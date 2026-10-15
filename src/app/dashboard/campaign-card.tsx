@@ -1,7 +1,15 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Copy, RefreshCw, Trash2, Crown, Users, Check } from 'lucide-react'
+import Link from 'next/link'
+import {
+  Copy,
+  RefreshCw,
+  Trash2,
+  Crown,
+  Users,
+  Check,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CampaignWithRole } from '@/lib/types'
 import {
@@ -63,7 +71,12 @@ export default function CampaignCard({ campaign }: Props) {
             {campaign.role === 'player' && (
               <Users size={16} className="text-indigo-400 shrink-0" />
             )}
-            <h3 className="font-semibold text-lg truncate">{campaign.name}</h3>
+            <Link
+              href={`/campaign/${campaign.id}`}
+              className="font-semibold text-lg truncate hover:text-indigo-400 transition"
+            >
+              {campaign.name}
+            </Link>
           </div>
           {campaign.genre && (
             <span className="text-xs px-2 py-0.5 bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 rounded-full">

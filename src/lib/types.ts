@@ -1,3 +1,7 @@
+// ============================================================
+// Базовые типы
+// ============================================================
+
 export type CampaignRole = 'dm' | 'player'
 
 export interface Profile {
@@ -32,6 +36,51 @@ export interface CampaignWithRole extends Campaign {
   members_count?: number
 }
 
+// ============================================================
+// Главы
+// ============================================================
+
+export interface Chapter {
+  id: string
+  campaign_id: string
+  title: string
+  content_md: string
+  order_index: number
+  is_visible_to_players: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ============================================================
+// Сущности (NPC, локации, предметы, монстры, ...)
+// ============================================================
+
+export type EntityType =
+  | 'npc'
+  | 'location'
+  | 'item'
+  | 'monster'
+  | 'faction'
+  | 'quest'
+  | 'note'
+
+export interface Entity {
+  id: string
+  campaign_id: string
+  type: EntityType
+  name: string
+  description: string
+  data_json: Record<string, unknown>
+  image_url: string | null
+  is_visible_to_players: boolean
+  created_at: string
+  updated_at: string
+}
+
+// ============================================================
+// Справочники для UI
+// ============================================================
+
 export const GENRES = [
   'Фэнтези',
   'Хоррор',
@@ -48,3 +97,23 @@ export const GENRES = [
 ] as const
 
 export type Genre = (typeof GENRES)[number]
+
+export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
+  npc: 'NPC',
+  location: 'Локация',
+  item: 'Предмет',
+  monster: 'Монстр',
+  faction: 'Фракция',
+  quest: 'Квест',
+  note: 'Заметка',
+}
+
+export const ENTITY_TYPE_ICONS: Record<EntityType, string> = {
+  npc: '👤',
+  location: '🗺️',
+  item: '⚔️',
+  monster: '👹',
+  faction: '🏛️',
+  quest: '📜',
+  note: '📝',
+}
