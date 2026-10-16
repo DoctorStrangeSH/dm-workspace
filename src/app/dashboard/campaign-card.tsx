@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Copy,
@@ -25,12 +25,15 @@ export default function CampaignCard({ campaign }: Props) {
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
   const [inviteCode, setInviteCode] = useState(campaign.invite_code)
+  const [inviteUrl, setInviteUrl] = useState(`/join/${campaign.invite_code}`)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  const inviteUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/join/${inviteCode}`
-      : `/join/${inviteCode}`
+  // Обновляем полный URL только на клиенте, после монтирования
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setInviteUrl(`${window.location.origin}/join/${inviteCode}`)
+    }
+  }, [inviteCode])
 
   const handleCopy = async () => {
     try {

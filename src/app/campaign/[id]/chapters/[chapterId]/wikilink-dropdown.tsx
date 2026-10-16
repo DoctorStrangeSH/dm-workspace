@@ -1,0 +1,111 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { ENTITY_STYLES } from '@/lib/entity-ui'
+import { cn } from '@/lib/utils'
+import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
+import type { EntityType } from '@/lib/types'
+
+interface Props {
+  query: string
+  entities: EntitySuggestion[]
+  position: { top: number; left: number }
+  onSelect: (entity: EntitySuggestion) => void
+  onClose: () => void
+}
+
+export default function WikilinkDropdown({
+  query,
+  entities,
+  position,
+  onSelect,
+  onClose,
+}: Props) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  const filtered = entities
+    .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
+    .slice(0, 10)
+
+  // Сброс активного индекса при изменении query
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [query])
+
+  // Обработка клавиш
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setActiveIndex((i) => Math.min(i + 1, filtered.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setActiveIndex((i) => Math.max(i - 1, 0))
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        if (filtered[activeIndex]) {
+          e.preventDefault()
+          onSelect(filtered[activeIndex])
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [filtered, activeIndex, onSelect, onClose])
+
+  // Скролл к активному элементу
+  useEffect(() => {
+    const el = listRef.current?.children[activeIndex] as HTMLElement
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [activeIndex])
+
+  if (filtered.length === 0) {
+    return (
+      <div
+        className="absolute z-50 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl p-3 text-sm text-slate-500"
+        style={{ top: position.top, left: position.left }}
+      >
+        Ничего не найдено
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={listRef}
+      className="absolute z-50 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl overflow-hidden min-w-[240px] max-w-[320px] max-h-[280px] overflow-y-auto"
+      style={{ top: position.top, left: position.left }}
+    >
+      {filtered.map((entity, i) => {
+        const style = ENTITY_STYLES[entity.type]
+        const isActive = i === activeIndex
+        return (
+          <div
+            key={entity.id}
+            onMouseEnter={() => setActiveIndex(i)}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              onSelect(entity)
+            }}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2 cursor-pointer transition',
+              isActive
+                ? 'bg-indigo-950/70 text-white'
+                : 'text-slate-300 hover:bg-slate-800/60'
+            )}
+          >
+            <span className="text-lg">{style.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate">{entity.name}</div>
+              <div className="text-xs text-slate-500">{style.label}</div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
