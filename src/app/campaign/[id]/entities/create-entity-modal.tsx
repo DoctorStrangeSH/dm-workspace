@@ -4,12 +4,15 @@ import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { createEntity } from '@/lib/actions/entities'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
-import type { EntityType } from '@/lib/types'
+import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
+import TemplateSelect from './create-entity-modal/template-select'
+import type { EntityTemplate, EntityType } from '@/lib/types'
 
 interface Props {
   campaignId: string
   defaultType?: EntityType
+  templates: EntityTemplate[]
   onClose: () => void
 }
 
@@ -26,33 +29,60 @@ const TYPE_OPTIONS: EntityType[] = [
 export default function CreateEntityModal({
   campaignId,
   defaultType = 'npc',
+  templates,
   onClose,
 }: Props) {
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<EntityType>(defaultType)
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<EntityTemplate | null>(null)
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+
+  const handleSelectTemplate = (template: EntityTemplate | null) => {
+    setSelectedTemplate(template)
+    if (template) {
+      if (!name) setName(template.name)
+      if (!description) setDescription(template.description)
+    }
+  }
+
+  const handleTypeChange = (t: EntityType) => {
+    setSelectedType(t)
+    setSelectedTemplate(null)
+  }
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
 
     const formData = new FormData(e.currentTarget)
-    // Принудительно ставим выбранный тип
     formData.set('type', selectedType)
+
+    if (selectedTemplate) {
+      formData.set(
+        'data_json',
+        JSON.stringify(selectedTemplate.dataJson ?? {})
+      )
+    }
 
     startTransition(async () => {
       const res = await createEntity(campaignId, formData)
       if (res.error) {
         setError(res.error)
+        toast.error(res.error)
         return
       }
+      toast.success('Сущность создана')
       onClose()
     })
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full my-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold">Новая сущность</h2>
           <button
@@ -65,7 +95,6 @@ export default function CreateEntityModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Выбор типа */}
           <div>
             <label className="block text-sm text-slate-300 mb-2">
               Тип <span className="text-red-400">*</span>
@@ -78,7 +107,7 @@ export default function CreateEntityModal({
                   <button
                     key={t}
                     type="button"
-                    onClick={() => setSelectedType(t)}
+                    onClick={() => handleTypeChange(t)}
                     className={cn(
                       'flex flex-col items-center gap-1 p-3 rounded-lg border transition',
                       active
@@ -94,7 +123,13 @@ export default function CreateEntityModal({
             </div>
           </div>
 
-          {/* Имя */}
+          <TemplateSelect
+            templates={templates}
+            selectedId={selectedTemplate?.id ?? null}
+            onSelect={handleSelectTemplate}
+            type={selectedType}
+          />
+
           <div>
             <label className="block text-sm text-slate-300 mb-1">
               Имя <span className="text-red-400">*</span>
@@ -105,6 +140,8 @@ export default function CreateEntityModal({
               required
               minLength={2}
               maxLength={150}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder={
                 selectedType === 'npc'
                   ? 'Гэндальф'
@@ -119,15 +156,16 @@ export default function CreateEntityModal({
             />
           </div>
 
-          {/* Описание */}
           <div>
             <label className="block text-sm text-slate-300 mb-1">
               Описание
             </label>
             <textarea
               name="description"
-              rows={4}
+              rows={3}
               maxLength={5000}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Краткое описание..."
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500 resize-none"
             />

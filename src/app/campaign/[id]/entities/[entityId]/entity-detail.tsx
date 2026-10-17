@@ -6,26 +6,63 @@ import { Eye, EyeOff, Trash2 } from 'lucide-react'
 import { updateEntity, deleteEntity } from '@/lib/actions/entities'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { useAutosave } from '@/lib/hooks/use-autosave'
+import { useToast } from '@/components/toast/toast-provider'
+import { Breadcrumbs } from '@/components/breadcrumbs'
 import SaveStatus from '../../chapters/[chapterId]/save-status'
 import EntityBacklinks from './entity-backlinks'
+import EntityDataForm from './entity-data-form'
+import EntityRelationsList from './relations/entity-relations-list'
+import EntityTags from './tags/entity-tags'
+import SaveAsTemplateButton from './save-as-template-button'
+import LocationBreadcrumbs from './locations/location-breadcrumbs'
+import LocationChildrenTree from './locations/location-children-tree'
 import { cn } from '@/lib/utils'
-import type { Entity } from '@/lib/types'
+import type {
+  Entity,
+  EntityRelation,
+  EntityTag,
+  Tag,
+  EntityType,
+} from '@/lib/types'
 import type { BacklinkChapter } from '@/lib/queries/backlinks'
 
 interface Props {
   entity: Entity
+  campaign: { id: string; name: string }
   campaignId: string
   isDm: boolean
   backlinks: BacklinkChapter[]
+  relations: EntityRelation[]
+  allEntities: Entity[]
+  entityTags: EntityTag[]
+  availableTags: Tag[]
+  locationPath?: Array<{
+    entityId: string
+    entityName: string
+    entityType: EntityType
+  }>
+  locationDescendants?: Array<{
+    entityId: string
+    entityName: string
+    depth: number
+  }>
 }
 
 export default function EntityDetail({
   entity,
+  campaign,
   campaignId,
   isDm,
   backlinks,
+  relations,
+  allEntities,
+  entityTags,
+  availableTags,
+  locationPath,
+  locationDescendants,
 }: Props) {
   const router = useRouter()
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState(entity.name)
   const [description, setDescription] = useState(entity.description)
@@ -55,9 +92,17 @@ export default function EntityDetail({
     const newVal = !isVisible
     setIsVisible(newVal)
     startTransition(async () => {
-      await updateEntity(entity.id, campaignId, {
+      const res = await updateEntity(entity.id, campaignId, {
         is_visible_to_players: newVal,
       })
+      if (res.error) {
+        toast.error(res.error)
+        setIsVisible(!newVal)
+      } else {
+        toast.success(
+          newVal ? 'Сущность видна игрокам' : 'Сущность скрыта от игроков'
+        )
+      }
     })
   }
 
@@ -65,8 +110,9 @@ export default function EntityDetail({
     startTransition(async () => {
       const res = await deleteEntity(entity.id, campaignId)
       if (res.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success('Сущность удалена')
         router.push(`/campaign/${campaignId}/entities`)
         router.refresh()
       }
@@ -75,6 +121,29 @@ export default function EntityDetail({
 
   return (
     <div>
+      {/* Общие крошки (кроме локаций — у них свои) */}
+      {entity.type !== 'location' && (
+        <Breadcrumbs
+          items={[
+            { label: 'Дашборд', href: '/dashboard' },
+            { label: campaign.name, href: `/campaign/${campaignId}` },
+            { label: 'Сущности', href: `/campaign/${campaignId}/entities` },
+            { label: entity.name },
+          ]}
+          className="mb-4"
+        />
+      )}
+
+      {/* Крошки локаций (иерархия) */}
+      {entity.type === 'location' &&
+        locationPath &&
+        locationPath.length > 1 && (
+          <LocationBreadcrumbs
+            campaignId={campaignId}
+            path={locationPath}
+          />
+        )}
+
       {/* Заголовок */}
       <div className="flex items-start gap-4 mb-6">
         <div
@@ -109,7 +178,7 @@ export default function EntityDetail({
 
       {/* Панель управления (только ГМ) */}
       {isDm && (
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800">
+        <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-slate-800">
           <button
             onClick={handleToggleVisibility}
             disabled={isPending}
@@ -123,6 +192,12 @@ export default function EntityDetail({
             {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
             {isVisible ? 'Видна игрокам' : 'Скрыта'}
           </button>
+
+          <SaveAsTemplateButton
+            entityId={entity.id}
+            campaignId={campaignId}
+            defaultName={entity.name}
+          />
 
           <button
             onClick={() => setShowDeleteConfirm(true)}
@@ -141,8 +216,8 @@ export default function EntityDetail({
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={12}
-            placeholder="Описание, статы, характеристики..."
+            rows={6}
+            placeholder="Описание, лор, внешность..."
             className="w-full bg-transparent border-none text-slate-200 focus:outline-none resize-none"
           />
         ) : (
@@ -151,6 +226,44 @@ export default function EntityDetail({
           </p>
         )}
       </div>
+
+      {/* Структурированные поля (data_json) */}
+      <EntityDataForm
+        entityId={entity.id}
+        campaignId={campaignId}
+        type={entity.type}
+        initialData={entity.data_json}
+        isDm={isDm}
+      />
+
+      {/* Теги */}
+      <EntityTags
+        entityId={entity.id}
+        campaignId={campaignId}
+        tags={entityTags}
+        availableTags={availableTags}
+        isDm={isDm}
+      />
+
+      {/* Вложенные локации */}
+      {entity.type === 'location' && locationDescendants && (
+        <div className="mt-8">
+          <LocationChildrenTree
+            campaignId={campaignId}
+            descendants={locationDescendants}
+          />
+        </div>
+      )}
+
+      {/* Связи */}
+      <EntityRelationsList
+        entityId={entity.id}
+        campaignId={campaignId}
+        entityType={entity.type}
+        relations={relations}
+        allEntities={allEntities}
+        isDm={isDm}
+      />
 
       {/* Беклинки */}
       <div className="mt-8">

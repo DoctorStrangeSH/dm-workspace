@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { createChapter } from '@/lib/actions/chapters'
+import { useToast } from '@/components/toast/toast-provider'
 
 interface Props {
   campaignId: string
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function CreateChapterModal({ campaignId, onClose }: Props) {
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -23,8 +25,10 @@ export default function CreateChapterModal({ campaignId, onClose }: Props) {
       const res = await createChapter(campaignId, formData)
       if (res.error) {
         setError(res.error)
+        toast.error(res.error)
         return
       }
+      toast.success('Глава создана')
       onClose()
     })
   }

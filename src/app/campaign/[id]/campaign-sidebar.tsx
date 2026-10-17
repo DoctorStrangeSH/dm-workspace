@@ -11,8 +11,12 @@ import {
   Skull,
   Settings,
   Crown,
+  Sword,
+  Library,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
 
 interface Props {
   campaignId: string
@@ -26,7 +30,10 @@ export default function CampaignSidebar({ campaignId, isDm }: Props) {
   const items = [
     { href: base, label: 'Обзор', icon: Home, exact: true },
     { href: `${base}/chapters`, label: 'Главы', icon: BookOpen },
+    { href: `${base}/characters`, label: 'Персонажи', icon: Sword },
     { href: `${base}/entities`, label: 'Сущности', icon: Users },
+    { href: `${base}/bestiary`, label: 'Бестиарий', icon: Library },
+    { href: `${base}/spells`, label: 'Заклинания', icon: Sparkles },
     { href: `${base}/npcs`, label: 'NPC', icon: Users },
     { href: `${base}/locations`, label: 'Локации', icon: MapPin },
     { href: `${base}/items`, label: 'Предметы', icon: Package },

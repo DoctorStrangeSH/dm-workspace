@@ -1,6 +1,16 @@
 'use client'
 
-import { Pencil, Eye, Columns, Bold, Italic, List, Link2, Quote, Code2 } from 'lucide-react'
+import {
+  Pencil,
+  Eye,
+  Columns,
+  Bold,
+  Italic,
+  List,
+  Link2,
+  Quote,
+  Code2,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SaveStatus from './save-status'
 
@@ -14,6 +24,8 @@ interface Props {
   error: string | null
   readOnly: boolean
   onInsert?: (snippet: string, wrap?: boolean) => void
+  exportButton?: React.ReactNode
+  hideViewModes?: boolean
 }
 
 export default function EditorToolbar({
@@ -25,32 +37,35 @@ export default function EditorToolbar({
   readOnly,
   onInsert,
   exportButton,
+  hideViewModes = false,
 }: Props) {
   return (
-    <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800 flex-wrap">
-      {/* Режимы */}
-      <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
-        <ViewButton
-          active={view === 'edit'}
-          onClick={() => onViewChange('edit')}
-          icon={<Pencil size={14} />}
-          label="Редактор"
-        />
-        <ViewButton
-          active={view === 'split'}
-          onClick={() => onViewChange('split')}
-          icon={<Columns size={14} />}
-          label="Разделённый"
-        />
-        <ViewButton
-          active={view === 'preview'}
-          onClick={() => onViewChange('preview')}
-          icon={<Eye size={14} />}
-          label="Просмотр"
-        />
-      </div>
+    <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-800 flex-wrap">
+      {/* Режимы — скрываем на мобиле */}
+      {!hideViewModes && (
+        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+          <ViewButton
+            active={view === 'edit'}
+            onClick={() => onViewChange('edit')}
+            icon={<Pencil size={14} />}
+            label="Редактор"
+          />
+          <ViewButton
+            active={view === 'split'}
+            onClick={() => onViewChange('split')}
+            icon={<Columns size={14} />}
+            label="Разделённый"
+          />
+          <ViewButton
+            active={view === 'preview'}
+            onClick={() => onViewChange('preview')}
+            icon={<Eye size={14} />}
+            label="Просмотр"
+          />
+        </div>
+      )}
 
-      {/* Быстрые вставки */}
+      {/* Быстрые вставки (только для ГМа) */}
       {!readOnly && view !== 'preview' && onInsert && (
         <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
           <ToolButton
@@ -86,7 +101,7 @@ export default function EditorToolbar({
         </div>
       )}
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         {exportButton}
         {!readOnly && (
           <SaveStatus status={status} lastSaved={lastSaved} error={error} />

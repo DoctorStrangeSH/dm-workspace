@@ -23,6 +23,20 @@ export async function createEntity(campaignId: string, formData: FormData) {
   const type = (formData.get('type') as string)?.trim() as EntityType
   const description =
     (formData.get('description') as string)?.trim() || ''
+  const dataJsonRaw = formData.get('data_json') as string | null
+
+  // Парсим data_json из формы (если есть)
+  let dataJson: Record<string, unknown> = {}
+  if (dataJsonRaw) {
+    try {
+      const parsed = JSON.parse(dataJsonRaw)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        dataJson = parsed
+      }
+    } catch {
+      // ignore — оставляем пустой объект
+    }
+  }
 
   if (!name || name.length < 2) {
     return { error: 'Имя должно быть минимум 2 символа' }
@@ -45,6 +59,7 @@ export async function createEntity(campaignId: string, formData: FormData) {
       type,
       name,
       description,
+      data_json: dataJson,
     })
     .select('id')
     .single()
@@ -121,7 +136,7 @@ export async function deleteEntity(entityId: string, campaignId: string) {
 }
 
 /**
- * Найти сущности по имени (для [[плашек]])
+ * Найти сущности по имени (для [[плашек]]).
  */
 export async function findEntitiesByName(
   campaignId: string,

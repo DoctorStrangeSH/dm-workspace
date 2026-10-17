@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BookOpen, ExternalLink } from 'lucide-react'
 import type { BacklinkChapter } from '@/lib/queries/backlinks'
+import EmptyState from '@/components/empty-state'
 
 interface Props {
   campaignId: string
@@ -23,15 +24,16 @@ function escapeRegExp(str: string): string {
 
 export default function EntityBacklinks({ campaignId, backlinks }: Props) {
   if (backlinks.length === 0) {
-    return (
-      <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 text-center">
-        <BookOpen size={24} className="text-slate-700 mx-auto mb-2" />
-        <p className="text-sm text-slate-500">
-          Пока не упоминается ни в одной главе
-        </p>
-      </div>
-    )
-  }
+  return (
+    <EmptyState
+      icon="📖"
+      title="Пока не упоминается"
+      description="Эта сущность не упоминается ни в одной главе. Добавь [[Название]] в текст главы."
+      size="sm"
+      dashed={false}
+    />
+  )
+}
 
   return (
     <div className="space-y-2">

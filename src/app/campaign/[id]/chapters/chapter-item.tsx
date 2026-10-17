@@ -16,6 +16,7 @@ import {
   Copy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/toast/toast-provider'
 import type { Chapter } from '@/lib/types'
 import {
   deleteChapter,
@@ -44,6 +45,7 @@ export default function ChapterItem({
   isSelected = false,
   onToggleSelect,
 }: Props) {
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(chapter.title)
@@ -78,9 +80,10 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await updateChapterTitle(chapter.id, campaignId, title)
       if (res.error) {
-        alert(res.error)
+        toast.error(res.error)
         setTitle(chapter.title)
       } else {
+        toast.success('Глава переименована')
         setIsEditing(false)
       }
     })
@@ -92,12 +95,20 @@ export default function ChapterItem({
   }
 
   const handleToggleVisibility = () => {
+    const willBeVisible = !chapter.is_visible_to_players
     startTransition(async () => {
-      await toggleChapterVisibility(
+      const res = await toggleChapterVisibility(
         chapter.id,
         campaignId,
-        !chapter.is_visible_to_players
+        willBeVisible
       )
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        toast.success(
+          willBeVisible ? 'Глава видна игрокам' : 'Глава скрыта от игроков'
+        )
+      }
     })
   }
 
@@ -105,7 +116,9 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await duplicateChapter(chapter.id, campaignId)
       if (res.error) {
-        alert(res.error)
+        toast.error(res.error)
+      } else {
+        toast.success('Копия главы создана')
       }
     })
   }
@@ -114,8 +127,9 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await deleteChapter(chapter.id, campaignId)
       if (res.error) {
-        alert(res.error)
+        toast.error(res.error)
       } else {
+        toast.success('Глава удалена')
         setShowDeleteConfirm(false)
       }
     })
@@ -135,7 +149,6 @@ export default function ChapterItem({
         )}
       >
         <div className="flex items-center gap-3 p-4">
-          {/* Чекбокс выделения */}
           {isSelectionMode && (
             <button
               onClick={() => onToggleSelect?.(chapter.id)}
@@ -151,7 +164,6 @@ export default function ChapterItem({
             </button>
           )}
 
-          {/* Ручка drag-n-drop (скрыта в режиме выделения) */}
           {isDm && !isSelectionMode && (
             <div
               {...attributes}

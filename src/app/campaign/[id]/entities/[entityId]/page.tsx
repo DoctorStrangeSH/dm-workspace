@@ -1,12 +1,17 @@
 export const instant = false
 
 import { connection } from 'next/server'
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCampaignAccess } from '@/lib/queries/access'
-import { getEntityBacklinks } from '@/lib/queries/backlinks'
-import { ArrowLeft } from 'lucide-react'
+import {
+  getEntityBacklinks,
+  getEntityRelations,
+  getEntityTags,
+  getCampaignTags,
+  getLocationPath,
+  getLocationDescendants,
+} from '@/lib/queries/backlinks'
 import EntityDetail from './entity-detail'
 import type { Entity } from '@/lib/types'
 
@@ -37,26 +42,46 @@ export default async function EntityPage({
 
   if (!isDm && !e.is_visible_to_players) notFound()
 
-  // Загружаем беклинки
-  const backlinks = await getEntityBacklinks(entityId)
+  const isLocation = e.type === 'location'
+
+  const [
+    backlinks,
+    relations,
+    entityTags,
+    availableTags,
+    allEntitiesRes,
+    locationPath,
+    locationDescendants,
+  ] = await Promise.all([
+    getEntityBacklinks(entityId),
+    getEntityRelations(entityId),
+    getEntityTags(entityId),
+    getCampaignTags(campaignId),
+    supabase
+      .from('entities')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('name'),
+    isLocation ? getLocationPath(entityId) : Promise.resolve([]),
+    isLocation ? getLocationDescendants(entityId) : Promise.resolve([]),
+  ])
+
+  const allEntities = (allEntitiesRes.data ?? []) as Entity[]
 
   return (
     <div className="max-w-3xl">
-      <div className="mb-6">
-        <Link
-          href={`/campaign/${campaignId}/entities`}
-          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition"
-        >
-          <ArrowLeft size={14} />
-          К сущностям
-        </Link>
-      </div>
-
       <EntityDetail
         entity={e}
+        campaign={campaign}
         campaignId={campaignId}
         isDm={isDm}
         backlinks={backlinks}
+        relations={relations}
+        allEntities={allEntities}
+        entityTags={entityTags}
+        availableTags={availableTags}
+        locationPath={locationPath}
+        locationDescendants={locationDescendants}
       />
     </div>
   )

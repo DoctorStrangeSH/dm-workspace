@@ -1,0 +1,216 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Check,
+  Shield,
+  Sparkles,
+  Trash2,
+  Pencil,
+  X,
+} from 'lucide-react'
+import {
+  updateInventoryItem,
+  removeInventoryItem,
+  toggleEquipped,
+  toggleAttuned,
+} from '@/lib/actions/characters'
+import { useToast } from '@/components/toast/toast-provider'
+import type { CharacterInventoryItem } from '@/lib/types'
+import { cn } from '@/lib/utils'
+
+interface Props {
+  item: CharacterInventoryItem
+  characterId: string
+  campaignId: string
+  canEdit: boolean
+}
+
+export default function InventoryItem({
+  item,
+  characterId,
+  campaignId,
+  canEdit,
+}: Props) {
+  const router = useRouter()
+  const toast = useToast()
+  const [isPending, startTransition] = useTransition()
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState(item.name)
+  const [editQuantity, setEditQuantity] = useState(item.quantity)
+
+  const handleSaveEdit = () => {
+    if (!editName.trim() || editQuantity < 1) {
+      toast.error('Некорректные значения')
+      return
+    }
+
+    startTransition(async () => {
+      const res = await updateInventoryItem(characterId, campaignId, item.id, {
+        name: editName.trim(),
+        quantity: editQuantity,
+      })
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        setIsEditing(false)
+        router.refresh()
+      }
+    })
+  }
+
+  const handleToggleEquipped = () => {
+    startTransition(async () => {
+      const res = await toggleEquipped(characterId, campaignId, item.id)
+      if (res.error) toast.error(res.error)
+      else router.refresh()
+    })
+  }
+
+  const handleToggleAttuned = () => {
+    startTransition(async () => {
+      const res = await toggleAttuned(characterId, campaignId, item.id)
+      if (res.error) toast.error(res.error)
+      else router.refresh()
+    })
+  }
+
+  const handleDelete = () => {
+    if (!confirm(`Удалить «${item.name}»?`)) return
+
+    startTransition(async () => {
+      const res = await removeInventoryItem(characterId, campaignId, item.id)
+      if (res.error) toast.error(res.error)
+      else {
+        toast.success('Предмет удалён')
+        router.refresh()
+      }
+    })
+  }
+
+  return (
+    <div className="group bg-slate-900 border border-slate-800 rounded-lg p-3 flex items-center gap-3">
+      {/* Equipped / Attuned бейджи */}
+      <div className="flex flex-col gap-1 shrink-0">
+        {canEdit ? (
+          <button
+            onClick={handleToggleEquipped}
+            disabled={isPending}
+            className={cn(
+              'w-5 h-5 rounded border-2 flex items-center justify-center transition',
+              item.equipped
+                ? 'bg-sky-600 border-sky-500'
+                : 'border-slate-700 hover:border-slate-500'
+            )}
+            title={item.equipped ? 'Снять' : 'Экипировать'}
+          >
+            {item.equipped && <Shield size={10} className="text-white" />}
+          </button>
+        ) : (
+          item.equipped && <Shield size={14} className="text-sky-400" />
+        )}
+
+        {item.attuned && (
+          <Sparkles size={14} className="text-violet-400" />
+        )}
+      </div>
+
+      {/* Контент */}
+      <div className="flex-1 min-w-0">
+        {isEditing ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="flex-1 px-2 py-1 bg-slate-950 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-indigo-500"
+            />
+            <input
+              type="number"
+              value={editQuantity}
+              onChange={(e) => setEditQuantity(Number(e.target.value))}
+              min={1}
+              className="w-16 px-2 py-1 bg-slate-950 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-indigo-500"
+            />
+            <button
+              onClick={handleSaveEdit}
+              disabled={isPending}
+              className="p-1 hover:bg-slate-800 rounded"
+            >
+              <Check size={14} className="text-green-400" />
+            </button>
+            <button
+              onClick={() => {
+                setIsEditing(false)
+                setEditName(item.name)
+                setEditQuantity(item.quantity)
+              }}
+              className="p-1 hover:bg-slate-800 rounded"
+            >
+              <X size={14} className="text-slate-400" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-slate-200 truncate">
+                {item.name}
+              </span>
+              {item.quantity > 1 && (
+                <span className="text-xs px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">
+                  ×{item.quantity}
+                </span>
+              )}
+            </div>
+            {item.notes && (
+              <p className="text-xs text-slate-500 truncate">{item.notes}</p>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Weight */}
+      {item.weight && item.weight > 0 && (
+        <span className="text-xs text-slate-500 shrink-0">
+          {(item.weight * item.quantity).toFixed(1)} lb
+        </span>
+      )}
+
+      {/* Actions */}
+      {canEdit && !isEditing && (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+          <button
+            onClick={handleToggleAttuned}
+            disabled={isPending}
+            className={cn(
+              'p-1.5 rounded transition',
+              item.attuned
+                ? 'text-violet-400 hover:bg-violet-950/40'
+                : 'text-slate-500 hover:bg-slate-800 hover:text-violet-400'
+            )}
+            title={item.attuned ? 'Отменить настройку' : 'Настроить'}
+          >
+            <Sparkles size={12} />
+          </button>
+          <button
+            onClick={() => setIsEditing(true)}
+            disabled={isPending}
+            className="p-1.5 hover:bg-slate-800 rounded transition"
+            title="Редактировать"
+          >
+            <Pencil size={12} className="text-slate-400" />
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={isPending}
+            className="p-1.5 hover:bg-red-950/40 rounded transition"
+            title="Удалить"
+          >
+            <Trash2 size={12} className="text-red-400" />
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}

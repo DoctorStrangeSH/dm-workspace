@@ -6,9 +6,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { getBacklinksCounts } from '@/lib/queries/backlinks'
+import { getTemplatesForCampaign } from '@/lib/queries/templates'
 import { Users } from 'lucide-react'
 import CreateEntityButton from './create-entity-button'
 import EntityCard from './entity-card'
+import EmptyState from '@/components/empty-state'
+import { Breadcrumbs } from '@/components/breadcrumbs'
 import { ENTITY_FILTERS } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
 import type { Entity, EntityType } from '@/lib/types'
@@ -51,19 +54,32 @@ export default async function EntitiesPage({
     query = query.eq('type', typeFilter)
   }
 
-  const { data, error } = await query
-  if (error) console.error('entities query error:', error)
+  const [entitiesRes, backlinksCounts, templates] = await Promise.all([
+    query,
+    getBacklinksCounts(campaignId),
+    getTemplatesForCampaign(campaignId),
+  ])
 
-  const entities = (data ?? []) as Entity[]
+  if (entitiesRes.error) {
+    console.error('entities query error:', entitiesRes.error)
+  }
 
-  // Счётчики упоминаний для всех сущностей кампании
-  const backlinksCounts = await getBacklinksCounts(campaignId)
+  const entities = (entitiesRes.data ?? []) as Entity[]
 
   const activeType = typeFilter ?? 'all'
   const base = `/campaign/${campaignId}/entities`
 
   return (
     <div className="max-w-6xl">
+      <Breadcrumbs
+        items={[
+          { label: 'Дашборд', href: '/dashboard' },
+          { label: campaign.name, href: `/campaign/${campaignId}` },
+          { label: 'Сущности' },
+        ]}
+        className="mb-4"
+      />
+
       <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -76,15 +92,19 @@ export default async function EntitiesPage({
             {!isDm && ' · только видимые вам'}
           </p>
         </div>
-        {isDm && <CreateEntityButton campaignId={campaignId} />}
+        {isDm && (
+          <CreateEntityButton
+            campaignId={campaignId}
+            templates={templates}
+          />
+        )}
       </div>
 
       {/* Фильтры по типу */}
       <div className="flex flex-wrap gap-2 mb-6">
         {ENTITY_FILTERS.map((f) => {
           const isActive = activeType === f.value
-          const href =
-            f.value === 'all' ? base : `${base}?type=${f.value}`
+          const href = f.value === 'all' ? base : `${base}?type=${f.value}`
           return (
             <Link
               key={f.value}
@@ -103,19 +123,20 @@ export default async function EntitiesPage({
       </div>
 
       {entities.length === 0 ? (
-        <div className="border-2 border-dashed border-slate-800 rounded-2xl p-12 text-center">
-          <Users size={40} className="text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-400 mb-2">
-            {activeType === 'all'
+        <EmptyState
+          icon="👥"
+          title={
+            activeType === 'all'
               ? 'Пока нет ни одной сущности'
-              : 'Нет сущностей этого типа'}
-          </p>
-          <p className="text-slate-500 text-sm">
-            {isDm
-              ? 'Создай NPC, локацию, монстра или предмет.'
-              : 'ГМ пока не добавил материалы.'}
-          </p>
-        </div>
+              : 'Нет сущностей этого типа'
+          }
+          description={
+            isDm
+              ? 'Создай NPC, локацию, монстра или предмет. Используй шаблон для быстрого старта.'
+              : 'ГМ пока не добавил материалы.'
+          }
+          size="lg"
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {entities.map((e) => (

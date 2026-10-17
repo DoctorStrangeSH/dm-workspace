@@ -6,8 +6,10 @@ import { redirect } from 'next/navigation'
 import LogoutButton from './logout-button'
 import CreateCampaignButton from './create-campaign-button'
 import CampaignCard from './campaign-card'
+import ThemeToggle from '@/components/theme-toggle'
 import { getUserCampaigns } from '@/lib/queries/campaigns'
 import { Crown, Users } from 'lucide-react'
+import EmptyState from '@/components/empty-state'
 
 export default async function DashboardPage() {
   await connection()
@@ -28,40 +30,41 @@ export default async function DashboardPage() {
   const { asDm, asPlayer } = await getUserCampaigns(user.id)
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <header className="border-b border-slate-800">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold">DM Workspace</h1>
-            <p className="text-slate-400 text-xs">
+    <div className="min-h-screen">
+      <header className="border-b" style={{ borderColor: 'var(--border-default)' }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-3">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-bold">DM Workspace</h1>
+            <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
               {profile?.display_name ?? user.email}
             </p>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <LogoutButton />
+          </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex justify-between items-center mb-8 flex-wrap gap-3">
           <div>
             <h2 className="text-2xl font-bold">Мои кампании</h2>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
               Всего: {asDm.length + asPlayer.length}
             </p>
           </div>
           <CreateCampaignButton />
         </div>
 
-        {asDm.length === 0 && asPlayer.length === 0 && (
-          <div className="border-2 border-dashed border-slate-800 rounded-2xl p-12 text-center">
-            <p className="text-slate-400 mb-4">
-              Пока нет ни одной кампании.
-            </p>
-            <p className="text-slate-500 text-sm">
-              Создай первую — как ГМ или присоединись по invite-ссылке.
-            </p>
-          </div>
-        )}
+{asDm.length === 0 && asPlayer.length === 0 && (
+  <EmptyState
+    icon="🎲"
+    title="Добро пожаловать в DM Workspace"
+    description="Создай свою первую кампанию как ГМ или присоединись к чужой по invite-ссылке."
+    size="lg"
+  />
+)}
 
         {asDm.length > 0 && (
           <section className="mb-10">
@@ -69,7 +72,7 @@ export default async function DashboardPage() {
               <Crown size={20} className="text-amber-400" />
               <h3 className="text-lg font-semibold">
                 Я — ГМ{' '}
-                <span className="text-slate-500 font-normal">
+                <span style={{ color: 'var(--text-subtle)' }} className="font-normal">
                   ({asDm.length})
                 </span>
               </h3>
@@ -88,7 +91,7 @@ export default async function DashboardPage() {
               <Users size={20} className="text-indigo-400" />
               <h3 className="text-lg font-semibold">
                 Я — Игрок{' '}
-                <span className="text-slate-500 font-normal">
+                <span style={{ color: 'var(--text-subtle)' }} className="font-normal">
                   ({asPlayer.length})
                 </span>
               </h3>

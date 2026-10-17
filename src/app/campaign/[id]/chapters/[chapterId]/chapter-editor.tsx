@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import type { ViewUpdate } from '@codemirror/view'
 import { updateChapterContent } from '@/lib/actions/chapter-content'
@@ -10,6 +10,7 @@ import { downloadText } from '@/lib/download'
 import { toFilename } from '@/lib/slugify'
 import { useAutosave } from '@/lib/hooks/use-autosave'
 import { useHotkey } from '@/lib/hooks/use-hotkey'
+import { useIsMobile } from '@/lib/hooks/use-media-query'
 import EditorToolbar, { type ViewMode } from './editor-toolbar'
 import CMEditor from './cm-editor'
 import MarkdownPreview from './markdown-preview'
@@ -44,8 +45,10 @@ export default function ChapterEditor({
   entities = [],
   chapterTitle,
 }: Props) {
+  const isMobile = useIsMobile()
   const [content, setContent] = useState(initialContent)
   const [view, setView] = useState<ViewMode>('split')
+  const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const cmRef = useRef<ReactCodeMirrorRef>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const lastOpenTimeRef = useRef(0)
@@ -91,6 +94,15 @@ export default function ChapterEditor({
       handleExportHotkey()
     },
   })
+
+  // ============================================================
+  // На мобиле split недоступен
+  // ============================================================
+  useEffect(() => {
+    if (isMobile && view === 'split') {
+      setView('edit')
+    }
+  }, [isMobile, view])
 
   // ============================================================
   // Детект [[query
@@ -213,11 +225,41 @@ export default function ChapterEditor({
     view.focus()
   }, [])
 
-  const showEditor = view === 'edit' || view === 'split'
-  const showPreview = view === 'preview' || view === 'split'
+  const showEditor = isMobile
+    ? mobileView === 'edit'
+    : view === 'edit' || view === 'split'
+  const showPreview = isMobile
+    ? mobileView === 'preview'
+    : view === 'preview' || view === 'split'
 
   return (
     <div className="flex flex-col">
+      {/* Мобильные табы */}
+      {isMobile && !readOnly && (
+        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 mb-3">
+          <button
+            onClick={() => setMobileView('edit')}
+            className={`flex-1 px-3 py-1.5 text-xs rounded transition ${
+              mobileView === 'edit'
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Редактор
+          </button>
+          <button
+            onClick={() => setMobileView('preview')}
+            className={`flex-1 px-3 py-1.5 text-xs rounded transition ${
+              mobileView === 'preview'
+                ? 'bg-indigo-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            Просмотр
+          </button>
+        </div>
+      )}
+
       <EditorToolbar
         view={view}
         onViewChange={setView}
@@ -233,19 +275,24 @@ export default function ChapterEditor({
             chapterTitle={chapterTitle}
           />
         }
+        hideViewModes={isMobile}
       />
 
       <div
-        className="grid gap-3"
-        style={{
-          gridTemplateColumns:
-            showEditor && showPreview ? '1fr 1fr' : '1fr',
-        }}
+        className={isMobile ? '' : 'grid gap-3'}
+        style={
+          isMobile
+            ? undefined
+            : {
+                gridTemplateColumns:
+                  showEditor && showPreview ? '1fr 1fr' : '1fr',
+              }
+        }
       >
         {showEditor && (
           <div
             ref={wrapperRef}
-            className="relative bg-slate-900 border border-slate-800 rounded-lg overflow-hidden h-[700px]"
+            className="relative bg-slate-900 border border-slate-800 rounded-lg overflow-hidden h-[calc(100vh-320px)] sm:h-[700px]"
           >
             <CMEditor
               ref={cmRef}
@@ -272,7 +319,7 @@ export default function ChapterEditor({
         )}
 
         {showPreview && (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-lg overflow-auto h-[700px] p-6">
+          <div className="bg-slate-900/50 border border-slate-800 rounded-lg overflow-auto h-[calc(100vh-320px)] sm:h-[700px] p-6">
             {content.trim() ? (
               <MarkdownPreview
                 content={content}

@@ -31,9 +31,10 @@ import {
 import { getChapterForExport } from '@/lib/actions/export'
 import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
-import { slugify } from '@/lib/slugify'
+import { useToast } from '@/components/toast/toast-provider'
 import { BookOpen, SearchX } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
+import EmptyState from '@/components/empty-state'
 
 interface Props {
   campaignId: string
@@ -46,6 +47,7 @@ export default function ChaptersList({
   initialChapters,
   isDm,
 }: Props) {
+  const toast = useToast()
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
   const [query, setQuery] = useState('')
   const [isSelectionMode, setIsSelectionMode] = useState(false)
@@ -85,6 +87,7 @@ export default function ChaptersList({
 
     if (res.error) {
       console.error('reorder failed:', res.error)
+      toast.error('Не удалось сохранить порядок')
       setChapters(previousChapters)
     }
   }
@@ -124,7 +127,7 @@ export default function ChaptersList({
     }
   }, [allSelected, filtered])
 
- // ============================================================
+  // ============================================================
   // Массовые действия
   // ============================================================
   const handleBulkDelete = useCallback(async () => {
@@ -138,12 +141,15 @@ export default function ChaptersList({
 
     const res = await bulkDeleteChapters(ids, campaignId)
     if (res.error) {
-      alert(res.error)
+      toast.error(res.error)
       return
     }
+    toast.success(
+      `Удалено ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
+    )
     setSelectedIds(new Set())
     setIsSelectionMode(false)
-  }, [selectedIds, campaignId])
+  }, [selectedIds, campaignId, toast])
 
   const handleBulkSetVisibility = useCallback(
     async (visible: boolean) => {
@@ -152,13 +158,18 @@ export default function ChaptersList({
 
       const res = await bulkSetVisibility(ids, campaignId, visible)
       if (res.error) {
-        alert(res.error)
+        toast.error(res.error)
         return
       }
+      toast.success(
+        visible
+          ? `Показано ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
+          : `Скрыто ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
+      )
       setSelectedIds(new Set())
       setIsSelectionMode(false)
     },
-    [selectedIds, campaignId]
+    [selectedIds, campaignId, toast]
   )
 
   const handleBulkExport = useCallback(async () => {
@@ -174,28 +185,48 @@ export default function ChaptersList({
       }
     }
 
-    if (parts.length === 0) return
+    if (parts.length === 0) {
+      toast.error('Не удалось экспортировать')
+      return
+    }
 
     const content = parts.join('')
     downloadText(content, `chapters-export-${Date.now()}.md`)
+    toast.success(
+      `Экспортировано ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
+    )
     setSelectedIds(new Set())
     setIsSelectionMode(false)
-  }, [selectedIds, campaignId])
+  }, [selectedIds, campaignId, toast])
 
   // Пустая кампания
-  if (chapters.length === 0) {
-    return (
-      <div className="border-2 border-dashed border-slate-800 rounded-2xl p-12 text-center">
-        <BookOpen size={40} className="text-slate-700 mx-auto mb-3" />
-        <p className="text-slate-400 mb-2">Пока нет ни одной главы</p>
-        <p className="text-slate-500 text-sm">
-          {isDm
-            ? 'Создай первую главу, чтобы начать писать приключение.'
-            : 'ГМ пока не добавил главы.'}
-        </p>
-      </div>
-    )
-  }
+// Пустая кампания
+if (chapters.length === 0) {
+  return (
+    <EmptyState
+      icon="📖"
+      title="Пока нет ни одной главы"
+      description={
+        isDm
+          ? 'Создай первую главу, чтобы начать писать приключение.'
+          : 'ГМ пока не добавил главы.'
+      }
+      actions={
+        isDm
+          ? [
+              {
+                label: 'Создать главу',
+                onClick: () => {
+                  // Открыть модалку создания
+                  // (нужно прокиднуть проп onOpenCreate из родителя)
+                },
+              },
+            ]
+          : undefined
+      }
+    />
+  )
+}
 
   return (
     <div>
@@ -225,15 +256,20 @@ export default function ChaptersList({
       </div>
 
       {/* Ничего не найдено */}
-      {isSearching && filtered.length === 0 && (
-        <div className="border-2 border-dashed border-slate-800 rounded-2xl p-12 text-center">
-          <SearchX size={40} className="text-slate-700 mx-auto mb-3" />
-          <p className="text-slate-400 mb-2">Ничего не найдено</p>
-          <p className="text-slate-500 text-sm">
-            Попробуй изменить запрос «{query}»
-          </p>
-        </div>
-      )}
+{isSearching && filtered.length === 0 && (
+  <EmptyState
+    icon="🔍"
+    title="Ничего не найдено"
+    description={`Попробуй изменить запрос «${query}»`}
+    actions={[
+      {
+        label: 'Очистить поиск',
+        onClick: () => setQuery(''),
+        variant: 'secondary',
+      },
+    ]}
+  />
+)}
 
       {/* Список */}
       {filtered.length > 0 && (

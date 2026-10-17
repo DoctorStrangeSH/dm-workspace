@@ -7,6 +7,7 @@ import { getCampaignAccess } from '@/lib/queries/access'
 import { BookOpen } from 'lucide-react'
 import CreateChapterButton from './create-chapter-button'
 import ChaptersList from './chapters-list'
+import { Breadcrumbs } from '@/components/breadcrumbs'
 import type { Chapter } from '@/lib/types'
 
 export default async function ChaptersPage({
@@ -35,6 +36,15 @@ export default async function ChaptersPage({
 
   return (
     <div className="max-w-4xl">
+      <Breadcrumbs
+        items={[
+          { label: 'Дашборд', href: '/dashboard' },
+          { label: campaign.name, href: `/campaign/${id}` },
+          { label: 'Главы' },
+        ]}
+        className="mb-4"
+      />
+
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">

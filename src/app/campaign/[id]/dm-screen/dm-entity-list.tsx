@@ -5,6 +5,7 @@ import { Search, X } from 'lucide-react'
 import DmEntityItem from './dm-entity-item'
 import { cn } from '@/lib/utils'
 import type { Entity, EntityType } from '@/lib/types'
+import EmptyState from '@/components/empty-state'
 
 interface Props {
   entities: Entity[]
@@ -126,13 +127,25 @@ export default function DmEntityList({
           </>
         )}
 
-        {filtered.length === 0 ? (
-          <div className="text-center py-8 text-sm text-slate-500">
-            {query.trim() || filter !== 'all'
-              ? 'Ничего не найдено'
-              : 'Пока нет сущностей'}
-          </div>
-        ) : (
+{filtered.length === 0 ? (
+  <div className="py-8">
+    <EmptyState
+      icon={query.trim() || filter !== 'all' ? '🔍' : '👥'}
+      title={
+        query.trim() || filter !== 'all'
+          ? 'Ничего не найдено'
+          : 'Пока нет сущностей'
+      }
+      description={
+        query.trim() || filter !== 'all'
+          ? 'Попробуй изменить фильтр или поиск'
+          : 'Создай первую сущность в кампании'
+      }
+      size="sm"
+      dashed={false}
+    />
+  </div>
+) : (
           <>
             {showRecent && (
               <div className="px-3 pt-2 pb-1 text-xs text-slate-500 uppercase tracking-wider">

@@ -56,8 +56,8 @@ export default function DmScreenPanel({ entities, campaignId }: Props) {
         className={cn(
           'fixed top-0 right-0 z-50 h-screen w-full sm:w-[400px] bg-slate-900 border-l border-slate-800 shadow-2xl transition-transform flex flex-col',
           isOpen ? 'translate-x-0' : 'translate-x-full'
-        )}
-      >
+     )}
+       >
         {/* Заголовок */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
           <div className="flex items-center gap-2">

@@ -1,0 +1,46 @@
+export const SPECIES_NAMES_RU: Record<string, string> = {
+  'human': 'Человек',
+  'elf': 'Эльф',
+  'dwarf': 'Дворф',
+  'halfling': 'Полурослик',
+  'dragonborn': 'Драконорождённый',
+  'gnome': 'Гном',
+  'half-elf': 'Полуэльф',
+  'half-orc': 'Полуорк',
+  'tiefling': 'Тифлинг',
+  'orc': 'Орк',
+  'goliath': 'Голиаф',
+  'aasimar': 'Аасимар',
+  'tabaxi': 'Табакси',
+}
+
+export const CLASS_NAMES_RU: Record<string, string> = {
+  'barbarian': 'Варвар',
+  'bard': 'Бард',
+  'cleric': 'Жрец',
+  'druid': 'Друид',
+  'fighter': 'Воин',
+  'monk': 'Монах',
+  'paladin': 'Паладин',
+  'ranger': 'Следопыт',
+  'rogue': 'Плут',
+  'sorcerer': 'Чародей',
+  'warlock': 'Колдун',
+  'wizard': 'Волшебник',
+}
+
+export const BACKGROUND_NAMES_RU: Record<string, string> = {
+  'acolyte': 'Послушник',
+  'criminal': 'Преступник',
+  'folk-hero': 'Народный герой',
+  'noble': 'Дворянин',
+  'sage': 'Мудрец',
+  'soldier': 'Солдат',
+  'charlatan': 'Шарлатан',
+  'entertainer': 'Артист',
+  'guild-artisan': 'Ремесленник',
+  'hermit': 'Отшельник',
+  'outlander': 'Чужеземец',
+  'sailor': 'Моряк',
+  'urchin': 'Беспризорник',
+}
