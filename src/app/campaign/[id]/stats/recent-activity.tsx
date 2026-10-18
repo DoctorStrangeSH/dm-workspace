@@ -27,7 +27,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 export default function RecentActivity({ campaignId, recent }: Props) {
-  if (recent.length === 0) return null
+  if (!recent || recent.length === 0) return null
 
   return (
     <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 mb-8">
