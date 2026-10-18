@@ -90,7 +90,6 @@ export default function CharacterSheet({
     })
   }
 
-  // Броски
   const rollAbility = (ability: AbilityKey) => {
     const mod = abilityModifier(data.abilities[ability])
     const expr = parseDice(`1d20${mod >= 0 ? '+' : ''}${mod}`)
@@ -305,6 +304,7 @@ export default function CharacterSheet({
           />
         }
         featuresContent={<FeaturesTab />}
+      />
 
       {showLevelUp && (
         <LevelUpDialog
