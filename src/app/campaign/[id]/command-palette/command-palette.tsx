@@ -118,6 +118,13 @@ export default function CommandPalette({
         icon: '🎒',
         href: `/campaign/${campaignId}/items`,
       },
+      {
+        id: 'action:scenes',
+        kind: 'action',
+        label: 'Открыть сцены',
+        icon: '🗺️',
+        href: `/campaign/${campaignId}/scenes`,
+      },
     )
 
     // Главы

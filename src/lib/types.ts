@@ -819,3 +819,155 @@ export interface MessageWithAuthor extends Message {
     avatar_url: string | null
   }
 }
+
+// ============================================================
+// Сцены (карты)
+// ============================================================
+
+export type GridType = 'square' | 'hex' | 'none'
+
+export interface Scene {
+  id: string
+  campaign_id: string
+  name: string
+  image_url: string | null
+  grid_type: GridType
+  grid_size: number
+  width: number
+  height: number
+  is_active: boolean
+  fog_enabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TokenCondition {
+  name: string
+  icon?: string
+}
+
+export interface Token {
+  id: string
+  scene_id: string
+  entity_id: string | null
+  character_id: string | null
+  owner_id: string | null
+  name: string
+  image_url: string | null
+  x: number
+  y: number
+  size: number
+  hp_current: number | null
+  hp_max: number | null
+  conditions: TokenCondition[]
+  color: string
+  is_hidden: boolean
+  created_at: string
+  updated_at: string
+}
+
+/** Стандартные состояния D&D 5.24 */
+export const CONDITION_LIST = [
+  { name: 'blinded', label: 'Ослеплён', icon: '👁️' },
+  { name: 'charmed', label: 'Очарован', icon: '💗' },
+  { name: 'deafened', label: 'Оглох', icon: '🔇' },
+  { name: 'frightened', label: 'Испуган', icon: '😨' },
+  { name: 'grappled', label: 'Схвачен', icon: '✊' },
+  { name: 'incapacitated', label: 'Недееспособен', icon: '💤' },
+  { name: 'invisible', label: 'Невидим', icon: '👻' },
+  { name: 'paralyzed', label: 'Парализован', icon: '🧊' },
+  { name: 'petrified', label: 'Окаменел', icon: '🗿' },
+  { name: 'poisoned', label: 'Отравлен', icon: '🤢' },
+  { name: 'prone', label: 'Лежит', icon: '🛌' },
+  { name: 'restrained', label: 'Опутан', icon: '🪢' },
+  { name: 'stunned', label: 'Оглушён', icon: '💫' },
+  { name: 'unconscious', label: 'Без сознания', icon: '💀' },
+]
+
+export interface InitiativeEntry {
+  id: string
+  scene_id: string
+  token_id: string
+  initiative: number
+  turn_order: number
+  is_current: boolean
+  created_at: string
+}
+
+/** Расширенный entry с данными токена */
+export interface InitiativeEntryWithToken extends InitiativeEntry {
+  token: Token
+}
+
+export interface FogArea {
+  id: string
+  scene_id: string
+  campaign_id: string
+  x: number
+  y: number
+  width: number
+  height: number
+  is_revealed: boolean
+  created_at: string
+}
+
+export interface Playlist {
+  id: string
+  campaign_id: string
+  name: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface Track {
+  id: string
+  playlist_id: string
+  campaign_id: string
+  name: string
+  audio_url: string
+  duration: number | null
+  order_index: number
+  created_at: string
+}
+
+export interface MusicPlayerState {
+  campaign_id: string
+  current_track_id: string | null
+  is_playing: boolean
+  position_seconds: number
+  volume: number
+  updated_at: string
+}
+
+export interface Handout {
+  id: string
+  campaign_id: string
+  name: string
+  image_url: string
+  is_visible: boolean
+  created_at: string
+}
+
+export interface SessionLog {
+  id: string
+  campaign_id: string
+  actor_id: string | null
+  event_type: string
+  description: string
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export const LOG_EVENT_LABELS: Record<string, string> = {
+  combat_start: '⚔️ Бой начат',
+  combat_end: '🏳️ Бой завершён',
+  token_move: '📍 Перемещение',
+  token_damage: '💥 Урон',
+  token_add: '➕ Токен добавлен',
+  token_delete: '🗑️ Токен удалён',
+  handout_show: '🖼️ Хендаут показан',
+  music_play: '🎵 Музыка',
+  level_up: '⬆️ Level-up',
+  chapter_create: '📖 Глава создана',
+}

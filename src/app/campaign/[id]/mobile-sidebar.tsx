@@ -3,22 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  Menu,
-  X,
-  Home,
-  BookOpen,
-  Users,
-  MapPin,
-  Package,
-  Skull,
-  Settings,
-  Crown,
-  Sword,
-  Library,
-  Sparkles,
-} from 'lucide-react'
+import { Menu, X, Settings, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getCampaignNavItems } from '@/lib/campaign-nav-items'
 
 interface Props {
   campaignId: string
@@ -29,6 +16,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const base = `/campaign/${campaignId}`
+  const items = getCampaignNavItems(base)
 
   useEffect(() => {
     setIsOpen(false)
@@ -53,19 +41,6 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen])
-
-  const items = [
-    { href: base, label: 'Обзор', icon: Home, exact: true },
-    { href: `${base}/chapters`, label: 'Главы', icon: BookOpen },
-    { href: `${base}/characters`, label: 'Персонажи', icon: Sword },
-    { href: `${base}/entities`, label: 'Сущности', icon: Users },
-    { href: `${base}/bestiary`, label: 'Бестиарий', icon: Library },
-    { href: `${base}/spells`, label: 'Заклинания', icon: Sparkles },
-    { href: `${base}/npcs`, label: 'NPC', icon: Users },
-    { href: `${base}/locations`, label: 'Локации', icon: MapPin },
-    { href: `${base}/items`, label: 'Предметы', icon: Package },
-    { href: `${base}/monsters`, label: 'Монстры', icon: Skull },
-  ]
 
   return (
     <>

@@ -2,21 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  Home,
-  BookOpen,
-  Users,
-  MapPin,
-  Package,
-  Skull,
-  Settings,
-  Crown,
-  Sword,
-  Library,
-  Sparkles,
-} from 'lucide-react'
+import { Settings, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-
+import { getCampaignNavItems } from '@/lib/campaign-nav-items'
 
 interface Props {
   campaignId: string
@@ -26,19 +14,7 @@ interface Props {
 export default function CampaignSidebar({ campaignId, isDm }: Props) {
   const pathname = usePathname()
   const base = `/campaign/${campaignId}`
-
-  const items = [
-    { href: base, label: 'Обзор', icon: Home, exact: true },
-    { href: `${base}/chapters`, label: 'Главы', icon: BookOpen },
-    { href: `${base}/characters`, label: 'Персонажи', icon: Sword },
-    { href: `${base}/entities`, label: 'Сущности', icon: Users },
-    { href: `${base}/bestiary`, label: 'Бестиарий', icon: Library },
-    { href: `${base}/spells`, label: 'Заклинания', icon: Sparkles },
-    { href: `${base}/npcs`, label: 'NPC', icon: Users },
-    { href: `${base}/locations`, label: 'Локации', icon: MapPin },
-    { href: `${base}/items`, label: 'Предметы', icon: Package },
-    { href: `${base}/monsters`, label: 'Монстры', icon: Skull },
-  ]
+  const items = getCampaignNavItems(base)
 
   return (
     <aside className="w-56 border-r border-slate-800 min-h-[calc(100vh-57px)] p-4 hidden md:block">

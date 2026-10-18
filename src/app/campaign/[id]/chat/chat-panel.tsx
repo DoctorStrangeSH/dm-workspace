@@ -11,20 +11,25 @@ import DiceRoller from './dice-roller'
 import { rollDice, parseDice } from '@/lib/dnd/formulas'
 import { cn } from '@/lib/utils'
 import type { MessageWithAuthor } from '@/lib/types'
+import { useRealtimeMessages } from '@/lib/hooks/use-realtime-messages'
 
 interface Props {
   campaignId: string
-  messages: MessageWithAuthor[]
+  initialMessages: MessageWithAuthor[] 
   currentUserId: string
   isDm: boolean
 }
 
 export default function ChatPanel({
   campaignId,
-  messages,
+  initialMessages,
   currentUserId,
   isDm,
 }: Props) {
+  const messages = useRealtimeMessages({
+    campaignId,
+    initialMessages,
+    })
   const router = useRouter()
   const toast = useToast()
   const [isOpen, setIsOpen] = useState(false)
