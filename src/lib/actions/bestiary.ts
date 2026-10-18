@@ -28,12 +28,15 @@ export async function addMonsterToCampaign(
     return { error: 'Монстр не найден в SRD' }
   }
 
-  const monsterData = srdMonster.data as any
+  // ВАЖНО: в srd_monsters поле data — это JSONB (объект), а не строка.
+  // Но на всякий случай поддержим и строку.
+  const monsterData: any =
+    typeof srdMonster.data === 'string'
+      ? JSON.parse(srdMonster.data)
+      : srdMonster.data ?? {}
 
-  // Парсим статы из SRD в наш формат
   const dataJson = parseMonsterData(monsterData)
 
-  // Создаем entity
   const { data: entity, error: insertError } = await supabase
     .from('entities')
     .insert({
@@ -59,40 +62,78 @@ export async function addMonsterToCampaign(
 }
 
 /**
+ * Извлекает числовой HP из значения Open5e.
+ * Поддерживает:
+ *  - число: 135
+ *  - строку с числом: "135"
+ *  - строку с формулой: "135 (18d8+54)"
+ *  - строку-формулу: "18d8+54" (тогда — среднее)
+ *  - объект вида { average: 135, formula: "18d8+54" }
+ */
+function extractHP(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return Math.floor(value)
+
+  if (typeof value === 'string') {
+    // "135 (18d8+54)" → берём первое число
+    const firstNum = value.match(/^\s*(\d+)/)
+    if (firstNum) return parseInt(firstNum[1], 10)
+
+    // Чистая формула "18d8+54" → среднее
+    const dice = value.match(/^(\d+)d(\d+)([+-]\d+)?$/i)
+    if (dice) {
+      const [, n, d, mod] = dice
+      return Math.floor(Number(n) * (Number(d) + 1) / 2) + Number(mod ?? 0)
+    }
+  }
+
+  if (value && typeof value === 'object') {
+    const v = value as any
+    if (typeof v.average === 'number') return v.average
+    if (typeof v.value === 'number') return v.value
+    if (typeof v.hit_points === 'number') return v.hit_points
+  }
+
+  return 0
+}
+
+/**
  * Парсит статблок SRD в наш MonsterData.
  */
 function parseMonsterData(srd: any): Record<string, unknown> {
-  // HP
-  const hpMatch = srd.hit_points?.match(/(\d+)/)
-  const hp = hpMatch ? parseInt(hpMatch[1], 10) : 0
+  // HP: Open5e v2 может отдавать число ИЛИ строку "135 (18d8+54)"
+  const hp = extractHP(srd.hit_points ?? srd.hp ?? srd.hit_points_roll ?? 0)
 
-  // AC
+  // AC: может быть числом или массивом [{ value: 17, type: "natural armor" }]
   const ac =
-    srd.armor_class?.[0]?.value ?? srd.armor_class ?? 10
+    typeof srd.armor_class === 'number'
+      ? srd.armor_class
+      : srd.armor_class?.[0]?.value ?? 10
 
-  // CR
   const cr = srd.challenge_rating ?? srd.cr ?? '0'
+
+  // Скорость: Open5e v2 отдаёт { walk: 30, fly: 60 } или "30 ft."
+  const speed = parseSpeed(srd.speed)
 
   return {
     ac: typeof ac === 'number' ? ac : 10,
     hp,
     hp_max: hp,
-    speed: parseSpeed(srd.speed),
-    size: srd.size?.toLowerCase() ?? 'medium',
-    type: srd.type?.toLowerCase() ?? 'unknown',
+    speed,
+    size: srd.size?.toLowerCase?.() ?? srd.size ?? 'medium',
+    type: srd.type?.toLowerCase?.() ?? srd.type ?? 'unknown',
     alignment: srd.alignment ?? '',
     cr: String(cr),
-    xp: srd.xp ?? 0,
+    xp: srd.xp ?? srd.experience_points ?? 0,
     abilities: {
-      str: srd.strength ?? 10,
-      dex: srd.dexterity ?? 10,
-      con: srd.constitution ?? 10,
-      int: srd.intelligence ?? 10,
-      wis: srd.wisdom ?? 10,
-      cha: srd.charisma ?? 10,
+      str: srd.strength ?? srd.abilities?.str ?? 10,
+      dex: srd.dexterity ?? srd.abilities?.dex ?? 10,
+      con: srd.constitution ?? srd.abilities?.con ?? 10,
+      int: srd.intelligence ?? srd.abilities?.int ?? 10,
+      wis: srd.wisdom ?? srd.abilities?.wis ?? 10,
+      cha: srd.charisma ?? srd.abilities?.cha ?? 10,
     },
-    resistances: formatList(srd.damage_resistances),
-    immunities: formatList(srd.damage_immunities),
+    resistances: formatList(srd.damage_resistances ?? srd.resistances),
+    immunities: formatList(srd.damage_immunities ?? srd.immunities),
     senses: srd.senses ?? '',
     languages: srd.languages ?? '',
     traits: formatActions(srd.special_abilities, srd.traits),
@@ -107,8 +148,10 @@ function parseSpeed(speed: any): number {
     const match = speed.match(/(\d+)/)
     return match ? parseInt(match[1], 10) : 30
   }
-  if (typeof speed === 'object' && speed.walk) {
-    const match = String(speed.walk).match(/(\d+)/)
+  if (speed && typeof speed === 'object') {
+    // Open5e v2: { walk: 30, fly: 60, ... } — берём walk
+    const walk = speed.walk ?? speed.value ?? 30
+    const match = String(walk).match(/(\d+)/)
     return match ? parseInt(match[1], 10) : 30
   }
   return 30
