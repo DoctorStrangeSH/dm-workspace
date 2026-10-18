@@ -30,8 +30,8 @@ export default function EntityTags({
   const handleRemove = (tagId: string) => {
     startTransition(async () => {
       const res = await removeTagFromEntity(entityId, tagId, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Тег удалён')
       }

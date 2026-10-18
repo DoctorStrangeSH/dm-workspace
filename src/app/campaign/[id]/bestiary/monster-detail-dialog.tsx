@@ -34,8 +34,8 @@ export default function MonsterDetailDialog({
   const handleAdd = () => {
     startTransition(async () => {
       const res = await addMonsterToCampaign(monster.key, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Монстр добавлен в кампанию')
         router.refresh()

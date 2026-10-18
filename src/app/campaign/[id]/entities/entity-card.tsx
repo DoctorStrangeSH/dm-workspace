@@ -43,18 +43,14 @@ export default function EntityCard({
               {entity.name}
             </h3>
             {isDm && !entity.is_visible_to_players && (
-              <EyeOff
-                size={14}
-                className="text-amber-400 shrink-0 mt-1"
-                title="Скрыта от игроков"
-              />
+              <span title="Скрыта от игроков" className="shrink-0 mt-1">
+                <EyeOff size={14} className="text-amber-400" />
+              </span>
             )}
             {isDm && entity.is_visible_to_players && (
-              <Eye
-                size={14}
-                className="text-green-400/60 shrink-0 mt-1"
-                title="Видна игрокам"
-              />
+              <span title="Видна игрокам" className="shrink-0 mt-1">
+                <Eye size={14} className="text-green-400/60" />
+              </span>
             )}
           </div>
 

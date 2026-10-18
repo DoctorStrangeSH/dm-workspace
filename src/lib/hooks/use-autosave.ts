@@ -26,7 +26,6 @@ export function useAutosave<T>({
   const isFirstRenderRef = useRef(true)
   const savingRef = useRef(false)
 
-  // Обновляем ref при каждом изменении value
   useEffect(() => {
     latestValueRef.current = value
   }, [value])
@@ -45,7 +44,6 @@ export function useAutosave<T>({
       } else {
         setStatus('saved')
         setLastSaved(new Date())
-        // Через 2 сек сбрасываем статус в idle
         setTimeout(() => {
           setStatus((s) => (s === 'saved' ? 'idle' : s))
         }, 2000)
@@ -59,11 +57,9 @@ export function useAutosave<T>({
     }
   }, [onSave])
 
-  // Debounced autosave при изменении value
   useEffect(() => {
     if (!enabled) return
 
-    // Пропускаем первый рендер (initial value)
     if (isFirstRenderRef.current) {
       isFirstRenderRef.current = false
       return
@@ -79,7 +75,6 @@ export function useAutosave<T>({
     }
   }, [value, delay, enabled, saveNow])
 
-  // Хоткей Ctrl+S / Cmd+S
   useEffect(() => {
     if (!enabled) return
 
@@ -95,7 +90,6 @@ export function useAutosave<T>({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [enabled, saveNow])
 
-  // Предупреждение при уходе со страницы с несохраненными изменениями
   useEffect(() => {
     if (!enabled) return
     if (status === 'saving' || status === 'error') {

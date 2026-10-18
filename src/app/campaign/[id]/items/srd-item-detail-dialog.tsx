@@ -54,8 +54,8 @@ export default function SrdItemDetailDialog({
 
     startTransition(async () => {
       const res = await addSrdItemToCharacter(item.key, selectedChar, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Предмет добавлен в инвентарь')
         router.refresh()
@@ -67,8 +67,8 @@ export default function SrdItemDetailDialog({
   const handleAddToCampaign = () => {
     startTransition(async () => {
       const res = await addSrdItemToCampaign(item.key, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Предмет добавлен в кампанию')
         router.refresh()

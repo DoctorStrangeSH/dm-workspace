@@ -1,5 +1,7 @@
 'use client'
 
+'use client'
+
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -22,11 +24,8 @@ import {
   stopMusic,
 } from '@/lib/actions/music'
 import { useToast } from '@/components/toast/toast-provider'
-import type {
-  PlaylistWithTracks,
-  Track,
-  MusicPlayerState,
-} from '@/lib/queries/music'
+import type { PlaylistWithTracks } from '@/lib/queries/music'
+import type { Track, MusicPlayerState } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -46,7 +45,6 @@ export default function MusicPanel({
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [newPlaylistName, setNewPlaylistName] = useState('')
-  const [addingToPlaylist, setAddingToPlaylist] = useState<string | null>(null)
   const [uploadingToPlaylist, setUploadingToPlaylist] = useState<string | null>(
     null
   )
@@ -151,7 +149,6 @@ export default function MusicPanel({
         </button>
       </div>
 
-      {/* Стоп */}
       {playerState?.is_playing && (
         <div className="p-3 border-b border-slate-800">
           <button
@@ -166,7 +163,6 @@ export default function MusicPanel({
       )}
 
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {/* Новый плейлист */}
         <div className="flex gap-2">
           <input
             type="text"
@@ -185,7 +181,6 @@ export default function MusicPanel({
           </button>
         </div>
 
-        {/* Список плейлистов */}
         {playlists.length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-6">
             Нет плейлистов. Создай первый!

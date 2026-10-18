@@ -94,9 +94,9 @@ export default function AddRelationDialog({
         selectedTarget.id,
         selectedRelationType
       )
-      if (res.error) {
-        toast.error(res.error)
-        setError(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
+        setError(res.error ?? 'Ошибка')
         return
       }
       toast.success('Связь создана')

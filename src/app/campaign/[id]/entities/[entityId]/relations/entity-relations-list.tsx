@@ -48,8 +48,8 @@ export default function EntityRelationsList({
   const handleDelete = (relationId: string) => {
     startTransition(async () => {
       const res = await deleteRelation(relationId, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Связь удалена')
       }

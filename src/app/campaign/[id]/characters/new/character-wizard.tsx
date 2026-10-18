@@ -10,12 +10,12 @@ import WizardStep1 from './wizard-step-1'
 import WizardStep2 from './wizard-step-2'
 import WizardStep3 from './wizard-step-3'
 import WizardStep4 from './wizard-step-4'
-import {
-  BACKGROUNDS,
-  CLASSES,
-  RACES,
-} from '@/lib/dnd/constants'
+import { BACKGROUNDS } from '@/lib/dnd/constants'
 import { buildCharacterData, isStandardArrayUsed } from '@/lib/dnd/character-builder'
+import {
+  srdSpeciesToRaceInfo,
+  srdClassToClassInfo,
+} from '@/lib/dnd/srd-adapter'
 import type { AbilityKey, SkillKey } from '@/lib/types'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
@@ -58,8 +58,17 @@ export default function CharacterWizard({
   const [backgroundSlug, setBackgroundSlug] = useState('')
   const [chosenSkills, setChosenSkills] = useState<SkillKey[]>([])
 
-  const race = RACES.find((r) => r.slug === raceSlug)
-  const classInfo = CLASSES.find((c) => c.slug === classSlug)
+  // Адаптеры: SRD → RaceInfo / ClassInfo
+  const race = useMemo(() => {
+    const srd = species.find((s) => s.key === raceSlug)
+    return srd ? srdSpeciesToRaceInfo(srd) : undefined
+  }, [species, raceSlug])
+
+  const classInfo = useMemo(() => {
+    const srd = classes.find((c) => c.key === classSlug)
+    return srd ? srdClassToClassInfo(srd) : undefined
+  }, [classes, classSlug])
+
   const background = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
 
   // Валидация шага
@@ -75,7 +84,16 @@ export default function CharacterWizard({
       return !!backgroundSlug && chosenSkills.length === maxSkills
     }
     return true
-  }, [step, name, raceSlug, classSlug, abilities, backgroundSlug, chosenSkills, classInfo])
+  }, [
+    step,
+    name,
+    raceSlug,
+    classSlug,
+    abilities,
+    backgroundSlug,
+    chosenSkills,
+    classInfo,
+  ])
 
   // Строим данные персонажа
   const characterData = useMemo(() => {
@@ -105,8 +123,8 @@ export default function CharacterWizard({
 
     startTransition(async () => {
       const res = await createCharacter(campaignId, name, characterData)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success('Персонаж создан')
@@ -173,10 +191,7 @@ export default function CharacterWizard({
         )}
 
         {step === 2 && (
-          <WizardStep2
-            abilities={abilities}
-            setAbilities={setAbilities}
-          />
+          <WizardStep2 abilities={abilities} setAbilities={setAbilities} />
         )}
 
         {step === 3 && (
@@ -191,6 +206,12 @@ export default function CharacterWizard({
 
         {step === 4 && characterData && (
           <WizardStep4 name={name} data={characterData} />
+        )}
+
+        {step === 4 && !characterData && (
+          <div className="text-center py-12 text-slate-500 text-sm">
+            Не хватает данных (раса / класс / предыстория). Вернись назад.
+          </div>
         )}
       </div>
 
@@ -220,7 +241,7 @@ export default function CharacterWizard({
           <button
             type="button"
             onClick={handleCreate}
-            disabled={isPending}
+            disabled={isPending || !characterData}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition font-medium disabled:opacity-50"
           >
             {isPending ? (

@@ -55,8 +55,8 @@ export default function HandoutPanel({
       const res = await createHandout(campaignId, formData)
       setIsUploading(false)
 
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Хендаут создан')
         setName('')
@@ -70,7 +70,7 @@ export default function HandoutPanel({
   const handleShow = (handoutId: string) => {
     startTransition(async () => {
       const res = await showHandout(handoutId, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Показано игрокам')
         router.refresh()
@@ -81,7 +81,7 @@ export default function HandoutPanel({
   const handleHide = (handoutId: string) => {
     startTransition(async () => {
       const res = await hideHandout(handoutId, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Скрыто')
         router.refresh()
@@ -93,7 +93,7 @@ export default function HandoutPanel({
     if (!confirm(`Удалить «${handoutName}»?`)) return
     startTransition(async () => {
       const res = await deleteHandout(handoutId, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Хендаут удалён')
         router.refresh()

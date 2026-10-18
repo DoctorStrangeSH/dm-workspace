@@ -25,8 +25,8 @@ export default function DeleteAccountDialog({ onClose }: Props) {
 
     startTransition(async () => {
       const res = await deleteAccount(password)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success('Аккаунт удалён')

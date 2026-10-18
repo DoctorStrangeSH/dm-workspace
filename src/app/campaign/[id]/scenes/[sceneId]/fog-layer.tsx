@@ -85,7 +85,7 @@ export default function FogLayer({
     if (w === 0 || h === 0) return
 
     const res = await revealArea(scene.id, x, y, w, h)
-    if (res.error) toast.error(res.error)
+    if ('error' in res) toast.error(res.error ?? 'Ошибка')
   }
 
   // Превью выделения

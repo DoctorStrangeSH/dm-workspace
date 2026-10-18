@@ -38,7 +38,7 @@ export default function ChatPanel({
   const handleSendText = (content: string, isHidden: boolean) => {
     startTransition(async () => {
       const res = await sendMessage(campaignId, content, 'text')
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else router.refresh()
     })
   }
@@ -64,7 +64,7 @@ export default function ChatPanel({
           },
         }
       )
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else router.refresh()
     })
   }
@@ -72,7 +72,7 @@ export default function ChatPanel({
   const handleDelete = (messageId: string) => {
     startTransition(async () => {
       const res = await deleteMessage(messageId, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else router.refresh()
     })
   }

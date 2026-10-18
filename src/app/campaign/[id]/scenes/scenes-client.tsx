@@ -31,7 +31,7 @@ export default function ScenesClient({
   const handleActivate = (sceneId: string) => {
     startTransition(async () => {
       const res = await setActiveScene(sceneId, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Сцена активирована')
         router.refresh()
@@ -43,7 +43,7 @@ export default function ScenesClient({
     if (!confirm(`Удалить сцену «${name}»?`)) return
     startTransition(async () => {
       const res = await deleteScene(sceneId, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Сцена удалена')
         router.refresh()

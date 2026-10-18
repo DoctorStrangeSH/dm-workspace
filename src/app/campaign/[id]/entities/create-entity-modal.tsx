@@ -70,9 +70,9 @@ export default function CreateEntityModal({
 
     startTransition(async () => {
       const res = await createEntity(campaignId, formData)
-      if (res.error) {
-        setError(res.error)
-        toast.error(res.error)
+      if ('error' in res) {
+        setError(res.error ?? 'Ошибка')
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success('Сущность создана')

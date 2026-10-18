@@ -79,8 +79,8 @@ export default function ChapterItem({
     }
     startTransition(async () => {
       const res = await updateChapterTitle(chapter.id, campaignId, title)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         setTitle(chapter.title)
       } else {
         toast.success('Глава переименована')
@@ -102,8 +102,8 @@ export default function ChapterItem({
         campaignId,
         willBeVisible
       )
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success(
           willBeVisible ? 'Глава видна игрокам' : 'Глава скрыта от игроков'
@@ -115,8 +115,8 @@ export default function ChapterItem({
   const handleDuplicate = () => {
     startTransition(async () => {
       const res = await duplicateChapter(chapter.id, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Копия главы создана')
       }
@@ -126,8 +126,8 @@ export default function ChapterItem({
   const handleDelete = () => {
     startTransition(async () => {
       const res = await deleteChapter(chapter.id, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Глава удалена')
         setShowDeleteConfirm(false)

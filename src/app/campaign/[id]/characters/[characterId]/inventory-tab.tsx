@@ -28,7 +28,6 @@ export default function InventoryTab({
   const inventory = data.inventory ?? []
   const currency = data.currency ?? {}
 
-  // Считаем вес
   const totalWeight = useMemo(
     () =>
       inventory.reduce(
@@ -40,7 +39,6 @@ export default function InventoryTab({
 
   const capacity = getCarryingCapacity(data.abilities.str)
 
-  // Группировка
   const equipped = inventory.filter((i) => i.equipped && !i.attuned)
   const attuned = inventory.filter((i) => i.attuned)
   const other = inventory.filter((i) => !i.equipped && !i.attuned)
@@ -71,7 +69,6 @@ export default function InventoryTab({
 
   return (
     <div>
-      {/* Панель действий */}
       <div className="flex items-center gap-2 mb-4">
         {canEdit && (
           <button
@@ -82,13 +79,11 @@ export default function InventoryTab({
             Добавить предмет
           </button>
         )}
-
         <div className="ml-auto text-sm text-slate-500">
           Предметов: {inventory.length}
         </div>
       </div>
 
-      {/* Деньги */}
       <CurrencyTracker
         characterId={character.id}
         campaignId={campaignId}
@@ -96,10 +91,8 @@ export default function InventoryTab({
         canEdit={canEdit}
       />
 
-      {/* Вес */}
       <EncumbranceBar currentWeight={totalWeight} capacity={capacity} />
 
-      {/* Список */}
       {inventory.length === 0 ? (
         <EmptyState
           icon="🎒"

@@ -3,15 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, Dices, Trash2, Check } from 'lucide-react'
-import {
-  updateSpell,
-  removeSpell,
-} from '@/lib/actions/characters'
+import { updateSpell, removeSpell } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import {
-  SPELL_SCHOOLS,
-  type CharacterSpell,
-} from '@/lib/types'
+import { SPELL_SCHOOLS, type CharacterSpell } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -34,12 +28,15 @@ export default function SpellCard({
   const [isPending, startTransition] = useTransition()
   const [isOpen, setIsOpen] = useState(false)
 
+  const spellId = spell.id
+
   const togglePrepared = () => {
+    if (!spellId) return
     startTransition(async () => {
-      const res = await updateSpell(characterId, campaignId, spell.id, {
+      const res = await updateSpell(characterId, campaignId, spellId, {
         prepared: !spell.prepared,
       })
-      if (res.error) {
+      if ('error' in res) {
         toast.error(res.error)
       } else {
         router.refresh()
@@ -48,11 +45,12 @@ export default function SpellCard({
   }
 
   const handleDelete = () => {
+    if (!spellId) return
     if (!confirm(`Удалить заклинание «${spell.name}»?`)) return
 
     startTransition(async () => {
-      const res = await removeSpell(characterId, campaignId, spell.id)
-      if (res.error) {
+      const res = await removeSpell(characterId, campaignId, spellId)
+      if ('error' in res) {
         toast.error(res.error)
       } else {
         toast.success('Заклинание удалено')
@@ -67,7 +65,6 @@ export default function SpellCard({
         className="flex items-center gap-2 p-3 cursor-pointer hover:bg-slate-800/60 transition"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {/* Prepared */}
         {canEdit && spell.level > 0 && (
           <button
             onClick={(e) => {

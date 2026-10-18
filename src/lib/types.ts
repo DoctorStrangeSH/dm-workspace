@@ -59,7 +59,7 @@ export interface Chapter {
 }
 
 // ============================================================
-// Сущности (NPC, локации, предметы, монстры, ...)
+// Сущности
 // ============================================================
 
 export type EntityType =
@@ -85,7 +85,7 @@ export interface Entity {
 }
 
 // ============================================================
-// Справочники для UI
+// UI справочники
 // ============================================================
 
 export const GENRES = [
@@ -126,13 +126,9 @@ export const ENTITY_TYPE_ICONS: Record<EntityType, string> = {
 }
 
 // ============================================================
-// data_json — структурированные данные сущностей
+// data_json
 // ============================================================
 
-/**
- * Характеристики D&D 5.24 (STR, DEX, CON, INT, WIS, CHA).
- * Значения 1-30, модификатор = floor((score - 10) / 2).
- */
 export interface AbilityScores {
   str: number
   dex: number
@@ -152,7 +148,7 @@ export interface MonsterData {
   xp?: number
   size?: 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan'
   alignment?: string
-  type?: string // "fiend", "beast", "humanoid", ...
+  type?: string
   saves?: Partial<AbilityScores>
   skills?: Record<string, number>
   resistances?: string
@@ -176,13 +172,7 @@ export interface NpcData {
 }
 
 export interface ItemData {
-  rarity?:
-    | 'common'
-    | 'uncommon'
-    | 'rare'
-    | 'very_rare'
-    | 'legendary'
-    | 'artifact'
+  rarity?: 'common' | 'uncommon' | 'rare' | 'very_rare' | 'legendary' | 'artifact'
   attunement?: boolean
   item_type?: string
   cost?: string
@@ -227,8 +217,8 @@ export type EntityData =
   | QuestData
   | Record<string, unknown>
 
-  // ============================================================
-// Связи между сущностями
+// ============================================================
+// Связи
 // ============================================================
 
 export type RelationType =
@@ -258,79 +248,24 @@ export interface EntityRelation {
 
 export interface RelationTypeInfo {
   label: string
-  /** Обратное название (для incoming) */
   reverseLabel: string
   icon: string
   color: string
 }
 
 export const RELATION_TYPES: Record<RelationType, RelationTypeInfo> = {
-  member_of: {
-    label: 'Член',
-    reverseLabel: 'Члены',
-    icon: '⚔️',
-    color: 'text-indigo-300',
-  },
-  leader_of: {
-    label: 'Лидер',
-    reverseLabel: 'Лидер',
-    icon: '👑',
-    color: 'text-amber-300',
-  },
-  located_in: {
-    label: 'Находится в',
-    reverseLabel: 'Содержит',
-    icon: '📍',
-    color: 'text-emerald-300',
-  },
-  owns: {
-    label: 'Владеет',
-    reverseLabel: 'Принадлежит',
-    icon: '🎁',
-    color: 'text-yellow-300',
-  },
-  quest_giver: {
-    label: 'Выдал квест',
-    reverseLabel: 'Выдан',
-    icon: '📜',
-    color: 'text-violet-300',
-  },
-  quest_target: {
-    label: 'Цель квеста',
-    reverseLabel: 'Цель квеста для',
-    icon: '🎯',
-    color: 'text-red-300',
-  },
-  ally_of: {
-    label: 'Союзник',
-    reverseLabel: 'Союзник',
-    icon: '🤝',
-    color: 'text-green-300',
-  },
-  enemy_of: {
-    label: 'Враг',
-    reverseLabel: 'Враг',
-    icon: '⚔️',
-    color: 'text-red-300',
-  },
-  parent_of: {
-    label: 'Родительская локация',
-    reverseLabel: 'Дочерние локации',
-    icon: '🗺️',
-    color: 'text-emerald-300',
-  },
-  related_to: {
-    label: 'Связано с',
-    reverseLabel: 'Связано с',
-    icon: '🔗',
-    color: 'text-slate-300',
-  },
+  member_of: { label: 'Член', reverseLabel: 'Члены', icon: '⚔️', color: 'text-indigo-300' },
+  leader_of: { label: 'Лидер', reverseLabel: 'Лидер', icon: '👑', color: 'text-amber-300' },
+  located_in: { label: 'Находится в', reverseLabel: 'Содержит', icon: '📍', color: 'text-emerald-300' },
+  owns: { label: 'Владеет', reverseLabel: 'Принадлежит', icon: '🎁', color: 'text-yellow-300' },
+  quest_giver: { label: 'Выдал квест', reverseLabel: 'Выдан', icon: '📜', color: 'text-violet-300' },
+  quest_target: { label: 'Цель квеста', reverseLabel: 'Цель квеста для', icon: '🎯', color: 'text-red-300' },
+  ally_of: { label: 'Союзник', reverseLabel: 'Союзник', icon: '🤝', color: 'text-green-300' },
+  enemy_of: { label: 'Враг', reverseLabel: 'Враг', icon: '⚔️', color: 'text-red-300' },
+  parent_of: { label: 'Родительская локация', reverseLabel: 'Дочерние локации', icon: '🗺️', color: 'text-emerald-300' },
+  related_to: { label: 'Связано с', reverseLabel: 'Связано с', icon: '🔗', color: 'text-slate-300' },
 }
 
-/**
- * Допустимые типы связей для пар типов сущностей.
- * Ключ — "sourceType→targetType", значение — массив типов.
- */
 export const ALLOWED_RELATIONS: Record<string, RelationType[]> = {
   'npc→faction': ['member_of', 'leader_of'],
   'npc→location': ['located_in'],
@@ -338,7 +273,7 @@ export const ALLOWED_RELATIONS: Record<string, RelationType[]> = {
   'npc→quest': ['quest_giver'],
   'npc→npc': ['ally_of', 'enemy_of', 'related_to'],
   'npc→monster': ['ally_of', 'enemy_of'],
-  'location→location': ['located_in', 'parent_of'],   // ← ОБНОВЛЕНО
+  'location→location': ['located_in', 'parent_of'],
   'location→npc': ['related_to'],
   'location→faction': ['related_to'],
   'location→item': ['related_to'],
@@ -356,15 +291,11 @@ export const ALLOWED_RELATIONS: Record<string, RelationType[]> = {
   'monster→monster': ['ally_of', 'enemy_of'],
 }
 
-/**
- * Возвращает допустимые типы связей для пары типов.
- */
 export function getAllowedRelations(
   sourceType: EntityType,
   targetType: EntityType
 ): RelationType[] {
-  const key = `${sourceType}→${targetType}`
-  return ALLOWED_RELATIONS[key] ?? ['related_to']
+  return ALLOWED_RELATIONS[`${sourceType}→${targetType}`] ?? ['related_to']
 }
 
 // ============================================================
@@ -384,25 +315,11 @@ export interface EntityTag {
   color: string
 }
 
-/**
- * Палитра для тегов — выбираем случайно при создании.
- */
 export const TAG_COLORS = [
-  '#6366f1', // indigo
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#ef4444', // red
-  '#f59e0b', // amber
-  '#10b981', // emerald
-  '#06b6d4', // cyan
-  '#3b82f6', // blue
-  '#a855f7', // purple
-  '#84cc16', // lime
+  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b',
+  '#10b981', '#06b6d4', '#3b82f6', '#a855f7', '#84cc16',
 ] as const
 
-/**
- * Нормализует имя тега: убирает #, пробелы по краям, ограничивает длину.
- */
 export function normalizeTagName(input: string): string {
   return input
     .trim()
@@ -425,37 +342,20 @@ export interface EntityTemplate {
 }
 
 // ============================================================
-// Статистика кампании
+// Статистика
 // ============================================================
 
 export interface CampaignStats {
-  chapters: {
-    total: number
-    visible: number
-    hidden: number
-    empty: number
-  }
+  chapters: { total: number; visible: number; hidden: number; empty: number }
   entities: {
-    total: number
-    visible: number
-    no_description: number
-    npc: number
-    location: number
-    item: number
-    monster: number
-    faction: number
-    quest: number
-    note: number
+    total: number; visible: number; no_description: number
+    npc: number; location: number; item: number; monster: number
+    faction: number; quest: number; note: number
   }
   entities_without_stats: number
   relations: number
   tags: number
-  recent: Array<{
-    type: 'chapter' | 'entity'
-    id: string
-    name: string
-    updated_at: string
-  }>
+  recent: Array<{ type: 'chapter' | 'entity'; id: string; name: string; updated_at: string }>
 }
 
 // ============================================================
@@ -498,197 +398,6 @@ export interface CharacterAttack {
   notes?: string
 }
 
-export interface CharacterSpell {
-  id?: string
-  name: string
-  level: number
-  prepared?: boolean
-  notes?: string
-}
-
-export interface CharacterInventoryItem {
-  id?: string
-  name: string
-  quantity: number
-  weight?: number
-  equipped?: boolean
-  attuned?: boolean
-  notes?: string
-}
-
-export interface CharacterData {
-  /** Уровень */
-  level: number
-  /** Класс (slug) */
-  class: string
-  /** Раса (slug) */
-  race: string
-  /** Предыстория (slug) */
-  background?: string
-  /** Мировоззрение */
-  alignment?: string
-
-  /** Характеристики (1-30) */
-  abilities: Record<AbilityKey, number>
-
-  /** Владение навыками */
-  proficientSkills?: SkillKey[]
-  /** Владение спасбросками */
-  proficientSaves?: AbilityKey[]
-  deathSaves?: DeathSaves
-
-  /** HP */
-  hp: CharacterHP
-  /** AC */
-  ac: number
-  /** Скорость (футов) */
-  speed: number
-
-  /** Атаки */
-  attacks?: CharacterAttack[]
-  /** Заклинания */
-  spells?: CharacterSpell[]
-  spellSlots?: SpellSlots
-  spellcastingAbility?: AbilityKey
-  /** Ячейки заклинаний по уровням */
-  spellSlots?: Record<number, { current: number; max: number }>
-  /** Инвентарь */
-  inventory?: CharacterInventoryItem[]
-  currency?: Currency
-  /** Деньги */
-  currency?: { pp?: number; gp?: number; sp?: number; cp?: number }
-
-  /** Особенности класса / расы */
-  features?: string[]
-  /** Черты */
-  traits?: string[]
-
-  /** Заметки */
-  notes?: string
-}
-
-export interface Character {
-  id: string
-  campaign_id: string
-  user_id: string
-  name: string
-  data_json: CharacterData
-  is_active: boolean
-  is_visible_to_party: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface CharacterWithOwner extends Character {
-  owner: {
-    id: string
-    username: string
-    display_name: string | null
-    avatar_url: string | null
-  }
-}
-
-export interface DeathSaves {
-  successes: number  // 0-3
-  failures: number   // 0-3
-  stabilized: boolean
-}
-
-/**
- * Пустой персонаж — дефолтные значения.
- */
-export function createEmptyCharacterData(): CharacterData {
-  return {
-    level: 1,
-    class: '',
-    race: '',
-    abilities: {
-      str: 10,
-      dex: 10,
-      con: 10,
-      int: 10,
-      wis: 10,
-      cha: 10,
-    },
-    hp: { current: 10, max: 10, temp: 0 },
-    ac: 10,
-    speed: 30,
-  }
-}
-
-/**
- * Названия характеристик на русском.
- */
-export const ABILITY_LABELS: Record<AbilityKey, string> = {
-  str: 'Сила',
-  dex: 'Ловкость',
-  con: 'Телосложение',
-  int: 'Интеллект',
-  wis: 'Мудрость',
-  cha: 'Харизма',
-}
-
-export const ABILITY_SHORT: Record<AbilityKey, string> = {
-  str: 'СИЛ',
-  dex: 'ЛОВ',
-  con: 'ТЕЛ',
-  int: 'ИНТ',
-  wis: 'МДР',
-  cha: 'ХАР',
-}
-
-/**
- * Названия навыков на русском.
- */
-export const SKILL_LABELS: Record<SkillKey, string> = {
-  acrobatics: 'Акробатика',
-  'animal-handling': 'Обращение с животными',
-  arcana: 'Магия',
-  athletics: 'Атлетика',
-  deception: 'Обман',
-  history: 'История',
-  insight: 'Проницательность',
-  intimidation: 'Запугивание',
-  investigation: 'Расследование',
-  medicine: 'Медицина',
-  nature: 'Природа',
-  perception: 'Внимательность',
-  performance: 'Выступление',
-  persuasion: 'Убеждение',
-  religion: 'Религия',
-  'sleight-of-hand': 'Ловкость рук',
-  stealth: 'Скрытность',
-  survival: 'Выживание',
-}
-
-/**
- * К какой характеристике относится навык.
- */
-export const SKILL_ABILITY: Record<SkillKey, AbilityKey> = {
-  acrobatics: 'dex',
-  'animal-handling': 'wis',
-  arcana: 'int',
-  athletics: 'str',
-  deception: 'cha',
-  history: 'int',
-  insight: 'wis',
-  intimidation: 'cha',
-  investigation: 'int',
-  medicine: 'wis',
-  nature: 'int',
-  perception: 'wis',
-  performance: 'cha',
-  persuasion: 'cha',
-  religion: 'int',
-  'sleight-of-hand': 'dex',
-  stealth: 'dex',
-  survival: 'wis',
-}
-
-// ============================================================
-// Заклинания
-// ============================================================
-
 export type SpellSchool =
   | 'abjuration'
   | 'conjuration'
@@ -713,7 +422,7 @@ export const SPELL_SCHOOLS: Record<SpellSchool, string> = {
 export interface CharacterSpell {
   id: string
   name: string
-  level: number // 0-9
+  level: number
   school?: SpellSchool
   castingTime?: string
   range?: string
@@ -732,15 +441,11 @@ export interface SpellSlotLevel {
 
 export type SpellSlots = Record<number, SpellSlotLevel>
 
-// ============================================================
-// Инвентарь
-// ============================================================
-
 export interface CharacterInventoryItem {
   id: string
   name: string
   quantity: number
-  weight?: number       // вес 1 единицы (фунты)
+  weight?: number
   equipped?: boolean
   attuned?: boolean
   notes?: string
@@ -748,10 +453,10 @@ export interface CharacterInventoryItem {
 }
 
 export interface Currency {
-  pp?: number  // платина
-  gp?: number  // золото
-  sp?: number  // серебро
-  cp?: number  // медь
+  pp?: number
+  gp?: number
+  sp?: number
+  cp?: number
 }
 
 export const CURRENCY_LABELS: Record<keyof Currency, string> = {
@@ -768,12 +473,125 @@ export const CURRENCY_SHORT: Record<keyof Currency, string> = {
   cp: 'cp',
 }
 
-/** Максимум attuned предметов */
 export const MAX_ATTUNEMENTS = 3
 
-/** Грузоподъемность: STR × 15 lbs */
 export function getCarryingCapacity(strengthScore: number): number {
   return strengthScore * 15
+}
+
+export interface DeathSaves {
+  successes: number
+  failures: number
+  stabilized: boolean
+}
+
+export interface CharacterData {
+  level: number
+  class: string
+  race: string
+  background?: string
+  alignment?: string
+  abilities: Record<AbilityKey, number>
+  proficientSkills?: SkillKey[]
+  proficientSaves?: AbilityKey[]
+  deathSaves?: DeathSaves
+  hp: CharacterHP
+  ac: number
+  speed: number
+  attacks?: CharacterAttack[]
+  spells?: CharacterSpell[]
+  spellSlots?: SpellSlots
+  spellcastingAbility?: AbilityKey
+  inventory?: CharacterInventoryItem[]
+  currency?: Currency
+  features?: string[]
+  traits?: string[]
+  notes?: string
+}
+
+export interface Character {
+  id: string
+  campaign_id: string
+  user_id: string
+  name: string
+  data_json: CharacterData
+  is_active: boolean
+  is_visible_to_party: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CharacterWithOwner extends Character {
+  owner: {
+    id: string
+    username: string
+    display_name: string | null
+    avatar_url: string | null
+  }
+}
+
+export function createEmptyCharacterData(): CharacterData {
+  return {
+    level: 1,
+    class: '',
+    race: '',
+    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+    hp: { current: 10, max: 10, temp: 0 },
+    ac: 10,
+    speed: 30,
+  }
+}
+
+export const ABILITY_LABELS: Record<AbilityKey, string> = {
+  str: 'Сила', dex: 'Ловкость', con: 'Телосложение',
+  int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма',
+}
+
+export const ABILITY_SHORT: Record<AbilityKey, string> = {
+  str: 'СИЛ', dex: 'ЛОВ', con: 'ТЕЛ',
+  int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
+}
+
+export const SKILL_LABELS: Record<SkillKey, string> = {
+  acrobatics: 'Акробатика',
+  'animal-handling': 'Обращение с животными',
+  arcana: 'Магия',
+  athletics: 'Атлетика',
+  deception: 'Обман',
+  history: 'История',
+  insight: 'Проницательность',
+  intimidation: 'Запугивание',
+  investigation: 'Расследование',
+  medicine: 'Медицина',
+  nature: 'Природа',
+  perception: 'Внимательность',
+  performance: 'Выступление',
+  persuasion: 'Убеждение',
+  religion: 'Религия',
+  'sleight-of-hand': 'Ловкость рук',
+  stealth: 'Скрытность',
+  survival: 'Выживание',
+}
+
+export const SKILL_ABILITY: Record<SkillKey, AbilityKey> = {
+  acrobatics: 'dex',
+  'animal-handling': 'wis',
+  arcana: 'int',
+  athletics: 'str',
+  deception: 'cha',
+  history: 'int',
+  insight: 'wis',
+  intimidation: 'cha',
+  investigation: 'int',
+  medicine: 'wis',
+  nature: 'int',
+  perception: 'wis',
+  performance: 'cha',
+  persuasion: 'cha',
+  religion: 'int',
+  'sleight-of-hand': 'dex',
+  stealth: 'dex',
+  survival: 'wis',
 }
 
 // ============================================================
@@ -821,7 +639,7 @@ export interface MessageWithAuthor extends Message {
 }
 
 // ============================================================
-// Сцены (карты)
+// Сцены
 // ============================================================
 
 export type GridType = 'square' | 'hex' | 'none'
@@ -866,7 +684,6 @@ export interface Token {
   updated_at: string
 }
 
-/** Стандартные состояния D&D 5.24 */
 export const CONDITION_LIST = [
   { name: 'blinded', label: 'Ослеплён', icon: '👁️' },
   { name: 'charmed', label: 'Очарован', icon: '💗' },
@@ -894,7 +711,6 @@ export interface InitiativeEntry {
   created_at: string
 }
 
-/** Расширенный entry с данными токена */
 export interface InitiativeEntryWithToken extends InitiativeEntry {
   token: Token
 }
@@ -970,4 +786,10 @@ export const LOG_EVENT_LABELS: Record<string, string> = {
   music_play: '🎵 Музыка',
   level_up: '⬆️ Level-up',
   chapter_create: '📖 Глава создана',
+}
+
+export interface BackgroundInfo {
+  slug: string
+  name: string
+  skills: SkillKey[]
 }

@@ -57,8 +57,8 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
 
     startTransition(async () => {
       const res = await longRest(character.id, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Долгий отдых завершён')
         router.refresh()

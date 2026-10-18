@@ -53,8 +53,8 @@ export default function TagInput({
     const res = await addTagToEntity(entityId, campaignId, tagName)
     setIsPending(false)
 
-    if (res.error) {
-      toast.error(res.error)
+    if ('error' in res) {
+      toast.error(res.error ?? 'Ошибка')
       return
     }
 

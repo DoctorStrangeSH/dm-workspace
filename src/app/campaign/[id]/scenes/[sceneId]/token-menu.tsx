@@ -51,7 +51,7 @@ export default function TokenMenu({
     const newHP = Math.max(0, token.hp_current + delta)
     startTransition(async () => {
       const res = await updateTokenHP(token.id, scene.id, newHP)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else onUpdate()
     })
   }
@@ -66,7 +66,7 @@ export default function TokenMenu({
   const handleToggleVisibility = () => {
     startTransition(async () => {
       const res = await toggleTokenVisibility(token.id, scene.id)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else onUpdate()
     })
   }
@@ -75,7 +75,7 @@ export default function TokenMenu({
     if (!confirm(`Удалить токен «${token.name}»?`)) return
     startTransition(async () => {
       const res = await deleteToken(token.id, scene.id)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Токен удалён')
         router.refresh()
@@ -92,7 +92,7 @@ export default function TokenMenu({
 
     startTransition(async () => {
       const res = await updateTokenConditions(token.id, scene.id, newConditions)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else onUpdate()
     })
   }

@@ -3,10 +3,7 @@
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dices, RotateCcw, Skull, Shield } from 'lucide-react'
-import {
-  rollDeathSave,
-  resetDeathSaves,
-} from '@/lib/actions/characters'
+import { rollDeathSave, resetDeathSaves } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
 import type { DeathSaves } from '@/lib/types'
@@ -34,29 +31,23 @@ export default function DeathSavesTracker({
   const handleRoll = () => {
     startTransition(async () => {
       const res = await rollDeathSave(characterId, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+
+      // Type guard
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
-      if (res.message) {
-        if (res.message.includes('мёртв')) {
-          toast.error(res.message, {
-            description: `Бросок: ${res.roll}`,
-          })
-        } else if (res.message.includes('стабилизирован')) {
-          toast.success(res.message, {
-            description: `Бросок: ${res.roll}`,
-          })
-        } else if (res.message.includes('🎉')) {
-          toast.success(res.message, {
-            description: `Бросок: ${res.roll}`,
-          })
-        } else {
-          toast.info(res.message, {
-            description: `Бросок: ${res.roll}`,
-          })
-        }
+
+      if (res.message.includes('мёртв')) {
+        toast.error(res.message, { description: `Бросок: ${res.roll}` })
+      } else if (res.message.includes('стабилизирован')) {
+        toast.success(res.message, { description: `Бросок: ${res.roll}` })
+      } else if (res.message.includes('🎉')) {
+        toast.success(res.message, { description: `Бросок: ${res.roll}` })
+      } else {
+        toast.info(res.message, { description: `Бросок: ${res.roll}` })
       }
+
       router.refresh()
     })
   }
@@ -64,10 +55,13 @@ export default function DeathSavesTracker({
   const handleReset = () => {
     startTransition(async () => {
       const res = await resetDeathSaves(characterId, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+
+      // Type guard
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
+
       toast.success('Спасброски сброшены')
       router.refresh()
     })
@@ -135,7 +129,6 @@ export default function DeathSavesTracker({
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {/* Успехи */}
         <div>
           <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">
             Успехи
@@ -159,7 +152,6 @@ export default function DeathSavesTracker({
           </div>
         </div>
 
-        {/* Провалы */}
         <div>
           <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">
             Провалы

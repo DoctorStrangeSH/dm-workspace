@@ -29,8 +29,8 @@ export default function SaveAsTemplateButton({
         campaignId,
         name
       )
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success('Шаблон сохранён')

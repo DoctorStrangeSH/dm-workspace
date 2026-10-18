@@ -33,10 +33,8 @@ export default function WizardStep3({
   const availableSkills = classSkillChoices?.from ?? []
 
   const backgroundSkills = background?.skills ?? []
-  const allChosen = Array.from(new Set([...chosenSkills, ...backgroundSkills]))
 
   const toggleSkill = (skill: SkillKey) => {
-    // Нельзя убрать навык от предыстории
     if (backgroundSkills.includes(skill)) return
 
     if (chosenSkills.includes(skill)) {
@@ -60,8 +58,9 @@ export default function WizardStep3({
               type="button"
               onClick={() => {
                 setBackgroundSlug(bg.slug)
-                // Убираем навыки от старой предыстории
-                const oldBg = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
+                const oldBg = BACKGROUNDS.find(
+                  (b) => b.slug === backgroundSlug
+                )
                 if (oldBg) {
                   setChosenSkills(
                     chosenSkills.filter((s) => !oldBg.skills.includes(s))
@@ -112,7 +111,10 @@ export default function WizardStep3({
                     isChosen || isFromBackground
                       ? 'bg-green-950/60 border-green-800 text-green-300'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700',
-                    isDisabled && !isChosen && !isFromBackground && 'opacity-40'
+                    isDisabled &&
+                      !isChosen &&
+                      !isFromBackground &&
+                      'opacity-40'
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">

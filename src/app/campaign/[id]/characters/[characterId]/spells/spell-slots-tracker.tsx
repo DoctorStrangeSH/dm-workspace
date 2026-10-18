@@ -34,8 +34,8 @@ export default function SpellSlotsTracker({
   const handleAction = (level: number, action: 'use' | 'restore') => {
     startTransition(async () => {
       const res = await useSpellSlot(characterId, campaignId, level, action)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         router.refresh()
       }

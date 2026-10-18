@@ -22,8 +22,8 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
 
     startTransition(async () => {
       const res = await createCampaign(formData)
-      if (res.error) {
-        setError(res.error)
+      if ('error' in res) {
+        setError(res.error ?? 'Ошибка')
         return
       }
       onSuccess?.()

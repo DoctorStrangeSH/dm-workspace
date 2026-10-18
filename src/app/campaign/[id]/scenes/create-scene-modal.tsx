@@ -34,8 +34,8 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
         width,
         height,
       })
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success('Сцена создана')

@@ -100,8 +100,8 @@ export default function LevelUpDialog({
         abilityChanges,
       })
 
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
 

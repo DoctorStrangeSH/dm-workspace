@@ -2,14 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Check,
-  Shield,
-  Sparkles,
-  Trash2,
-  Pencil,
-  X,
-} from 'lucide-react'
+import { Check, Shield, Sparkles, Trash2, Pencil, X } from 'lucide-react'
 import {
   updateInventoryItem,
   removeInventoryItem,
@@ -17,8 +10,8 @@ import {
   toggleAttuned,
 } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import type { CharacterInventoryItem } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import type { CharacterInventoryItem } from '@/lib/types'
 
 interface Props {
   item: CharacterInventoryItem
@@ -40,18 +33,21 @@ export default function InventoryItem({
   const [editName, setEditName] = useState(item.name)
   const [editQuantity, setEditQuantity] = useState(item.quantity)
 
+  const itemId = item.id
+
   const handleSaveEdit = () => {
     if (!editName.trim() || editQuantity < 1) {
       toast.error('Некорректные значения')
       return
     }
+    if (!itemId) return
 
     startTransition(async () => {
-      const res = await updateInventoryItem(characterId, campaignId, item.id, {
+      const res = await updateInventoryItem(characterId, campaignId, itemId, {
         name: editName.trim(),
         quantity: editQuantity,
       })
-      if (res.error) {
+      if ('error' in res) {
         toast.error(res.error)
       } else {
         setIsEditing(false)
@@ -61,27 +57,29 @@ export default function InventoryItem({
   }
 
   const handleToggleEquipped = () => {
+    if (!itemId) return
     startTransition(async () => {
-      const res = await toggleEquipped(characterId, campaignId, item.id)
-      if (res.error) toast.error(res.error)
+      const res = await toggleEquipped(characterId, campaignId, itemId)
+      if ('error' in res) toast.error(res.error)
       else router.refresh()
     })
   }
 
   const handleToggleAttuned = () => {
+    if (!itemId) return
     startTransition(async () => {
-      const res = await toggleAttuned(characterId, campaignId, item.id)
-      if (res.error) toast.error(res.error)
+      const res = await toggleAttuned(characterId, campaignId, itemId)
+      if ('error' in res) toast.error(res.error)
       else router.refresh()
     })
   }
 
   const handleDelete = () => {
+    if (!itemId) return
     if (!confirm(`Удалить «${item.name}»?`)) return
-
     startTransition(async () => {
-      const res = await removeInventoryItem(characterId, campaignId, item.id)
-      if (res.error) toast.error(res.error)
+      const res = await removeInventoryItem(characterId, campaignId, itemId)
+      if ('error' in res) toast.error(res.error)
       else {
         toast.success('Предмет удалён')
         router.refresh()
@@ -91,7 +89,6 @@ export default function InventoryItem({
 
   return (
     <div className="group bg-slate-900 border border-slate-800 rounded-lg p-3 flex items-center gap-3">
-      {/* Equipped / Attuned бейджи */}
       <div className="flex flex-col gap-1 shrink-0">
         {canEdit ? (
           <button
@@ -110,13 +107,9 @@ export default function InventoryItem({
         ) : (
           item.equipped && <Shield size={14} className="text-sky-400" />
         )}
-
-        {item.attuned && (
-          <Sparkles size={14} className="text-violet-400" />
-        )}
+        {item.attuned && <Sparkles size={14} className="text-violet-400" />}
       </div>
 
-      {/* Контент */}
       <div className="flex-1 min-w-0">
         {isEditing ? (
           <div className="flex items-center gap-2">
@@ -170,14 +163,12 @@ export default function InventoryItem({
         )}
       </div>
 
-      {/* Weight */}
       {item.weight && item.weight > 0 && (
         <span className="text-xs text-slate-500 shrink-0">
           {(item.weight * item.quantity).toFixed(1)} lb
         </span>
       )}
 
-      {/* Actions */}
       {canEdit && !isEditing && (
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
           <button

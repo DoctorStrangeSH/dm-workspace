@@ -79,8 +79,8 @@ export default function CharacterSheet({
       const res = await updateCharacter(character.id, campaignId, {
         name: editName,
       })
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         setEditName(character.name)
       } else {
         toast.success('Имя обновлено')
@@ -209,7 +209,6 @@ export default function CharacterSheet({
               Владелец: {owner.display_name ?? owner.username}
             </p>
 
-            {/* Кнопка Level Up */}
             {canEdit && data.level < 20 && (
               <button
                 onClick={() => setShowLevelUp(true)}
@@ -228,7 +227,6 @@ export default function CharacterSheet({
       <CharacterTabs
         overviewContent={
           <>
-            {/* Характеристики */}
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
               {ABILITIES.map((ability) => (
                 <AbilityBox
@@ -241,7 +239,6 @@ export default function CharacterSheet({
               ))}
             </div>
 
-            {/* Боевые */}
             <div className="mb-4">
               <CombatStats
                 ac={data.ac}
@@ -252,7 +249,6 @@ export default function CharacterSheet({
               />
             </div>
 
-            {/* HP */}
             <div className="mb-4">
               <HPTracker
                 characterId={character.id}
@@ -262,7 +258,6 @@ export default function CharacterSheet({
               />
             </div>
 
-            {/* Death Saves */}
             {data.hp.current === 0 && (
               <div className="mb-4">
                 <DeathSavesTracker
@@ -280,7 +275,6 @@ export default function CharacterSheet({
               </div>
             )}
 
-            {/* Навыки и спасброски */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <SavesList
                 proficientSaves={data.proficientSaves ?? []}
@@ -310,16 +304,8 @@ export default function CharacterSheet({
             canEdit={canEdit}
           />
         }
-        featuresContent={
-          <FeaturesTab
-            characterId={character.id}
-            campaignId={campaignId}
-            canEdit={canEdit}
-          />
-        }
-      />
+        featuresContent={<FeaturesTab />}
 
-      {/* Level Up Dialog */}
       {showLevelUp && (
         <LevelUpDialog
           character={character}

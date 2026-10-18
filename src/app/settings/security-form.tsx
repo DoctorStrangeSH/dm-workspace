@@ -23,7 +23,7 @@ export default function SecurityForm({ currentEmail }: Props) {
 
     startTransition(async () => {
       const res = await updatePassword(formData)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Пароль обновлён')
         setShowPasswordForm(false)
@@ -37,7 +37,7 @@ export default function SecurityForm({ currentEmail }: Props) {
 
     startTransition(async () => {
       const res = await updateEmail(formData)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success(res.message ?? 'Email обновлён')
         setShowEmailForm(false)

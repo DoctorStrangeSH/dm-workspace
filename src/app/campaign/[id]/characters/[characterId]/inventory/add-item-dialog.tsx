@@ -20,7 +20,6 @@ export default function AddItemDialog({
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
-
   const [name, setName] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [weight, setWeight] = useState('')
@@ -28,7 +27,6 @@ export default function AddItemDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!name.trim()) {
       toast.error('Введите название')
       return
@@ -41,12 +39,10 @@ export default function AddItemDialog({
         weight: weight ? parseFloat(weight) : undefined,
         notes: notes || undefined,
       })
-
-      if (res.error) {
+      if ('error' in res) {
         toast.error(res.error)
         return
       }
-
       toast.success('Предмет добавлен')
       router.refresh()
       onClose()

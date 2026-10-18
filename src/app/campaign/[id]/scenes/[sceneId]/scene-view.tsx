@@ -115,7 +115,7 @@ export default function SceneView({
   const handleActivate = () => {
     startTransition(async () => {
       const res = await setActiveScene(scene.id, campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Сцена активирована')
         router.refresh()
@@ -131,8 +131,8 @@ export default function SceneView({
     const res = await uploadMap(scene.id, campaignId, file)
     setIsUploading(false)
 
-    if (res.error) {
-      toast.error(res.error)
+    if ('error' in res) {
+      toast.error(res.error ?? 'Ошибка')
     } else {
       toast.success('Карта загружена')
       router.refresh()
@@ -143,7 +143,7 @@ export default function SceneView({
   const handleStartCombat = () => {
     startTransition(async () => {
       const res = await startCombat(scene.id)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Бой начат')
         setShowInitiative(true)
@@ -156,7 +156,7 @@ export default function SceneView({
     if (!confirm('Очистить весь туман?')) return
     startTransition(async () => {
       const res = await clearFog(scene.id)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Туман очищен')
         router.refresh()

@@ -42,8 +42,8 @@ export default function SrdSpellDetailDialog({
         selectedChar,
         campaignId
       )
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Заклинание добавлено')
         router.refresh()

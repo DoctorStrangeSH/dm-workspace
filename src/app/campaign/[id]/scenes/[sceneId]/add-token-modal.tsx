@@ -46,8 +46,8 @@ export default function AddTokenModal({
         y: Math.floor(scene.height / 2),
         ...data,
       })
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Токен добавлен')
         router.refresh()

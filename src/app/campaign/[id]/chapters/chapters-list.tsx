@@ -85,7 +85,7 @@ export default function ChaptersList({
     const orderedIds = newChapters.map((c) => c.id)
     const res = await reorderChapters(campaignId, orderedIds)
 
-    if (res.error) {
+    if ('error' in res) {
       console.error('reorder failed:', res.error)
       toast.error('Не удалось сохранить порядок')
       setChapters(previousChapters)
@@ -140,8 +140,8 @@ export default function ChaptersList({
     if (!confirmed) return
 
     const res = await bulkDeleteChapters(ids, campaignId)
-    if (res.error) {
-      toast.error(res.error)
+    if ('error' in res) {
+      toast.error(res.error ?? 'Ошибка')
       return
     }
     toast.success(
@@ -157,8 +157,8 @@ export default function ChaptersList({
       if (ids.length === 0) return
 
       const res = await bulkSetVisibility(ids, campaignId, visible)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success(

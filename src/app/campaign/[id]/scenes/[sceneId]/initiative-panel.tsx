@@ -48,7 +48,7 @@ export default function InitiativePanel({
   const handleNextTurn = () => {
     startTransition(async () => {
       const res = await nextTurn(sceneId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else router.refresh()
     })
   }
@@ -57,7 +57,7 @@ export default function InitiativePanel({
     if (!confirm('Завершить бой?')) return
     startTransition(async () => {
       const res = await endCombat(sceneId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Бой завершён')
         router.refresh()
@@ -73,7 +73,7 @@ export default function InitiativePanel({
 
     startTransition(async () => {
       const res = await rollInitiativeForToken(entry.id, sceneId, total)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.info(`${entry.token.name}: ${total}`, {
           description: `[${roll}] + ${dexMod}`,
@@ -90,7 +90,7 @@ export default function InitiativePanel({
   ) => {
     startTransition(async () => {
       const res = await damageToken(entry.token_id, sceneId, amount, type)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else router.refresh()
     })
   }

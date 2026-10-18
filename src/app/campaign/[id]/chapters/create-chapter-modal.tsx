@@ -23,9 +23,9 @@ export default function CreateChapterModal({ campaignId, onClose }: Props) {
 
     startTransition(async () => {
       const res = await createChapter(campaignId, formData)
-      if (res.error) {
-        setError(res.error)
-        toast.error(res.error)
+      if ('error' in res) {
+        setError(res.error ?? 'Ошибка')
+        toast.error(res.error ?? 'Ошибка')
         return
       }
       toast.success('Глава создана')

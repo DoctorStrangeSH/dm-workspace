@@ -7,11 +7,8 @@ import type { AbilityKey, SkillKey } from '@/lib/types'
 export interface RaceInfo {
   slug: string
   name: string
-  /** Бонусы к характеристикам */
   abilityBonuses: Partial<Record<AbilityKey, number>>
-  /** Скорость в футах */
   speed: number
-  /** Размер */
   size: 'small' | 'medium'
 }
 
@@ -88,13 +85,9 @@ export const RACES: RaceInfo[] = [
 export interface ClassInfo {
   slug: string
   name: string
-  /** Кость хитов (d6, d8, d10, d12) */
   hitDie: 6 | 8 | 10 | 12
-  /** Основная характеристика */
   primaryAbility: AbilityKey | AbilityKey[]
-  /** Спасброски, в которых класс даёт владение */
   savingThrows: AbilityKey[]
-  /** Навыки на выбор */
   skillChoices: { count: number; from: SkillKey[] }
 }
 
@@ -240,7 +233,6 @@ export const CLASSES: ClassInfo[] = [
 export interface BackgroundInfo {
   slug: string
   name: string
-  /** Навыки, дающие владение */
   skills: SkillKey[]
 }
 
@@ -316,7 +308,6 @@ export const BACKGROUNDS: BackgroundInfo[] = [
 // Point Buy
 // ============================================================
 
-/** Стоимость очков для каждой характеристики (8-15) */
 export const POINT_BUY_COSTS: Record<number, number> = {
   8: 0,
   9: 1,
@@ -328,16 +319,12 @@ export const POINT_BUY_COSTS: Record<number, number> = {
   15: 9,
 }
 
-/** Всего очков point buy */
 export const POINT_BUY_TOTAL = 27
 
-/** Стандартный массив */
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8] as const
 
-import type { AbilityKey } from '@/lib/types'
-
 // ============================================================
-// Заклинательная характеристика по классу
+// Заклинательная характеристика
 // ============================================================
 
 export const SPELLCASTING_ABILITY: Record<string, AbilityKey> = {
@@ -351,10 +338,6 @@ export const SPELLCASTING_ABILITY: Record<string, AbilityKey> = {
   wizard: 'int',
 }
 
-/**
- * Возвращает заклинательную характеристику для класса.
- * Возвращает undefined, если класс не заклинатель.
- */
 export function getSpellcastingAbility(
   classSlug: string
 ): AbilityKey | undefined {
@@ -362,13 +345,9 @@ export function getSpellcastingAbility(
 }
 
 // ============================================================
-// Ability Score Improvement (ASI) — уровни
+// ASI
 // ============================================================
 
-/**
- * Уровни, на которых персонаж получает ASI.
- * В D&D 5.24: 4, 8, 12, 16, 19.
- */
 export const ASI_LEVELS = [4, 8, 12, 16, 19]
 
 export function hasASI(level: number): boolean {

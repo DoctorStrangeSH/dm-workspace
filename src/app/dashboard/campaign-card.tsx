@@ -57,7 +57,7 @@ export default function CampaignCard({ campaign }: Props) {
   const handleDelete = () => {
     startTransition(async () => {
       const res = await deleteCampaign(campaign.id)
-      if (res.error) {
+      if ('error' in res) {
         alert(res.error)
       }
     })

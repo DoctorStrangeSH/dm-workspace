@@ -55,7 +55,7 @@ export default function SessionLogPanel({
     if (!confirm('Очистить весь лог?')) return
     startTransition(async () => {
       const res = await clearLog(campaignId)
-      if (res.error) toast.error(res.error)
+      if ('error' in res) toast.error(res.error ?? 'Ошибка')
       else {
         toast.success('Лог очищен')
         router.refresh()

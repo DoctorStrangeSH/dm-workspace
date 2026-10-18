@@ -3,10 +3,8 @@
 import { useState } from 'react'
 import { Music } from 'lucide-react'
 import MusicPanel from './music-panel'
-import type {
-  PlaylistWithTracks,
-  MusicPlayerState,
-} from '@/lib/queries/music'
+import type { PlaylistWithTracks } from '@/lib/queries/music'
+import type { MusicPlayerState } from '@/lib/types'
 
 interface Props {
   campaignId: string

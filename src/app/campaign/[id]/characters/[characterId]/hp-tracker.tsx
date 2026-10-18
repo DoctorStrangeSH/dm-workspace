@@ -31,8 +31,8 @@ export default function HPTracker({
   const updateHP = (newHP: { current?: number; max?: number; temp?: number }) => {
     startTransition(async () => {
       const res = await updateCharacterHP(characterId, campaignId, newHP)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       }
     })
   }

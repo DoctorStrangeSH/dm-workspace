@@ -28,8 +28,8 @@ export default function AvatarUploader({ currentUrl, displayName }: Props) {
 
     startTransition(async () => {
       const res = await uploadAvatar(formData)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         setPreview(currentUrl)
       } else {
         toast.success('Аватар обновлён')

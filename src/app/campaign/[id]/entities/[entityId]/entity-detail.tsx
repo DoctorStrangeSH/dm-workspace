@@ -95,8 +95,8 @@ export default function EntityDetail({
       const res = await updateEntity(entity.id, campaignId, {
         is_visible_to_players: newVal,
       })
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         setIsVisible(!newVal)
       } else {
         toast.success(
@@ -109,8 +109,8 @@ export default function EntityDetail({
   const handleDelete = () => {
     startTransition(async () => {
       const res = await deleteEntity(entity.id, campaignId)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Сущность удалена')
         router.push(`/campaign/${campaignId}/entities`)

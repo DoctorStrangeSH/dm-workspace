@@ -90,8 +90,8 @@ export default function Token({
       lastMovedAtRef.current = Date.now()  // ← запоминаем время
 
       const res = await moveToken(token.id, sceneId, newX, newY)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
         setPos({ x: token.x, y: token.y })
       }
     }

@@ -27,8 +27,8 @@ export default function ProfileForm({
 
     startTransition(async () => {
       const res = await updateProfile(formData)
-      if (res.error) {
-        toast.error(res.error)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
       } else {
         toast.success('Профиль обновлён')
         router.refresh()
