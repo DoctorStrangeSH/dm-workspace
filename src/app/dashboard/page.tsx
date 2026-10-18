@@ -3,13 +3,13 @@ export const instant = false
 import { connection } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import LogoutButton from './logout-button'
 import CreateCampaignButton from './create-campaign-button'
 import CampaignCard from './campaign-card'
 import ThemeToggle from '@/components/theme-toggle'
 import { getUserCampaigns } from '@/lib/queries/campaigns'
-import { Crown, Users } from 'lucide-react'
-import EmptyState from '@/components/empty-state'
+import { Crown, Users, Settings as SettingsIcon } from 'lucide-react'
 
 export default async function DashboardPage() {
   await connection()
@@ -31,15 +31,44 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b" style={{ borderColor: 'var(--border-default)' }}>
+      <header
+        className="border-b"
+        style={{ borderColor: 'var(--border-default)' }}
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-3">
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold">DM Workspace</h1>
-            <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-              {profile?.display_name ?? user.email}
-            </p>
+          <div className="flex items-center gap-3 min-w-0">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt=""
+                className="w-8 h-8 rounded-full object-cover border border-slate-700"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-indigo-950/60 border border-indigo-900/50 flex items-center justify-center text-sm font-bold text-indigo-300">
+                {(profile?.display_name ?? user.email ?? 'U')
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl font-bold">DM Workspace</h1>
+              <p
+                className="text-xs truncate"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {profile?.display_name ?? user.email}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-1">
+            <Link
+              href="/settings"
+              className="p-2 hover:bg-slate-800 rounded-lg transition"
+              title="Настройки"
+            >
+              <SettingsIcon size={16} />
+            </Link>
             <ThemeToggle />
             <LogoutButton />
           </div>
@@ -57,14 +86,19 @@ export default async function DashboardPage() {
           <CreateCampaignButton />
         </div>
 
-{asDm.length === 0 && asPlayer.length === 0 && (
-  <EmptyState
-    icon="🎲"
-    title="Добро пожаловать в DM Workspace"
-    description="Создай свою первую кампанию как ГМ или присоединись к чужой по invite-ссылке."
-    size="lg"
-  />
-)}
+        {asDm.length === 0 && asPlayer.length === 0 && (
+          <div
+            className="border-2 border-dashed rounded-2xl p-12 text-center"
+            style={{ borderColor: 'var(--border-default)' }}
+          >
+            <p className="mb-4" style={{ color: 'var(--text-muted)' }}>
+              Пока нет ни одной кампании.
+            </p>
+            <p className="text-sm" style={{ color: 'var(--text-subtle)' }}>
+              Создай первую — как ГМ или присоединись по invite-ссылке.
+            </p>
+          </div>
+        )}
 
         {asDm.length > 0 && (
           <section className="mb-10">
@@ -72,7 +106,10 @@ export default async function DashboardPage() {
               <Crown size={20} className="text-amber-400" />
               <h3 className="text-lg font-semibold">
                 Я — ГМ{' '}
-                <span style={{ color: 'var(--text-subtle)' }} className="font-normal">
+                <span
+                  style={{ color: 'var(--text-subtle)' }}
+                  className="font-normal"
+                >
                   ({asDm.length})
                 </span>
               </h3>
@@ -91,7 +128,10 @@ export default async function DashboardPage() {
               <Users size={20} className="text-indigo-400" />
               <h3 className="text-lg font-semibold">
                 Я — Игрок{' '}
-                <span style={{ color: 'var(--text-subtle)' }} className="font-normal">
+                <span
+                  style={{ color: 'var(--text-subtle)' }}
+                  className="font-normal"
+                >
                   ({asPlayer.length})
                 </span>
               </h3>
