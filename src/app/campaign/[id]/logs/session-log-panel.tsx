@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ScrollText, X, Download, Trash2, Loader2 } from 'lucide-react'
 import { clearLog } from '@/lib/actions/logs'
 import { useToast } from '@/components/toast/toast-provider'
 import { LOG_EVENT_LABELS } from '@/lib/types'
 import type { SessionLogWithActor } from '@/lib/queries/logs'
-import { cn } from '@/lib/utils'
 
 interface Props {
   campaignId: string

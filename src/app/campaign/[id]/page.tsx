@@ -1,7 +1,6 @@
 export const instant = false
 
 import { connection } from 'next/server'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { getCampaignStats } from '@/lib/queries/stats'
@@ -20,7 +19,7 @@ export default async function CampaignOverviewPage({
   await connection()
 
   const { id } = await params
-  const { campaign, role, isDm } = await getCampaignAccess(id)
+  const { campaign, isDm } = await getCampaignAccess(id)
 
   if (!campaign) notFound()
 

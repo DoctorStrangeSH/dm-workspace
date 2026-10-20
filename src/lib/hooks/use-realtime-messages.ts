@@ -17,9 +17,12 @@ export function useRealtimeMessages({
 }: Options) {
   const [messages, setMessages] = useState<MessageWithAuthor[]>(initialMessages)
 
-  useEffect(() => {
+  // CHANGES: убран useEffect(setMessages) → паттерн «props → state».
+  const [prevInitial, setPrevInitial] = useState(initialMessages)
+  if (initialMessages !== prevInitial) {
+    setPrevInitial(initialMessages)
     setMessages(initialMessages)
-  }, [initialMessages])
+  }
 
   useEffect(() => {
     if (!enabled) return
@@ -34,10 +37,13 @@ export function useRealtimeMessages({
       })
       .on('broadcast', { event: 'INSERT' }, async (payload) => {
         console.log('[messages broadcast] INSERT:', payload)
-        const newMsg = payload.payload.record as any
+        const newMsg = payload.payload.record as {
+          id: string
+          user_id: string
+          [key: string]: unknown
+        }
         if (!newMsg) return
 
-        // Загружаем автора
         const { data: author } = await supabase
           .from('profiles')
           .select('id, username, display_name, avatar_url')
@@ -46,7 +52,7 @@ export function useRealtimeMessages({
 
         setMessages((prev) => {
           if (prev.some((m) => m.id === newMsg.id)) return prev
-          return [...prev, { ...newMsg, author }]
+          return [...prev, { ...newMsg, author } as MessageWithAuthor]
         })
       })
       .on('broadcast', { event: 'UPDATE' }, (payload) => {

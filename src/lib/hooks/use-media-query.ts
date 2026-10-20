@@ -1,34 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 
 /**
- * Возвращает true, если медиа-запрос совпадает.
- * SSR-безопасно: возвращает false на сервере.
+ * CHANGES: заменён useState + useEffect на useSyncExternalStore.
+ * Это стандартный хук React для подписки на внешние источники (matchMedia),
+ * без setState в useEffect и без каскадных рендеров.
+ * SSR-safe: на сервере возвращает false.
  */
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
+  const subscribe = (onChange: () => void) => {
+    if (typeof window === 'undefined') return () => {}
     const media = window.matchMedia(query)
-    setMatches(media.matches)
+    media.addEventListener('change', onChange)
+    return () => media.removeEventListener('change', onChange)
+  }
 
-    const listener = (e: MediaQueryListEvent) => {
-      setMatches(e.matches)
-    }
+  const getSnapshot = () => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia(query).matches
+  }
 
-    media.addEventListener('change', listener)
-    return () => media.removeEventListener('change', listener)
-  }, [query])
+  const getServerSnapshot = () => false
 
-  return matches
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
-/**
- * Готовые брейкпоинты.
- */
 export function useIsMobile(): boolean {
   return useMediaQuery('(max-width: 767px)')
 }

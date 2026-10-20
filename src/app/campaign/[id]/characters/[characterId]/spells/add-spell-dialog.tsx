@@ -9,7 +9,6 @@ import {
   SPELL_SCHOOLS,
   type SpellSchool,
 } from '@/lib/types'
-import { cn } from '@/lib/utils'
 
 interface Props {
   characterId: string

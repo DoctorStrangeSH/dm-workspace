@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import type { ViewUpdate } from '@codemirror/view'
 import { updateChapterContent } from '@/lib/actions/chapter-content'
@@ -47,11 +47,16 @@ export default function ChapterEditor({
 }: Props) {
   const isMobile = useIsMobile()
   const [content, setContent] = useState(initialContent)
-  const [view, setView] = useState<ViewMode>('split')
+  const [userView, setUserView] = useState<ViewMode>('split')
   const [mobileView, setMobileView] = useState<'edit' | 'preview'>('edit')
   const cmRef = useRef<ReactCodeMirrorRef>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const lastOpenTimeRef = useRef(0)
+
+  // CHANGES: убран useEffect(isMobile + view → setView).
+  // Вместо этого view вычисляется как производное от userView и isMobile.
+  // На мобиле split невозможен — пользователь видит edit.
+  const view: ViewMode = isMobile && userView === 'split' ? 'edit' : userView
 
   const [trigger, setTrigger] = useState<Trigger>({
     isOpen: false,
@@ -75,9 +80,6 @@ export default function ChapterEditor({
     enabled: !readOnly,
   })
 
-  // ============================================================
-  // Хоткей Ctrl+E — экспорт
-  // ============================================================
   const handleExportHotkey = useCallback(async () => {
     const res = await getChapterForExport(chapterId, campaignId)
     if (res.error || !res.data) return
@@ -95,18 +97,6 @@ export default function ChapterEditor({
     },
   })
 
-  // ============================================================
-  // На мобиле split недоступен
-  // ============================================================
-  useEffect(() => {
-    if (isMobile && view === 'split') {
-      setView('edit')
-    }
-  }, [isMobile, view])
-
-  // ============================================================
-  // Детект [[query
-  // ============================================================
   const checkTrigger = useCallback(() => {
     const cmView = cmRef.current?.view
     if (!cmView) return
@@ -153,18 +143,12 @@ export default function ChapterEditor({
     [checkTrigger]
   )
 
-  // ============================================================
-  // Выбор сущности из dropdown
-  // ============================================================
   const handleSelect = useCallback(
     (entity: EntitySuggestion) => {
       const cmView = cmRef.current?.view
       if (!cmView) return
 
-      const afterCursor = cmView.state.sliceDoc(
-        trigger.end,
-        trigger.end + 2
-      )
+      const afterCursor = cmView.state.sliceDoc(trigger.end, trigger.end + 2)
       const hasClosingBrackets = afterCursor === ']]'
 
       cmView.dispatch({
@@ -184,9 +168,6 @@ export default function ChapterEditor({
     [trigger.start, trigger.end]
   )
 
-  // ============================================================
-  // Быстрая вставка сниппетов
-  // ============================================================
   const handleInsert = useCallback((snippet: string, wrap = false) => {
     const view = cmRef.current?.view
     if (!view) return
@@ -234,7 +215,6 @@ export default function ChapterEditor({
 
   return (
     <div className="flex flex-col">
-      {/* Мобильные табы */}
       {isMobile && !readOnly && (
         <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 mb-3">
           <button
@@ -262,7 +242,7 @@ export default function ChapterEditor({
 
       <EditorToolbar
         view={view}
-        onViewChange={setView}
+        onViewChange={setUserView}
         status={status}
         lastSaved={lastSaved}
         error={error}
@@ -310,9 +290,7 @@ export default function ChapterEditor({
                 entities={entities}
                 position={trigger.position}
                 onSelect={handleSelect}
-                onClose={() =>
-                  setTrigger((t) => ({ ...t, isOpen: false }))
-                }
+                onClose={() => setTrigger((t) => ({ ...t, isOpen: false }))}
               />
             )}
           </div>

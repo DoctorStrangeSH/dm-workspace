@@ -17,9 +17,17 @@ export function useRealtimeTokens({
 }: Options) {
   const [tokens, setTokens] = useState<Token[]>(initialTokens)
 
-  useEffect(() => {
+  // CHANGES:
+  // 1. Убран useEffect с setTokens(initialTokens) — это вызывало каскадный рендер.
+  // 2. Используется официальный паттерн React «adjusting state when props change»:
+  //    сравнение в рендере через prevInitial + setState в рендере (React поддерживает это).
+  //    https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  // 3. setState в рендере срабатывает только когда initialTokens реально изменился (по ссылке).
+  const [prevInitial, setPrevInitial] = useState(initialTokens)
+  if (initialTokens !== prevInitial) {
+    setPrevInitial(initialTokens)
     setTokens(initialTokens)
-  }, [initialTokens])
+  }
 
   useEffect(() => {
     if (!enabled) return

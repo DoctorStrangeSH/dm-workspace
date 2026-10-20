@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
-import type { EntityType } from '@/lib/types'
 
 export async function createTemplateFromEntity(
   entityId: string,

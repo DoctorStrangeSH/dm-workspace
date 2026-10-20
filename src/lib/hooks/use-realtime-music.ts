@@ -12,9 +12,12 @@ interface Options {
 export function useRealtimeMusic({ campaignId, initialState }: Options) {
   const [state, setState] = useState<MusicPlayerState | null>(initialState)
 
-  useEffect(() => {
+  // CHANGES: убран useEffect(setState) → паттерн «props → state».
+  const [prevInitial, setPrevInitial] = useState(initialState)
+  if (initialState !== prevInitial) {
+    setPrevInitial(initialState)
     setState(initialState)
-  }, [initialState])
+  }
 
   useEffect(() => {
     if (!campaignId) return

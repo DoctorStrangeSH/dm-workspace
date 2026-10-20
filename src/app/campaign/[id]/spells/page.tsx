@@ -16,7 +16,7 @@ export default async function SpellsPage({
   await connection()
 
   const { id: campaignId } = await params
-  const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
+  const { campaign, isMember } = await getCampaignAccess(campaignId)
 
   if (!campaign) notFound()
   if (!isMember) redirect('/dashboard')

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 
 interface HotkeyOptions {
   /**
@@ -23,6 +23,14 @@ interface HotkeyOptions {
 /**
  * Универсальный хук для хоткеев, работающий на любой раскладке.
  * Использует event.code, а не event.key.
+ *
+ * CHANGES:
+ * 1. Убрано `handlerRef.current = handler` из тела рендера — это анти-паттерн React 19
+ *    (нельзя мутировать ref во время рендера: React может прервать/повторить рендер).
+ * 2. Синхронизация через useLayoutEffect — выполняется после коммита, до отрисовки.
+ *    Без deps-массива: handler может быть новым замыканием каждый рендер,
+ *    но listener пересоздаётся только при изменении code/ctrl/meta/shift/alt/ignoreInInputs.
+ * 3. Логика listener не изменилась.
  */
 export function useHotkey({
   code,
@@ -34,7 +42,10 @@ export function useHotkey({
   handler,
 }: HotkeyOptions) {
   const handlerRef = useRef(handler)
-  handlerRef.current = handler
+
+  useLayoutEffect(() => {
+    handlerRef.current = handler
+  })
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {

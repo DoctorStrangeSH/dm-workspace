@@ -32,7 +32,7 @@ export default function EntityRelationsList({
   isDm,
 }: Props) {
   const toast = useToast()
-  const [isPending, startTransition] = useTransition()
+  const [startTransition] = useTransition()
   const [showDialog, setShowDialog] = useState(false)
 
   const grouped = useMemo(() => {

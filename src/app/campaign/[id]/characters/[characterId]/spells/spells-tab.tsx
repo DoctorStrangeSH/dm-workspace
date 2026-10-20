@@ -14,11 +14,7 @@ import {
   formatModifier,
   proficiencyBonus,
 } from '@/lib/dnd/formulas'
-import type {
-  Character,
-  CharacterSpell,
-  CharacterData,
-} from '@/lib/types'
+import type { Character, CharacterSpell, CharacterData } from '@/lib/types'
 
 interface Props {
   character: Character
@@ -33,17 +29,22 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   const data: CharacterData = character.data_json
-  const spells = data.spells ?? []
+
+  // CHANGES: обёрнуто в useMemo, чтобы ссылка на spells была стабильной.
+  // Раньше `data.spells ?? []` создавал новый [] каждый рендер,
+  // из-за чего useMemo(spellsByLevel) пересчитывался всегда.
+  const spells = useMemo(
+    () => character.data_json.spells ?? [],
+    [character.data_json.spells]
+  )
   const slots = data.spellSlots ?? {}
 
-  // Группировка по уровню
   const spellsByLevel = useMemo(() => {
     const groups: Record<number, CharacterSpell[]> = {}
     for (const s of spells) {
       if (!groups[s.level]) groups[s.level] = []
       groups[s.level].push(s)
     }
-    // Сортируем по названию внутри группы
     for (const level in groups) {
       groups[level].sort((a, b) => a.name.localeCompare(b.name))
     }
@@ -51,7 +52,11 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   }, [spells])
 
   const handleLongRest = () => {
-    if (!confirm('Завершить долгий отдых? Восстановятся HP, ячейки заклинаний и death saves.')) {
+    if (
+      !confirm(
+        'Завершить долгий отдых? Восстановятся HP, ячейки заклинаний и death saves.'
+      )
+    ) {
       return
     }
 
@@ -67,7 +72,6 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   }
 
   const handleRoll = (spell: CharacterSpell) => {
-    // Бросок атаки заклинанием
     const spellAbility = data.spellcastingAbility
     if (!spellAbility) {
       toast.info(`${spell.name}`, {
@@ -82,10 +86,9 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
     const roll = Math.floor(Math.random() * 20) + 1
     const total = roll + bonus
 
-    toast.info(
-      `${spell.name}: ${formatModifier(bonus)} = ${total}`,
-      { description: `Атака заклинанием: [${roll}] ${formatModifier(bonus)}` }
-    )
+    toast.info(`${spell.name}: ${formatModifier(bonus)} = ${total}`, {
+      description: `Атака заклинанием: [${roll}] ${formatModifier(bonus)}`,
+    })
   }
 
   const levelKeys = Object.keys(spellsByLevel)
@@ -94,7 +97,6 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
 
   return (
     <div>
-      {/* Панель действий */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {canEdit && (
           <>
@@ -122,7 +124,6 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
         </div>
       </div>
 
-      {/* Spell Slots */}
       <SpellSlotsTracker
         characterId={character.id}
         campaignId={campaignId}
@@ -130,7 +131,6 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
         canEdit={canEdit}
       />
 
-      {/* Список заклинаний */}
       {spells.length === 0 ? (
         <EmptyState
           icon="✨"
@@ -172,7 +172,6 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
         </div>
       )}
 
-      {/* Add Spell Dialog */}
       {showAddDialog && (
         <AddSpellDialog
           characterId={character.id}

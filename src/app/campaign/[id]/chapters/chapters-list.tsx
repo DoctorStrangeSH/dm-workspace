@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -32,7 +32,6 @@ import { getChapterForExport } from '@/lib/actions/export'
 import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
 import { useToast } from '@/components/toast/toast-provider'
-import { BookOpen, SearchX } from 'lucide-react'
 import type { Chapter } from '@/lib/types'
 import EmptyState from '@/components/empty-state'
 
@@ -54,12 +53,15 @@ export default function ChaptersList({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  // CHANGES: убран useEffect(setChapters) → паттерн «props → state».
+  const [prevInitial, setPrevInitial] = useState(initialChapters)
+  if (initialChapters !== prevInitial) {
+    setPrevInitial(initialChapters)
+    setChapters(initialChapters)
+  }
+
   const { filtered, totalCount, matchedCount, isSearching } =
     useChapterFilter(chapters, query)
-
-  useEffect(() => {
-    setChapters(initialChapters)
-  }, [initialChapters])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -97,9 +99,6 @@ export default function ChaptersList({
     searchInputRef.current?.select()
   }, [])
 
-  // ============================================================
-  // Режим выделения
-  // ============================================================
   const toggleSelectionMode = useCallback(() => {
     setIsSelectionMode((v) => {
       if (v) setSelectedIds(new Set())
@@ -127,9 +126,6 @@ export default function ChaptersList({
     }
   }, [allSelected, filtered])
 
-  // ============================================================
-  // Массовые действия
-  // ============================================================
   const handleBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) return
@@ -199,34 +195,29 @@ export default function ChaptersList({
     setIsSelectionMode(false)
   }, [selectedIds, campaignId, toast])
 
-  // Пустая кампания
-// Пустая кампания
-if (chapters.length === 0) {
-  return (
-    <EmptyState
-      icon="📖"
-      title="Пока нет ни одной главы"
-      description={
-        isDm
-          ? 'Создай первую главу, чтобы начать писать приключение.'
-          : 'ГМ пока не добавил главы.'
-      }
-      actions={
-        isDm
-          ? [
-              {
-                label: 'Создать главу',
-                onClick: () => {
-                  // Открыть модалку создания
-                  // (нужно прокиднуть проп onOpenCreate из родителя)
+  if (chapters.length === 0) {
+    return (
+      <EmptyState
+        icon="📖"
+        title="Пока нет ни одной главы"
+        description={
+          isDm
+            ? 'Создай первую главу, чтобы начать писать приключение.'
+            : 'ГМ пока не добавил главы.'
+        }
+        actions={
+          isDm
+            ? [
+                {
+                  label: 'Создать главу',
+                  onClick: () => {},
                 },
-              },
-            ]
-          : undefined
-      }
-    />
-  )
-}
+              ]
+            : undefined
+        }
+      />
+    )
+  }
 
   return (
     <div>
@@ -255,23 +246,21 @@ if (chapters.length === 0) {
         )}
       </div>
 
-      {/* Ничего не найдено */}
-{isSearching && filtered.length === 0 && (
-  <EmptyState
-    icon="🔍"
-    title="Ничего не найдено"
-    description={`Попробуй изменить запрос «${query}»`}
-    actions={[
-      {
-        label: 'Очистить поиск',
-        onClick: () => setQuery(''),
-        variant: 'secondary',
-      },
-    ]}
-  />
-)}
+      {isSearching && filtered.length === 0 && (
+        <EmptyState
+          icon="🔍"
+          title="Ничего не найдено"
+          description={`Попробуй изменить запрос «${query}»`}
+          actions={[
+            {
+              label: 'Очистить поиск',
+              onClick: () => setQuery(''),
+              variant: 'secondary',
+            },
+          ]}
+        />
+      )}
 
-      {/* Список */}
       {filtered.length > 0 && (
         <>
           {!isDm ? (
@@ -330,7 +319,6 @@ if (chapters.length === 0) {
         </>
       )}
 
-      {/* Плавающая панель массовых действий */}
       {isDm && isSelectionMode && (
         <BulkActionsBar
           selectedCount={selectedIds.size}

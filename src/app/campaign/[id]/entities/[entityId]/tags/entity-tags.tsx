@@ -7,7 +7,6 @@ import { useToast } from '@/components/toast/toast-provider'
 import TagChip from './tag-chip'
 import TagInput from './tag-input'
 import type { EntityTag, Tag } from '@/lib/types'
-import EmptyState from '@/components/empty-state'
 
 interface Props {
   entityId: string
@@ -25,7 +24,7 @@ export default function EntityTags({
   isDm,
 }: Props) {
   const toast = useToast()
-  const [isPending, startTransition] = useTransition()
+  const [startTransition] = useTransition()
 
   const handleRemove = (tagId: string) => {
     startTransition(async () => {

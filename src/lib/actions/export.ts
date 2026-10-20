@@ -67,7 +67,7 @@ export async function getCampaignForExport(campaignId: string): Promise<{
   }
   error?: string
 }> {
-  const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
+  const { campaign, isMember } = await getCampaignAccess(campaignId)
 
   if (!campaign) return { error: 'Кампания не найдена' }
   if (!isMember) return { error: 'Нет доступа' }

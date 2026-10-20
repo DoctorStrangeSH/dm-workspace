@@ -1,6 +1,5 @@
 import type { CharacterData } from '@/lib/types'
 import { CLASSES } from '@/lib/dnd/constants'
-import { abilityModifier } from '@/lib/dnd/formulas'
 import { getSpellSlotsForLevel } from '@/lib/dnd/spell-slots'
 
 /**

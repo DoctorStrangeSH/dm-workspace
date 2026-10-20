@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { EditorView } from '@codemirror/view'
-import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
 
 interface WikilinkTrigger {
   isOpen: boolean
@@ -14,7 +13,6 @@ interface WikilinkTrigger {
 
 export function useWikilinkTrigger(
   view: EditorView | undefined,
-  entities: EntitySuggestion[]
 ) {
   const [trigger, setTrigger] = useState<WikilinkTrigger>({
     isOpen: false,
@@ -67,9 +65,6 @@ export function useWikilinkTrigger(
     const updateListener = () => {
       checkTrigger()
     }
-
-    const cleanup = view.dom.addEventListener('keyup', updateListener)
-    const cleanup2 = view.dom.addEventListener('click', updateListener)
 
     // CM6 extension для отслеживания изменений
     const observer = new MutationObserver(updateListener)

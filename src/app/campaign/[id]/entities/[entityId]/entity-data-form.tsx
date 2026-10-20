@@ -14,7 +14,7 @@ import NumberField from './fields/number-field'
 import SelectField from './fields/select-field'
 import TextareaField from './fields/textarea-field'
 import BooleanField from './fields/boolean-field'
-import type { Entity, EntityType } from '@/lib/types'
+import type { EntityType } from '@/lib/types'
 
 interface Props {
   entityId: string
@@ -24,9 +24,6 @@ interface Props {
   isDm: boolean
 }
 
-/**
- * Извлекает значение по пути "abilities.str" из объекта.
- */
 function getNestedValue(
   obj: Record<string, unknown>,
   path: string
@@ -39,10 +36,6 @@ function getNestedValue(
   }, obj)
 }
 
-/**
- * Устанавливает значение по пути "abilities.str" в объект.
- * Возвращает НОВЫЙ объект (иммутабельно).
- */
 function setNestedValue(
   obj: Record<string, unknown>,
   path: string,
@@ -76,7 +69,10 @@ export default function EntityDataForm({
 }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(initialData)
 
-  const schema = ENTITY_SCHEMAS[type] ?? []
+  // CHANGES: schema и sections вычисляются через useMemo с зависимостью от type.
+  // Раньше `ENTITY_SCHEMAS[type] ?? []` создавал новый [] каждый рендер,
+  // из-за чего useMemo(sections) пересчитывался всегда.
+  const schema = useMemo(() => ENTITY_SCHEMAS[type] ?? [], [type])
   const sections = useMemo(() => groupFieldsBySection(schema), [schema])
 
   const handleSave = useCallback(
@@ -152,7 +148,6 @@ function FieldRenderer({
   onChange: (v: unknown) => void
   disabled: boolean
 }) {
-  // Textarea — на всю ширину
   if (field.type === 'textarea') {
     return (
       <div className="md:col-span-2">
@@ -168,7 +163,6 @@ function FieldRenderer({
     )
   }
 
-  // Boolean
   if (field.type === 'boolean') {
     return (
       <BooleanField
@@ -181,7 +175,6 @@ function FieldRenderer({
     )
   }
 
-  // Select
   if (field.type === 'select' && field.options) {
     return (
       <SelectField
@@ -195,7 +188,6 @@ function FieldRenderer({
     )
   }
 
-  // Number
   if (field.type === 'number') {
     return (
       <NumberField
@@ -211,7 +203,6 @@ function FieldRenderer({
     )
   }
 
-  // Text (default)
   return (
     <TextField
       label={field.label}

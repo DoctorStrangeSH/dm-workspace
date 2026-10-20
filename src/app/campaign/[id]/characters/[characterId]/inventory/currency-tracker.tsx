@@ -35,7 +35,7 @@ export default function CurrencyTracker({
 }: Props) {
   const router = useRouter()
   const toast = useToast()
-  const [isPending, startTransition] = useTransition()
+  const [startTransition] = useTransition()
   const [editing, setEditing] = useState<keyof Currency | null>(null)
   const [tempValue, setTempValue] = useState('')
 

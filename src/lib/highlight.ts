@@ -1,12 +1,5 @@
 import { escapeRegExp } from './utils'
 
-interface HighlightOptions {
-  /** CSS-класс для `<mark>` */
-  className?: string
-  /** Максимальная длина текста (для длинных) */
-  maxLength?: number
-}
-
 /**
  * Разбивает строку на части — совпадающие с query и нет.
  * Возвращает массив: [{ text, matched }]

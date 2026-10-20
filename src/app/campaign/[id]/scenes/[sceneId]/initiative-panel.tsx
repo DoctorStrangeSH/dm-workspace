@@ -2,12 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Swords,
-  ChevronRight,
-  X,
-  Dices,
-} from 'lucide-react'
+import { Swords, ChevronRight, X, Dices } from 'lucide-react'
 import {
   nextTurn,
   endCombat,
@@ -66,17 +61,15 @@ export default function InitiativePanel({
     })
   }
 
+  // CHANGES: убран Math.random() — бросок теперь на сервере (в rollInitiativeForToken)
   const handleRoll = (entry: InitiativeEntryWithToken) => {
-    const roll = Math.floor(Math.random() * 20) + 1
-    const dexMod = 0 // упрощённо
-    const total = roll + dexMod
-
     startTransition(async () => {
-      const res = await rollInitiativeForToken(entry.id, sceneId, total)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
-      else {
-        toast.info(`${entry.token.name}: ${total}`, {
-          description: `[${roll}] + ${dexMod}`,
+      const res = await rollInitiativeForToken(entry.id, sceneId)
+      if ('error' in res) {
+        toast.error(res.error ?? 'Ошибка')
+      } else {
+        toast.info(`${entry.token.name}: ${res.total}`, {
+          description: `[${res.roll}] ${res.dexMod >= 0 ? '+' : ''}${res.dexMod} (DEX)`,
         })
         router.refresh()
       }
@@ -102,15 +95,11 @@ export default function InitiativePanel({
           <Swords size={18} className="text-red-400" />
           <h2 className="font-semibold">Бой</h2>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-slate-800 rounded"
-        >
+        <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded">
           <X size={18} />
         </button>
       </div>
 
-      {/* Текущий ход */}
       {currentEntry && (
         <div className="p-3 bg-red-950/30 border-b border-red-900/40">
           <div className="text-xs text-red-400 uppercase tracking-wider mb-1">
@@ -130,7 +119,6 @@ export default function InitiativePanel({
         </div>
       )}
 
-      {/* Список */}
       <div className="flex-1 overflow-y-auto p-2">
         {entries.length === 0 ? (
           <p className="text-center text-sm text-slate-500 py-8">
@@ -215,7 +203,6 @@ export default function InitiativePanel({
         )}
       </div>
 
-      {/* Футер */}
       <div className="p-3 border-t border-slate-800 space-y-2">
         <button
           onClick={handleEndCombat}
@@ -226,7 +213,6 @@ export default function InitiativePanel({
         </button>
       </div>
 
-      {/* Меню урона */}
       {selectedEntry && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"

@@ -8,17 +8,17 @@ const MAX_RECENT = 5
 
 export function useCommandPalette() {
   const [isOpen, setIsOpen] = useState(false)
-  const [recentIds, setRecentIds] = useState<string[]>([])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
+  // CHANGES: убран useEffect для чтения localStorage → lazy initializer.
+  const [recentIds, setRecentIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return []
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setRecentIds(JSON.parse(stored))
+      return stored ? (JSON.parse(stored) as string[]) : []
     } catch {
-      // ignore
+      return []
     }
-  }, [])
+  })
 
   const open = useCallback(() => setIsOpen(true), [])
   const close = useCallback(() => setIsOpen(false), [])

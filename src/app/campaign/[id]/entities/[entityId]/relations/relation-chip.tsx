@@ -18,7 +18,6 @@ interface Props {
 export default function RelationChip({
   relation,
   campaignId,
-  currentEntityId,
   isDm,
   onDelete,
 }: Props) {

@@ -21,7 +21,8 @@ import { logEvent } from './logs'
 
 type ErrorResult = { error: string }
 type SuccessResult = { success: true }
-type SaveResult = ErrorResult | {}
+// CHANGES: {} → { success: true }, чтобы не пропускать 0/""/false
+type SaveResult = ErrorResult | { success: true }
 
 // ============================================================
 // Базовые actions
@@ -201,7 +202,8 @@ async function saveCharacterData(
     .eq('campaign_id', campaignId)
 
   if (error) return { error: 'Не удалось сохранить' }
-  return {}
+  // CHANGES: {} → { success: true } (типобезопасно)
+  return { success: true }
 }
 
 // ============================================================
@@ -368,7 +370,8 @@ export async function removeSpell(
   return { success: true }
 }
 
-export async function useSpellSlot(
+// CHANGES: useSpellSlot → spendSpellSlot (семантически точнее, ESLint не считает хуком)
+export async function spendSpellSlot(
   characterId: string,
   campaignId: string,
   level: number,

@@ -8,25 +8,28 @@ const STORAGE_KEY_RECENT = 'dm-screen-recent'
 const MAX_RECENT = 8
 
 export function useDmScreen() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [recentIds, setRecentIds] = useState<string[]>([])
-
-  // Загружаем состояние из localStorage при монтировании
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
+  // CHANGES: убран useEffect для чтения localStorage → lazy initializer.
+  // На SSR возвращаем false / [], на клиенте — из localStorage.
+  const [isOpen, setIsOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
     try {
-      const stored = localStorage.getItem(STORAGE_KEY_OPEN)
-      if (stored === 'true') setIsOpen(true)
-
-      const recent = localStorage.getItem(STORAGE_KEY_RECENT)
-      if (recent) setRecentIds(JSON.parse(recent))
+      return localStorage.getItem(STORAGE_KEY_OPEN) === 'true'
     } catch {
-      // ignore
+      return false
     }
-  }, [])
+  })
 
-  // Сохраняем состояние панели
+  const [recentIds, setRecentIds] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const recent = localStorage.getItem(STORAGE_KEY_RECENT)
+      return recent ? (JSON.parse(recent) as string[]) : []
+    } catch {
+      return []
+    }
+  })
+
+  // Сохраняем состояние панели (это side-effect, не setState — допустимо)
   useEffect(() => {
     if (typeof window === 'undefined') return
     localStorage.setItem(STORAGE_KEY_OPEN, String(isOpen))

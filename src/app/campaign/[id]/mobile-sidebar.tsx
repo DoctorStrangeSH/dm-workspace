@@ -18,9 +18,12 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
   const base = `/campaign/${campaignId}`
   const items = getCampaignNavItems(base)
 
-  useEffect(() => {
+  // CHANGES: убран useEffect(setIsOpen(false), [pathname]) → паттерн «props → state».
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname)
     setIsOpen(false)
-  }, [pathname])
+  }
 
   useEffect(() => {
     if (isOpen) {
@@ -90,6 +93,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setIsOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition',
                   isActive
@@ -107,6 +111,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
             <div className="mt-6 pt-6 border-t border-slate-800">
               <Link
                 href={`${base}/settings`}
+                onClick={() => setIsOpen(false)}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition',
                   pathname.startsWith(`${base}/settings`)

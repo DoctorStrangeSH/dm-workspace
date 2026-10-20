@@ -17,9 +17,12 @@ export function useRealtimeHandouts({
 }: Options) {
   const [handouts, setHandouts] = useState<Handout[]>(initialHandouts)
 
-  useEffect(() => {
+  // CHANGES: убран useEffect(setHandouts) → паттерн «props → state».
+  const [prevInitial, setPrevInitial] = useState(initialHandouts)
+  if (initialHandouts !== prevInitial) {
+    setPrevInitial(initialHandouts)
     setHandouts(initialHandouts)
-  }, [initialHandouts])
+  }
 
   useEffect(() => {
     if (!enabled) return

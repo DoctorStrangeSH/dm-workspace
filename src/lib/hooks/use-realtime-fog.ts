@@ -17,9 +17,12 @@ export function useRealtimeFog({
 }: Options) {
   const [fog, setFog] = useState<FogArea[]>(initialFog)
 
-  useEffect(() => {
+  // CHANGES: убран useEffect(setFog) → паттерн «props → state».
+  const [prevInitial, setPrevInitial] = useState(initialFog)
+  if (initialFog !== prevInitial) {
+    setPrevInitial(initialFog)
     setFog(initialFog)
-  }, [initialFog])
+  }
 
   useEffect(() => {
     if (!enabled) return

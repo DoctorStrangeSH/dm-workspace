@@ -17,10 +17,13 @@ export function useRealtimeChapters({
 }: Options) {
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
 
-  // Синхронизируем при изменении initialChapters (после router.refresh)
-  useEffect(() => {
+  // CHANGES: убран useEffect(setChapters) → официальный паттерн React
+  // «adjusting state when props change» (сравнение в рендере через prevInitial).
+  const [prevInitial, setPrevInitial] = useState(initialChapters)
+  if (initialChapters !== prevInitial) {
+    setPrevInitial(initialChapters)
     setChapters(initialChapters)
-  }, [initialChapters])
+  }
 
   const sortChapters = useCallback(
     (list: Chapter[]) =>
@@ -46,7 +49,6 @@ export function useRealtimeChapters({
         (payload) => {
           const newChapter = payload.new as Chapter
           setChapters((prev) => {
-            // Защита от дубликатов
             if (prev.some((c) => c.id === newChapter.id)) return prev
             return sortChapters([...prev, newChapter])
           })

@@ -25,8 +25,6 @@ interface Props {
   classes: SrdClass[]
 }
 
-const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
-
 export default function CharacterWizard({
   campaignId,
   species,

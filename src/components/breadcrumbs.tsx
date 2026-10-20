@@ -39,7 +39,6 @@ export function Breadcrumbs({
       className={cn('flex items-center gap-1 text-sm min-w-0', className)}
     >
       {visible.map((item, i) => {
-        const isLast = i === visible.length - 1 && !hasHidden
         const isLastVisible = i === visible.length - 1
 
         return (

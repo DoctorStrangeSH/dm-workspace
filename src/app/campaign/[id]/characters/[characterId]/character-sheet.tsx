@@ -55,11 +55,10 @@ export default function CharacterSheet({
   campaignName,
   owner,
   canEdit,
-  isDm,
 }: Props) {
   const router = useRouter()
   const toast = useToast()
-  const [isPending, startTransition] = useTransition()
+  const [startTransition] = useTransition()
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState(character.name)
   const [showLevelUp, setShowLevelUp] = useState(false)

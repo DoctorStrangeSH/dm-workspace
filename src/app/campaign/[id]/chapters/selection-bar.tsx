@@ -1,7 +1,6 @@
 'use client'
 
 import { CheckSquare, Square, X, CheckCheck } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface Props {
   totalCount: number

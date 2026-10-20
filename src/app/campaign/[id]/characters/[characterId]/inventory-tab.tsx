@@ -9,7 +9,6 @@ import InventoryItem from './inventory/inventory-item'
 import AddItemDialog from './inventory/add-item-dialog'
 import { getCarryingCapacity, MAX_ATTUNEMENTS } from '@/lib/types'
 import type { Character } from '@/lib/types'
-import { cn } from '@/lib/utils'
 
 interface Props {
   character: Character
@@ -25,7 +24,14 @@ export default function InventoryTab({
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   const data = character.data_json
-  const inventory = data.inventory ?? []
+
+  // CHANGES: обёрнуто в useMemo, чтобы ссылка на inventory была стабильной.
+  // Раньше `data.inventory ?? []` создавал новый [] каждый рендер,
+  // из-за чего useMemo(totalWeight) пересчитывался всегда.
+  const inventory = useMemo(
+    () => character.data_json.inventory ?? [],
+    [character.data_json.inventory]
+  )
   const currency = data.currency ?? {}
 
   const totalWeight = useMemo(

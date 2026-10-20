@@ -3,7 +3,8 @@
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Minus, Plus } from 'lucide-react'
-import { useSpellSlot } from '@/lib/actions/characters'
+// CHANGES: useSpellSlot → spendSpellSlot
+import { spendSpellSlot } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
 import type { SpellSlots } from '@/lib/types'
@@ -33,7 +34,8 @@ export default function SpellSlotsTracker({
 
   const handleAction = (level: number, action: 'use' | 'restore') => {
     startTransition(async () => {
-      const res = await useSpellSlot(characterId, campaignId, level, action)
+      // CHANGES: useSpellSlot → spendSpellSlot
+      const res = await spendSpellSlot(characterId, campaignId, level, action)
       if ('error' in res) {
         toast.error(res.error ?? 'Ошибка')
       } else {

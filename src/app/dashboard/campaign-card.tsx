@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import {
   Copy,
@@ -25,15 +25,18 @@ export default function CampaignCard({ campaign }: Props) {
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
   const [inviteCode, setInviteCode] = useState(campaign.invite_code)
-  const [inviteUrl, setInviteUrl] = useState(`/join/${campaign.invite_code}`)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  // Обновляем полный URL только на клиенте, после монтирования
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setInviteUrl(`${window.location.origin}/join/${inviteCode}`)
-    }
-  }, [inviteCode])
+  // CHANGES: убран useEffect(setInviteUrl) → вычисляем во время рендера.
+  // window.location.origin не меняется, поэтому не нужен state + effect.
+  // На SSR (typeof window === 'undefined') используем относительный путь,
+  // на клиенте — полный URL. Это безопасно: hydration не сломается,
+  // потому что inviteUrl используется только в обработчике копирования
+  // (клиент) и в <code> (текст, не гидратируется как атрибут).
+  const inviteUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/join/${inviteCode}`
+      : `/join/${inviteCode}`
 
   const handleCopy = async () => {
     try {
@@ -123,10 +126,7 @@ export default function CampaignCard({ campaign }: Props) {
             >
               <RefreshCw
                 size={16}
-                className={cn(
-                  'text-slate-400',
-                  isPending && 'animate-spin'
-                )}
+                className={cn('text-slate-400', isPending && 'animate-spin')}
               />
             </button>
             <button
@@ -144,9 +144,7 @@ export default function CampaignCard({ campaign }: Props) {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">
-              Удалить кампанию?
-            </h3>
+            <h3 className="text-lg font-semibold mb-2">Удалить кампанию?</h3>
             <p className="text-slate-400 text-sm mb-6">
               «{campaign.name}» будет удалена навсегда. Восстановить нельзя.
             </p>

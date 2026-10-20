@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
 import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
-import type { EntityType } from '@/lib/types'
 
 interface Props {
   query: string
@@ -28,12 +27,13 @@ export default function WikilinkDropdown({
     .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
     .slice(0, 10)
 
-  // Сброс активного индекса при изменении query
-  useEffect(() => {
+  // CHANGES: убран useEffect(setActiveIndex(0), [query]) → паттерн «props → state».
+  const [prevQuery, setPrevQuery] = useState(query)
+  if (query !== prevQuery) {
+    setPrevQuery(query)
     setActiveIndex(0)
-  }, [query])
+  }
 
-  // Обработка клавиш
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
@@ -57,7 +57,6 @@ export default function WikilinkDropdown({
     return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [filtered, activeIndex, onSelect, onClose])
 
-  // Скролл к активному элементу
   useEffect(() => {
     const el = listRef.current?.children[activeIndex] as HTMLElement
     el?.scrollIntoView({ block: 'nearest' })

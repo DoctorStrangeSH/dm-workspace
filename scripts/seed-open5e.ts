@@ -78,15 +78,6 @@ function transformSpell(spell: any): any {
 // CREATURES
 // ============================================================
 
-const ABILITY_MAP: Record<string, string> = {
-  strength: 'str',
-  dexterity: 'dex',
-  constitution: 'con',
-  intelligence: 'int',
-  wisdom: 'wis',
-  charisma: 'cha',
-}
-
 function transformCreature(creature: any): any {
   // Abilities: из ability_scores
   const scores = creature.ability_scores ?? {}

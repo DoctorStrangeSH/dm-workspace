@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Key, Mail, Loader2 } from 'lucide-react'
+import { Key, Mail } from 'lucide-react'
 import { updateEmail, updatePassword } from '@/lib/actions/settings'
 import { useToast } from '@/components/toast/toast-provider'
 

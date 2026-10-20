@@ -13,7 +13,6 @@ import {
 } from '@/lib/dnd/constants'
 import {
   abilityModifier,
-  getSkillBonus,
 } from '@/lib/dnd/formulas'
 import { SKILL_ABILITY, SKILL_LABELS } from '@/lib/types'
 

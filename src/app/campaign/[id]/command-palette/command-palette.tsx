@@ -34,7 +34,6 @@ export default function CommandPalette({
   isOpen,
   onClose,
   campaignId,
-  campaignName,
   chapters,
   entities,
 }: Props) {
@@ -47,7 +46,6 @@ export default function CommandPalette({
   const commands = useMemo<Command[]>(() => {
     const list: Command[] = []
 
-    // Действия
     list.push(
       {
         id: 'action:dashboard',
@@ -127,7 +125,6 @@ export default function CommandPalette({
       },
     )
 
-    // Главы
     for (const ch of chapters) {
       list.push({
         id: `chapter:${ch.id}`,
@@ -139,7 +136,6 @@ export default function CommandPalette({
       })
     }
 
-    // Сущности
     for (const e of entities) {
       const typeIcon =
         e.type === 'npc'
@@ -177,18 +173,33 @@ export default function CommandPalette({
       .map((r) => r.item)
   }, [commands, query])
 
-  useEffect(() => {
+  // CHANGES:
+  // 1. Убран useEffect с setActiveIndex(0) на [query] — каскадный рендер.
+  //    Заменён на официальный паттерн: сравнение query в рендере через prevQuery.
+  const [prevQuery, setPrevQuery] = useState(query)
+  if (query !== prevQuery) {
+    setPrevQuery(query)
     setActiveIndex(0)
-  }, [query])
+  }
 
-  useEffect(() => {
+  // 2. Убран useEffect с setQuery('') / setActiveIndex(0) на [isOpen] — каскадный рендер.
+  //    Заменён на тот же паттерн: сравнение isOpen в рендере.
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen)
     if (isOpen) {
       setQuery('')
       setActiveIndex(0)
-      setTimeout(() => inputRef.current?.focus(), 50)
     }
-  }, [isOpen])
+  }
 
+  useEffect(() => {
+   if (!isOpen) return
+   const t = setTimeout(() => inputRef.current?.focus(), 50)
+   return () => clearTimeout(t)
+}, [isOpen])
+
+  // Этот useEffect оставлен: он не setState, а side-effect на DOM (scrollIntoView)
   useEffect(() => {
     const el = listRef.current?.children[activeIndex] as HTMLElement
     el?.scrollIntoView({ block: 'nearest' })
@@ -233,7 +244,6 @@ export default function CommandPalette({
         className="bg-slate-900 border-y sm:border border-slate-700 sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden h-[90vh] sm:h-auto sm:max-h-[70vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Поиск */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800 shrink-0">
           <Search size={18} className="text-slate-500 shrink-0" />
           <input
@@ -250,22 +260,21 @@ export default function CommandPalette({
           </kbd>
         </div>
 
-        {/* Список */}
         <div
           ref={listRef}
           className="flex-1 overflow-y-auto py-2"
         >
-{filtered.length === 0 ? (
-  <div className="px-4 py-10">
-    <EmptyState
-      icon="🔍"
-      title="Ничего не найдено"
-      description={`По запросу «${query}» ничего не найдено.`}
-      size="sm"
-      dashed={false}
-    />
-  </div>
-) : (
+          {filtered.length === 0 ? (
+            <div className="px-4 py-10">
+              <EmptyState
+                icon="🔍"
+                title="Ничего не найдено"
+                description={`По запросу «${query}» ничего не найдено.`}
+                size="sm"
+                dashed={false}
+              />
+            </div>
+          ) : (
             filtered.map((cmd, i) => {
               const isActive = i === activeIndex
               const showKindLabel =
@@ -317,7 +326,6 @@ export default function CommandPalette({
           )}
         </div>
 
-        {/* Футер — только на десктопе */}
         <div className="hidden sm:flex px-4 py-2 border-t border-slate-800 items-center justify-between text-xs text-slate-500 shrink-0">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">

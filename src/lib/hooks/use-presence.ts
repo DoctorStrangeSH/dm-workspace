@@ -43,7 +43,7 @@ export function usePresence({
         const state = channel.presenceState()
         const users: OnlineUser[] = []
         for (const key in state) {
-          const presences = state[key] as any[]
+          const presences = state[key] as unknown[]
           if (presences[0]) {
             users.push(presences[0])
           }

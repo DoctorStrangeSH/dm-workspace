@@ -133,7 +133,7 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
               ) : (
                 monsters.map((m) => {
                   // data_json у монстров приходит как объект; но на всякий случай — строка
-                  const dj: any = typeof m.data_json === 'string' ? JSON.parse(m.data_json) : m.data_json
+                  const dj: unknown = typeof m.data_json === 'string' ? JSON.parse(m.data_json) : m.data_json
                   const rawHp = dj?.hp ?? dj?.hit_points ?? dj?.hp_max
                   const [hpDisplay, hpNum] = parseMonsterHP(rawHp)
                   return (

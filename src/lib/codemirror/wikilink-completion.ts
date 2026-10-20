@@ -1,7 +1,6 @@
 import {
   CompletionContext,
   CompletionResult,
-  autocompletion,
   startCompletion,
 } from '@codemirror/autocomplete'
 import { keymap } from '@codemirror/view'

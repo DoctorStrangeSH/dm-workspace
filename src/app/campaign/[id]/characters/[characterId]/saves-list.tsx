@@ -1,8 +1,7 @@
 'use client'
 
-import { Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
-import { ABILITY_LABELS, ABILITY_SHORT, type AbilityKey } from '@/lib/types'
+import { ABILITY_SHORT, type AbilityKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface Props {

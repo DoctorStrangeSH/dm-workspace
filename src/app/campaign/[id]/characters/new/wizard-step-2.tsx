@@ -12,7 +12,7 @@ import {
   getPointsRemaining,
   isStandardArrayUsed,
 } from '@/lib/dnd/character-builder'
-import { ABILITY_LABELS, ABILITY_SHORT, type AbilityKey } from '@/lib/types'
+import { ABILITY_LABELS, type AbilityKey } from '@/lib/types'
 import { STANDARD_ARRAY } from '@/lib/dnd/constants'
 import { cn } from '@/lib/utils'
 

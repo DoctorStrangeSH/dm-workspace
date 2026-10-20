@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Map, Crown, Eye, Trash2 } from 'lucide-react'
+import { Plus, Map, Eye, Trash2 } from 'lucide-react'
 import EmptyState from '@/components/empty-state'
 import CreateSceneModal from './create-scene-modal'
 import { deleteScene, setActiveScene } from '@/lib/actions/scenes'

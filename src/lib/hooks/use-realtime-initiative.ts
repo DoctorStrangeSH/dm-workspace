@@ -18,17 +18,18 @@ export function useRealtimeInitiative({
   const [initiative, setInitiative] =
     useState<InitiativeEntryWithToken[]>(initialInitiative)
 
-  useEffect(() => {
+  // CHANGES: убран useEffect(setInitiative) → паттерн «props → state».
+  const [prevInitial, setPrevInitial] = useState(initialInitiative)
+  if (initialInitiative !== prevInitial) {
+    setPrevInitial(initialInitiative)
     setInitiative(initialInitiative)
-  }, [initialInitiative])
+  }
 
   useEffect(() => {
     if (!enabled) return
 
     const supabase = createClient()
 
-    // Перезагружаем полную инициативу при любом изменении
-    // (проще, чем собирать token + initiative по кускам)
     const refresh = async () => {
       const { data } = await supabase
         .from('initiative')
@@ -63,7 +64,6 @@ export function useRealtimeInitiative({
         },
         refresh
       )
-      // Также следим за tokens — HP меняется
       .on(
         'postgres_changes',
         {

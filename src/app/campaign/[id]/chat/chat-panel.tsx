@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { MessageSquare, X, ChevronRight } from 'lucide-react'
+import { MessageSquare, X } from 'lucide-react'
 import { sendMessage, deleteMessage } from '@/lib/actions/messages'
 import { useToast } from '@/components/toast/toast-provider'
 import MessageList from './message-list'
@@ -35,7 +35,7 @@ export default function ChatPanel({
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  const handleSendText = (content: string, isHidden: boolean) => {
+  const handleSendText = (content: string) => {
     startTransition(async () => {
       const res = await sendMessage(campaignId, content, 'text')
       if ('error' in res) toast.error(res.error ?? 'Ошибка')

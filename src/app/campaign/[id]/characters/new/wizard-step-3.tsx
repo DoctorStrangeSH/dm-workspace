@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { BACKGROUNDS, type ClassInfo } from '@/lib/dnd/constants'
 import {
@@ -8,7 +7,6 @@ import {
   SKILL_LABELS,
   SKILL_ABILITY,
   type SkillKey,
-  type BackgroundInfo,
 } from '@/lib/types'
 
 interface Props {

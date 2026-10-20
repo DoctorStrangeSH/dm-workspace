@@ -11,16 +11,6 @@ interface Props {
 /**
  * Выделяет упоминание [[Name]] в сниппете жирным.
  */
-function highlightSnippet(snippet: string, entityName: string): string {
-  return snippet.replace(
-    new RegExp(`\\[\\[${escapeRegExp(entityName)}\\]\\]`, 'g'),
-    `**[[${entityName}]]**`
-  )
-}
-
-function escapeRegExp(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
 
 export default function EntityBacklinks({ campaignId, backlinks }: Props) {
   if (backlinks.length === 0) {

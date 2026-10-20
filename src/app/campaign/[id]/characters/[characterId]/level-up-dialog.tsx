@@ -12,12 +12,10 @@ import {
 } from '@/lib/dnd/level-up'
 import {
   abilityModifier,
-  formatModifier,
 } from '@/lib/dnd/formulas'
 import { hasASI } from '@/lib/dnd/constants'
 import {
   ABILITY_LABELS,
-  ABILITY_SHORT,
   type AbilityKey,
   type Character,
 } from '@/lib/types'

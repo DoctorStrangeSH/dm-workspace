@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Dices, Skull, Shield } from 'lucide-react'
+import { Dices } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { MessageWithAuthor } from '@/lib/types'
 
@@ -17,14 +17,6 @@ function formatTime(iso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
-}
-
-function isNaturalMaxRoll(rolls: number[], sides: number): boolean {
-  return rolls.length === 1 && rolls[0] === sides
-}
-
-function isNaturalOne(rolls: number[]): boolean {
-  return rolls.length === 1 && rolls[0] === 1
 }
 
 export default function MessageList({

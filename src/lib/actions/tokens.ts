@@ -50,7 +50,7 @@ export async function createToken(
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
-  const { isDm, isMember, role } = await getCampaignAccess(campaignId)
+  const { isDm, isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа к кампании' }
 
   const supabase = await createClient()
