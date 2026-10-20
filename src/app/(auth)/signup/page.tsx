@@ -50,10 +50,16 @@ function SignupForm() {
 
       <form onSubmit={handleSignup} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Имя (для отображения)</label>
+          {/* CHANGES: htmlFor="username" — связка label↔input */}
+          <label htmlFor="username" className="mb-1 block text-sm text-slate-300">
+            Имя (для отображения)
+          </label>
           <input
+            id="username"
+            name="username"
             type="text"
             required
+            autoComplete="nickname"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Гэндальф"
@@ -62,10 +68,16 @@ function SignupForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Email</label>
+          {/* CHANGES: htmlFor="email" — связка label↔input */}
+          <label htmlFor="email" className="mb-1 block text-sm text-slate-300">
+            Email
+          </label>
           <input
+            id="email"
+            name="email"
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
@@ -73,11 +85,17 @@ function SignupForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-300">Пароль</label>
+          {/* CHANGES: htmlFor="password" — связка label↔input */}
+          <label htmlFor="password" className="mb-1 block text-sm text-slate-300">
+            Пароль
+          </label>
           <input
+            id="password"
+            name="password"
             type="password"
             required
             minLength={6}
+            autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"

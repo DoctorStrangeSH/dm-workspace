@@ -10,7 +10,13 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:update": "playwright test --update-snapshots",
+    "test:e2e:smoke": "playwright test tests/smoke.spec.ts",
+    "test:e2e:screenshots": "playwright test tests/screenshots.spec.ts",
+    "seed:test": "tsx scripts/seed-test-user.ts"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",
@@ -35,6 +41,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -47,6 +54,7 @@
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.6.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   },
   "lint-staged": {
