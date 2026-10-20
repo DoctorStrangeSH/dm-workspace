@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Plus, Package, Sparkles, Shield } from 'lucide-react'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 import CurrencyTracker from './inventory/currency-tracker'
 import EncumbranceBar from './inventory/encumbrance-bar'
 import InventoryItem from './inventory/inventory-item'

@@ -17,6 +17,7 @@ import SpellsTab from './spells/spells-tab'
 import InventoryTab from './inventory-tab'
 import FeaturesTab from './features-tab'
 import LevelUpDialog from './level-up-dialog'
+import { Card, Button, IconButton } from '@/components/ui'
 import {
   abilityModifier,
   formatModifier,
@@ -58,7 +59,7 @@ export default function CharacterSheet({
 }: Props) {
   const router = useRouter()
   const toast = useToast()
-  const [startTransition] = useTransition()
+  const [isPending, startTransition] = useTransition()
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState(character.name)
   const [showLevelUp, setShowLevelUp] = useState(false)
@@ -142,9 +143,9 @@ export default function CharacterSheet({
       />
 
       {/* Заголовок */}
-      <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900 p-5">
+      <Card padding="lg" className="mb-4">
         <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-amber-900/50 bg-amber-950/40 text-3xl">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-3xl">
             ⚔️
           </div>
 
@@ -163,56 +164,67 @@ export default function CharacterSheet({
                     }
                   }}
                   autoFocus
-                  className="rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xl font-bold text-white focus:border-indigo-500 focus:outline-none"
+                  className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-xl font-bold text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
                 />
-                <button onClick={handleSaveName} className="rounded p-1 hover:bg-slate-800">
-                  <Check size={16} className="text-green-400" />
-                </button>
-                <button
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  label="Сохранить"
+                  onClick={handleSaveName}
+                  disabled={isPending}
+                  className="text-[var(--success)]"
+                >
+                  <Check size={16} />
+                </IconButton>
+                <IconButton
+                  variant="ghost"
+                  size="sm"
+                  label="Отмена"
                   onClick={() => {
                     setEditName(character.name)
                     setIsEditingName(false)
                   }}
-                  className="rounded p-1 hover:bg-slate-800"
                 >
-                  <X size={16} className="text-slate-400" />
-                </button>
+                  <X size={16} />
+                </IconButton>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">{character.name}</h1>
+                <h1 className="text-2xl font-bold text-[var(--text-primary)]">{character.name}</h1>
                 {canEdit && (
-                  <button
+                  <IconButton
+                    variant="ghost"
+                    size="sm"
+                    label="Редактировать имя"
                     onClick={() => setIsEditingName(true)}
-                    className="rounded p-1 opacity-60 transition hover:bg-slate-800 hover:opacity-100"
-                    title="Редактировать имя"
                   >
                     <Pencil size={14} />
-                  </button>
+                  </IconButton>
                 )}
               </div>
             )}
 
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
               {race?.name} · {cls?.name} · Уровень {data.level}
             </p>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
               Владелец: {owner.display_name ?? owner.username}
             </p>
 
             {canEdit && data.level < 20 && (
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<TrendingUp size={12} />}
                 onClick={() => setShowLevelUp(true)}
-                className="mt-3 flex items-center gap-1.5 rounded-lg border border-green-900/50 bg-green-950/40 px-3 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60"
-                title="Повысить уровень"
+                className="mt-3 border-[var(--success)]/30 bg-[var(--success-subtle)] text-[var(--success-text)]"
               >
-                <TrendingUp size={12} />
                 Level {data.level} → {data.level + 1}
-              </button>
+              </Button>
             )}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Вкладки */}
       <CharacterTabs

@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import ItemsSearch from './items-search'
 import SrdItemCard from './srd-item-card'
 import SrdItemDetailDialog from './srd-item-detail-dialog'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 import { searchSrdItemsAction, type SrdItem } from '@/lib/actions/items-search'
 
 interface Props {

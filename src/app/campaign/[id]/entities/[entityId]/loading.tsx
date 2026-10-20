@@ -1,4 +1,4 @@
-import { EntityDetailSkeleton } from '@/components/skeleton'
+import { EntityDetailSkeleton } from '@/components/ui'
 
 export default function EntityDetailLoading() {
   return (

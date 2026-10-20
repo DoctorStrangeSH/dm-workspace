@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { BookOpen, ExternalLink } from 'lucide-react'
 import type { BacklinkChapter } from '@/lib/queries/backlinks'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 
 interface Props {
   campaignId: string

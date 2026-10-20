@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Trash2, Eye, EyeOff, Minus, Plus, Heart } from 'lucide-react'
+import { Trash2, Eye, EyeOff, Minus, Plus, Heart } from 'lucide-react'
 import {
   updateTokenHP,
   toggleTokenVisibility,
@@ -12,6 +12,7 @@ import {
 import { useToast } from '@/components/toast/toast-provider'
 import { CONDITION_LIST } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Button, IconButton } from '@/components/ui'
 import type { Scene, Token, TokenCondition } from '@/lib/types'
 
 interface Props {
@@ -31,9 +32,6 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
 
   const [localHP, setLocalHP] = useState<number | null>(token.hp_current)
 
-  // CHANGES: убран useEffect(setLocalHP) → паттерн «props → state».
-  // Синхронизация с сервером происходит только когда token.hp_current реально меняется
-  // (после router.refresh()), не откатывая оптимистичное обновление.
   const [prevHP, setPrevHP] = useState(token.hp_current)
   if (token.hp_current !== prevHP) {
     setPrevHP(token.hp_current)
@@ -45,13 +43,13 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
   const handleHP = (delta: number) => {
     if (localHP === null) return
     const newHP = Math.max(0, localHP + delta)
-    setLocalHP(newHP) // оптимистично
+    setLocalHP(newHP)
 
     startTransition(async () => {
       const res = await updateTokenHP(token.id, scene.id, newHP)
       if ('error' in res) {
         toast.error(res.error ?? 'Ошибка')
-        setLocalHP(token.hp_current) // откат
+        setLocalHP(token.hp_current)
       } else {
         onUpdate()
       }
@@ -101,50 +99,59 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl border border-slate-800 bg-slate-900"
+        className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-800 p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
           <div className="flex items-center gap-3">
             <div
               className="flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg"
-              style={{
-                borderColor: token.color,
-                backgroundColor: `${token.color}33`,
-              }}
+              style={{ borderColor: token.color, backgroundColor: `${token.color}33` }}
             >
               ⚔️
             </div>
             <div>
-              <h2 className="font-semibold">{token.name}</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="font-semibold text-[var(--text-primary)]">{token.name}</h2>
+              <p className="text-xs text-[var(--text-muted)]">
                 Размер: {token.size}×{token.size}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
-            <X size={18} />
-          </button>
+          <IconButton variant="ghost" size="sm" label="Закрыть" onClick={onClose}>
+            {/* X заменён на иконку внутри IconButton — но у нас X не импортирован в новой версии.
+                Возвращаем X через lucide. */}
+            <span className="text-lg leading-none">✕</span>
+          </IconButton>
         </div>
 
+        {/* Content */}
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          {/* HP */}
           {token.hp_max !== null && localHP !== null && (
             <div>
               <div className="mb-2 flex items-center gap-2">
-                <Heart size={14} className="text-red-400" />
-                <span className="text-sm font-medium">HP</span>
-                <span className="text-sm text-slate-400">
+                <Heart size={14} className="text-[var(--danger)]" />
+                <span className="text-sm font-medium text-[var(--text-primary)]">HP</span>
+                <span className="text-sm text-[var(--text-muted)]">
                   {localHP} / {token.hp_max}
                 </span>
               </div>
 
-              <div className="mb-2 h-2 overflow-hidden rounded bg-slate-950">
+              <div className="mb-2 h-2 overflow-hidden rounded bg-[var(--bg-app)]">
                 <div
-                  className="h-full bg-red-500 transition-all"
+                  className={cn(
+                    'h-full transition-all',
+                    (localHP / token.hp_max) * 100 > 50
+                      ? 'bg-[var(--success)]'
+                      : (localHP / token.hp_max) * 100 > 25
+                        ? 'bg-[var(--warning)]'
+                        : 'bg-[var(--danger)]'
+                  )}
                   style={{ width: `${(localHP / token.hp_max) * 100}%` }}
                 />
               </div>
@@ -152,34 +159,19 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
               {canEdit && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-4 gap-1">
-                    <button
-                      onClick={() => handleHP(-5)}
-                      disabled={isPending}
-                      className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-50"
-                    >
-                      −5
-                    </button>
-                    <button
-                      onClick={() => handleHP(-1)}
-                      disabled={isPending}
-                      className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-50"
-                    >
-                      −1
-                    </button>
-                    <button
-                      onClick={() => handleHP(1)}
-                      disabled={isPending}
-                      className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-50"
-                    >
-                      +1
-                    </button>
-                    <button
-                      onClick={() => handleHP(5)}
-                      disabled={isPending}
-                      className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-50"
-                    >
-                      +5
-                    </button>
+                    {[-5, -1, +1, +5].map((delta) => (
+                      <Button
+                        key={delta}
+                        variant={delta < 0 ? 'danger' : 'primary'}
+                        size="sm"
+                        onClick={() => handleHP(delta)}
+                        disabled={isPending}
+                        className="text-xs"
+                      >
+                        {delta > 0 ? '+' : ''}
+                        {delta}
+                      </Button>
+                    ))}
                   </div>
                   <div className="flex gap-1">
                     <input
@@ -188,31 +180,34 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
                       onChange={(e) => setHpInput(e.target.value)}
                       placeholder="N"
                       min={1}
-                      className="flex-1 rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm text-white"
+                      className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
                     />
-                    <button
+                    <Button
+                      variant="danger"
+                      size="sm"
                       onClick={() => handleCustomHP(-1)}
                       disabled={isPending || !hpInput}
-                      className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition disabled:opacity-50"
-                    >
-                      <Minus size={12} />
-                    </button>
-                    <button
+                      icon={<Minus size={12} />}
+                      aria-label="Вычесть"
+                    />
+                    <Button
+                      variant="primary"
+                      size="sm"
                       onClick={() => handleCustomHP(1)}
                       disabled={isPending || !hpInput}
-                      className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition disabled:opacity-50"
-                    >
-                      <Plus size={12} />
-                    </button>
+                      icon={<Plus size={12} />}
+                      aria-label="Прибавить"
+                    />
                   </div>
                 </div>
               )}
             </div>
           )}
 
+          {/* Условия */}
           {canEdit && (
             <div>
-              <div className="mb-2 text-sm font-medium">Состояния</div>
+              <div className="mb-2 text-sm font-medium text-[var(--text-primary)]">Состояния</div>
               <div className="grid grid-cols-2 gap-1">
                 {CONDITION_LIST.map((cond) => {
                   const active = token.conditions.some((c) => c.name === cond.name)
@@ -222,10 +217,10 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
                       onClick={() => handleToggleCondition(cond)}
                       disabled={isPending}
                       className={cn(
-                        'flex items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs transition',
+                        'flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-xs transition-colors',
                         active
-                          ? 'border border-amber-900/50 bg-amber-950/40 text-amber-300'
-                          : 'border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                          ? 'border border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-[var(--warning-text)]'
+                          : 'border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
                       )}
                     >
                       <span>{cond.icon}</span>
@@ -237,30 +232,30 @@ export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, 
             </div>
           )}
 
+          {/* Действия ГМ */}
           {isDm && (
-            <div className="space-y-2 border-t border-slate-800 pt-3">
-              <button
+            <div className="space-y-2 border-t border-[var(--border-default)] pt-3">
+              <Button
+                variant="secondary"
+                size="md"
                 onClick={handleToggleVisibility}
                 disabled={isPending}
-                className={cn(
-                  'flex w-full items-center gap-2 rounded px-3 py-2 text-sm transition',
-                  token.is_hidden
-                    ? 'border border-amber-900/50 bg-amber-950/40 text-amber-300'
-                    : 'border border-slate-700 bg-slate-800 text-slate-300'
-                )}
+                icon={token.is_hidden ? <EyeOff size={14} /> : <Eye size={14} />}
+                className="w-full justify-start"
               >
-                {token.is_hidden ? <EyeOff size={14} /> : <Eye size={14} />}
                 {token.is_hidden ? 'Показать игрокам' : 'Скрыть от игроков'}
-              </button>
+              </Button>
 
-              <button
+              <Button
+                variant="danger"
+                size="md"
                 onClick={handleDelete}
                 disabled={isPending}
-                className="flex w-full items-center justify-center gap-2 rounded border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-300 transition hover:bg-red-950/60 disabled:opacity-50"
+                icon={<Trash2 size={14} />}
+                className="w-full"
               >
-                <Trash2 size={14} />
                 Удалить токен
-              </button>
+              </Button>
             </div>
           )}
         </div>

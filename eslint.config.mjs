@@ -25,7 +25,6 @@ const eslintConfig = defineConfig([
     },
   },
 
-  // Исключения для парсеров внешнего JSON
   {
     files: [
       'src/lib/srd/**/*.ts',
@@ -39,6 +38,7 @@ const eslintConfig = defineConfig([
       'src/lib/queries/music.ts',
       'src/lib/dnd/srd-adapter.ts',
       'scripts/**/*.ts',
+      'tests/**/*.ts',
     ],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
@@ -60,7 +60,6 @@ const eslintConfig = defineConfig([
     },
   },
 
-  // Исключения для hook-файлов — set-state-in-effect починим постепенно
   {
     files: ['src/lib/hooks/use-realtime-*.ts'],
     rules: {
@@ -68,7 +67,18 @@ const eslintConfig = defineConfig([
     },
   },
 
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    'node_modules/**',
+    'playwright-report/**',
+    'test-results/**',
+    'blob-report/**',
+    'coverage/**',
+    '.vercel/**',
+  ]),
 ])
 
 export default eslintConfig

@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import { AppShell } from '@/components/app-shell'
+import { Button, Card } from '@/components/ui'
 
 export default async function JoinPage({ params }: { params: Promise<{ code: string }> }) {
   await connection()
@@ -16,33 +18,35 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Если не залогинен — редирект на логин с return-url
   if (!user) {
     redirect(`/login?next=/join/${code}`)
   }
 
-  // Пробуем присоединиться
   const { data: campaignId, error } = await supabase.rpc('join_campaign_by_code', { code })
 
+  // ─── Ошибка ───
   if (error || !campaignId) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white">
-        <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
-          <XCircle size={48} className="mx-auto mb-4 text-red-400" />
-          <h1 className="mb-2 text-xl font-bold">Не удалось присоединиться</h1>
-          <p className="mb-6 text-sm text-slate-400">Код приглашения недействителен или устарел.</p>
-          <Link
-            href="/dashboard"
-            className="inline-block rounded-lg bg-indigo-600 px-4 py-2 transition hover:bg-indigo-500"
-          >
-            На главную
+      <AppShell maxWidth="sm" className="flex items-center justify-center">
+        <Card padding="lg" className="w-full text-center">
+          <XCircle size={48} className="mx-auto mb-4 text-[var(--danger)]" />
+          <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">
+            Не удалось присоединиться
+          </h1>
+          <p className="mb-6 text-sm text-[var(--text-muted)]">
+            Код приглашения недействителен или устарел.
+          </p>
+          <Link href="/dashboard">
+            <Button variant="primary" size="md">
+              На главную
+            </Button>
           </Link>
-        </div>
-      </div>
+        </Card>
+      </AppShell>
     )
   }
 
-  // Получаем название кампании для отображения
+  // ─── Успех ───
   const { data: campaign } = await supabase
     .from('campaigns')
     .select('name')
@@ -50,21 +54,22 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     .single()
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-white">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center">
-        <CheckCircle2 size={48} className="mx-auto mb-4 text-green-400" />
-        <h1 className="mb-2 text-xl font-bold">Добро пожаловать!</h1>
-        <p className="mb-6 text-sm text-slate-400">
+    <AppShell maxWidth="sm" className="flex items-center justify-center">
+      <Card padding="lg" className="w-full text-center">
+        <CheckCircle2 size={48} className="mx-auto mb-4 text-[var(--success)]" />
+        <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">Добро пожаловать!</h1>
+        <p className="mb-6 text-sm text-[var(--text-muted)]">
           Ты присоединился к кампании{' '}
-          <span className="font-medium text-white">«{campaign?.name ?? 'Без названия'}»</span>
+          <span className="font-medium text-[var(--text-primary)]">
+            «{campaign?.name ?? 'Без названия'}»
+          </span>
         </p>
-        <Link
-          href="/dashboard"
-          className="inline-block rounded-lg bg-indigo-600 px-4 py-2 transition hover:bg-indigo-500"
-        >
-          Перейти к кампаниям
+        <Link href="/dashboard">
+          <Button variant="primary" size="md">
+            Перейти к кампаниям
+          </Button>
         </Link>
-      </div>
-    </div>
+      </Card>
+    </AppShell>
   )
 }

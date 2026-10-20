@@ -4,6 +4,7 @@ import { Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
 import { ABILITY_LABELS, ABILITY_SHORT, type AbilityKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Card, IconButton } from '@/components/ui'
 
 interface Props {
   ability: AbilityKey
@@ -15,43 +16,46 @@ interface Props {
 
 export default function AbilityBox({ ability, score, modifier, onRoll, onClick }: Props) {
   return (
-    <div
+    <Card
+      padding="sm"
       className={cn(
-        'group relative rounded-xl border border-slate-800 bg-slate-900 p-3 text-center transition hover:border-indigo-700',
+        'group relative text-center transition-colors hover:border-[var(--border-hover)]',
         (onRoll || onClick) && 'cursor-pointer'
       )}
-      onClick={onClick}
     >
-      <div className="mb-1 text-[10px] tracking-wider text-slate-500 uppercase">
-        {ABILITY_SHORT[ability]}
-      </div>
+      <div onClick={onClick}>
+        <div className="mb-1 text-[10px] tracking-wider text-[var(--text-subtle)] uppercase">
+          {ABILITY_SHORT[ability]}
+        </div>
 
-      <div className="text-2xl font-bold">{score}</div>
+        <div className="text-2xl font-bold text-[var(--text-primary)]">{score}</div>
 
-      <div
-        className={cn(
-          'mt-1 inline-block rounded px-2 py-0.5 text-xs font-medium',
-          modifier >= 0
-            ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
-            : 'border border-red-900/50 bg-red-950/60 text-red-300'
-        )}
-      >
-        {formatModifier(modifier)}
+        <div
+          className={cn(
+            'mt-1 inline-block rounded px-2 py-0.5 text-xs font-medium',
+            modifier >= 0
+              ? 'border border-[var(--accent)]/30 bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+              : 'border border-[var(--danger)]/30 bg-[var(--danger-subtle)] text-[var(--danger-text)]'
+          )}
+        >
+          {formatModifier(modifier)}
+        </div>
       </div>
 
       {onRoll && (
-        <button
-          type="button"
+        <IconButton
+          variant="ghost"
+          size="sm"
+          label={`Бросок ${ABILITY_LABELS[ability]}`}
           onClick={(e) => {
             e.stopPropagation()
             onRoll()
           }}
-          className="absolute top-1.5 right-1.5 rounded p-1 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800"
-          title={`Бросок ${ABILITY_LABELS[ability]}`}
+          className="absolute top-1.5 right-1.5 opacity-0 transition group-hover:opacity-100"
         >
-          <Dices size={12} className="text-slate-400" />
-        </button>
+          <Dices size={12} />
+        </IconButton>
       )}
-    </div>
+    </Card>
   )
 }

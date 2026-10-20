@@ -21,7 +21,6 @@ export default function WikilinkDropdown({ query, entities, position, onSelect, 
     .filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
     .slice(0, 10)
 
-  // CHANGES: убран useEffect(setActiveIndex(0), [query]) → паттерн «props → state».
   const [prevQuery, setPrevQuery] = useState(query)
   if (query !== prevQuery) {
     setPrevQuery(query)
@@ -59,7 +58,7 @@ export default function WikilinkDropdown({ query, entities, position, onSelect, 
   if (filtered.length === 0) {
     return (
       <div
-        className="absolute z-50 rounded-lg border border-slate-800 bg-slate-900 p-3 text-sm text-slate-500 shadow-2xl"
+        className="absolute z-50 rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 text-sm text-[var(--text-muted)] shadow-[var(--shadow-xl)]"
         style={{ top: position.top, left: position.left }}
       >
         Ничего не найдено
@@ -70,7 +69,7 @@ export default function WikilinkDropdown({ query, entities, position, onSelect, 
   return (
     <div
       ref={listRef}
-      className="absolute z-50 max-h-[280px] max-w-[320px] min-w-[240px] overflow-hidden overflow-y-auto rounded-lg border border-slate-800 bg-slate-900 shadow-2xl"
+      className="absolute z-50 max-h-[280px] max-w-[320px] min-w-[240px] overflow-hidden overflow-y-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)]"
       style={{ top: position.top, left: position.left }}
     >
       {filtered.map((entity, i) => {
@@ -85,14 +84,16 @@ export default function WikilinkDropdown({ query, entities, position, onSelect, 
               onSelect(entity)
             }}
             className={cn(
-              'flex cursor-pointer items-center gap-3 px-3 py-2 transition',
-              isActive ? 'bg-indigo-950/70 text-white' : 'text-slate-300 hover:bg-slate-800/60'
+              'flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors',
+              isActive
+                ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]'
             )}
           >
             <span className="text-lg">{style.icon}</span>
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{entity.name}</div>
-              <div className="text-xs text-slate-500">{style.label}</div>
+              <div className="text-xs text-[var(--text-subtle)]">{style.label}</div>
             </div>
           </div>
         )

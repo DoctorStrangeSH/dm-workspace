@@ -3,6 +3,7 @@
 import { Shield, Zap, Footprints, Eye, Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
 import { cn } from '@/lib/utils'
+import { Card, IconButton } from '@/components/ui'
 
 interface Props {
   ac: number
@@ -24,26 +25,26 @@ export default function CombatStats({
       icon: Shield,
       label: 'AC',
       value: ac,
-      color: 'text-sky-400',
+      color: 'text-[var(--info-text)]',
     },
     {
       icon: Zap,
       label: 'Инициатива',
       value: formatModifier(initiative),
-      color: 'text-amber-400',
+      color: 'text-[var(--warning-text)]',
       onRoll: onRollInitiative,
     },
     {
       icon: Footprints,
       label: 'Скорость',
       value: `${speed} ft`,
-      color: 'text-emerald-400',
+      color: 'text-[var(--success-text)]',
     },
     {
       icon: Eye,
       label: 'Пасс. внимат.',
       value: passivePerception,
-      color: 'text-violet-400',
+      color: 'text-[var(--accent-text)]',
     },
   ]
 
@@ -52,24 +53,22 @@ export default function CombatStats({
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
-          <div
-            key={stat.label}
-            className="group relative rounded-xl border border-slate-800 bg-slate-900 p-3 text-center"
-          >
+          <Card key={stat.label} padding="sm" className="group relative text-center">
             <Icon size={14} className={cn(stat.color, 'mx-auto mb-1')} />
-            <div className="text-lg font-bold">{stat.value}</div>
-            <div className="text-[10px] text-slate-500 uppercase">{stat.label}</div>
+            <div className="text-lg font-bold text-[var(--text-primary)]">{stat.value}</div>
+            <div className="text-[10px] text-[var(--text-subtle)] uppercase">{stat.label}</div>
             {stat.onRoll && (
-              <button
-                type="button"
+              <IconButton
+                variant="ghost"
+                size="sm"
+                label="Бросок инициативы"
                 onClick={stat.onRoll}
-                className="absolute top-1.5 right-1.5 rounded p-1 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800"
-                title="Бросок инициативы"
+                className="absolute top-1.5 right-1.5 opacity-0 transition group-hover:opacity-100"
               >
-                <Dices size={10} className="text-slate-400" />
-              </button>
+                <Dices size={10} />
+              </IconButton>
             )}
-          </div>
+          </Card>
         )
       })}
     </div>

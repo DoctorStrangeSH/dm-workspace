@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect } from 'react'
 import BestiarySearch from './bestiary-search'
 import MonsterCard from './monster-card'
 import MonsterDetailDialog from './monster-detail-dialog'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 import { searchSrdMonstersAction, type SrdMonster } from '@/lib/actions/bestiary-search'
 
 interface Props {

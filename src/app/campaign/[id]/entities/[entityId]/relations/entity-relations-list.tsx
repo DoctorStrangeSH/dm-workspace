@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo } from 'react'
 import { Plus, Link2 } from 'lucide-react'
 import { deleteRelation } from '@/lib/actions/relations'
 import { useToast } from '@/components/toast/toast-provider'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 import { RELATION_TYPES, type EntityRelation, type RelationType } from '@/lib/types'
 import RelationChip from './relation-chip'
 import AddRelationDialog from './add-relation-dialog'
@@ -28,7 +28,8 @@ export default function EntityRelationsList({
   isDm,
 }: Props) {
   const toast = useToast()
-  const [startTransition] = useTransition()
+  // CHANGES: исправлено — было `const [Boolean] = useTransition()` (ошибка TS2349)
+  const [, startTransition] = useTransition()
   const [showDialog, setShowDialog] = useState(false)
 
   const grouped = useMemo(() => {
@@ -81,7 +82,6 @@ export default function EntityRelationsList({
         )}
       </div>
 
-      {/* Подсказка для локаций */}
       {entityType === 'location' && relations.length === 0 && isDm && (
         <div className="mb-4 rounded-lg border border-emerald-900/30 bg-emerald-950/20 p-3">
           <p className="text-sm text-emerald-300">

@@ -73,7 +73,8 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
               <label className="mb-1 block text-sm text-slate-300">Тип сетки</label>
               <select
                 value={gridType}
-                onChange={(e) => setGridType(e.target.value as unknown)}
+                // CHANGES: было `as unknown`, стало точное приведение к union
+                onChange={(e) => setGridType(e.target.value as 'square' | 'hex' | 'none')}
                 className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
               >
                 <option value="square">Квадрат</option>

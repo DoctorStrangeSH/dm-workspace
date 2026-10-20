@@ -10,6 +10,7 @@ import EntitiesBreakdown from './stats/entities-breakdown'
 import NeedsAttention from './stats/needs-attention'
 import RecentActivity from './stats/recent-activity'
 import { Crown } from 'lucide-react'
+import { Badge, EmptyState } from '@/components/ui'
 
 export default async function CampaignOverviewPage({
   params,
@@ -33,17 +34,19 @@ export default async function CampaignOverviewPage({
       />
 
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">{campaign.name}</h1>
+        <h1 className="mb-2 text-3xl font-bold text-[var(--text-primary)]">{campaign.name}</h1>
         {campaign.genre && (
-          <span className="rounded-full border border-indigo-900/50 bg-indigo-950/60 px-2 py-1 text-xs text-indigo-300">
+          <Badge variant="accent" size="md">
             {campaign.genre}
-          </span>
+          </Badge>
         )}
-        {campaign.description && <p className="mt-4 text-slate-400">{campaign.description}</p>}
+        {campaign.description && (
+          <p className="mt-4 text-[var(--text-muted)]">{campaign.description}</p>
+        )}
       </div>
 
       {isDm && (
-        <div className="mb-6 flex items-center gap-2 rounded-lg border border-amber-900/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-400">
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-[var(--warning)]/30 bg-[var(--warning-subtle)] px-3 py-2 text-sm text-[var(--warning-text)]">
           <Crown size={14} />
           <span>Ты — ГМ этой кампании</span>
         </div>
@@ -60,14 +63,14 @@ export default async function CampaignOverviewPage({
 
       {!stats ||
         (stats.chapters.total === 0 && stats.entities.total === 0 && (
-          <div className="rounded-2xl border-2 border-dashed border-slate-800 p-12 text-center">
-            <p className="mb-2 text-slate-400">Кампания пока пустая</p>
-            <p className="text-sm text-slate-500">
-              {isDm
-                ? 'Начни с создания первой главы или сущности.'
-                : 'ГМ пока не добавил материалы.'}
-            </p>
-          </div>
+          <EmptyState
+            icon="🏰"
+            title="Кампания пока пустая"
+            description={
+              isDm ? 'Начни с создания первой главы или сущности.' : 'ГМ пока не добавил материалы.'
+            }
+            size="lg"
+          />
         ))}
     </div>
   )

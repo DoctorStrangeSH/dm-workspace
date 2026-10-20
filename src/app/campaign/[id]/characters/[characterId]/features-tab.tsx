@@ -1,6 +1,6 @@
 'use client'
 
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 
 export default function FeaturesTab() {
   return (

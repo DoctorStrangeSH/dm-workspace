@@ -2,6 +2,7 @@
 
 import { Pencil, Eye, Columns, Bold, Italic, List, Link2, Quote, Code2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { IconButton, Tooltip } from '@/components/ui'
 import SaveStatus from './save-status'
 
 export type ViewMode = 'edit' | 'split' | 'preview'
@@ -30,10 +31,10 @@ export default function EditorToolbar({
   hideViewModes = false,
 }: Props) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
-      {/* Режимы — скрываем на мобиле */}
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] pb-3">
+      {/* Режимы */}
       {!hideViewModes && (
-        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
           <ViewButton
             active={view === 'edit'}
             onClick={() => onViewChange('edit')}
@@ -55,39 +56,27 @@ export default function EditorToolbar({
         </div>
       )}
 
-      {/* Быстрые вставки (только для ГМа) */}
+      {/* Быстрые вставки */}
       {!readOnly && view !== 'preview' && onInsert && (
-        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
-          <ToolButton
-            onClick={() => onInsert('**жирный**', true)}
-            icon={<Bold size={14} />}
-            title="Жирный (Ctrl+B)"
-          />
-          <ToolButton
-            onClick={() => onInsert('*курсив*', true)}
-            icon={<Italic size={14} />}
-            title="Курсив (Ctrl+I)"
-          />
-          <ToolButton
-            onClick={() => onInsert('\n- элемент списка')}
-            icon={<List size={14} />}
-            title="Список"
-          />
-          <ToolButton
-            onClick={() => onInsert('[текст](url)')}
-            icon={<Link2 size={14} />}
-            title="Ссылка"
-          />
-          <ToolButton
-            onClick={() => onInsert('\n> цитата\n')}
-            icon={<Quote size={14} />}
-            title="Цитата"
-          />
-          <ToolButton
-            onClick={() => onInsert('`код`', true)}
-            icon={<Code2 size={14} />}
-            title="Код"
-          />
+        <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
+          <Tooltip content="Жирный (Ctrl+B)">
+            <ToolButton onClick={() => onInsert('**жирный**', true)} icon={<Bold size={14} />} />
+          </Tooltip>
+          <Tooltip content="Курсив (Ctrl+I)">
+            <ToolButton onClick={() => onInsert('*курсив*', true)} icon={<Italic size={14} />} />
+          </Tooltip>
+          <Tooltip content="Список">
+            <ToolButton onClick={() => onInsert('\n- элемент списка')} icon={<List size={14} />} />
+          </Tooltip>
+          <Tooltip content="Ссылка">
+            <ToolButton onClick={() => onInsert('[текст](url)')} icon={<Link2 size={14} />} />
+          </Tooltip>
+          <Tooltip content="Цитата">
+            <ToolButton onClick={() => onInsert('\n> цитата\n')} icon={<Quote size={14} />} />
+          </Tooltip>
+          <Tooltip content="Код">
+            <ToolButton onClick={() => onInsert('`код`', true)} icon={<Code2 size={14} />} />
+          </Tooltip>
         </div>
       )}
 
@@ -114,8 +103,10 @@ function ViewButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition',
-        active ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+        'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors',
+        active
+          ? 'bg-[var(--accent)] text-white'
+          : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
       )}
       title={label}
     >
@@ -125,23 +116,10 @@ function ViewButton({
   )
 }
 
-function ToolButton({
-  onClick,
-  icon,
-  title,
-}: {
-  onClick: () => void
-  icon: React.ReactNode
-  title: string
-}) {
+function ToolButton({ onClick, icon }: { onClick: () => void; icon: React.ReactNode }) {
   return (
-    <button
-      onClick={onClick}
-      className="rounded p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-      title={title}
-      type="button"
-    >
+    <IconButton variant="ghost" size="sm" label="" onClick={onClick}>
       {icon}
-    </button>
+    </IconButton>
   )
 }

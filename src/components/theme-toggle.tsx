@@ -3,6 +3,7 @@
 import { Sun, Moon, Monitor } from 'lucide-react'
 import { useTheme } from '@/lib/hooks/use-theme'
 import { cn } from '@/lib/utils'
+import { IconButton } from '@/components/ui'
 import type { ThemeMode } from '@/lib/types'
 
 interface Props {
@@ -19,34 +20,35 @@ export default function ThemeToggle({ variant = 'compact' }: Props) {
   const { theme, setTheme } = useTheme()
 
   if (variant === 'compact') {
-    // Кнопка-переключатель циклом: light → dark → system
     const currentIndex = THEMES.findIndex((t) => t.value === theme)
     const nextIndex = (currentIndex + 1) % THEMES.length
     const next = THEMES[nextIndex]
     const Current = THEMES[currentIndex]?.icon ?? Moon
 
+    // CHANGES: IconButton вместо <button> с хардкодными классами
     return (
-      <button
+      <IconButton
+        variant="ghost"
+        size="md"
+        label={`Тема: ${THEMES[currentIndex]?.label} → ${next.label}`}
         onClick={() => setTheme(next.value)}
-        className="rounded-lg p-2 transition hover:bg-slate-800"
-        title={`Тема: ${THEMES[currentIndex]?.label} → ${next.label}`}
       >
         <Current size={16} />
-      </button>
+      </IconButton>
     )
   }
 
   return (
-    <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
+    <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
       {THEMES.map(({ value, icon: Icon, label }) => (
         <button
           key={value}
           onClick={() => setTheme(value)}
           className={cn(
-            'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition',
+            'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors',
             theme === value
-              ? 'bg-indigo-600 text-white'
-              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              ? 'bg-[var(--accent)] text-white'
+              : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
           )}
           title={label}
         >

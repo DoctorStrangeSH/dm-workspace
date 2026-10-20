@@ -3,6 +3,7 @@
 import { formatModifier } from '@/lib/dnd/formulas'
 import { ABILITY_SHORT, type AbilityKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui'
 
 interface Props {
   proficientSaves: AbilityKey[]
@@ -14,8 +15,8 @@ const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
 export default function SavesList({ proficientSaves, getBonus, onRoll }: Props) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <h3 className="mb-3 text-sm font-semibold tracking-wider text-slate-400 uppercase">
+    <Card padding="md">
+      <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
         Спасброски
       </h3>
 
@@ -31,20 +32,25 @@ export default function SavesList({ proficientSaves, getBonus, onRoll }: Props) 
               onClick={() => onRoll?.(ability)}
               disabled={!onRoll}
               className={cn(
-                'group flex items-center gap-2 rounded px-2 py-1.5 text-sm transition',
-                onRoll && 'hover:bg-slate-800/60',
+                'group flex items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors',
+                onRoll && 'hover:bg-[var(--bg-hover)]',
                 !onRoll && 'cursor-default'
               )}
             >
               <span
                 className={cn(
                   'h-2 w-2 shrink-0 rounded-full',
-                  isProficient ? 'bg-amber-400' : 'border border-slate-600 bg-slate-700'
+                  isProficient
+                    ? 'bg-[var(--warning)]'
+                    : 'border border-[var(--border-strong)] bg-[var(--bg-tertiary)]'
                 )}
               />
-              <span className="flex-1 text-slate-300">{ABILITY_SHORT[ability]}</span>
+              <span className="flex-1 text-[var(--text-secondary)]">{ABILITY_SHORT[ability]}</span>
               <span
-                className={cn('font-medium', isProficient ? 'text-amber-300' : 'text-slate-400')}
+                className={cn(
+                  'font-medium',
+                  isProficient ? 'text-[var(--warning-text)]' : 'text-[var(--text-muted)]'
+                )}
               >
                 {formatModifier(bonus)}
               </span>
@@ -52,6 +58,6 @@ export default function SavesList({ proficientSaves, getBonus, onRoll }: Props) 
           )
         })}
       </div>
-    </div>
+    </Card>
   )
 }

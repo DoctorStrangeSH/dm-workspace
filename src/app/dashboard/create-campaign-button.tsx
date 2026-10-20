@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui'
 import CreateCampaignModal from './create-campaign-modal'
 
 export default function CreateCampaignButton() {
@@ -9,13 +10,9 @@ export default function CreateCampaignButton() {
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500"
-      >
-        <Plus size={18} />
+      <Button variant="primary" size="md" icon={<Plus size={18} />} onClick={() => setOpen(true)}>
         Создать кампанию
-      </button>
+      </Button>
       {open && <CreateCampaignModal onClose={() => setOpen(false)} />}
     </>
   )

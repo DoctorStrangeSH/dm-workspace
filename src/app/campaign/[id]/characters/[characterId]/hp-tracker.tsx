@@ -5,6 +5,7 @@ import { Heart, Minus, Plus, Skull } from 'lucide-react'
 import { updateCharacterHP } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
+import { Card, Button } from '@/components/ui'
 import type { CharacterHP } from '@/lib/types'
 
 interface Props {
@@ -42,29 +43,34 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
   }
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+    <Card padding="md">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Heart
             size={16}
-            className={cn(isDead ? 'text-red-500' : isLow ? 'text-red-400' : 'text-red-400')}
+            className={cn(
+              isDead
+                ? 'text-[var(--danger)]'
+                : isLow
+                  ? 'text-[var(--danger)]'
+                  : 'text-[var(--danger)]'
+            )}
           />
-          <span className="text-sm font-medium text-slate-300">HP</span>
+          <span className="text-sm font-medium text-[var(--text-secondary)]">HP</span>
         </div>
 
         {hp.temp > 0 && (
-          <div className="flex items-center gap-1 text-xs text-blue-400">
+          <div className="flex items-center gap-1 text-xs text-[var(--info-text)]">
             <span>+{hp.temp} temp</span>
           </div>
         )}
       </div>
 
-      {/* Полоска HP */}
-      <div className="relative mb-3 h-6 overflow-hidden rounded border border-slate-800 bg-slate-950">
+      <div className="relative mb-3 h-6 overflow-hidden rounded border border-[var(--border-default)] bg-[var(--bg-app)]">
         <div
           className={cn(
             'h-full transition-all duration-300',
-            isDead ? 'bg-red-700' : isLow ? 'bg-red-500' : 'bg-red-600'
+            isDead ? 'bg-red-700' : isLow ? 'bg-[var(--danger)]' : 'bg-red-600'
           )}
           style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
         />
@@ -74,48 +80,47 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
       </div>
 
       {isDead && (
-        <div className="mb-3 flex items-center gap-2 rounded border border-red-900/50 bg-red-950/30 p-2 text-xs text-red-400">
+        <div className="mb-3 flex items-center gap-2 rounded border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-xs text-[var(--danger-text)]">
           <Skull size={12} />
           <span>Спасброски от смерти: 3 успеха / 3 провала</span>
         </div>
       )}
 
-      {/* Кнопки (только если можно редактировать) */}
       {canEdit && (
         <div className="space-y-2">
           <div className="grid grid-cols-4 gap-1">
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              size="sm"
               onClick={() => updateHP({ current: Math.max(0, hp.current - 5) })}
               disabled={isPending || hp.current === 0}
-              className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-40"
             >
               −5
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
               onClick={() => updateHP({ current: Math.max(0, hp.current - 1) })}
               disabled={isPending || hp.current === 0}
-              className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-40"
             >
               −1
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => updateHP({ current: Math.min(hp.max, hp.current + 1) })}
               disabled={isPending || hp.current === hp.max}
-              className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-40"
             >
               +1
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => updateHP({ current: Math.min(hp.max, hp.current + 5) })}
               disabled={isPending || hp.current === hp.max}
-              className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-40"
             >
               +5
-            </button>
+            </Button>
           </div>
 
           <div className="flex gap-1">
@@ -125,27 +130,25 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
               onChange={(e) => setCustomValue(e.target.value)}
               placeholder="N"
               min={1}
-              className="flex-1 rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+              className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
             />
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              size="sm"
               onClick={() => applyCustom(-1)}
               disabled={isPending || !customValue}
-              className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-40"
-            >
-              <Minus size={12} />
-            </button>
-            <button
-              type="button"
+              icon={<Minus size={12} />}
+            />
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => applyCustom(1)}
               disabled={isPending || !customValue}
-              className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-40"
-            >
-              <Plus size={12} />
-            </button>
+              icon={<Plus size={12} />}
+            />
           </div>
         </div>
       )}
-    </div>
+    </Card>
   )
 }

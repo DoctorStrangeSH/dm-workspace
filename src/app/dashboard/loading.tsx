@@ -1,4 +1,4 @@
-import { Skeleton, CampaignCardSkeleton } from '@/components/skeleton'
+import { Skeleton, CampaignCardSkeleton } from '@/components/ui'
 
 export default function DashboardLoading() {
   return (

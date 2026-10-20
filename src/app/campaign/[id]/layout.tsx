@@ -95,29 +95,27 @@ export default async function CampaignLayout({
 
   return (
     <DmScreenProvider>
-      <div className="min-h-screen">
-        <header
-          className="sticky top-0 z-30 border-b backdrop-blur"
-          style={{
-            borderColor: 'var(--border-default)',
-            backgroundColor: 'color-mix(in srgb, var(--bg-app) 95%, transparent)',
-          }}
-        >
+      <div className="min-h-screen bg-[var(--bg-app)]">
+        {/* CHANGES: топбар на токенах (border-[var(--border-default)], bg-[var(--bg-app)]/95) */}
+        <header className="sticky top-0 z-30 border-b border-[var(--border-default)] bg-[var(--bg-app)]/95 backdrop-blur">
           <div className="flex items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
             <MobileSidebar campaignId={id} isDm={role === 'dm'} />
 
+            {/* CHANGES: Link с классами IconButton (без вложенного <button>) */}
             <Link
               href="/dashboard"
-              className="hidden rounded-lg p-2 transition hover:bg-slate-800 md:flex"
-              title="Назад к кампаниям"
+              aria-label="Назад к кампаниям"
+              className="hidden h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] md:inline-flex"
             >
               <ArrowLeft size={18} />
             </Link>
 
             <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-bold sm:text-lg">{campaign.name}</h1>
+              <h1 className="truncate text-base font-bold text-[var(--text-primary)] sm:text-lg">
+                {campaign.name}
+              </h1>
               {campaign.genre && (
-                <p className="truncate text-xs" style={{ color: 'var(--text-muted)' }}>
+                <p className="truncate text-xs text-[var(--text-muted)]">
                   {campaign.genre} · {role === 'dm' ? 'ГМ' : 'Игрок'}
                 </p>
               )}

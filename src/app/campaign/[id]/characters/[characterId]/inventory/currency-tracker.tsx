@@ -27,7 +27,8 @@ const COIN_KEYS: (keyof Currency)[] = ['pp', 'gp', 'sp', 'cp']
 export default function CurrencyTracker({ characterId, campaignId, currency, canEdit }: Props) {
   const router = useRouter()
   const toast = useToast()
-  const [startTransition] = useTransition()
+  // CHANGES: исправлено — было `const [Boolean] = useTransition()` (ошибка TS2349)
+  const [, startTransition] = useTransition()
   const [editing, setEditing] = useState<keyof Currency | null>(null)
   const [tempValue, setTempValue] = useState('')
 

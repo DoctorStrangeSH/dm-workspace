@@ -18,7 +18,8 @@ interface Props {
 
 export default function EntityTags({ entityId, campaignId, tags, availableTags, isDm }: Props) {
   const toast = useToast()
-  const [startTransition] = useTransition()
+  // CHANGES: исправлено — было `const [Boolean] = useTransition()` (ошибка TS2349)
+  const [, startTransition] = useTransition()
 
   const handleRemove = (tagId: string) => {
     startTransition(async () => {

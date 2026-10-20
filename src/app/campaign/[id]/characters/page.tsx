@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { getCampaignCharacters } from '@/lib/queries/characters'
 import { Breadcrumbs } from '@/components/breadcrumbs'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 import CreateCharacterButton from './create-character-button'
 import { Sword } from 'lucide-react'
 

@@ -30,9 +30,9 @@ export default function BulkActionsBar({ selectedCount, onDelete, onSetVisible, 
 
   return (
     <div className="pointer-events-none fixed bottom-6 left-1/2 z-40 -translate-x-1/2">
-      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-3 shadow-2xl">
-        <span className="border-r border-slate-800 pr-2 text-sm text-slate-400">
-          Выбрано: <span className="font-medium text-white">{selectedCount}</span>
+      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-[var(--border-default)] bg-[var(--bg-elevated)] px-4 py-3 shadow-[var(--shadow-xl)]">
+        <span className="border-r border-[var(--border-default)] pr-2 text-sm text-[var(--text-muted)]">
+          Выбрано: <span className="font-medium text-[var(--text-primary)]">{selectedCount}</span>
         </span>
 
         <ActionButton
@@ -59,7 +59,7 @@ export default function BulkActionsBar({ selectedCount, onDelete, onSetVisible, 
           loading={action === 'export'}
         />
 
-        <div className="h-6 w-px bg-slate-800" />
+        <div className="h-6 w-px bg-[var(--border-default)]" />
 
         <ActionButton
           icon={<Trash2 size={16} />}
@@ -96,8 +96,8 @@ function ActionButton({
       className={cn(
         'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition disabled:opacity-50',
         variant === 'danger'
-          ? 'text-red-400 hover:bg-red-950/50'
-          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+          ? 'text-[var(--danger)] hover:bg-[var(--danger-subtle)]'
+          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
       )}
     >
       {loading ? <Loader2 size={16} className="animate-spin" /> : icon}

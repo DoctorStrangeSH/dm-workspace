@@ -1,4 +1,4 @@
-import { Skeleton, EntityCardSkeleton } from '@/components/skeleton'
+import { Skeleton, EntityCardSkeleton } from '@/components/ui'
 
 export default function EntitiesLoading() {
   return (

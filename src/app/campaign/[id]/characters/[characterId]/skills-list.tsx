@@ -4,6 +4,7 @@ import { Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
 import { ABILITY_LABELS, SKILL_LABELS, SKILL_ABILITY, type SkillKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui'
 
 interface Props {
   proficientSkills: SkillKey[]
@@ -35,8 +36,10 @@ const ALL_SKILLS: SkillKey[] = [
 
 export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
-      <h3 className="mb-3 text-sm font-semibold tracking-wider text-slate-400 uppercase">Навыки</h3>
+    <Card padding="md">
+      <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
+        Навыки
+      </h3>
 
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
         {ALL_SKILLS.map((skill) => {
@@ -51,26 +54,30 @@ export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props
               onClick={() => onRoll?.(skill)}
               disabled={!onRoll}
               className={cn(
-                'group flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition',
-                onRoll && 'hover:bg-slate-800/60',
+                'group flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors',
+                onRoll && 'hover:bg-[var(--bg-hover)]',
                 !onRoll && 'cursor-default'
               )}
             >
               <span
                 className={cn(
                   'h-2 w-2 shrink-0 rounded-full',
-                  isProficient ? 'bg-amber-400' : 'border border-slate-600 bg-slate-700'
+                  isProficient
+                    ? 'bg-[var(--warning)]'
+                    : 'border border-[var(--border-strong)] bg-[var(--bg-tertiary)]'
                 )}
                 title={isProficient ? 'Владение' : 'Без владения'}
               />
-              <span className="flex-1 truncate text-slate-300">{SKILL_LABELS[skill]}</span>
-              <span className="shrink-0 text-xs text-slate-500 uppercase">
+              <span className="flex-1 truncate text-[var(--text-secondary)]">
+                {SKILL_LABELS[skill]}
+              </span>
+              <span className="shrink-0 text-xs text-[var(--text-subtle)] uppercase">
                 {ABILITY_LABELS[ability].slice(0, 3)}
               </span>
               <span
                 className={cn(
                   'w-10 shrink-0 text-right font-medium',
-                  isProficient ? 'text-amber-300' : 'text-slate-400'
+                  isProficient ? 'text-[var(--warning-text)]' : 'text-[var(--text-muted)]'
                 )}
               >
                 {formatModifier(bonus)}
@@ -78,13 +85,13 @@ export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props
               {onRoll && (
                 <Dices
                   size={12}
-                  className="shrink-0 text-slate-600 transition group-hover:text-slate-300"
+                  className="shrink-0 text-[var(--text-subtle)] transition group-hover:text-[var(--text-muted)]"
                 />
               )}
             </button>
           )
         })}
       </div>
-    </div>
+    </Card>
   )
 }

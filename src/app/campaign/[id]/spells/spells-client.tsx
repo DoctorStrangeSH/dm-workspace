@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import SpellsSearch from './spells-search'
 import SrdSpellCard from './srd-spell-card'
 import SrdSpellDetailDialog from './srd-spell-detail-dialog'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 import { searchSrdSpellsAction, type SrdSpell } from '@/lib/actions/spells-search'
 
 interface Props {

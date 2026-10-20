@@ -7,7 +7,7 @@ import { fuzzyFilter } from '@/lib/fuzzy'
 import { cn } from '@/lib/utils'
 import type { Command } from '@/lib/commands'
 import type { Entity, Chapter } from '@/lib/types'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 
 interface Props {
   isOpen: boolean

@@ -43,7 +43,10 @@ export function usePresence({
         const state = channel.presenceState()
         const users: OnlineUser[] = []
         for (const key in state) {
-          const presences = state[key] as unknown[]
+          // CHANGES: приведение через `unknown` — Supabase типизирует
+          // presenceState() как `{ presence_ref: string }[]`, что не пересекается
+          // с OnlineUser[] напрямую. `unknown` — мост для приведения.
+          const presences = state[key] as unknown as OnlineUser[]
           if (presences[0]) {
             users.push(presences[0])
           }

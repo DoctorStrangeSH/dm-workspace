@@ -5,7 +5,7 @@ import { Search, X } from 'lucide-react'
 import DmEntityItem from './dm-entity-item'
 import { cn } from '@/lib/utils'
 import type { Entity, EntityType } from '@/lib/types'
-import EmptyState from '@/components/empty-state'
+import { EmptyState } from '@/components/ui'
 
 interface Props {
   entities: Entity[]

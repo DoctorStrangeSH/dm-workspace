@@ -1,71 +1,172 @@
 @import 'tailwindcss';
 
 /* ============================================================
-   Тема — CSS-переменные
+   ШРИФТЫ (Inter + JetBrains Mono)
+   Подключаются в layout.tsx через next/font, здесь — fallback.
+   ============================================================ */
+
+:root {
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, sans-serif;
+  --font-mono:
+    var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+/* ============================================================
+   ТЕМА — CSS-переменные
+   Сохранены ВСЕ старые переменные + добавлены новые.
    ============================================================ */
 
 :root,
 [data-theme='dark'] {
-  /* Фоны */
-  --bg-app: rgb(2 6 23); /* slate-950 */
-  --bg-primary: rgb(15 23 42); /* slate-900 */
-  --bg-secondary: rgb(30 41 59); /* slate-800 */
-  --bg-tertiary: rgb(51 65 85); /* slate-700 */
-  --bg-hover: rgb(30 41 59 / 0.6);
-  --bg-active: rgb(49 46 129 / 0.6);
+  /* ─── Фоны (многослойные, глубокие) ─── */
+  --bg-app: rgb(10 10 18); /* #0a0a12 — глубокий ночной */
+  --bg-primary: rgb(18 18 28); /* #12121c — surface */
+  --bg-secondary: rgb(26 26 38); /* #1a1a26 — elevated */
+  --bg-tertiary: rgb(38 38 52); /* #262634 — hover */
+  --bg-hover: rgb(26 26 38 / 0.6);
+  --bg-active: rgb(124 58 237 / 0.25); /* violet-600/25 */
 
-  /* Текст */
-  --text-primary: rgb(226 232 240); /* slate-200 */
-  --text-secondary: rgb(203 213 225); /* slate-300 */
-  --text-muted: rgb(148 163 184); /* slate-400 */
-  --text-subtle: rgb(100 116 139); /* slate-500 */
+  /* ─── Новые фоны (семантические) ─── */
+  --bg-surface: rgb(18 18 28);
+  --bg-elevated: rgb(26 26 38);
+  --bg-overlay: rgb(5 5 10 / 0.8);
 
-  /* Границы */
-  --border-default: rgb(30 41 59); /* slate-800 */
-  --border-hover: rgb(51 65 85); /* slate-700 */
+  /* ─── Текст (тёплый, zinc) ─── */
+  --text-primary: rgb(228 228 231); /* zinc-200 */
+  --text-secondary: rgb(212 212 216); /* zinc-300 */
+  --text-muted: rgb(161 161 170); /* zinc-400 */
+  --text-subtle: rgb(113 113 122); /* zinc-500 */
+  --text-inverse: rgb(10 10 18);
 
-  /* Акцент */
-  --accent: rgb(99 102 241); /* indigo-500 */
-  --accent-hover: rgb(129 140 248); /* indigo-400 */
-  --accent-text: rgb(165 180 252); /* indigo-300 */
+  /* ─── Границы (заметные) ─── */
+  --border-default: rgb(39 39 52); /* #272734 */
+  --border-hover: rgb(63 63 80); /* #3f3f50 */
+  --border-strong: rgb(82 82 100); /* #525264 */
+  --border-focus: rgb(139 92 246); /* violet-500 */
 
-  /* Скроллбар */
-  --scrollbar-track: rgb(15 23 42);
-  --scrollbar-thumb: rgb(51 65 85);
-  --scrollbar-thumb-hover: rgb(71 85 105);
+  /* ─── Акцент (violet, «магия») ─── */
+  --accent: rgb(124 58 237); /* violet-600 */
+  --accent-hover: rgb(139 92 246); /* violet-500 */
+  --accent-text: rgb(196 181 253); /* violet-300 */
+  --accent-subtle: rgb(76 29 149 / 0.4); /* violet-900/40 */
+
+  /* ─── Семантические ─── */
+  --success: rgb(34 197 94); /* green-500 */
+  --success-text: rgb(134 239 172); /* green-300 */
+  --success-subtle: rgb(20 83 45 / 0.4);
+
+  --danger: rgb(239 68 68); /* red-500 */
+  --danger-text: rgb(252 165 165); /* red-300 */
+  --danger-subtle: rgb(127 29 29 / 0.4);
+
+  --warning: rgb(245 158 11); /* amber-500 */
+  --warning-text: rgb(252 211 77); /* amber-300 */
+  --warning-subtle: rgb(120 53 15 / 0.4);
+
+  --info: rgb(56 189 248); /* sky-400 */
+  --info-text: rgb(125 211 252); /* sky-300 */
+  --info-subtle: rgb(12 74 110 / 0.4);
+
+  /* ─── Focus ring ─── */
+  --focus-ring: rgb(139 92 246); /* violet-500 */
+  --focus-ring-offset: rgb(10 10 18);
+
+  /* ─── Скроллбар ─── */
+  --scrollbar-track: rgb(18 18 28);
+  --scrollbar-thumb: rgb(52 52 68);
+  --scrollbar-thumb-hover: rgb(72 72 92);
+
+  /* ─── Тени (глубже, заметнее на тёмном) ─── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.6), 0 4px 6px -4px rgb(0 0 0 / 0.6);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.7), 0 8px 10px -6px rgb(0 0 0 / 0.7);
+
+  /* ─── Радиусы ─── */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+
+  /* ─── Анимации ─── */
+  --transition-fast: 150ms;
+  --transition-base: 200ms;
+  --transition-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme='light'] {
-  /* Фоны */
-  --bg-app: rgb(248 250 252); /* slate-50 */
-  --bg-primary: rgb(255 255 255); /* white */
-  --bg-secondary: rgb(241 245 249); /* slate-100 */
-  --bg-tertiary: rgb(226 232 240); /* slate-200 */
+  /* ─── Фоны ─── */
+  --bg-app: rgb(248 250 252);
+  --bg-primary: rgb(255 255 255);
+  --bg-secondary: rgb(241 245 249);
+  --bg-tertiary: rgb(226 232 240);
   --bg-hover: rgb(241 245 249 / 0.8);
-  --bg-active: rgb(224 231 255); /* indigo-100 */
+  --bg-active: rgb(224 231 255);
 
-  /* Текст */
-  --text-primary: rgb(15 23 42); /* slate-900 */
-  --text-secondary: rgb(30 41 59); /* slate-800 */
-  --text-muted: rgb(71 85 105); /* slate-600 */
-  --text-subtle: rgb(100 116 139); /* slate-500 */
+  --bg-surface: rgb(255 255 255);
+  --bg-elevated: rgb(248 250 252);
+  --bg-overlay: rgb(15 23 42 / 0.4);
 
-  /* Границы */
-  --border-default: rgb(226 232 240); /* slate-200 */
-  --border-hover: rgb(203 213 225); /* slate-300 */
+  /* ─── Текст ─── */
+  --text-primary: rgb(15 23 42);
+  --text-secondary: rgb(30 41 59);
+  --text-muted: rgb(71 85 105);
+  --text-subtle: rgb(100 116 139);
+  --text-inverse: rgb(248 250 252);
 
-  /* Акцент */
-  --accent: rgb(79 70 229); /* indigo-600 */
-  --accent-hover: rgb(99 102 241); /* indigo-500 */
-  --accent-text: rgb(67 56 202); /* indigo-700 */
+  /* ─── Границы ─── */
+  --border-default: rgb(226 232 240);
+  --border-hover: rgb(203 213 225);
+  --border-strong: rgb(148 163 184);
+  --border-focus: rgb(79 70 229);
 
-  /* Скроллбар */
+  /* ─── Акцент ─── */
+  --accent: rgb(79 70 229);
+  --accent-hover: rgb(99 102 241);
+  --accent-text: rgb(67 56 202);
+  --accent-subtle: rgb(224 231 255 / 0.6);
+
+  /* ─── Семантические ─── */
+  --success: rgb(22 163 74);
+  --success-text: rgb(21 128 61);
+  --success-subtle: rgb(220 252 231);
+
+  --danger: rgb(220 38 38);
+  --danger-text: rgb(185 28 28);
+  --danger-subtle: rgb(254 226 226);
+
+  --warning: rgb(217 119 6);
+  --warning-text: rgb(180 83 9);
+  --warning-subtle: rgb(254 243 199);
+
+  --info: rgb(2 132 199);
+  --info-text: rgb(3 105 161);
+  --info-subtle: rgb(224 242 254);
+
+  /* ─── Focus ring ─── */
+  --focus-ring: rgb(79 70 229);
+  --focus-ring-offset: rgb(255 255 255);
+
+  /* ─── Скроллбар ─── */
   --scrollbar-track: rgb(241 245 249);
   --scrollbar-thumb: rgb(203 213 225);
   --scrollbar-thumb-hover: rgb(148 163 184);
+
+  /* ─── Тени ─── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 }
 
-/* Базовые стили через переменные */
+/* ============================================================
+   БАЗОВЫЕ СТИЛИ
+   ============================================================ */
+
 html,
 body {
   height: 100%;
@@ -74,8 +175,12 @@ body {
 body {
   background-color: var(--bg-app);
   color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* ─── Скроллбар ─── */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -94,13 +199,38 @@ body {
   background: var(--scrollbar-thumb-hover);
 }
 
+/* ─── Focus-visible (a11y) ─── */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--accent);
+  color: white;
+}
+
+/* ─── Reduced motion (a11y) ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ============================================================
    CodeMirror — базовая настройка
    ============================================================ */
 
 .cm-editor {
   height: 100%;
-  background-color: rgb(15 23 42) !important;
+  background-color: var(--bg-primary) !important;
 }
 
 .cm-editor.cm-focused {
@@ -108,32 +238,29 @@ body {
 }
 
 .cm-scroller {
-  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace !important;
+  font-family: var(--font-mono) !important;
 }
 
 /* ============================================================
    CodeMirror — Tooltip / Autocomplete
-   ВАЖНО: tooltip рендерится в body, а не в .cm-editor!
    ============================================================ */
 
 .cm-tooltip {
   z-index: 9999 !important;
-  background-color: rgb(15 23 42) !important; /* slate-900 */
-  color: rgb(226 232 240) !important; /* slate-200 */
-  border: 1px solid rgb(30 41 59) !important; /* slate-800 */
-  border-radius: 0.5rem !important;
-  box-shadow:
-    0 10px 25px -5px rgb(0 0 0 / 0.6),
-    0 8px 10px -6px rgb(0 0 0 / 0.6) !important;
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-xl) !important;
   padding: 4px !important;
   overflow: hidden !important;
   font-family: inherit !important;
 }
 
 .cm-tooltip.cm-tooltip-autocomplete {
-  background-color: rgb(15 23 42) !important;
-  border: 1px solid rgb(30 41 59) !important;
-  border-radius: 0.5rem !important;
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
 }
 
 .cm-tooltip.cm-tooltip-autocomplete > ul {
@@ -150,12 +277,12 @@ body {
 
 .cm-tooltip.cm-tooltip-autocomplete > ul > li {
   padding: 6px 10px !important;
-  border-radius: 0.375rem !important;
+  border-radius: var(--radius-sm) !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  color: rgb(203 213 225) !important; /* slate-300 */
+  color: var(--text-secondary) !important;
   line-height: 1.4 !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -163,11 +290,11 @@ body {
 }
 
 .cm-tooltip.cm-tooltip-autocomplete > ul > li:hover {
-  background-color: rgb(30 41 59) !important; /* slate-800 */
+  background-color: var(--bg-secondary) !important;
 }
 
 .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] {
-  background-color: rgb(49 46 129) !important; /* indigo-900 */
+  background-color: var(--accent) !important;
   color: white !important;
 }
 
@@ -179,46 +306,40 @@ body {
 .cm-tooltip.cm-tooltip-autocomplete > ul > li .cm-completionMatchedText {
   text-decoration: none !important;
   font-weight: 700 !important;
-  color: rgb(165 180 252) !important; /* indigo-300 */
+  color: var(--accent-text) !important;
 }
 
 .cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionMatchedText {
-  color: rgb(196 181 253) !important; /* violet-300 */
+  color: white !important;
 }
 
 .cm-tooltip.cm-tooltip-autocomplete > ul > li .cm-completionDetail {
   margin-left: auto !important;
   font-size: 0.75rem !important;
-  color: rgb(148 163 184) !important; /* slate-400 */
+  color: var(--text-muted) !important;
   font-style: normal !important;
-}
-
-.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail {
-  color: rgb(196 181 253) !important;
 }
 
 .cm-tooltip.cm-tooltip-autocomplete .cm-completionIcon {
   display: none !important;
 }
 
-/* Стрелка tooltip */
 .cm-tooltip .cm-tooltip-arrow:before {
-  border-top-color: rgb(30 41 59) !important;
-  border-bottom-color: rgb(30 41 59) !important;
+  border-top-color: var(--border-default) !important;
+  border-bottom-color: var(--border-default) !important;
 }
 
 .cm-tooltip .cm-tooltip-arrow:after {
-  border-top-color: rgb(15 23 42) !important;
-  border-bottom-color: rgb(15 23 42) !important;
+  border-top-color: var(--bg-primary) !important;
+  border-bottom-color: var(--bg-primary) !important;
 }
 
-/* Info-панель (справа от опции) */
 .cm-tooltip.cm-completionInfo {
-  background-color: rgb(15 23 42) !important;
-  border: 1px solid rgb(30 41 59) !important;
-  border-radius: 0.5rem !important;
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-md) !important;
   padding: 8px 12px !important;
-  color: rgb(203 213 225) !important;
+  color: var(--text-secondary) !important;
   max-width: 320px !important;
   font-size: 13px !important;
 }
@@ -228,7 +349,7 @@ body {
    ============================================================ */
 
 .prose {
-  color: rgb(203 213 225); /* slate-300 */
+  color: var(--text-secondary);
   line-height: 1.7;
   max-width: none;
 }
@@ -238,8 +359,8 @@ body {
   margin-top: 1.5rem;
   margin-bottom: 1rem;
   font-weight: 700;
-  color: rgb(165 180 252); /* indigo-300 */
-  border-bottom: 1px solid rgb(30 41 59);
+  color: var(--accent-text);
+  border-bottom: 1px solid var(--border-default);
   padding-bottom: 0.5rem;
 }
 
@@ -248,7 +369,7 @@ body {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   font-weight: 700;
-  color: rgb(165 180 252);
+  color: var(--accent-text);
 }
 
 .prose h3 {
@@ -256,7 +377,7 @@ body {
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: rgb(165 180 252);
+  color: var(--accent-text);
 }
 
 .prose h4,
@@ -266,7 +387,7 @@ body {
   margin-top: 1rem;
   margin-bottom: 0.5rem;
   font-weight: 600;
-  color: rgb(165 180 252);
+  color: var(--accent-text);
 }
 
 .prose h1:first-child,
@@ -280,22 +401,22 @@ body {
 }
 
 .prose strong {
-  color: rgb(252 211 77); /* amber-300 */
+  color: var(--warning-text);
   font-weight: 700;
 }
 
 .prose em {
-  color: rgb(196 181 253); /* violet-300 */
+  color: rgb(196 181 253);
   font-style: italic;
 }
 
 .prose del {
-  color: rgb(100 116 139);
+  color: var(--text-subtle);
   text-decoration: line-through;
 }
 
 .prose a {
-  color: rgb(56 189 248); /* sky-400 */
+  color: var(--info);
   text-decoration: none;
 }
 
@@ -322,50 +443,50 @@ body {
 }
 
 .prose li::marker {
-  color: rgb(99 102 241); /* indigo-500 */
+  color: var(--accent);
 }
 
 .prose input[type='checkbox'] {
   margin-right: 0.5rem;
-  accent-color: rgb(99 102 241);
+  accent-color: var(--accent);
 }
 
 .prose code {
-  background: rgb(30 41 59); /* slate-800 */
-  color: rgb(244 114 182); /* pink-400 */
+  background: var(--bg-secondary);
+  color: rgb(244 114 182);
   padding: 0.125rem 0.375rem;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-sm);
   font-size: 0.875em;
-  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 .prose pre {
-  background: rgb(2 6 23); /* slate-950 */
+  background: var(--bg-app);
   padding: 1rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   overflow-x: auto;
   margin-bottom: 1rem;
-  border: 1px solid rgb(30 41 59);
+  border: 1px solid var(--border-default);
 }
 
 .prose pre code {
   background: transparent;
-  color: rgb(226 232 240);
+  color: var(--text-primary);
   padding: 0;
   font-size: 0.875rem;
 }
 
 .prose blockquote {
-  border-left: 3px solid rgb(99 102 241);
+  border-left: 3px solid var(--accent);
   padding-left: 1rem;
-  color: rgb(148 163 184);
+  color: var(--text-muted);
   font-style: italic;
   margin: 1rem 0;
 }
 
 .prose hr {
   border: none;
-  border-top: 1px solid rgb(30 41 59);
+  border-top: 1px solid var(--border-default);
   margin: 2rem 0;
 }
 
@@ -378,19 +499,19 @@ body {
 
 .prose th,
 .prose td {
-  border: 1px solid rgb(30 41 59);
+  border: 1px solid var(--border-default);
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
 .prose th {
-  background: rgb(15 23 42);
+  background: var(--bg-primary);
   font-weight: 600;
-  color: rgb(165 180 252);
+  color: var(--accent-text);
 }
 
 .prose tr:nth-child(even) {
-  background: rgb(15 23 42 / 0.5);
+  background: var(--bg-primary);
 }
 
 /* ============================================================
@@ -402,22 +523,23 @@ body {
   align-items: center;
   gap: 0.25rem;
   padding: 0.125rem 0.5rem;
-  background: rgb(30 27 75 / 0.6);
-  border: 1px solid rgb(49 46 129 / 0.5);
-  color: rgb(165 180 252);
-  border-radius: 0.25rem;
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent);
+  color: var(--accent-text);
+  border-radius: var(--radius-sm);
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 0.15s,
-    border-color 0.15s;
+    background-color var(--transition-fast) var(--ease-out),
+    border-color var(--transition-fast) var(--ease-out);
   font-weight: 500;
   font-size: 0.95em;
 }
 
 .prose .entity-link:hover {
-  background: rgb(49 46 129 / 0.7);
-  border-color: rgb(99 102 241);
+  background: var(--accent);
+  border-color: var(--accent-hover);
+  color: white;
   text-decoration: none;
 }
 
@@ -425,12 +547,6 @@ body {
   opacity: 0.6;
   border-style: dashed;
   cursor: help;
-}
-
-.prose .entity-link-missing:hover {
-  background: rgb(30 27 75 / 0.6);
-  border-color: rgb(49 46 129 / 0.5);
-  text-decoration: none;
 }
 
 /* ============================================================
@@ -444,7 +560,6 @@ body {
   overflow: hidden;
 }
 
-/* Убираем нативный крестик у input[type="search"] */
 input[type='search']::-webkit-search-cancel-button,
 input[type='search']::-webkit-search-decoration {
   -webkit-appearance: none;
@@ -457,26 +572,25 @@ input[type='search']::-ms-clear {
   height: 0;
 }
 
-/* Мобильные фиксы */
+/* ============================================================
+   Мобильные фиксы
+   ============================================================ */
+
 @media (max-width: 767px) {
-  /* Убираем горизонтальный overflow */
   html,
   body {
     overflow-x: hidden;
   }
 
-  /* Padding для main-контента */
   main {
     padding: 0.75rem !important;
   }
 
-  /* Таблицы — скролл */
   .prose table {
     display: block;
     overflow-x: auto;
   }
 
-  /* Уменьшаем кнопки в toolbar */
   .cm-tooltip-autocomplete > ul {
     max-width: calc(100vw - 24px) !important;
   }
@@ -528,4 +642,134 @@ input[type='search']::-ms-clear {
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   НОВЫЕ УТИЛИТЫ (для дизайн-системы)
+   ============================================================ */
+
+/* ─── Transition-классы ─── */
+.transition-fast {
+  transition: all var(--transition-fast) var(--ease-out);
+}
+
+.transition-base {
+  transition: all var(--transition-base) var(--ease-out);
+}
+
+.transition-slow {
+  transition: all var(--transition-slow) var(--ease-out);
+}
+
+/* ─── Кнопки (базовые, для быстрого использования) ─── */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast) var(--ease-out);
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-base:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--border-hover);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgb(220 38 38);
+}
+
+/* ─── Focus ring для интерактивных элементов ─── */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ─── Карточки ─── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--transition-fast) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--border-hover);
+}
+
+/* ─── Badge ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.badge-accent {
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  border: 1px solid var(--accent);
+}
+
+.badge-success {
+  background: var(--success-subtle);
+  color: var(--success-text);
+  border: 1px solid var(--success);
+}
+
+.badge-danger {
+  background: var(--danger-subtle);
+  color: var(--danger-text);
+  border: 1px solid var(--danger);
+}
+
+.badge-warning {
+  background: var(--warning-subtle);
+  color: var(--warning-text);
+  border: 1px solid var(--warning);
 }

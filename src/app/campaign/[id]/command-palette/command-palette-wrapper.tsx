@@ -3,6 +3,7 @@
 import { useCommandPalette } from '@/lib/hooks/use-command-palette'
 import CommandPalette from './command-palette'
 import { Search } from 'lucide-react'
+import { Tooltip } from '@/components/ui'
 import type { Entity, Chapter } from '@/lib/types'
 
 interface Props {
@@ -22,18 +23,20 @@ export default function CommandPaletteWrapper({
 
   return (
     <>
-      <button
-        onClick={open}
-        className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm text-slate-400 transition hover:border-slate-700 hover:text-white"
-        title="Палитра команд (Ctrl+K)"
-      >
-        <Search size={14} />
-        <span className="hidden sm:inline">Поиск...</span>
-        <kbd className="hidden items-center gap-0.5 rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] md:inline-flex">
-          <span>⌘</span>
-          <span>K</span>
-        </kbd>
-      </button>
+      <Tooltip content="Палитра команд (Ctrl+K)">
+        <button
+          onClick={open}
+          className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          aria-label="Открыть палитру команд"
+        >
+          <Search size={14} />
+          <span className="hidden sm:inline">Поиск...</span>
+          <kbd className="hidden items-center gap-0.5 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[10px] md:inline-flex">
+            <span>⌘</span>
+            <span>K</span>
+          </kbd>
+        </button>
+      </Tooltip>
 
       <CommandPalette
         isOpen={isOpen}

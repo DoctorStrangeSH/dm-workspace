@@ -7,6 +7,7 @@ import { nextTurn, endCombat, rollInitiativeForToken, damageToken } from '@/lib/
 import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import { cn } from '@/lib/utils'
+import { Button, IconButton, Dialog } from '@/components/ui'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
@@ -50,7 +51,6 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
     })
   }
 
-  // CHANGES: убран Math.random() — бросок теперь на сервере (в rollInitiativeForToken)
   const handleRoll = (entry: InitiativeEntryWithToken) => {
     startTransition(async () => {
       const res = await rollInitiativeForToken(entry.id, sceneId)
@@ -78,35 +78,43 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
   }
 
   return (
-    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl sm:w-[340px]">
-      <div className="flex items-center justify-between border-b border-slate-800 p-4">
+    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-2xl sm:w-[340px]">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
         <div className="flex items-center gap-2">
-          <Swords size={18} className="text-red-400" />
-          <h2 className="font-semibold">Бой</h2>
+          <Swords size={18} className="text-[var(--danger)]" />
+          <h2 className="font-semibold text-[var(--text-primary)]">Бой</h2>
         </div>
-        <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
+        <IconButton variant="ghost" size="sm" label="Закрыть" onClick={onClose}>
           <X size={18} />
-        </button>
+        </IconButton>
       </div>
 
+      {/* Текущий ход */}
       {currentEntry && (
-        <div className="border-b border-red-900/40 bg-red-950/30 p-3">
-          <div className="mb-1 text-xs tracking-wider text-red-400 uppercase">Сейчас</div>
-          <div className="font-semibold text-white">{currentEntry.token.name}</div>
-          <button
+        <div className="border-b border-[var(--danger)]/40 bg-[var(--danger-subtle)] p-3">
+          <div className="mb-1 text-xs tracking-wider text-[var(--danger-text)] uppercase">
+            Сейчас
+          </div>
+          <div className="font-semibold text-[var(--text-primary)]">{currentEntry.token.name}</div>
+          <Button
+            variant="danger"
+            size="sm"
             onClick={handleNextTurn}
             disabled={isPending}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-500 disabled:opacity-50"
+            icon={<ChevronRight size={14} />}
+            iconPosition="right"
+            className="mt-2 w-full"
           >
             Следующий ход
-            <ChevronRight size={14} />
-          </button>
+          </Button>
         </div>
       )}
 
+      {/* Список */}
       <div className="flex-1 overflow-y-auto p-2">
         {entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-slate-500">Нет инициативы</p>
+          <p className="py-8 text-center text-sm text-[var(--text-muted)]">Нет инициативы</p>
         ) : (
           <div className="space-y-1">
             {entries.map((entry) => {
@@ -120,12 +128,14 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                 <div
                   key={entry.id}
                   className={cn(
-                    'flex cursor-pointer items-center gap-2 rounded-lg p-2 transition',
-                    isCurrent ? 'border border-red-900/50 bg-red-950/40' : 'hover:bg-slate-800/60'
+                    'flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors',
+                    isCurrent
+                      ? 'border border-[var(--danger)]/30 bg-[var(--danger-subtle)]'
+                      : 'hover:bg-[var(--bg-hover)]'
                   )}
                   onClick={() => setSelectedEntry(entry)}
                 >
-                  <div className="w-4 text-xs text-slate-500">{entry.initiative}</div>
+                  <div className="w-4 text-xs text-[var(--text-muted)]">{entry.initiative}</div>
                   <div
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm"
                     style={{
@@ -136,40 +146,43 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                     ⚔️
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium">{entry.token.name}</div>
+                    <div className="truncate text-sm font-medium text-[var(--text-primary)]">
+                      {entry.token.name}
+                    </div>
                     {entry.token.hp_current !== null && entry.token.hp_max !== null && (
                       <div className="mt-0.5 flex items-center gap-1">
-                        <div className="h-1 flex-1 overflow-hidden rounded bg-slate-950">
+                        <div className="h-1 flex-1 overflow-hidden rounded bg-[var(--bg-app)]">
                           <div
                             className={cn(
                               'h-full transition-all duration-300',
                               (hpPercent ?? 0) > 50
-                                ? 'bg-green-500'
+                                ? 'bg-[var(--success)]'
                                 : (hpPercent ?? 0) > 25
-                                  ? 'bg-amber-500'
-                                  : 'bg-red-500'
+                                  ? 'bg-[var(--warning)]'
+                                  : 'bg-[var(--danger)]'
                             )}
                             style={{ width: `${hpPercent}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-[10px] text-[var(--text-muted)]">
                           {entry.token.hp_current}/{entry.token.hp_max}
                         </span>
                       </div>
                     )}
                   </div>
                   {entry.initiative === 0 && isDm && (
-                    <button
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      label="Бросок инициативы"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleRoll(entry)
                       }}
                       disabled={isPending}
-                      className="rounded p-1 transition hover:bg-slate-700 disabled:opacity-50"
-                      title="Бросок инициативы"
                     >
-                      <Dices size={14} className="text-slate-400" />
-                    </button>
+                      <Dices size={14} />
+                    </IconButton>
                   )}
                 </div>
               )
@@ -178,76 +191,63 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
         )}
       </div>
 
-      <div className="space-y-2 border-t border-slate-800 p-3">
-        <button
+      {/* Футер */}
+      <div className="border-t border-[var(--border-default)] p-3">
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={handleEndCombat}
           disabled={isPending}
-          className="w-full rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-red-300 transition hover:bg-slate-700 disabled:opacity-50"
+          className="w-full text-[var(--danger-text)]"
         >
           Завершить бой
-        </button>
+        </Button>
       </div>
 
+      {/* Меню урона */}
       {selectedEntry && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-          onClick={() => setSelectedEntry(null)}
+        <Dialog
+          open={true}
+          onClose={() => setSelectedEntry(null)}
+          title={selectedEntry.token.name}
+          size="sm"
         >
-          <div
-            className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold">{selectedEntry.token.name}</h3>
-              <button
-                onClick={() => setSelectedEntry(null)}
-                className="rounded p-1 hover:bg-slate-800"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {selectedEntry.token.hp_current !== null && selectedEntry.token.hp_max !== null && (
-              <div className="mb-3">
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="text-slate-400">HP</span>
-                  <span>
-                    {selectedEntry.token.hp_current}/{selectedEntry.token.hp_max}
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded bg-slate-950">
-                  <div
-                    className="h-full bg-red-500 transition-all duration-300"
-                    style={{
-                      width: `${(selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100}%`,
-                    }}
-                  />
-                </div>
+          {selectedEntry.token.hp_current !== null && selectedEntry.token.hp_max !== null && (
+            <div className="mb-3">
+              <div className="mb-1 flex items-center justify-between text-sm">
+                <span className="text-[var(--text-muted)]">HP</span>
+                <span className="text-[var(--text-primary)]">
+                  {selectedEntry.token.hp_current}/{selectedEntry.token.hp_max}
+                </span>
               </div>
-            )}
-
-            <div className="grid grid-cols-4 gap-1">
-              {[-5, -1, +1, +5].map((delta) => (
-                <button
-                  key={delta}
-                  onClick={() =>
-                    handleDamage(selectedEntry, Math.abs(delta), delta < 0 ? 'damage' : 'heal')
-                  }
-                  disabled={isPending}
-                  className={cn(
-                    'rounded px-2 py-2 text-sm font-medium transition disabled:opacity-50',
-                    delta < 0
-                      ? 'border border-red-900/50 bg-red-950/40 text-red-300 hover:bg-red-950/60'
-                      : 'border border-green-900/50 bg-green-950/40 text-green-300 hover:bg-green-950/60'
-                  )}
-                >
-                  {delta > 0 ? '+' : ''}
-                  {delta}
-                </button>
-              ))}
+              <div className="h-2 overflow-hidden rounded bg-[var(--bg-app)]">
+                <div
+                  className="h-full bg-[var(--danger)] transition-all duration-300"
+                  style={{
+                    width: `${(selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100}%`,
+                  }}
+                />
+              </div>
             </div>
+          )}
+
+          <div className="grid grid-cols-4 gap-1">
+            {[-5, -1, +1, +5].map((delta) => (
+              <Button
+                key={delta}
+                variant={delta < 0 ? 'danger' : 'primary'}
+                size="md"
+                onClick={() =>
+                  handleDamage(selectedEntry, Math.abs(delta), delta < 0 ? 'damage' : 'heal')
+                }
+                disabled={isPending}
+              >
+                {delta > 0 ? '+' : ''}
+                {delta}
+              </Button>
+            ))}
           </div>
-        </div>
+        </Dialog>
       )}
     </aside>
   )

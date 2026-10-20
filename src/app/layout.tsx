@@ -1,8 +1,21 @@
 import type { Metadata } from 'next'
+import { Inter, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import { ToastProvider } from '@/components/toast/toast-provider'
 import { ThemeProvider } from '@/lib/hooks/use-theme'
 import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'DM Workspace',
@@ -11,7 +24,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" data-theme="dark" suppressHydrationWarning>
+    <html
+      lang="ru"
+      data-theme="dark"
+      suppressHydrationWarning
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
         <Script
           id="theme-init"

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Download, Check, Loader2 } from 'lucide-react'
+import { Download, Check } from 'lucide-react'
 import { getChapterForExport } from '@/lib/actions/export'
 import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
 import { toFilename } from '@/lib/slugify'
+import { Button } from '@/components/ui'
 
 interface Props {
   chapterId: string
@@ -36,20 +37,15 @@ export default function ExportChapterButton({ chapterId, campaignId, chapterTitl
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="sm"
       onClick={handleExport}
-      disabled={isPending}
-      className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-white disabled:opacity-50"
+      loading={isPending}
+      icon={done ? <Check size={14} /> : <Download size={14} />}
       title="Скачать .md (Ctrl+E)"
     >
-      {isPending ? (
-        <Loader2 size={14} className="animate-spin" />
-      ) : done ? (
-        <Check size={14} className="text-green-400" />
-      ) : (
-        <Download size={14} />
-      )}
-      <span className="hidden sm:inline">{done ? 'Готово' : 'Скачать .md'}</span>
-    </button>
+      {done ? 'Готово' : 'Скачать .md'}
+    </Button>
   )
 }

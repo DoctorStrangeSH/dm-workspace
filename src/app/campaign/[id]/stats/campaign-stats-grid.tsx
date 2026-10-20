@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BookOpen, Users, Link2, Hash } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui'
 import type { CampaignStats } from '@/lib/types'
 
 interface Props {
@@ -16,7 +16,7 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
       label: 'Главы',
       icon: BookOpen,
       href: `${base}/chapters`,
-      color: 'text-indigo-400',
+      color: 'text-[var(--accent-text)]',
       value: stats.chapters.total,
       subtext:
         stats.chapters.hidden > 0
@@ -29,7 +29,7 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
       label: 'Сущности',
       icon: Users,
       href: `${base}/entities`,
-      color: 'text-emerald-400',
+      color: 'text-[var(--success-text)]',
       value: stats.entities.total,
       subtext:
         stats.entities.npc + stats.entities.monster + stats.entities.location > 0
@@ -40,7 +40,7 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
       label: 'Связи',
       icon: Link2,
       href: `${base}/entities`,
-      color: 'text-sky-400',
+      color: 'text-[var(--info-text)]',
       value: stats.relations,
       subtext: stats.relations > 0 ? 'между сущностями' : 'пока нет',
     },
@@ -48,7 +48,7 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
       label: 'Теги',
       icon: Hash,
       href: `${base}/entities`,
-      color: 'text-amber-400',
+      color: 'text-[var(--warning-text)]',
       value: stats.tags,
       subtext: stats.tags > 0 ? 'уникальных' : 'пока нет',
     },
@@ -59,15 +59,15 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
       {items.map((item) => {
         const Icon = item.icon
         return (
-          <Link
-            key={item.label}
-            href={item.href}
-            className="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700"
-          >
-            <Icon size={18} className={cn(item.color, 'mb-2')} />
-            <div className="text-2xl font-bold">{item.value}</div>
-            <div className="mb-1 text-xs text-slate-400">{item.label}</div>
-            <div className="line-clamp-2 text-[10px] text-slate-500">{item.subtext}</div>
+          <Link key={item.label} href={item.href} className="group">
+            <Card padding="md" hoverable className="h-full">
+              <Icon size={18} className={`${item.color} mb-2`} />
+              <div className="text-2xl font-bold text-[var(--text-primary)]">{item.value}</div>
+              <div className="mb-1 text-xs text-[var(--text-muted)]">{item.label}</div>
+              <div className="line-clamp-2 text-[10px] text-[var(--text-subtle)]">
+                {item.subtext}
+              </div>
+            </Card>
           </Link>
         )
       })}

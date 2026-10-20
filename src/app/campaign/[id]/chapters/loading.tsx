@@ -1,4 +1,4 @@
-import { Skeleton, ChapterItemSkeleton } from '@/components/skeleton'
+import { Skeleton, ChapterItemSkeleton } from '@/components/ui'
 
 export default function ChaptersLoading() {
   return (

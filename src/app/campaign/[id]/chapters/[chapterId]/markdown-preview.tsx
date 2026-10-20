@@ -25,13 +25,12 @@ export default function MarkdownPreview({ content, campaignId, entityMap, classN
   const processed = useMemo(() => preprocessWikilinks(content), [content])
 
   return (
-    <div className={cn('prose prose-invert max-w-none', className)}>
+    <div className={cn('prose max-w-none', className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
           a: ({ node, children, href, ...rest }) => {
-            // ВАЖНО: rehype-raw конвертирует data-entity → dataEntity (camelCase)
             const entityName = (node?.properties?.['data-entity'] ||
               node?.properties?.dataEntity) as string | undefined
 

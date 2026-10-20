@@ -22,7 +22,7 @@ const ChaptersSearch = forwardRef<HTMLInputElement, Props>(function ChaptersSear
       <div className="relative">
         <Search
           size={16}
-          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-500"
+          className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--text-subtle)]"
         />
         <input
           ref={ref}
@@ -30,26 +30,24 @@ const ChaptersSearch = forwardRef<HTMLInputElement, Props>(function ChaptersSear
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Поиск по главам и содержимому..."
-          className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2.5 pr-24 pl-9 text-sm text-white transition placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
+          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] py-2.5 pr-24 pl-9 text-sm text-[var(--text-primary)] transition placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
           aria-label="Поиск глав"
         />
 
-        {/* Счётчик — слева от крестика */}
         {isSearching && (
-          <div className="pointer-events-none absolute top-1/2 right-10 -translate-y-1/2 text-xs text-slate-500">
+          <div className="pointer-events-none absolute top-1/2 right-10 -translate-y-1/2 text-xs text-[var(--text-subtle)]">
             {matchedCount} из {totalCount}
           </div>
         )}
 
-        {/* Кнопка очистки */}
         {value && (
           <button
             onClick={() => onChange('')}
-            className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 transition hover:bg-slate-800"
+            className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 transition hover:bg-[var(--bg-hover)]"
             aria-label="Очистить поиск"
             type="button"
           >
-            <X size={14} className="text-slate-500" />
+            <X size={14} className="text-[var(--text-subtle)]" />
           </button>
         )}
       </div>

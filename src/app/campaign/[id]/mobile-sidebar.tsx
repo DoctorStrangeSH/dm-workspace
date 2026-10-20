@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X, Settings, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { IconButton } from '@/components/ui'
 import { getCampaignNavItems } from '@/lib/campaign-nav-items'
 
 interface Props {
@@ -18,7 +19,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
   const base = `/campaign/${campaignId}`
   const items = getCampaignNavItems(base)
 
-  // CHANGES: убран useEffect(setIsOpen(false), [pathname]) → паттерн «props → state».
+  // CHANGES: паттерн «props → state» (уже был) — оставляем.
   const [prevPathname, setPrevPathname] = useState(pathname)
   if (pathname !== prevPathname) {
     setPrevPathname(pathname)
@@ -47,39 +48,37 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
 
   return (
     <>
-      <button
+      {/* CHANGES: IconButton вместо <button> с хардкодными классами */}
+      <IconButton
+        variant="ghost"
+        size="md"
+        label="Открыть меню"
         onClick={() => setIsOpen(true)}
-        className="rounded-lg p-2 transition hover:bg-slate-800 md:hidden"
-        title="Меню"
-        aria-label="Открыть меню"
+        className="md:hidden"
       >
         <Menu size={20} />
-      </button>
+      </IconButton>
 
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-40 bg-[var(--bg-overlay)] backdrop-blur-sm md:hidden"
         />
       )}
 
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen w-64 border-r border-slate-800 bg-slate-950 transition-transform md:hidden',
+          'fixed top-0 left-0 z-50 h-screen w-64 border-r border-[var(--border-default)] bg-[var(--bg-app)] transition-transform md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-          <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">
+        <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
+          <span className="text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
             Меню
           </span>
-          <button
-            onClick={() => setIsOpen(false)}
-            className="rounded-lg p-1.5 transition hover:bg-slate-800"
-            title="Закрыть"
-          >
+          <IconButton variant="ghost" size="sm" label="Закрыть" onClick={() => setIsOpen(false)}>
             <X size={18} />
-          </button>
+          </IconButton>
         </div>
 
         <nav className="h-[calc(100vh-57px)] space-y-1 overflow-y-auto p-4">
@@ -93,10 +92,11 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
                   isActive
-                    ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                    ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                 )}
               >
                 <Icon size={16} />
@@ -106,22 +106,23 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
           })}
 
           {isDm && (
-            <div className="mt-6 border-t border-slate-800 pt-6">
+            <div className="mt-6 border-t border-[var(--border-default)] pt-6">
               <Link
                 href={`${base}/settings`}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
                   pathname.startsWith(`${base}/settings`)
-                    ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
-                    : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                    ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                 )}
               >
                 <Settings size={16} />
                 Настройки
               </Link>
 
-              <div className="mt-3 flex items-center gap-2 px-3 text-xs text-amber-400">
+              <div className="mt-3 flex items-center gap-2 px-3 text-xs text-[var(--warning-text)]">
                 <Crown size={12} />
                 <span>Режим ГМа</span>
               </div>

@@ -1,4 +1,4 @@
-import { Skeleton, ChapterEditorSkeleton } from '@/components/skeleton'
+import { Skeleton, ChapterEditorSkeleton } from '@/components/ui'
 
 export default function ChapterEditorLoading() {
   return (

@@ -28,16 +28,22 @@ import { getChapterForExport } from '@/lib/actions/export'
 import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
 import { useToast } from '@/components/toast/toast-provider'
+import { EmptyState } from '@/components/ui'
 import type { Chapter } from '@/lib/types'
-import EmptyState from '@/components/empty-state'
 
 interface Props {
   campaignId: string
   initialChapters: Chapter[]
   isDm: boolean
+  onCreateChapter?: () => void
 }
 
-export default function ChaptersList({ campaignId, initialChapters, isDm }: Props) {
+export default function ChaptersList({
+  campaignId,
+  initialChapters,
+  isDm,
+  onCreateChapter,
+}: Props) {
   const toast = useToast()
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
   const [query, setQuery] = useState('')
@@ -45,7 +51,6 @@ export default function ChaptersList({ campaignId, initialChapters, isDm }: Prop
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // CHANGES: убран useEffect(setChapters) → паттерн «props → state».
   const [prevInitial, setPrevInitial] = useState(initialChapters)
   if (initialChapters !== prevInitial) {
     setPrevInitial(initialChapters)
@@ -191,14 +196,10 @@ export default function ChaptersList({ campaignId, initialChapters, isDm }: Prop
             ? 'Создай первую главу, чтобы начать писать приключение.'
             : 'ГМ пока не добавил главы.'
         }
+        size="lg"
         actions={
-          isDm
-            ? [
-                {
-                  label: 'Создать главу',
-                  onClick: () => {},
-                },
-              ]
+          isDm && onCreateChapter
+            ? [{ label: 'Создать главу', onClick: onCreateChapter }]
             : undefined
         }
       />
@@ -237,6 +238,7 @@ export default function ChaptersList({ campaignId, initialChapters, isDm }: Prop
           icon="🔍"
           title="Ничего не найдено"
           description={`Попробуй изменить запрос «${query}»`}
+          size="md"
           actions={[
             {
               label: 'Очистить поиск',
