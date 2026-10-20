@@ -7,15 +7,8 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
 import { EditorView, keymap } from '@codemirror/view'
 import { Prec } from '@codemirror/state'
-import {
-  defaultKeymap,
-  history,
-  historyKeymap,
-} from '@codemirror/commands'
-import {
-  searchKeymap,
-  highlightSelectionMatches,
-} from '@codemirror/search'
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { customTheme, customHighlighting } from './markdown-theme'
 import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
 
@@ -67,11 +60,7 @@ const CMEditor = forwardRef<ReactCodeMirrorRef, Props>(function CMEditor(
           EditorView.lineWrapping,
           customTheme,
           customHighlighting,
-          keymap.of([
-            ...defaultKeymap,
-            ...historyKeymap,
-            ...searchKeymap,
-          ]),
+          keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
         ]}
         basicSetup={{
           lineNumbers: false,

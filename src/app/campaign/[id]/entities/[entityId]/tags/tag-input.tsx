@@ -15,12 +15,7 @@ interface Props {
   availableTags: Tag[]
 }
 
-export default function TagInput({
-  entityId,
-  campaignId,
-  existingTags,
-  availableTags,
-}: Props) {
+export default function TagInput({ entityId, campaignId, existingTags, availableTags }: Props) {
   const toast = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -29,10 +24,7 @@ export default function TagInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const existingIds = useMemo(
-    () => new Set(existingTags.map((t) => t.id)),
-    [existingTags]
-  )
+  const existingIds = useMemo(() => new Set(existingTags.map((t) => t.id)), [existingTags])
 
   const filtered = useMemo(() => {
     const q = normalizeTagName(query)
@@ -88,10 +80,7 @@ export default function TagInput({
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false)
       }
     }
@@ -101,8 +90,8 @@ export default function TagInput({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus-within:border-indigo-500 transition">
-        <Hash size={14} className="text-slate-500 shrink-0" />
+      <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 transition focus-within:border-indigo-500">
+        <Hash size={14} className="shrink-0 text-slate-500" />
         <input
           ref={inputRef}
           type="text"
@@ -116,14 +105,14 @@ export default function TagInput({
           onKeyDown={handleKeyDown}
           placeholder="Добавить тег..."
           disabled={isPending}
-          className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 focus:outline-none min-w-[120px]"
+          className="min-w-[120px] flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 focus:outline-none"
         />
         {query && (
           <button
             type="button"
             onClick={() => handleAdd(query)}
             disabled={isPending || !normalizedQuery}
-            className="p-1 hover:bg-slate-800 rounded transition disabled:opacity-50"
+            className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
             title="Добавить"
           >
             <Plus size={14} className="text-indigo-400" />
@@ -132,7 +121,7 @@ export default function TagInput({
       </div>
 
       {isOpen && (filtered.length > 0 || canCreate) && (
-        <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-slate-900 border border-slate-800 rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+        <div className="absolute top-full right-0 left-0 z-30 mt-1 max-h-60 overflow-hidden overflow-y-auto rounded-lg border border-slate-800 bg-slate-900 shadow-xl">
           {filtered.map((tag, i) => (
             <button
               key={tag.id}
@@ -140,21 +129,19 @@ export default function TagInput({
               onClick={() => handleAdd(tag.name)}
               onMouseEnter={() => setActiveIndex(i)}
               className={cn(
-                'w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition',
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition',
                 i === activeIndex
                   ? 'bg-slate-800 text-white'
                   : 'text-slate-300 hover:bg-slate-800/60'
               )}
             >
               <span
-                className="w-2 h-2 rounded-full shrink-0"
+                className="h-2 w-2 shrink-0 rounded-full"
                 style={{ backgroundColor: tag.color }}
               />
               <span className="font-medium">#{tag.name}</span>
               {tag.entitiesCount !== undefined && (
-                <span className="ml-auto text-xs text-slate-500">
-                  {tag.entitiesCount}
-                </span>
+                <span className="ml-auto text-xs text-slate-500">{tag.entitiesCount}</span>
               )}
             </button>
           ))}
@@ -165,7 +152,7 @@ export default function TagInput({
               onClick={() => handleAdd(query)}
               onMouseEnter={() => setActiveIndex(filtered.length)}
               className={cn(
-                'w-full flex items-center gap-2 px-3 py-2 text-left text-sm border-t border-slate-800 transition',
+                'flex w-full items-center gap-2 border-t border-slate-800 px-3 py-2 text-left text-sm transition',
                 activeIndex === filtered.length
                   ? 'bg-indigo-950/60 text-indigo-300'
                   : 'text-slate-400 hover:bg-slate-800/60'
@@ -173,8 +160,7 @@ export default function TagInput({
             >
               <Plus size={14} />
               <span>
-                Создать{' '}
-                <span className="font-medium">#{normalizedQuery}</span>
+                Создать <span className="font-medium">#{normalizedQuery}</span>
               </span>
             </button>
           )}

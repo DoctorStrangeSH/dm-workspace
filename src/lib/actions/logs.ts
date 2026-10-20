@@ -39,10 +39,7 @@ export async function clearLog(campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
-    .from('session_logs')
-    .delete()
-    .eq('campaign_id', campaignId)
+  const { error } = await supabase.from('session_logs').delete().eq('campaign_id', campaignId)
 
   if (error) return { error: 'Не удалось очистить' }
 

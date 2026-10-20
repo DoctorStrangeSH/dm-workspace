@@ -1,16 +1,6 @@
 'use client'
 
-import {
-  Pencil,
-  Eye,
-  Columns,
-  Bold,
-  Italic,
-  List,
-  Link2,
-  Quote,
-  Code2,
-} from 'lucide-react'
+import { Pencil, Eye, Columns, Bold, Italic, List, Link2, Quote, Code2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import SaveStatus from './save-status'
 
@@ -40,10 +30,10 @@ export default function EditorToolbar({
   hideViewModes = false,
 }: Props) {
   return (
-    <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-slate-800 flex-wrap">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
       {/* Режимы — скрываем на мобиле */}
       {!hideViewModes && (
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
           <ViewButton
             active={view === 'edit'}
             onClick={() => onViewChange('edit')}
@@ -67,7 +57,7 @@ export default function EditorToolbar({
 
       {/* Быстрые вставки (только для ГМа) */}
       {!readOnly && view !== 'preview' && onInsert && (
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+        <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
           <ToolButton
             onClick={() => onInsert('**жирный**', true)}
             icon={<Bold size={14} />}
@@ -101,11 +91,9 @@ export default function EditorToolbar({
         </div>
       )}
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="ml-auto flex items-center gap-2">
         {exportButton}
-        {!readOnly && (
-          <SaveStatus status={status} lastSaved={lastSaved} error={error} />
-        )}
+        {!readOnly && <SaveStatus status={status} lastSaved={lastSaved} error={error} />}
       </div>
     </div>
   )
@@ -126,10 +114,8 @@ function ViewButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition',
-        active
-          ? 'bg-indigo-600 text-white'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+        'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition',
+        active ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
       )}
       title={label}
     >
@@ -151,7 +137,7 @@ function ToolButton({
   return (
     <button
       onClick={onClick}
-      className="p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded transition"
+      className="rounded p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
       title={title}
       type="button"
     >

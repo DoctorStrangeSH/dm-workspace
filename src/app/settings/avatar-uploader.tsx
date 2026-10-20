@@ -42,36 +42,26 @@ export default function AvatarUploader({ currentUrl, displayName }: Props) {
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-slate-700 hover:border-indigo-500 transition group"
+        className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-slate-700 transition hover:border-indigo-500"
         disabled={isPending}
       >
         {preview ? (
-          <img
-            src={preview}
-            alt={displayName}
-            className="w-full h-full object-cover"
-          />
+          <img src={preview} alt={displayName} className="h-full w-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-indigo-950/60 flex items-center justify-center text-2xl font-bold text-indigo-300">
+          <div className="flex h-full w-full items-center justify-center bg-indigo-950/60 text-2xl font-bold text-indigo-300">
             {displayName.charAt(0).toUpperCase()}
           </div>
         )}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition group-hover:opacity-100">
           {isPending ? (
-            <Loader2 size={20} className="text-white animate-spin" />
+            <Loader2 size={20} className="animate-spin text-white" />
           ) : (
             <Camera size={20} className="text-white" />
           )}
         </div>
       </button>
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFile}
-        className="hidden"
-      />
+      <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
 
       <div className="text-sm text-slate-400">
         <p className="font-medium text-slate-200">Аватар</p>

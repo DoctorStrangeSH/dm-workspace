@@ -18,12 +18,7 @@ interface Props {
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-export default function SpellSlotsTracker({
-  characterId,
-  campaignId,
-  slots,
-  canEdit,
-}: Props) {
+export default function SpellSlotsTracker({ characterId, campaignId, slots, canEdit }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -45,8 +40,8 @@ export default function SpellSlotsTracker({
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
-      <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <h3 className="mb-3 text-sm font-semibold tracking-wider text-slate-400 uppercase">
         Ячейки заклинаний
       </h3>
 
@@ -55,25 +50,21 @@ export default function SpellSlotsTracker({
           const slot = slots[level]
           return (
             <div key={level} className="flex items-center gap-3">
-              <div className="w-16 text-sm text-slate-400">
-                {level} ур.
-              </div>
+              <div className="w-16 text-sm text-slate-400">{level} ур.</div>
 
-              <div className="flex-1 flex items-center gap-1">
+              <div className="flex flex-1 items-center gap-1">
                 {Array.from({ length: slot.max }, (_, i) => (
                   <div
                     key={i}
                     className={cn(
-                      'w-6 h-6 rounded border-2 transition',
-                      i < slot.current
-                        ? 'bg-violet-600 border-violet-500'
-                        : 'border-slate-700'
+                      'h-6 w-6 rounded border-2 transition',
+                      i < slot.current ? 'border-violet-500 bg-violet-600' : 'border-slate-700'
                     )}
                   />
                 ))}
               </div>
 
-              <div className="text-sm text-slate-400 tabular-nums w-12 text-right">
+              <div className="w-12 text-right text-sm text-slate-400 tabular-nums">
                 {slot.current}/{slot.max}
               </div>
 
@@ -82,7 +73,7 @@ export default function SpellSlotsTracker({
                   <button
                     onClick={() => handleAction(level, 'use')}
                     disabled={isPending || slot.current === 0}
-                    className="p-1 hover:bg-slate-800 rounded transition disabled:opacity-30"
+                    className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-30"
                     title="Потратить ячейку"
                   >
                     <Minus size={12} />
@@ -90,7 +81,7 @@ export default function SpellSlotsTracker({
                   <button
                     onClick={() => handleAction(level, 'restore')}
                     disabled={isPending || slot.current === slot.max}
-                    className="p-1 hover:bg-slate-800 rounded transition disabled:opacity-30"
+                    className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-30"
                     title="Восстановить ячейку"
                   >
                     <Plus size={12} />

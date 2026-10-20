@@ -52,10 +52,7 @@ export async function createTemplateFromEntity(
   return { success: true, templateId: data.id }
 }
 
-export async function deleteTemplate(
-  templateId: string,
-  campaignId: string
-) {
+export async function deleteTemplate(templateId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 

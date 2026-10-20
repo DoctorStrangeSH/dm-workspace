@@ -17,22 +17,20 @@ export default function CampaignSidebar({ campaignId, isDm }: Props) {
   const items = getCampaignNavItems(base)
 
   return (
-    <aside className="w-56 border-r border-slate-800 min-h-[calc(100vh-57px)] p-4 hidden md:block">
+    <aside className="hidden min-h-[calc(100vh-57px)] w-56 border-r border-slate-800 p-4 md:block">
       <nav className="space-y-1">
         {items.map((item) => {
           const Icon = item.icon
-          const isActive = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href)
+          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
 
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
                 isActive
-                  ? 'bg-indigo-950/60 text-indigo-300 border border-indigo-900/50'
+                  ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
                   : 'text-slate-400 hover:bg-slate-900 hover:text-white'
               )}
             >
@@ -44,13 +42,13 @@ export default function CampaignSidebar({ campaignId, isDm }: Props) {
       </nav>
 
       {isDm && (
-        <div className="mt-6 pt-6 border-t border-slate-800">
+        <div className="mt-6 border-t border-slate-800 pt-6">
           <Link
             href={`${base}/settings`}
             className={cn(
-              'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition',
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
               pathname.startsWith(`${base}/settings`)
-                ? 'bg-indigo-950/60 text-indigo-300 border border-indigo-900/50'
+                ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
                 : 'text-slate-400 hover:bg-slate-900 hover:text-white'
             )}
           >
@@ -58,7 +56,7 @@ export default function CampaignSidebar({ campaignId, isDm }: Props) {
             Настройки
           </Link>
 
-          <div className="mt-3 flex items-center gap-2 text-xs text-amber-400 px-3">
+          <div className="mt-3 flex items-center gap-2 px-3 text-xs text-amber-400">
             <Crown size={12} />
             <span>Режим ГМа</span>
           </div>

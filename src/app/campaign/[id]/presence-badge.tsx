@@ -9,11 +9,7 @@ interface Props {
   currentUserName: string
 }
 
-export default function PresenceBadge({
-  campaignId,
-  currentUserId,
-  currentUserName,
-}: Props) {
+export default function PresenceBadge({ campaignId, currentUserId, currentUserName }: Props) {
   const users = usePresence({
     campaignId,
     currentUserId,
@@ -24,10 +20,10 @@ export default function PresenceBadge({
 
   return (
     <div
-      className="flex items-center gap-1.5 px-2 py-1 text-xs bg-green-950/40 border border-green-900/50 text-green-300 rounded-lg"
+      className="flex items-center gap-1.5 rounded-lg border border-green-900/50 bg-green-950/40 px-2 py-1 text-xs text-green-300"
       title={users.map((u) => u.display_name).join(', ')}
     >
-      <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
       <Users size={12} />
       {users.length} онлайн
     </div>

@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Coins } from 'lucide-react'
 import { updateCurrency } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import {
-  CURRENCY_SHORT,
-  type Currency,
-} from '@/lib/types'
+import { CURRENCY_SHORT, type Currency } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -27,12 +24,7 @@ const COLORS: Record<keyof Currency, string> = {
 
 const COIN_KEYS: (keyof Currency)[] = ['pp', 'gp', 'sp', 'cp']
 
-export default function CurrencyTracker({
-  characterId,
-  campaignId,
-  currency,
-  canEdit,
-}: Props) {
+export default function CurrencyTracker({ characterId, campaignId, currency, canEdit }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [startTransition] = useTransition()
@@ -63,12 +55,10 @@ export default function CurrencyTracker({
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
-      <div className="flex items-center gap-2 mb-3">
+    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <div className="mb-3 flex items-center gap-2">
         <Coins size={16} className="text-amber-400" />
-        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          Деньги
-        </h3>
+        <h3 className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Деньги</h3>
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -79,11 +69,9 @@ export default function CurrencyTracker({
           return (
             <div
               key={key}
-              className="bg-slate-950 border border-slate-800 rounded-lg p-2 text-center"
+              className="rounded-lg border border-slate-800 bg-slate-950 p-2 text-center"
             >
-              <div className="text-[10px] text-slate-500 uppercase mb-1">
-                {CURRENCY_SHORT[key]}
-              </div>
+              <div className="mb-1 text-[10px] text-slate-500 uppercase">{CURRENCY_SHORT[key]}</div>
 
               {isEditing ? (
                 <input
@@ -99,7 +87,7 @@ export default function CurrencyTracker({
                   }}
                   autoFocus
                   min={0}
-                  className="w-full text-center bg-slate-900 border border-indigo-700 rounded text-sm py-0.5 focus:outline-none"
+                  className="w-full rounded border border-indigo-700 bg-slate-900 py-0.5 text-center text-sm focus:outline-none"
                 />
               ) : (
                 <button
@@ -112,7 +100,7 @@ export default function CurrencyTracker({
                   className={cn(
                     'text-lg font-bold',
                     COLORS[key],
-                    canEdit && 'hover:text-white transition'
+                    canEdit && 'transition hover:text-white'
                   )}
                 >
                   {value}

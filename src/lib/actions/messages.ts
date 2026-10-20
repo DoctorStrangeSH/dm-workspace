@@ -46,10 +46,7 @@ export async function sendMessage(
   return { success: true, messageId: data.id }
 }
 
-export async function deleteMessage(
-  messageId: string,
-  campaignId: string
-) {
+export async function deleteMessage(messageId: string, campaignId: string) {
   const supabase = await createClient()
   const {
     data: { user },

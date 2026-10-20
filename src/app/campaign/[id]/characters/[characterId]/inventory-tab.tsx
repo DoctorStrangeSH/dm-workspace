@@ -16,11 +16,7 @@ interface Props {
   canEdit: boolean
 }
 
-export default function InventoryTab({
-  character,
-  campaignId,
-  canEdit,
-}: Props) {
+export default function InventoryTab({ character, campaignId, canEdit }: Props) {
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   const data = character.data_json
@@ -35,11 +31,7 @@ export default function InventoryTab({
   const currency = data.currency ?? {}
 
   const totalWeight = useMemo(
-    () =>
-      inventory.reduce(
-        (sum, item) => sum + (item.weight ?? 0) * item.quantity,
-        0
-      ),
+    () => inventory.reduce((sum, item) => sum + (item.weight ?? 0) * item.quantity, 0),
     [inventory]
   )
 
@@ -75,19 +67,17 @@ export default function InventoryTab({
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
+      <div className="mb-4 flex items-center gap-2">
         {canEdit && (
           <button
             onClick={() => setShowAddDialog(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm transition"
+            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-500"
           >
             <Plus size={14} />
             Добавить предмет
           </button>
         )}
-        <div className="ml-auto text-sm text-slate-500">
-          Предметов: {inventory.length}
-        </div>
+        <div className="ml-auto text-sm text-slate-500">Предметов: {inventory.length}</div>
       </div>
 
       <CurrencyTracker
@@ -117,13 +107,11 @@ export default function InventoryTab({
             const Icon = group.icon
             return (
               <div key={group.title}>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wider text-slate-400 uppercase">
                   <Icon size={14} className={group.color} />
                   {group.title}
                   {group.badge && (
-                    <span className="text-slate-600 font-normal">
-                      ({group.badge})
-                    </span>
+                    <span className="font-normal text-slate-600">({group.badge})</span>
                   )}
                 </h3>
                 <div className="space-y-1.5">

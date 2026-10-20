@@ -12,10 +12,7 @@ import WizardStep3 from './wizard-step-3'
 import WizardStep4 from './wizard-step-4'
 import { BACKGROUNDS } from '@/lib/dnd/constants'
 import { buildCharacterData, isStandardArrayUsed } from '@/lib/dnd/character-builder'
-import {
-  srdSpeciesToRaceInfo,
-  srdClassToClassInfo,
-} from '@/lib/dnd/srd-adapter'
+import { srdSpeciesToRaceInfo, srdClassToClassInfo } from '@/lib/dnd/srd-adapter'
 import type { AbilityKey, SkillKey } from '@/lib/types'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
@@ -25,11 +22,7 @@ interface Props {
   classes: SrdClass[]
 }
 
-export default function CharacterWizard({
-  campaignId,
-  species,
-  classes,
-}: Props) {
+export default function CharacterWizard({ campaignId, species, classes }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -82,16 +75,7 @@ export default function CharacterWizard({
       return !!backgroundSlug && chosenSkills.length === maxSkills
     }
     return true
-  }, [
-    step,
-    name,
-    raceSlug,
-    classSlug,
-    abilities,
-    backgroundSlug,
-    chosenSkills,
-    classInfo,
-  ])
+  }, [step, name, raceSlug, classSlug, abilities, backgroundSlug, chosenSkills, classInfo])
 
   // Строим данные персонажа
   const characterData = useMemo(() => {
@@ -141,32 +125,30 @@ export default function CharacterWizard({
   return (
     <div>
       {/* Прогресс-бар */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="mb-8 flex items-center gap-2">
         {steps.map((s, i) => (
-          <div key={s.number} className="flex items-center gap-2 flex-1">
+          <div key={s.number} className="flex flex-1 items-center gap-2">
             <div
               className={cn(
-                'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition',
+                'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition',
                 step === s.number
                   ? 'bg-indigo-600 text-white'
                   : step > s.number
-                    ? 'bg-green-950/60 border border-green-800 text-green-300'
-                    : 'bg-slate-900 border border-slate-800 text-slate-500'
+                    ? 'border border-green-800 bg-green-950/60 text-green-300'
+                    : 'border border-slate-800 bg-slate-900 text-slate-500'
               )}
             >
               {step > s.number ? <Check size={14} /> : s.number}
             </div>
             <span
               className={cn(
-                'text-sm font-medium hidden sm:inline',
+                'hidden text-sm font-medium sm:inline',
                 step === s.number ? 'text-white' : 'text-slate-500'
               )}
             >
               {s.label}
             </span>
-            {i < steps.length - 1 && (
-              <div className="flex-1 h-px bg-slate-800 mx-2" />
-            )}
+            {i < steps.length - 1 && <div className="mx-2 h-px flex-1 bg-slate-800" />}
           </div>
         ))}
       </div>
@@ -188,9 +170,7 @@ export default function CharacterWizard({
           />
         )}
 
-        {step === 2 && (
-          <WizardStep2 abilities={abilities} setAbilities={setAbilities} />
-        )}
+        {step === 2 && <WizardStep2 abilities={abilities} setAbilities={setAbilities} />}
 
         {step === 3 && (
           <WizardStep3
@@ -202,24 +182,22 @@ export default function CharacterWizard({
           />
         )}
 
-        {step === 4 && characterData && (
-          <WizardStep4 name={name} data={characterData} />
-        )}
+        {step === 4 && characterData && <WizardStep4 name={name} data={characterData} />}
 
         {step === 4 && !characterData && (
-          <div className="text-center py-12 text-slate-500 text-sm">
+          <div className="py-12 text-center text-sm text-slate-500">
             Не хватает данных (раса / класс / предыстория). Вернись назад.
           </div>
         )}
       </div>
 
       {/* Навигация */}
-      <div className="flex items-center justify-between gap-3 mt-8 pt-6 border-t border-slate-800">
+      <div className="mt-8 flex items-center justify-between gap-3 border-t border-slate-800 pt-6">
         <button
           type="button"
           onClick={handleBack}
           disabled={step === 1 || isPending}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
         >
           <ChevronLeft size={16} />
           Назад
@@ -230,7 +208,7 @@ export default function CharacterWizard({
             type="button"
             onClick={handleNext}
             disabled={!isStepValid || isPending}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition font-medium disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
           >
             Далее
             <ChevronRight size={16} />
@@ -240,7 +218,7 @@ export default function CharacterWizard({
             type="button"
             onClick={handleCreate}
             disabled={isPending || !characterData}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg transition font-medium disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium transition hover:bg-green-500 disabled:opacity-50"
           >
             {isPending ? (
               <>

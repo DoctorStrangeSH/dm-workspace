@@ -15,12 +15,7 @@ interface Props {
   onDelete?: (relationId: string) => void
 }
 
-export default function RelationChip({
-  relation,
-  campaignId,
-  isDm,
-  onDelete,
-}: Props) {
+export default function RelationChip({ relation, campaignId, isDm, onDelete }: Props) {
   const isOutgoing = relation.direction === 'outgoing'
   const other = isOutgoing
     ? {
@@ -35,14 +30,12 @@ export default function RelationChip({
       }
 
   const relationInfo = RELATION_TYPES[relation.relationType]
-  const label = isOutgoing
-    ? relationInfo.label
-    : relationInfo.reverseLabel
+  const label = isOutgoing ? relationInfo.label : relationInfo.reverseLabel
 
   const style = ENTITY_STYLES[other.type]
 
   return (
-    <div className="group inline-flex items-center gap-1.5 pl-2.5 pr-1 py-1 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 transition">
+    <div className="group inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900 py-1 pr-1 pl-2.5 transition hover:border-slate-700">
       <span className="text-xs text-slate-500">{label}</span>
       <Link
         href={`/campaign/${campaignId}/entities/${other.id}`}
@@ -57,7 +50,7 @@ export default function RelationChip({
       {isDm && onDelete && (
         <button
           onClick={() => onDelete(relation.relationId)}
-          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-950/50 rounded-full transition"
+          className="rounded-full p-0.5 opacity-0 transition group-hover:opacity-100 hover:bg-red-950/50"
           title="Удалить связь"
         >
           <X size={10} className="text-red-400" />

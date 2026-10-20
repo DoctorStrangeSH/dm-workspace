@@ -45,28 +45,26 @@ export default function DmScreenPanel({ entities, campaignId }: Props) {
         onClick={close}
         className={cn(
           'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity',
-          isOpen
-            ? 'opacity-100 pointer-events-auto'
-            : 'opacity-0 pointer-events-none'
+          isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         )}
       />
 
       {/* Панель */}
       <aside
         className={cn(
-          'fixed top-0 right-0 z-50 h-screen w-full sm:w-[400px] bg-slate-900 border-l border-slate-800 shadow-2xl transition-transform flex flex-col',
+          'fixed top-0 right-0 z-50 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl transition-transform sm:w-[400px]',
           isOpen ? 'translate-x-0' : 'translate-x-full'
-     )}
-       >
+        )}
+      >
         {/* Заголовок */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
           <div className="flex items-center gap-2">
             <BookMarked size={18} className="text-indigo-400" />
             <h2 className="font-semibold">Панель ГМа</h2>
           </div>
           <button
             onClick={close}
-            className="p-1.5 hover:bg-slate-800 rounded-lg transition"
+            className="rounded-lg p-1.5 transition hover:bg-slate-800"
             title="Закрыть (Esc)"
           >
             <X size={18} />
@@ -74,7 +72,7 @@ export default function DmScreenPanel({ entities, campaignId }: Props) {
         </div>
 
         {/* Список сущностей */}
-        <div className="flex-1 min-h-0">
+        <div className="min-h-0 flex-1">
           <DmEntityList
             entities={entities}
             campaignId={campaignId}

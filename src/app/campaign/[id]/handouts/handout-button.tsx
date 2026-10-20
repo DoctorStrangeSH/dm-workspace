@@ -17,17 +17,13 @@ export default function HandoutButton({ campaignId, handouts }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="p-2 hover:bg-slate-800 rounded-lg transition"
+        className="rounded-lg p-2 transition hover:bg-slate-800"
         title="Хендауты"
       >
         <ImageIcon size={16} />
       </button>
       {open && (
-        <HandoutPanel
-          campaignId={campaignId}
-          handouts={handouts}
-          onClose={() => setOpen(false)}
-        />
+        <HandoutPanel campaignId={campaignId} handouts={handouts} onClose={() => setOpen(false)} />
       )}
     </>
   )

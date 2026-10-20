@@ -39,8 +39,7 @@ export default function AddRelationDialog({
   const [query, setQuery] = useState('')
   const [selectedType, setSelectedType] = useState<EntityType | null>(null)
   const [selectedTarget, setSelectedTarget] = useState<Entity | null>(null)
-  const [selectedRelationType, setSelectedRelationType] =
-    useState<RelationType | null>(null)
+  const [selectedRelationType, setSelectedRelationType] = useState<RelationType | null>(null)
 
   const availableEntities = useMemo(
     () => allEntities.filter((e) => e.id !== sourceEntity.id),
@@ -61,10 +60,7 @@ export default function AddRelationDialog({
 
   const allowedRelationTypes = useMemo(() => {
     if (!selectedTarget) return []
-    return getAllowedRelations(
-      sourceEntity.type,
-      selectedTarget.type
-    ).filter(
+    return getAllowedRelations(sourceEntity.type, selectedTarget.type).filter(
       (rt) =>
         !existingRelations.some(
           (r) =>
@@ -105,14 +101,14 @@ export default function AddRelationDialog({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[80vh] flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <h2 className="font-semibold">Добавить связь</h2>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="p-1 hover:bg-slate-800 rounded transition"
+            className="rounded p-1 transition hover:bg-slate-800"
           >
             <X size={18} />
           </button>
@@ -120,13 +116,9 @@ export default function AddRelationDialog({
 
         {!selectedType && !selectedTarget && (
           <div className="p-4">
-            <p className="text-sm text-slate-400 mb-3">
-              С каким типом сущности связываем?
-            </p>
+            <p className="mb-3 text-sm text-slate-400">С каким типом сущности связываем?</p>
             {availableTypes.length === 0 ? (
-              <p className="text-slate-500 text-sm">
-                Нет других сущностей в кампании
-              </p>
+              <p className="text-sm text-slate-500">Нет других сущностей в кампании</p>
             ) : (
               <div className="grid grid-cols-3 gap-2">
                 {availableTypes.map((t) => {
@@ -136,8 +128,8 @@ export default function AddRelationDialog({
                       key={t}
                       onClick={() => setSelectedType(t)}
                       className={cn(
-                        'flex flex-col items-center gap-1 p-3 rounded-lg border transition',
-                        'bg-slate-950 border-slate-800 hover:border-indigo-600 text-slate-300'
+                        'flex flex-col items-center gap-1 rounded-lg border p-3 transition',
+                        'border-slate-800 bg-slate-950 text-slate-300 hover:border-indigo-600'
                       )}
                     >
                       <span className="text-xl">{style.icon}</span>
@@ -151,18 +143,18 @@ export default function AddRelationDialog({
         )}
 
         {selectedType && !selectedTarget && (
-          <div className="flex flex-col flex-1 min-h-0">
-            <div className="p-4 border-b border-slate-800">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="border-b border-slate-800 p-4">
               <button
                 onClick={() => setSelectedType(null)}
-                className="text-xs text-slate-500 hover:text-white mb-2"
+                className="mb-2 text-xs text-slate-500 hover:text-white"
               >
                 ← Изменить тип
               </button>
               <div className="relative">
                 <Search
                   size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500"
                 />
                 <input
                   autoFocus
@@ -170,16 +162,14 @@ export default function AddRelationDialog({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Поиск..."
-                  className="w-full pl-9 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 py-2 pr-3 pl-9 text-sm focus:border-indigo-500 focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-2">
               {filtered.length === 0 ? (
-                <p className="text-center text-slate-500 text-sm py-8">
-                  Ничего не найдено
-                </p>
+                <p className="py-8 text-center text-sm text-slate-500">Ничего не найдено</p>
               ) : (
                 filtered.map((e) => {
                   const style = ENTITY_STYLES[e.type]
@@ -187,16 +177,12 @@ export default function AddRelationDialog({
                     <button
                       key={e.id}
                       onClick={() => setSelectedTarget(e)}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-left"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-800"
                     >
                       <span className="text-lg">{style.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-slate-200 truncate">
-                          {e.name}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          {style.label}
-                        </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm text-slate-200">{e.name}</div>
+                        <div className="text-xs text-slate-500">{style.label}</div>
                       </div>
                     </button>
                   )
@@ -207,26 +193,24 @@ export default function AddRelationDialog({
         )}
 
         {selectedTarget && (
-          <div className="p-4 overflow-y-auto">
+          <div className="overflow-y-auto p-4">
             <button
               onClick={() => {
                 setSelectedTarget(null)
                 setSelectedRelationType(null)
               }}
-              className="text-xs text-slate-500 hover:text-white mb-3"
+              className="mb-3 text-xs text-slate-500 hover:text-white"
             >
               ← Изменить сущность
             </button>
-            <div className="flex items-center gap-2 mb-4 p-2 bg-slate-950 border border-slate-800 rounded-lg">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 p-2">
               <span>{ENTITY_STYLES[selectedTarget.type].icon}</span>
-              <span className="text-sm font-medium">
-                {selectedTarget.name}
-              </span>
+              <span className="text-sm font-medium">{selectedTarget.name}</span>
             </div>
 
-            <p className="text-sm text-slate-400 mb-3">Тип связи:</p>
+            <p className="mb-3 text-sm text-slate-400">Тип связи:</p>
             {allowedRelationTypes.length === 0 ? (
-              <p className="text-slate-500 text-sm">
+              <p className="text-sm text-slate-500">
                 Нет доступных типов связей (все уже добавлены)
               </p>
             ) : (
@@ -238,10 +222,10 @@ export default function AddRelationDialog({
                       key={rt}
                       onClick={() => setSelectedRelationType(rt)}
                       className={cn(
-                        'w-full flex items-center gap-2 px-3 py-2 rounded-lg border transition text-left',
+                        'flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition',
                         selectedRelationType === rt
-                          ? 'bg-indigo-950/60 border-indigo-600 text-white'
-                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                          ? 'border-indigo-600 bg-indigo-950/60 text-white'
+                          : 'border-slate-800 bg-slate-950 text-slate-300 hover:border-slate-700'
                       )}
                     >
                       <span>{info.icon}</span>
@@ -253,7 +237,7 @@ export default function AddRelationDialog({
             )}
 
             {error && (
-              <div className="mt-3 text-red-400 text-sm bg-red-950/30 border border-red-900/50 rounded-lg p-2">
+              <div className="mt-3 rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
                 {error}
               </div>
             )}
@@ -262,7 +246,7 @@ export default function AddRelationDialog({
               <button
                 onClick={handleSubmit}
                 disabled={isPending}
-                className="mt-4 w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition font-medium disabled:opacity-50"
+                className="mt-4 w-full rounded-lg bg-indigo-600 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
               >
                 {isPending ? 'Создаём...' : 'Создать связь'}
               </button>

@@ -30,8 +30,8 @@ export default function TokenLayer({
 
   return (
     <>
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="relative w-full h-full" style={{ pointerEvents: 'auto' }}>
+      <div className="pointer-events-none absolute inset-0">
+        <div className="relative h-full w-full" style={{ pointerEvents: 'auto' }}>
           {tokens.map((token) => {
             const canDrag = isDm || token.owner_id === currentUserId
             return (

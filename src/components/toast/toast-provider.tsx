@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useRef,
-} from 'react'
+import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import Toast from './toast'
 import type { ToastItem, ToastOptions, ToastType } from '@/lib/toast-types'
 
@@ -85,34 +79,28 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   )
 
   const success = useCallback(
-    (message: string, options?: ToastOptions) =>
-      show('success', message, options),
+    (message: string, options?: ToastOptions) => show('success', message, options),
     [show]
   )
   const error = useCallback(
-    (message: string, options?: ToastOptions) =>
-      show('error', message, options),
+    (message: string, options?: ToastOptions) => show('error', message, options),
     [show]
   )
   const info = useCallback(
-    (message: string, options?: ToastOptions) =>
-      show('info', message, options),
+    (message: string, options?: ToastOptions) => show('info', message, options),
     [show]
   )
   const warning = useCallback(
-    (message: string, options?: ToastOptions) =>
-      show('warning', message, options),
+    (message: string, options?: ToastOptions) => show('warning', message, options),
     [show]
   )
 
   return (
-    <ToastContext.Provider
-      value={{ success, error, info, warning, dismiss, dismissAll }}
-    >
+    <ToastContext.Provider value={{ success, error, info, warning, dismiss, dismissAll }}>
       {children}
 
       {/* Контейнер тостов */}
-      <div className="fixed bottom-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none sm:bottom-6 sm:right-6">
+      <div className="pointer-events-none fixed right-4 bottom-4 z-[200] flex flex-col gap-2 sm:right-6 sm:bottom-6">
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onClose={dismiss} />
         ))}

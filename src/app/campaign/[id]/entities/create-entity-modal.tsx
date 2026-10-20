@@ -36,8 +36,7 @@ export default function CreateEntityModal({
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [selectedType, setSelectedType] = useState<EntityType>(defaultType)
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<EntityTemplate | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<EntityTemplate | null>(null)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
@@ -62,10 +61,7 @@ export default function CreateEntityModal({
     formData.set('type', selectedType)
 
     if (selectedTemplate) {
-      formData.set(
-        'data_json',
-        JSON.stringify(selectedTemplate.dataJson ?? {})
-      )
+      formData.set('data_json', JSON.stringify(selectedTemplate.dataJson ?? {}))
     }
 
     startTransition(async () => {
@@ -81,14 +77,14 @@ export default function CreateEntityModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full my-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+      <div className="my-auto w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold">Новая сущность</h2>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="p-1 hover:bg-slate-800 rounded-lg transition"
+            className="rounded-lg p-1 transition hover:bg-slate-800"
           >
             <X size={20} />
           </button>
@@ -96,7 +92,7 @@ export default function CreateEntityModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-2">
+            <label className="mb-2 block text-sm text-slate-300">
               Тип <span className="text-red-400">*</span>
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -109,10 +105,10 @@ export default function CreateEntityModal({
                     type="button"
                     onClick={() => handleTypeChange(t)}
                     className={cn(
-                      'flex flex-col items-center gap-1 p-3 rounded-lg border transition',
+                      'flex flex-col items-center gap-1 rounded-lg border p-3 transition',
                       active
-                        ? 'bg-indigo-950/60 border-indigo-600 text-white'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                        ? 'border-indigo-600 bg-indigo-950/60 text-white'
+                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                     )}
                   >
                     <span className="text-xl">{style.icon}</span>
@@ -131,7 +127,7 @@ export default function CreateEntityModal({
           />
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
+            <label className="mb-1 block text-sm text-slate-300">
               Имя <span className="text-red-400">*</span>
             </label>
             <input
@@ -152,14 +148,12 @@ export default function CreateEntityModal({
                       : 'Название...'
               }
               autoFocus
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
-              Описание
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">Описание</label>
             <textarea
               name="description"
               rows={3}
@@ -167,29 +161,29 @@ export default function CreateEntityModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Краткое описание..."
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500 resize-none"
+              className="w-full resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm bg-red-950/30 border border-red-900/50 rounded-lg p-2">
+            <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
               {error}
             </div>
           )}
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition disabled:opacity-50 font-medium"
+              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Создаём...' : 'Создать'}
             </button>

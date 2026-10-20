@@ -13,11 +13,7 @@ interface Props {
   chapterTitle: string
 }
 
-export default function ExportChapterButton({
-  chapterId,
-  campaignId,
-  chapterTitle,
-}: Props) {
+export default function ExportChapterButton({ chapterId, campaignId, chapterTitle }: Props) {
   const [isPending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
 
@@ -43,7 +39,7 @@ export default function ExportChapterButton({
     <button
       onClick={handleExport}
       disabled={isPending}
-      className="flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition text-slate-400 hover:bg-slate-800 hover:text-white disabled:opacity-50"
+      className="flex items-center gap-1.5 rounded px-2.5 py-1 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-white disabled:opacity-50"
       title="Скачать .md (Ctrl+E)"
     >
       {isPending ? (
@@ -53,9 +49,7 @@ export default function ExportChapterButton({
       ) : (
         <Download size={14} />
       )}
-      <span className="hidden sm:inline">
-        {done ? 'Готово' : 'Скачать .md'}
-      </span>
+      <span className="hidden sm:inline">{done ? 'Готово' : 'Скачать .md'}</span>
     </button>
   )
 }

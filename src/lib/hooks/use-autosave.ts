@@ -11,12 +11,7 @@ interface Options<T> {
   enabled?: boolean
 }
 
-export function useAutosave<T>({
-  value,
-  onSave,
-  delay = 1500,
-  enabled = true,
-}: Options<T>) {
+export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: Options<T>) {
   const [status, setStatus] = useState<SaveStatus>('idle')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [error, setError] = useState<string | null>(null)

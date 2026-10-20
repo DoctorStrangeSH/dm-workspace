@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import { Minus, Plus, RotateCcw } from 'lucide-react'
-import {
-  abilityModifier,
-  formatModifier,
-} from '@/lib/dnd/formulas'
+import { abilityModifier, formatModifier } from '@/lib/dnd/formulas'
 import {
   canDecrement,
   canIncrement,
@@ -57,7 +54,7 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
   return (
     <div className="space-y-6">
       {/* Режим */}
-      <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg p-1">
+      <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 p-1">
         <button
           type="button"
           onClick={() => {
@@ -65,10 +62,8 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
             resetPointBuy()
           }}
           className={cn(
-            'flex-1 px-3 py-1.5 text-sm rounded transition',
-            mode === 'pointbuy'
-              ? 'bg-indigo-600 text-white'
-              : 'text-slate-400 hover:text-white'
+            'flex-1 rounded px-3 py-1.5 text-sm transition',
+            mode === 'pointbuy' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
           )}
         >
           Point Buy (27 очков)
@@ -77,10 +72,8 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
           type="button"
           onClick={() => setMode('standard')}
           className={cn(
-            'flex-1 px-3 py-1.5 text-sm rounded transition',
-            mode === 'standard'
-              ? 'bg-indigo-600 text-white'
-              : 'text-slate-400 hover:text-white'
+            'flex-1 rounded px-3 py-1.5 text-sm transition',
+            mode === 'standard' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
           )}
         >
           Стандартный массив
@@ -97,50 +90,43 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
                 <span className={remaining === 0 ? 'text-green-400' : 'text-amber-400'}>
                   {remaining}
                 </span>
-                <span className="text-slate-600 text-base"> / 27</span>
+                <span className="text-base text-slate-600"> / 27</span>
               </p>
             </div>
             <button
               type="button"
               onClick={resetPointBuy}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
             >
               <RotateCcw size={14} />
               Сбросить
             </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {ABILITIES.map((ab) => {
               const mod = abilityModifier(abilities[ab])
               return (
-                <div
-                  key={ab}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-3"
-                >
-                  <div className="text-xs text-slate-500 mb-2">
-                    {ABILITY_LABELS[ab]}
-                  </div>
+                <div key={ab} className="rounded-xl border border-slate-800 bg-slate-900 p-3">
+                  <div className="mb-2 text-xs text-slate-500">{ABILITY_LABELS[ab]}</div>
                   <div className="flex items-center justify-between gap-2">
                     <button
                       type="button"
                       onClick={() => decrement(ab)}
                       disabled={!canDecrement(abilities, ab)}
-                      className="p-1.5 hover:bg-slate-800 rounded transition disabled:opacity-30"
+                      className="rounded p-1.5 transition hover:bg-slate-800 disabled:opacity-30"
                     >
                       <Minus size={14} />
                     </button>
                     <div className="text-center">
                       <div className="text-2xl font-bold">{abilities[ab]}</div>
-                      <div className="text-xs text-slate-500">
-                        {formatModifier(mod)}
-                      </div>
+                      <div className="text-xs text-slate-500">{formatModifier(mod)}</div>
                     </div>
                     <button
                       type="button"
                       onClick={() => increment(ab)}
                       disabled={!canIncrement(abilities, ab)}
-                      className="p-1.5 hover:bg-slate-800 rounded transition disabled:opacity-30"
+                      className="rounded p-1.5 transition hover:bg-slate-800 disabled:opacity-30"
                     >
                       <Plus size={14} />
                     </button>
@@ -156,10 +142,10 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
       {mode === 'standard' && (
         <>
           <div>
-            <p className="text-sm text-slate-400 mb-3">
+            <p className="mb-3 text-sm text-slate-400">
               Распредели значения: 15, 14, 13, 12, 10, 8
             </p>
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="mb-4 flex flex-wrap gap-2">
               {STANDARD_ARRAY.map((v) => (
                 <button
                   key={v}
@@ -172,7 +158,7 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
                     }
                   }}
                   disabled={standardValues.includes(v)}
-                  className="px-3 py-1.5 bg-indigo-950/60 border border-indigo-800 text-indigo-300 rounded-lg text-sm font-medium hover:bg-indigo-900/60 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded-lg border border-indigo-800 bg-indigo-950/60 px-3 py-1.5 text-sm font-medium text-indigo-300 transition hover:bg-indigo-900/60 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {v}
                 </button>
@@ -183,30 +169,23 @@ export default function WizardStep2({ abilities, setAbilities }: Props) {
                   setStandardValues([])
                   resetPointBuy()
                 }}
-                className="px-3 py-1.5 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                className="rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
               >
-                <RotateCcw size={14} className="inline mr-1" />
+                <RotateCcw size={14} className="mr-1 inline" />
                 Сбросить
               </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {ABILITIES.map((ab) => {
               const mod = abilityModifier(abilities[ab])
               return (
-                <div
-                  key={ab}
-                  className="bg-slate-900 border border-slate-800 rounded-xl p-3"
-                >
-                  <div className="text-xs text-slate-500 mb-2">
-                    {ABILITY_LABELS[ab]}
-                  </div>
+                <div key={ab} className="rounded-xl border border-slate-800 bg-slate-900 p-3">
+                  <div className="mb-2 text-xs text-slate-500">{ABILITY_LABELS[ab]}</div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">{abilities[ab]}</div>
-                    <div className="text-xs text-slate-500">
-                      {formatModifier(mod)}
-                    </div>
+                    <div className="text-xs text-slate-500">{formatModifier(mod)}</div>
                   </div>
                 </div>
               )

@@ -14,13 +14,7 @@ interface Props {
   brushMode: boolean
 }
 
-export default function FogLayer({
-  scene,
-  initialFog,
-  isDm,
-  fogEnabled,
-  brushMode,
-}: Props) {
+export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMode }: Props) {
   const toast = useToast()
   const fog = useRealtimeFog({ sceneId: scene.id, initialFog })
   const [dragging, setDragging] = useState(false)
@@ -102,7 +96,7 @@ export default function FogLayer({
   return (
     <div
       ref={wrapperRef}
-      className="absolute inset-0 pointer-events-auto"
+      className="pointer-events-auto absolute inset-0"
       style={{ cursor: isDm && brushMode ? 'crosshair' : 'default' }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}

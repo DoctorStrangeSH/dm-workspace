@@ -16,13 +16,7 @@ interface Props {
   onRoll?: (spell: CharacterSpell) => void
 }
 
-export default function SpellCard({
-  spell,
-  characterId,
-  campaignId,
-  canEdit,
-  onRoll,
-}: Props) {
+export default function SpellCard({ spell, characterId, campaignId, canEdit, onRoll }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -60,9 +54,9 @@ export default function SpellCard({
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
       <div
-        className="flex items-center gap-2 p-3 cursor-pointer hover:bg-slate-800/60 transition"
+        className="flex cursor-pointer items-center gap-2 p-3 transition hover:bg-slate-800/60"
         onClick={() => setIsOpen(!isOpen)}
       >
         {canEdit && spell.level > 0 && (
@@ -72,9 +66,9 @@ export default function SpellCard({
               togglePrepared()
             }}
             className={cn(
-              'w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition',
+              'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition',
               spell.prepared
-                ? 'bg-violet-600 border-violet-500'
+                ? 'border-violet-500 bg-violet-600'
                 : 'border-slate-700 hover:border-slate-500'
             )}
             title={spell.prepared ? 'Подготовлено' : 'Не подготовлено'}
@@ -85,19 +79,14 @@ export default function SpellCard({
 
         <ChevronDown
           size={14}
-          className={cn(
-            'shrink-0 text-slate-500 transition',
-            isOpen && 'rotate-180'
-          )}
+          className={cn('shrink-0 text-slate-500 transition', isOpen && 'rotate-180')}
         />
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-slate-200 truncate">
-              {spell.name}
-            </span>
+            <span className="truncate font-medium text-slate-200">{spell.name}</span>
             {spell.ritual && (
-              <span className="text-[10px] px-1.5 py-0.5 bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 rounded">
+              <span className="rounded border border-indigo-900/50 bg-indigo-950/60 px-1.5 py-0.5 text-[10px] text-indigo-300">
                 Ритуал
               </span>
             )}
@@ -114,7 +103,7 @@ export default function SpellCard({
               e.stopPropagation()
               onRoll(spell)
             }}
-            className="p-1.5 hover:bg-slate-700 rounded transition"
+            className="rounded p-1.5 transition hover:bg-slate-700"
             title="Бросок"
           >
             <Dices size={14} className="text-slate-400" />
@@ -128,7 +117,7 @@ export default function SpellCard({
               handleDelete()
             }}
             disabled={isPending}
-            className="p-1.5 hover:bg-red-950/40 rounded transition disabled:opacity-50"
+            className="rounded p-1.5 transition hover:bg-red-950/40 disabled:opacity-50"
             title="Удалить"
           >
             <Trash2 size={14} className="text-red-400" />
@@ -137,7 +126,7 @@ export default function SpellCard({
       </div>
 
       {isOpen && (
-        <div className="px-3 pb-3 border-t border-slate-800 bg-slate-950/40">
+        <div className="border-t border-slate-800 bg-slate-950/40 px-3 pb-3">
           <div className="grid grid-cols-2 gap-2 py-3 text-xs">
             {spell.range && (
               <div>
@@ -160,7 +149,7 @@ export default function SpellCard({
           </div>
 
           {spell.description && (
-            <div className="pb-2 text-sm text-slate-300 whitespace-pre-wrap">
+            <div className="pb-2 text-sm whitespace-pre-wrap text-slate-300">
               {spell.description}
             </div>
           )}

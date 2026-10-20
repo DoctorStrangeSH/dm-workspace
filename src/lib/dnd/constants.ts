@@ -111,7 +111,26 @@ export const CLASSES: ClassInfo[] = [
     savingThrows: ['dex', 'cha'],
     skillChoices: {
       count: 3,
-      from: ['acrobatics', 'animal-handling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleight-of-hand', 'stealth', 'survival'],
+      from: [
+        'acrobatics',
+        'animal-handling',
+        'arcana',
+        'athletics',
+        'deception',
+        'history',
+        'insight',
+        'intimidation',
+        'investigation',
+        'medicine',
+        'nature',
+        'perception',
+        'performance',
+        'persuasion',
+        'religion',
+        'sleight-of-hand',
+        'stealth',
+        'survival',
+      ],
     },
   },
   {
@@ -133,7 +152,16 @@ export const CLASSES: ClassInfo[] = [
     savingThrows: ['int', 'wis'],
     skillChoices: {
       count: 2,
-      from: ['arcana', 'animal-handling', 'insight', 'medicine', 'nature', 'perception', 'religion', 'survival'],
+      from: [
+        'arcana',
+        'animal-handling',
+        'insight',
+        'medicine',
+        'nature',
+        'perception',
+        'religion',
+        'survival',
+      ],
     },
   },
   {
@@ -144,7 +172,16 @@ export const CLASSES: ClassInfo[] = [
     savingThrows: ['str', 'con'],
     skillChoices: {
       count: 2,
-      from: ['acrobatics', 'animal-handling', 'athletics', 'history', 'insight', 'intimidation', 'perception', 'survival'],
+      from: [
+        'acrobatics',
+        'animal-handling',
+        'athletics',
+        'history',
+        'insight',
+        'intimidation',
+        'perception',
+        'survival',
+      ],
     },
   },
   {
@@ -177,7 +214,16 @@ export const CLASSES: ClassInfo[] = [
     savingThrows: ['str', 'dex'],
     skillChoices: {
       count: 3,
-      from: ['animal-handling', 'athletics', 'insight', 'investigation', 'nature', 'perception', 'stealth', 'survival'],
+      from: [
+        'animal-handling',
+        'athletics',
+        'insight',
+        'investigation',
+        'nature',
+        'perception',
+        'stealth',
+        'survival',
+      ],
     },
   },
   {
@@ -188,7 +234,19 @@ export const CLASSES: ClassInfo[] = [
     savingThrows: ['dex', 'int'],
     skillChoices: {
       count: 4,
-      from: ['acrobatics', 'athletics', 'deception', 'insight', 'intimidation', 'investigation', 'perception', 'performance', 'persuasion', 'sleight-of-hand', 'stealth'],
+      from: [
+        'acrobatics',
+        'athletics',
+        'deception',
+        'insight',
+        'intimidation',
+        'investigation',
+        'perception',
+        'performance',
+        'persuasion',
+        'sleight-of-hand',
+        'stealth',
+      ],
     },
   },
   {
@@ -210,7 +268,15 @@ export const CLASSES: ClassInfo[] = [
     savingThrows: ['wis', 'cha'],
     skillChoices: {
       count: 2,
-      from: ['arcana', 'deception', 'history', 'intimidation', 'investigation', 'nature', 'religion'],
+      from: [
+        'arcana',
+        'deception',
+        'history',
+        'intimidation',
+        'investigation',
+        'nature',
+        'religion',
+      ],
     },
   },
   {
@@ -338,9 +404,7 @@ export const SPELLCASTING_ABILITY: Record<string, AbilityKey> = {
   wizard: 'int',
 }
 
-export function getSpellcastingAbility(
-  classSlug: string
-): AbilityKey | undefined {
+export function getSpellcastingAbility(classSlug: string): AbilityKey | undefined {
   return SPELLCASTING_ABILITY[classSlug]
 }
 

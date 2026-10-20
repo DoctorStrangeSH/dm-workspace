@@ -23,7 +23,9 @@ export async function createHandout(campaignId: string, formData: FormData) {
   const { error: uploadError } = await supabase.storage.from('handouts').upload(fileName, file)
   if (uploadError) return { error: 'Не удалось загрузить' }
 
-  const { data: { publicUrl } } = supabase.storage.from('handouts').getPublicUrl(fileName)
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('handouts').getPublicUrl(fileName)
 
   const { error } = await supabase.from('handouts').insert({
     campaign_id: campaignId,
@@ -45,7 +47,11 @@ export async function showHandout(handoutId: string, campaignId: string) {
 
   const supabase = await createClient()
 
-  await supabase.from('handouts').update({ is_visible: false }).eq('campaign_id', campaignId).eq('is_visible', true)
+  await supabase
+    .from('handouts')
+    .update({ is_visible: false })
+    .eq('campaign_id', campaignId)
+    .eq('is_visible', true)
 
   const { data: handout, error } = await supabase
     .from('handouts')
@@ -67,7 +73,10 @@ export async function hideHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase.from('handouts').update({ is_visible: false }).eq('id', handoutId)
+  const { error } = await supabase
+    .from('handouts')
+    .update({ is_visible: false })
+    .eq('id', handoutId)
   if (error) return { error: 'Не удалось скрыть' }
 
   revalidatePath(`/campaign/${campaignId}`)
@@ -79,7 +88,11 @@ export async function deleteHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase.from('handouts').delete().eq('id', handoutId).eq('campaign_id', campaignId)
+  const { error } = await supabase
+    .from('handouts')
+    .delete()
+    .eq('id', handoutId)
+    .eq('campaign_id', campaignId)
   if (error) return { error: 'Не удалось удалить' }
 
   revalidatePath(`/campaign/${campaignId}`)

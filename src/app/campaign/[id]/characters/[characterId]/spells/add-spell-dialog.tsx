@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { addSpell } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import {
-  SPELL_SCHOOLS,
-  type SpellSchool,
-} from '@/lib/types'
+import { SPELL_SCHOOLS, type SpellSchool } from '@/lib/types'
 
 interface Props {
   characterId: string
@@ -16,11 +13,7 @@ interface Props {
   onClose: () => void
 }
 
-export default function AddSpellDialog({
-  characterId,
-  campaignId,
-  onClose,
-}: Props) {
+export default function AddSpellDialog({ characterId, campaignId, onClose }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -68,22 +61,22 @@ export default function AddSpellDialog({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col my-auto">
-        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+      <div className="my-auto flex max-h-[90vh] w-full max-w-lg flex-col rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <h2 className="font-semibold">Новое заклинание</h2>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="p-1 hover:bg-slate-800 rounded transition"
+            className="rounded p-1 transition hover:bg-slate-800"
           >
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto p-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
+            <label className="mb-1 block text-sm text-slate-300">
               Название <span className="text-red-400">*</span>
             </label>
             <input
@@ -92,19 +85,17 @@ export default function AddSpellDialog({
               onChange={(e) => setName(e.target.value)}
               placeholder="Огненный шар"
               autoFocus
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Уровень
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Уровень</label>
               <select
                 value={level}
                 onChange={(e) => setLevel(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               >
                 <option value={0}>Заговор (0)</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((l) => (
@@ -116,11 +107,11 @@ export default function AddSpellDialog({
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Школа</label>
+              <label className="mb-1 block text-sm text-slate-300">Школа</label>
               <select
                 value={school}
                 onChange={(e) => setSchool(e.target.value as SpellSchool)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               >
                 <option value="">— Не выбрано —</option>
                 {Object.entries(SPELL_SCHOOLS).map(([key, label]) => (
@@ -134,54 +125,46 @@ export default function AddSpellDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Время
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Время</label>
               <input
                 type="text"
                 value={castingTime}
                 onChange={(e) => setCastingTime(e.target.value)}
                 placeholder="1 действие"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Дистанция
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Дистанция</label>
               <input
                 type="text"
                 value={range}
                 onChange={(e) => setRange(e.target.value)}
                 placeholder="150 футов"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Компоненты
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Компоненты</label>
               <input
                 type="text"
                 value={components}
                 onChange={(e) => setComponents(e.target.value)}
                 placeholder="V, S, M"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Длительность
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Длительность</label>
               <input
                 type="text"
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="Мгновенно"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
           </div>
@@ -200,31 +183,29 @@ export default function AddSpellDialog({
           </div>
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
-              Описание
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">Описание</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="Описание заклинания..."
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500 resize-none"
+              className="w-full resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition disabled:opacity-50 font-medium"
+              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Добавляем...' : 'Добавить'}
             </button>

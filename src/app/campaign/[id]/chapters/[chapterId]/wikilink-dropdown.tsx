@@ -13,13 +13,7 @@ interface Props {
   onClose: () => void
 }
 
-export default function WikilinkDropdown({
-  query,
-  entities,
-  position,
-  onSelect,
-  onClose,
-}: Props) {
+export default function WikilinkDropdown({ query, entities, position, onSelect, onClose }: Props) {
   const [activeIndex, setActiveIndex] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -65,7 +59,7 @@ export default function WikilinkDropdown({
   if (filtered.length === 0) {
     return (
       <div
-        className="absolute z-50 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl p-3 text-sm text-slate-500"
+        className="absolute z-50 rounded-lg border border-slate-800 bg-slate-900 p-3 text-sm text-slate-500 shadow-2xl"
         style={{ top: position.top, left: position.left }}
       >
         Ничего не найдено
@@ -76,7 +70,7 @@ export default function WikilinkDropdown({
   return (
     <div
       ref={listRef}
-      className="absolute z-50 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl overflow-hidden min-w-[240px] max-w-[320px] max-h-[280px] overflow-y-auto"
+      className="absolute z-50 max-h-[280px] max-w-[320px] min-w-[240px] overflow-hidden overflow-y-auto rounded-lg border border-slate-800 bg-slate-900 shadow-2xl"
       style={{ top: position.top, left: position.left }}
     >
       {filtered.map((entity, i) => {
@@ -91,15 +85,13 @@ export default function WikilinkDropdown({
               onSelect(entity)
             }}
             className={cn(
-              'flex items-center gap-3 px-3 py-2 cursor-pointer transition',
-              isActive
-                ? 'bg-indigo-950/70 text-white'
-                : 'text-slate-300 hover:bg-slate-800/60'
+              'flex cursor-pointer items-center gap-3 px-3 py-2 transition',
+              isActive ? 'bg-indigo-950/70 text-white' : 'text-slate-300 hover:bg-slate-800/60'
             )}
           >
             <span className="text-lg">{style.icon}</span>
-            <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">{entity.name}</div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate font-medium">{entity.name}</div>
               <div className="text-xs text-slate-500">{style.label}</div>
             </div>
           </div>

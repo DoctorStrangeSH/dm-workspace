@@ -8,11 +8,7 @@ import { normalizeTagName, TAG_COLORS } from '@/lib/types'
 /**
  * Добавляет тег к сущности. Если тега нет — создает.
  */
-export async function addTagToEntity(
-  entityId: string,
-  campaignId: string,
-  tagName: string
-) {
+export async function addTagToEntity(entityId: string, campaignId: string, tagName: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -45,8 +41,7 @@ export async function addTagToEntity(
     tagId = existingTags[0].id
   } else {
     // Создаем новый тег со случайным цветом
-    const color =
-      TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)]
+    const color = TAG_COLORS[Math.floor(Math.random() * TAG_COLORS.length)]
 
     const { data: newTag, error: tagError } = await supabase
       .from('tags')
@@ -87,11 +82,7 @@ export async function addTagToEntity(
 /**
  * Удаляет тег с сущности.
  */
-export async function removeTagFromEntity(
-  entityId: string,
-  tagId: string,
-  campaignId: string
-) {
+export async function removeTagFromEntity(entityId: string, tagId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -116,11 +107,7 @@ export async function removeTagFromEntity(
 /**
  * Переименовывает тег (глобально в кампании).
  */
-export async function renameTag(
-  tagId: string,
-  campaignId: string,
-  newName: string
-) {
+export async function renameTag(tagId: string, campaignId: string, newName: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 

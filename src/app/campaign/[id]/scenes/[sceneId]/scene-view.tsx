@@ -170,14 +170,12 @@ export default function SceneView({
   return (
     <div>
       {/* Панель */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold truncate">{scene.name}</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-2xl font-bold">{scene.name}</h1>
+          <p className="mt-0.5 text-xs text-slate-500">
             {scene.width}×{scene.height} клеток · {scene.grid_size}px
-            {scene.is_active && (
-              <span className="ml-2 text-green-400">· Активна</span>
-            )}
+            {scene.is_active && <span className="ml-2 text-green-400">· Активна</span>}
             {' · '}
             <span>
               {tokens.length} {tokens.length === 1 ? 'токен' : 'токенов'}
@@ -185,10 +183,10 @@ export default function SceneView({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowGrid(!showGrid)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+            className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm transition hover:bg-slate-700"
             title={showGrid ? 'Скрыть сетку (G)' : 'Показать сетку (G)'}
           >
             {showGrid ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -199,7 +197,7 @@ export default function SceneView({
             <button
               onClick={handleActivate}
               disabled={isPending}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-600 hover:bg-green-500 text-white rounded-lg transition disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white transition hover:bg-green-500 disabled:opacity-50"
             >
               <Eye size={14} />
               Активировать
@@ -208,11 +206,9 @@ export default function SceneView({
 
           {/* Инструменты */}
           <button
-            onClick={() =>
-              setActiveTool(activeTool === 'ruler' ? 'none' : 'ruler')
-            }
+            onClick={() => setActiveTool(activeTool === 'ruler' ? 'none' : 'ruler')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition',
+              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
               activeTool === 'ruler'
                 ? 'bg-indigo-600 text-white'
                 : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -223,11 +219,9 @@ export default function SceneView({
           </button>
 
           <button
-            onClick={() =>
-              setActiveTool(activeTool === 'cone' ? 'none' : 'cone')
-            }
+            onClick={() => setActiveTool(activeTool === 'cone' ? 'none' : 'cone')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition',
+              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
               activeTool === 'cone'
                 ? 'bg-red-600 text-white'
                 : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -238,11 +232,9 @@ export default function SceneView({
           </button>
 
           <button
-            onClick={() =>
-              setActiveTool(activeTool === 'sphere' ? 'none' : 'sphere')
-            }
+            onClick={() => setActiveTool(activeTool === 'sphere' ? 'none' : 'sphere')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition',
+              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
               activeTool === 'sphere'
                 ? 'bg-red-600 text-white'
                 : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -253,11 +245,9 @@ export default function SceneView({
           </button>
 
           <button
-            onClick={() =>
-              setActiveTool(activeTool === 'line' ? 'none' : 'line')
-            }
+            onClick={() => setActiveTool(activeTool === 'line' ? 'none' : 'line')}
             className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition',
+              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
               activeTool === 'line'
                 ? 'bg-red-600 text-white'
                 : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -270,7 +260,7 @@ export default function SceneView({
           {isDm && (
             <button
               onClick={() => setShowAddToken(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-500 text-white rounded-lg transition"
+              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-sm text-white transition hover:bg-amber-500"
               title="Добавить токен (Ctrl+T)"
             >
               <Plus size={14} />
@@ -282,7 +272,7 @@ export default function SceneView({
             <button
               onClick={handleStartCombat}
               disabled={isPending}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-500 disabled:opacity-50"
               title="Начать бой (Ctrl+B)"
             >
               <Swords size={14} />
@@ -293,7 +283,7 @@ export default function SceneView({
           {initiative.length > 0 && (
             <button
               onClick={() => setShowInitiative(!showInitiative)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition"
+              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-500"
             >
               <Swords size={14} />
               Бой ({initiative.length})
@@ -305,7 +295,7 @@ export default function SceneView({
               <button
                 onClick={() => setFogEnabled(!fogEnabled)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition',
+                  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
                   fogEnabled
                     ? 'bg-slate-700 text-white'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -320,7 +310,7 @@ export default function SceneView({
                 <button
                   onClick={() => setBrushMode(!brushMode)}
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition',
+                    'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
                     brushMode
                       ? 'bg-amber-600 text-white'
                       : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -336,7 +326,7 @@ export default function SceneView({
                 <button
                   onClick={handleClearFog}
                   disabled={isPending}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
                   title="Очистить туман"
                 >
                   <Eraser size={14} />
@@ -357,7 +347,7 @@ export default function SceneView({
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-500 disabled:opacity-50"
               >
                 {isUploading ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -373,17 +363,16 @@ export default function SceneView({
 
       {/* Индикатор текущего хода */}
       {currentTurn && (
-        <div className="mb-3 flex items-center justify-between gap-2 px-4 py-2 bg-red-950/30 border border-red-900/40 rounded-lg">
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-red-900/40 bg-red-950/30 px-4 py-2">
           <div className="flex items-center gap-2">
             <Swords size={16} className="text-red-400" />
             <span className="text-sm text-slate-300">
-              Ход:{' '}
-              <strong className="text-white">{currentTurn.token.name}</strong>
+              Ход: <strong className="text-white">{currentTurn.token.name}</strong>
             </span>
           </div>
           <button
             onClick={() => setShowInitiative(true)}
-            className="px-3 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded transition"
+            className="rounded bg-red-600 px-3 py-1 text-xs text-white transition hover:bg-red-500"
           >
             Панель боя
           </button>
@@ -391,18 +380,10 @@ export default function SceneView({
       )}
 
       {/* Размер шаблона */}
-      {(activeTool === 'cone' ||
-        activeTool === 'sphere' ||
-        activeTool === 'line') && (
-        <div className="flex items-center gap-2 mb-3">
+      {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
+        <div className="mb-3 flex items-center gap-2">
           <span className="text-sm text-slate-400">
-            Размер{' '}
-            {activeTool === 'cone'
-              ? 'конуса'
-              : activeTool === 'sphere'
-                ? 'сферы'
-                : 'линии'}
-            :
+            Размер {activeTool === 'cone' ? 'конуса' : activeTool === 'sphere' ? 'сферы' : 'линии'}:
           </span>
           <input
             type="number"
@@ -411,7 +392,7 @@ export default function SceneView({
             min={5}
             max={120}
             step={5}
-            className="w-20 px-2 py-1 bg-slate-950 border border-slate-800 rounded text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-20 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-sm text-white focus:border-indigo-500 focus:outline-none"
           />
           <span className="text-sm text-slate-500">футов</span>
         </div>
@@ -419,7 +400,7 @@ export default function SceneView({
 
       {/* Пустая сцена */}
       {tokens.length === 0 && isDm && (
-        <div className="mb-4 p-3 bg-slate-900/50 border border-slate-800 rounded-lg text-center text-sm text-slate-500">
+        <div className="mb-4 rounded-lg border border-slate-800 bg-slate-900/50 p-3 text-center text-sm text-slate-500">
           Сцена пуста. Добавь первый токен кнопкой{' '}
           <strong className="text-slate-300">«Токен»</strong>.
         </div>
@@ -451,18 +432,9 @@ export default function SceneView({
               fogEnabled={fogEnabled}
               brushMode={brushMode}
             />
-            {activeTool === 'ruler' && (
-              <RulerTool scene={scene} isActive={true} />
-            )}
-            {(activeTool === 'cone' ||
-              activeTool === 'sphere' ||
-              activeTool === 'line') && (
-              <TemplateTool
-                scene={scene}
-                isActive={true}
-                type={activeTool}
-                size={templateSize}
-              />
+            {activeTool === 'ruler' && <RulerTool scene={scene} isActive={true} />}
+            {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
+              <TemplateTool scene={scene} isActive={true} type={activeTool} size={templateSize} />
             )}
           </div>
         </div>

@@ -21,9 +21,7 @@ interface CampaignAccess {
  * Проверяет доступ текущего пользователя к кампании.
  * Возвращает кампанию + роль или null-ы, если доступа нет.
  */
-export async function getCampaignAccess(
-  campaignId: string
-): Promise<CampaignAccess> {
+export async function getCampaignAccess(campaignId: string): Promise<CampaignAccess> {
   const supabase = await createClient()
   const {
     data: { user },

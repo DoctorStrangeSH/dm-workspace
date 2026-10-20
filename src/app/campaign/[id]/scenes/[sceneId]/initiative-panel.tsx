@@ -3,12 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Swords, ChevronRight, X, Dices } from 'lucide-react'
-import {
-  nextTurn,
-  endCombat,
-  rollInitiativeForToken,
-  damageToken,
-} from '@/lib/actions/combat'
+import { nextTurn, endCombat, rollInitiativeForToken, damageToken } from '@/lib/actions/combat'
 import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import { cn } from '@/lib/utils'
@@ -21,17 +16,11 @@ interface Props {
   onClose: () => void
 }
 
-export default function InitiativePanel({
-  sceneId,
-  initialInitiative,
-  isDm,
-  onClose,
-}: Props) {
+export default function InitiativePanel({ sceneId, initialInitiative, isDm, onClose }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
-  const [selectedEntry, setSelectedEntry] =
-    useState<InitiativeEntryWithToken | null>(null)
+  const [selectedEntry, setSelectedEntry] = useState<InitiativeEntryWithToken | null>(null)
 
   const entries = useRealtimeInitiative({
     sceneId,
@@ -89,29 +78,25 @@ export default function InitiativePanel({
   }
 
   return (
-    <aside className="fixed top-0 right-0 z-40 h-screen w-full sm:w-[340px] bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-slate-800">
+    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl sm:w-[340px]">
+      <div className="flex items-center justify-between border-b border-slate-800 p-4">
         <div className="flex items-center gap-2">
           <Swords size={18} className="text-red-400" />
           <h2 className="font-semibold">Бой</h2>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded">
+        <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
           <X size={18} />
         </button>
       </div>
 
       {currentEntry && (
-        <div className="p-3 bg-red-950/30 border-b border-red-900/40">
-          <div className="text-xs text-red-400 uppercase tracking-wider mb-1">
-            Сейчас
-          </div>
-          <div className="font-semibold text-white">
-            {currentEntry.token.name}
-          </div>
+        <div className="border-b border-red-900/40 bg-red-950/30 p-3">
+          <div className="mb-1 text-xs tracking-wider text-red-400 uppercase">Сейчас</div>
+          <div className="font-semibold text-white">{currentEntry.token.name}</div>
           <button
             onClick={handleNextTurn}
             disabled={isPending}
-            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg transition text-sm disabled:opacity-50"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-500 disabled:opacity-50"
           >
             Следующий ход
             <ChevronRight size={14} />
@@ -121,16 +106,13 @@ export default function InitiativePanel({
 
       <div className="flex-1 overflow-y-auto p-2">
         {entries.length === 0 ? (
-          <p className="text-center text-sm text-slate-500 py-8">
-            Нет инициативы
-          </p>
+          <p className="py-8 text-center text-sm text-slate-500">Нет инициативы</p>
         ) : (
           <div className="space-y-1">
             {entries.map((entry) => {
               const isCurrent = entry.is_current
               const hpPercent =
-                entry.token.hp_current !== null &&
-                entry.token.hp_max !== null
+                entry.token.hp_current !== null && entry.token.hp_max !== null
                   ? (entry.token.hp_current / entry.token.hp_max) * 100
                   : null
 
@@ -138,18 +120,14 @@ export default function InitiativePanel({
                 <div
                   key={entry.id}
                   className={cn(
-                    'flex items-center gap-2 p-2 rounded-lg transition cursor-pointer',
-                    isCurrent
-                      ? 'bg-red-950/40 border border-red-900/50'
-                      : 'hover:bg-slate-800/60'
+                    'flex cursor-pointer items-center gap-2 rounded-lg p-2 transition',
+                    isCurrent ? 'border border-red-900/50 bg-red-950/40' : 'hover:bg-slate-800/60'
                   )}
                   onClick={() => setSelectedEntry(entry)}
                 >
-                  <div className="text-xs text-slate-500 w-4">
-                    {entry.initiative}
-                  </div>
+                  <div className="w-4 text-xs text-slate-500">{entry.initiative}</div>
                   <div
-                    className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm shrink-0"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm"
                     style={{
                       borderColor: entry.token.color,
                       backgroundColor: `${entry.token.color}33`,
@@ -157,31 +135,28 @@ export default function InitiativePanel({
                   >
                     ⚔️
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
-                      {entry.token.name}
-                    </div>
-                    {entry.token.hp_current !== null &&
-                      entry.token.hp_max !== null && (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <div className="flex-1 h-1 bg-slate-950 rounded overflow-hidden">
-                            <div
-                              className={cn(
-                                'h-full transition-all duration-300',
-                                (hpPercent ?? 0) > 50
-                                  ? 'bg-green-500'
-                                  : (hpPercent ?? 0) > 25
-                                    ? 'bg-amber-500'
-                                    : 'bg-red-500'
-                              )}
-                              style={{ width: `${hpPercent}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] text-slate-500">
-                            {entry.token.hp_current}/{entry.token.hp_max}
-                          </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{entry.token.name}</div>
+                    {entry.token.hp_current !== null && entry.token.hp_max !== null && (
+                      <div className="mt-0.5 flex items-center gap-1">
+                        <div className="h-1 flex-1 overflow-hidden rounded bg-slate-950">
+                          <div
+                            className={cn(
+                              'h-full transition-all duration-300',
+                              (hpPercent ?? 0) > 50
+                                ? 'bg-green-500'
+                                : (hpPercent ?? 0) > 25
+                                  ? 'bg-amber-500'
+                                  : 'bg-red-500'
+                            )}
+                            style={{ width: `${hpPercent}%` }}
+                          />
                         </div>
-                      )}
+                        <span className="text-[10px] text-slate-500">
+                          {entry.token.hp_current}/{entry.token.hp_max}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   {entry.initiative === 0 && isDm && (
                     <button
@@ -190,7 +165,7 @@ export default function InitiativePanel({
                         handleRoll(entry)
                       }}
                       disabled={isPending}
-                      className="p-1 hover:bg-slate-700 rounded transition disabled:opacity-50"
+                      className="rounded p-1 transition hover:bg-slate-700 disabled:opacity-50"
                       title="Бросок инициативы"
                     >
                       <Dices size={14} className="text-slate-400" />
@@ -203,11 +178,11 @@ export default function InitiativePanel({
         )}
       </div>
 
-      <div className="p-3 border-t border-slate-800 space-y-2">
+      <div className="space-y-2 border-t border-slate-800 p-3">
         <button
           onClick={handleEndCombat}
           disabled={isPending}
-          className="w-full px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-red-300 rounded-lg transition disabled:opacity-50"
+          className="w-full rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-red-300 transition hover:bg-slate-700 disabled:opacity-50"
         >
           Завершить бой
         </button>
@@ -215,61 +190,55 @@ export default function InitiativePanel({
 
       {selectedEntry && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           onClick={() => setSelectedEntry(null)}
         >
           <div
-            className="bg-slate-900 border border-slate-800 rounded-2xl p-4 max-w-sm w-full"
+            className="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3 flex items-center justify-between">
               <h3 className="font-semibold">{selectedEntry.token.name}</h3>
               <button
                 onClick={() => setSelectedEntry(null)}
-                className="p-1 hover:bg-slate-800 rounded"
+                className="rounded p-1 hover:bg-slate-800"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {selectedEntry.token.hp_current !== null &&
-              selectedEntry.token.hp_max !== null && (
-                <div className="mb-3">
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-slate-400">HP</span>
-                    <span>
-                      {selectedEntry.token.hp_current}/
-                      {selectedEntry.token.hp_max}
-                    </span>
-                  </div>
-                  <div className="h-2 bg-slate-950 rounded overflow-hidden">
-                    <div
-                      className="h-full bg-red-500 transition-all duration-300"
-                      style={{
-                        width: `${(selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100}%`,
-                      }}
-                    />
-                  </div>
+            {selectedEntry.token.hp_current !== null && selectedEntry.token.hp_max !== null && (
+              <div className="mb-3">
+                <div className="mb-1 flex items-center justify-between text-sm">
+                  <span className="text-slate-400">HP</span>
+                  <span>
+                    {selectedEntry.token.hp_current}/{selectedEntry.token.hp_max}
+                  </span>
                 </div>
-              )}
+                <div className="h-2 overflow-hidden rounded bg-slate-950">
+                  <div
+                    className="h-full bg-red-500 transition-all duration-300"
+                    style={{
+                      width: `${(selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-4 gap-1">
               {[-5, -1, +1, +5].map((delta) => (
                 <button
                   key={delta}
                   onClick={() =>
-                    handleDamage(
-                      selectedEntry,
-                      Math.abs(delta),
-                      delta < 0 ? 'damage' : 'heal'
-                    )
+                    handleDamage(selectedEntry, Math.abs(delta), delta < 0 ? 'damage' : 'heal')
                   }
                   disabled={isPending}
                   className={cn(
-                    'px-2 py-2 rounded text-sm font-medium transition disabled:opacity-50',
+                    'rounded px-2 py-2 text-sm font-medium transition disabled:opacity-50',
                     delta < 0
-                      ? 'bg-red-950/40 border border-red-900/50 text-red-300 hover:bg-red-950/60'
-                      : 'bg-green-950/40 border border-green-900/50 text-green-300 hover:bg-green-950/60'
+                      ? 'border border-red-900/50 bg-red-950/40 text-red-300 hover:bg-red-950/60'
+                      : 'border border-green-900/50 bg-green-950/40 text-green-300 hover:bg-green-950/60'
                   )}
                 >
                   {delta > 0 ? '+' : ''}

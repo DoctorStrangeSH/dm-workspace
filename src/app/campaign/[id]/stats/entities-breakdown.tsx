@@ -8,14 +8,7 @@ interface Props {
   stats: CampaignStats['entities']
 }
 
-const ORDER: EntityType[] = [
-  'npc',
-  'location',
-  'monster',
-  'item',
-  'faction',
-  'quest',
-]
+const ORDER: EntityType[] = ['npc', 'location', 'monster', 'item', 'faction', 'quest']
 
 export default function EntitiesBreakdown({ campaignId, stats }: Props) {
   const items = ORDER.map((type) => ({
@@ -26,12 +19,12 @@ export default function EntitiesBreakdown({ campaignId, stats }: Props) {
   if (items.length === 0) return null
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 mb-8">
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+    <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+      <h2 className="mb-4 text-sm font-semibold tracking-wider text-slate-400 uppercase">
         Разбивка сущностей
       </h2>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {items.map((item) => {
           const style = ENTITY_STYLES[item.type]
           return (
@@ -39,19 +32,15 @@ export default function EntitiesBreakdown({ campaignId, stats }: Props) {
               key={item.type}
               href={`/campaign/${campaignId}/entities?type=${item.type}`}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-lg border transition hover:opacity-80',
+                'flex items-center gap-2 rounded-lg border px-3 py-2 transition hover:opacity-80',
                 style.bg,
                 style.border
               )}
             >
               <span className="text-lg">{style.icon}</span>
               <div className="min-w-0">
-                <div className="text-base font-bold leading-tight">
-                  {item.count}
-                </div>
-                <div className={cn('text-[10px] truncate', style.color)}>
-                  {style.label}
-                </div>
+                <div className="text-base leading-tight font-bold">{item.count}</div>
+                <div className={cn('truncate text-[10px]', style.color)}>{style.label}</div>
               </div>
             </Link>
           )

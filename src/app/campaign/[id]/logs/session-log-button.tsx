@@ -11,18 +11,14 @@ interface Props {
   isDm: boolean
 }
 
-export default function SessionLogButton({
-  campaignId,
-  log,
-  isDm,
-}: Props) {
+export default function SessionLogButton({ campaignId, log, isDm }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="p-2 hover:bg-slate-800 rounded-lg transition"
+        className="rounded-lg p-2 transition hover:bg-slate-800"
         title="Записи сессии"
       >
         <ScrollText size={16} />

@@ -38,7 +38,7 @@ export function Skeleton({
 
 export function ChapterItemSkeleton() {
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <div className="flex items-center gap-3">
         <Skeleton width="18px" height="18px" rounded="sm" />
         <Skeleton width="18px" height="18px" rounded="sm" />
@@ -53,7 +53,7 @@ export function ChapterItemSkeleton() {
 
 export function EntityCardSkeleton() {
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <div className="flex items-start gap-3">
         <Skeleton width="40px" height="40px" rounded="lg" />
         <div className="flex-1 space-y-2">
@@ -69,7 +69,7 @@ export function EntityCardSkeleton() {
 
 export function CampaignCardSkeleton() {
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5">
+    <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
       <Skeleton width="70%" height="20px" className="mb-2" />
       <Skeleton width="40%" height="12px" className="mb-4" />
       <Skeleton width="100%" height="12px" className="mb-1" />
@@ -82,13 +82,13 @@ export function CampaignCardSkeleton() {
 export function ChapterEditorSkeleton() {
   return (
     <div className="flex flex-col">
-      <div className="flex items-center justify-between gap-3 mb-3 pb-3 border-b border-slate-800">
+      <div className="mb-3 flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
         <Skeleton width="180px" height="32px" rounded="lg" />
         <Skeleton width="120px" height="20px" />
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 h-[700px] space-y-3">
+        <div className="h-[700px] space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-6">
           <Skeleton width="80%" height="20px" />
           <Skeleton width="100%" height="14px" />
           <Skeleton width="90%" height="14px" />
@@ -99,7 +99,7 @@ export function ChapterEditorSkeleton() {
           <Skeleton width="85%" height="14px" />
           <Skeleton width="100%" height="14px" />
         </div>
-        <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 h-[700px] space-y-3">
+        <div className="h-[700px] space-y-3 rounded-lg border border-slate-800 bg-slate-900/50 p-6">
           <Skeleton width="70%" height="24px" />
           <Skeleton width="100%" height="14px" />
           <Skeleton width="90%" height="14px" />
@@ -115,7 +115,7 @@ export function EntityDetailSkeleton() {
     <div>
       <Skeleton width="250px" height="14px" className="mb-6" />
 
-      <div className="flex items-start gap-4 mb-6">
+      <div className="mb-6 flex items-start gap-4">
         <Skeleton width="56px" height="56px" rounded="lg" />
         <div className="flex-1 space-y-2">
           <Skeleton width="100px" height="12px" />
@@ -123,12 +123,12 @@ export function EntityDetailSkeleton() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-6 pb-4 border-b border-slate-800">
+      <div className="mb-6 flex items-center gap-2 border-b border-slate-800 pb-4">
         <Skeleton width="120px" height="32px" rounded="lg" />
         <Skeleton width="140px" height="32px" rounded="lg" />
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2">
+      <div className="space-y-2 rounded-lg border border-slate-800 bg-slate-900 p-4">
         <Skeleton width="100%" height="14px" />
         <Skeleton width="90%" height="14px" />
         <Skeleton width="80%" height="14px" />

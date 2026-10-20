@@ -16,21 +16,13 @@ export async function getScenes(campaignId: string): Promise<Scene[]> {
   return (data ?? []) as Scene[]
 }
 
-export async function getScene(
-  sceneId: string
-): Promise<Scene | null> {
+export async function getScene(sceneId: string): Promise<Scene | null> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('scenes')
-    .select('*')
-    .eq('id', sceneId)
-    .single()
+  const { data } = await supabase.from('scenes').select('*').eq('id', sceneId).single()
   return (data as Scene) ?? null
 }
 
-export async function getActiveScene(
-  campaignId: string
-): Promise<Scene | null> {
+export async function getActiveScene(campaignId: string): Promise<Scene | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('scenes')

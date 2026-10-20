@@ -12,18 +12,14 @@ interface Props {
 
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
-export default function SavesList({
-  proficientSaves,
-  getBonus,
-  onRoll,
-}: Props) {
+export default function SavesList({ proficientSaves, getBonus, onRoll }: Props) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <h3 className="mb-3 text-sm font-semibold tracking-wider text-slate-400 uppercase">
         Спасброски
       </h3>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
         {ABILITIES.map((ability) => {
           const isProficient = proficientSaves.includes(ability)
           const bonus = getBonus(ability)
@@ -35,25 +31,20 @@ export default function SavesList({
               onClick={() => onRoll?.(ability)}
               disabled={!onRoll}
               className={cn(
-                'group flex items-center gap-2 px-2 py-1.5 rounded text-sm transition',
+                'group flex items-center gap-2 rounded px-2 py-1.5 text-sm transition',
                 onRoll && 'hover:bg-slate-800/60',
                 !onRoll && 'cursor-default'
               )}
             >
               <span
                 className={cn(
-                  'w-2 h-2 rounded-full shrink-0',
-                  isProficient
-                    ? 'bg-amber-400'
-                    : 'bg-slate-700 border border-slate-600'
+                  'h-2 w-2 shrink-0 rounded-full',
+                  isProficient ? 'bg-amber-400' : 'border border-slate-600 bg-slate-700'
                 )}
               />
               <span className="flex-1 text-slate-300">{ABILITY_SHORT[ability]}</span>
               <span
-                className={cn(
-                  'font-medium',
-                  isProficient ? 'text-amber-300' : 'text-slate-400'
-                )}
+                className={cn('font-medium', isProficient ? 'text-amber-300' : 'text-slate-400')}
               >
                 {formatModifier(bonus)}
               </span>

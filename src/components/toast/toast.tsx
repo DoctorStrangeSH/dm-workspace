@@ -66,33 +66,27 @@ export default function Toast({ toast, onClose }: Props) {
   return (
     <div
       className={cn(
-        'pointer-events-auto flex items-start gap-3 p-3 pr-2 rounded-lg border shadow-lg backdrop-blur-sm min-w-[280px] max-w-md transition-all duration-200 ease-out relative overflow-hidden',
+        'pointer-events-auto relative flex max-w-md min-w-[280px] items-start gap-3 overflow-hidden rounded-lg border p-3 pr-2 shadow-lg backdrop-blur-sm transition-all duration-200 ease-out',
         style.bg,
         style.border,
-        isVisible && !isLeaving
-          ? 'translate-x-0 opacity-100'
-          : 'translate-x-full opacity-0'
+        isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       )}
     >
       {/* Иконка */}
-      <div className={cn('shrink-0 mt-0.5', style.text)}>{style.icon}</div>
+      <div className={cn('mt-0.5 shrink-0', style.text)}>{style.icon}</div>
 
       {/* Контент */}
-      <div className="flex-1 min-w-0">
-        <div className={cn('text-sm font-medium', style.text)}>
-          {toast.message}
-        </div>
+      <div className="min-w-0 flex-1">
+        <div className={cn('text-sm font-medium', style.text)}>{toast.message}</div>
         {toast.description && (
-          <div className="text-xs text-slate-400 mt-0.5">
-            {toast.description}
-          </div>
+          <div className="mt-0.5 text-xs text-slate-400">{toast.description}</div>
         )}
       </div>
 
       {/* Кнопка закрыть */}
       <button
         onClick={handleClose}
-        className="shrink-0 p-1 hover:bg-white/10 rounded transition"
+        className="shrink-0 rounded p-1 transition hover:bg-white/10"
         title="Закрыть"
       >
         <X size={14} className="text-slate-400" />
@@ -100,7 +94,7 @@ export default function Toast({ toast, onClose }: Props) {
 
       {/* Прогресс-бар */}
       {showProgress && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/5">
+        <div className="absolute right-0 bottom-0 left-0 h-0.5 bg-white/5">
           <div
             className={cn('h-full', style.bar)}
             style={{

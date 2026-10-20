@@ -80,28 +80,22 @@ export default async function EntitiesPage({
         className="mb-4"
       />
 
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Users size={22} className="text-emerald-400" />
             Сущности
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {entities.length}{' '}
-            {entities.length === 1 ? 'сущность' : 'сущностей'}
+          <p className="mt-1 text-sm text-slate-400">
+            {entities.length} {entities.length === 1 ? 'сущность' : 'сущностей'}
             {!isDm && ' · только видимые вам'}
           </p>
         </div>
-        {isDm && (
-          <CreateEntityButton
-            campaignId={campaignId}
-            templates={templates}
-          />
-        )}
+        {isDm && <CreateEntityButton campaignId={campaignId} templates={templates} />}
       </div>
 
       {/* Фильтры по типу */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="mb-6 flex flex-wrap gap-2">
         {ENTITY_FILTERS.map((f) => {
           const isActive = activeType === f.value
           const href = f.value === 'all' ? base : `${base}?type=${f.value}`
@@ -110,10 +104,10 @@ export default async function EntitiesPage({
               key={f.value}
               href={href}
               className={cn(
-                'px-3 py-1.5 text-sm rounded-lg border transition',
+                'rounded-lg border px-3 py-1.5 text-sm transition',
                 isActive
-                  ? 'bg-indigo-600 border-indigo-500 text-white'
-                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-white'
+                  ? 'border-indigo-500 bg-indigo-600 text-white'
+                  : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-white'
               )}
             >
               {f.label}
@@ -125,11 +119,7 @@ export default async function EntitiesPage({
       {entities.length === 0 ? (
         <EmptyState
           icon="👥"
-          title={
-            activeType === 'all'
-              ? 'Пока нет ни одной сущности'
-              : 'Нет сущностей этого типа'
-          }
+          title={activeType === 'all' ? 'Пока нет ни одной сущности' : 'Нет сущностей этого типа'}
           description={
             isDm
               ? 'Создай NPC, локацию, монстра или предмет. Используй шаблон для быстрого старта.'
@@ -138,7 +128,7 @@ export default async function EntitiesPage({
           size="lg"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {entities.map((e) => (
             <EntityCard
               key={e.id}

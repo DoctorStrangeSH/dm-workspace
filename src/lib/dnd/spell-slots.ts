@@ -64,10 +64,7 @@ const HALF_CASTERS = ['paladin', 'ranger']
  * Возвращает spell slots для класса и уровня.
  * Возвращает пустой объект для не-кастеров.
  */
-export function getSpellSlotsForLevel(
-  classSlug: string,
-  level: number
-): SpellSlots {
+export function getSpellSlotsForLevel(classSlug: string, level: number): SpellSlots {
   const clampedLevel = Math.max(1, Math.min(20, level))
 
   let table: SlotTable | null = null

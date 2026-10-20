@@ -17,21 +17,12 @@ interface Props {
 function preprocessWikilinks(text: string): string {
   return text.replace(
     /\[\[([^\]]+)\]\]/g,
-    (_match, name) =>
-      `<a data-entity="${name.trim()}" class="entity-link">${name.trim()}</a>`
+    (_match, name) => `<a data-entity="${name.trim()}" class="entity-link">${name.trim()}</a>`
   )
 }
 
-export default function MarkdownPreview({
-  content,
-  campaignId,
-  entityMap,
-  className,
-}: Props) {
-  const processed = useMemo(
-    () => preprocessWikilinks(content),
-    [content]
-  )
+export default function MarkdownPreview({ content, campaignId, entityMap, className }: Props) {
+  const processed = useMemo(() => preprocessWikilinks(content), [content])
 
   return (
     <div className={cn('prose prose-invert max-w-none', className)}>
@@ -60,22 +51,14 @@ export default function MarkdownPreview({
               }
 
               return (
-                <span
-                  className="entity-link entity-link-missing"
-                  title="Сущность не найдена"
-                >
+                <span className="entity-link entity-link-missing" title="Сущность не найдена">
                   {children}
                 </span>
               )
             }
 
             return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                {...rest}
-              >
+              <a href={href} target="_blank" rel="noopener noreferrer" {...rest}>
                 {children}
               </a>
             )

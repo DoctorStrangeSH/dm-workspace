@@ -56,9 +56,7 @@ export function ThemeProvider({ children, initialTheme = 'dark' }: Props) {
     },
     () => {
       if (typeof window === 'undefined') return 'dark'
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     },
     () => 'dark' // SSR fallback
   )
@@ -87,8 +85,7 @@ export function ThemeProvider({ children, initialTheme = 'dark' }: Props) {
     })
   }, [])
 
-  const resolvedTheme: 'dark' | 'light' =
-    theme === 'system' ? systemTheme : theme
+  const resolvedTheme: 'dark' | 'light' = theme === 'system' ? systemTheme : theme
 
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>

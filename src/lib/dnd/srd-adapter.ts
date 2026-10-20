@@ -65,10 +65,24 @@ export function srdClassToClassInfo(cls: SrdClass): ClassInfo {
 
   // Навыки — базовые, если нет данных
   const baseSkills: SkillKey[] = [
-    'athletics', 'acrobatics', 'sleight-of-hand', 'stealth',
-    'arcana', 'history', 'investigation', 'nature', 'religion',
-    'animal-handling', 'insight', 'medicine', 'perception', 'survival',
-    'deception', 'intimidation', 'performance', 'persuasion',
+    'athletics',
+    'acrobatics',
+    'sleight-of-hand',
+    'stealth',
+    'arcana',
+    'history',
+    'investigation',
+    'nature',
+    'religion',
+    'animal-handling',
+    'insight',
+    'medicine',
+    'perception',
+    'survival',
+    'deception',
+    'intimidation',
+    'performance',
+    'persuasion',
   ]
 
   return {

@@ -324,7 +324,10 @@ export async function addSpell(
     ...spell,
     id: `spell-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
   }
-  const newData: CharacterData = { ...access.data, spells: [...(access.data.spells ?? []), newSpell] }
+  const newData: CharacterData = {
+    ...access.data,
+    spells: [...(access.data.spells ?? []), newSpell],
+  }
 
   const save = await saveCharacterData(characterId, campaignId, newData)
   if ('error' in save) return save
@@ -391,7 +394,10 @@ export async function spendSpellSlot(
     current: Math.max(0, Math.min(current.max, current.current + delta)),
   }
 
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, spellSlots: slots })
+  const save = await saveCharacterData(characterId, campaignId, {
+    ...access.data,
+    spellSlots: slots,
+  })
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -542,7 +548,10 @@ export async function toggleAttuned(
   const updated = inventory.map((item) =>
     item.id === itemId ? { ...item, attuned: !item.attuned } : item
   )
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory: updated })
+  const save = await saveCharacterData(characterId, campaignId, {
+    ...access.data,
+    inventory: updated,
+  })
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -582,11 +591,7 @@ export async function levelUp(
   const save = await saveCharacterData(characterId, campaignId, newData)
   if ('error' in save) return save
 
-  await logEvent(
-    campaignId,
-    'level_up',
-    `${access.name} достиг уровня ${newData.level}`
-  )
+  await logEvent(campaignId, 'level_up', `${access.name} достиг уровня ${newData.level}`)
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
   return { success: true, newLevel: newData.level, hpGain }

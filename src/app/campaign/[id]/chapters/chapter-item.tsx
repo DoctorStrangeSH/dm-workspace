@@ -4,17 +4,7 @@ import { useState, useTransition, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  Eye,
-  EyeOff,
-  Trash2,
-  Pencil,
-  Check,
-  X,
-  FileText,
-  GripVertical,
-  Copy,
-} from 'lucide-react'
+import { Eye, EyeOff, Trash2, Pencil, Check, X, FileText, GripVertical, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/toast/toast-provider'
 import type { Chapter } from '@/lib/types'
@@ -52,14 +42,10 @@ export default function ChapterItem({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: chapter.id, disabled: !isDm || isSelectionMode })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: chapter.id,
+    disabled: !isDm || isSelectionMode,
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -97,17 +83,11 @@ export default function ChapterItem({
   const handleToggleVisibility = () => {
     const willBeVisible = !chapter.is_visible_to_players
     startTransition(async () => {
-      const res = await toggleChapterVisibility(
-        chapter.id,
-        campaignId,
-        willBeVisible
-      )
+      const res = await toggleChapterVisibility(chapter.id, campaignId, willBeVisible)
       if ('error' in res) {
         toast.error(res.error ?? 'Ошибка')
       } else {
-        toast.success(
-          willBeVisible ? 'Глава видна игрокам' : 'Глава скрыта от игроков'
-        )
+        toast.success(willBeVisible ? 'Глава видна игрокам' : 'Глава скрыта от игроков')
       }
     })
   }
@@ -141,7 +121,7 @@ export default function ChapterItem({
         ref={setNodeRef}
         style={style}
         className={cn(
-          'group bg-slate-900/60 border rounded-xl transition',
+          'group rounded-xl border bg-slate-900/60 transition',
           isSelected
             ? 'border-indigo-600 bg-indigo-950/20'
             : 'border-slate-800 hover:border-slate-700',
@@ -153,9 +133,9 @@ export default function ChapterItem({
             <button
               onClick={() => onToggleSelect?.(chapter.id)}
               className={cn(
-                'shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition',
+                'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition',
                 isSelected
-                  ? 'bg-indigo-600 border-indigo-500'
+                  ? 'border-indigo-500 bg-indigo-600'
                   : 'border-slate-700 hover:border-slate-500'
               )}
               title={isSelected ? 'Снять выделение' : 'Выделить'}
@@ -168,16 +148,16 @@ export default function ChapterItem({
             <div
               {...attributes}
               {...listeners}
-              className="cursor-grab active:cursor-grabbing text-slate-600 hover:text-slate-400 shrink-0 touch-none"
+              className="shrink-0 cursor-grab touch-none text-slate-600 hover:text-slate-400 active:cursor-grabbing"
               title="Перетащи, чтобы изменить порядок"
             >
               <GripVertical size={18} />
             </div>
           )}
 
-          <FileText size={18} className="text-indigo-400 shrink-0" />
+          <FileText size={18} className="shrink-0 text-indigo-400" />
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {isEditing ? (
               <div className="flex items-center gap-2">
                 <input
@@ -189,19 +169,19 @@ export default function ChapterItem({
                     if (e.key === 'Escape') handleCancelEdit()
                   }}
                   disabled={isPending}
-                  className="flex-1 px-2 py-1 bg-slate-950 border border-slate-700 rounded text-white text-sm focus:outline-none focus:border-indigo-500"
+                  className="flex-1 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white focus:border-indigo-500 focus:outline-none"
                 />
                 <button
                   onClick={handleSaveTitle}
                   disabled={isPending}
-                  className="p-1 hover:bg-slate-800 rounded transition"
+                  className="rounded p-1 transition hover:bg-slate-800"
                 >
                   <Check size={14} className="text-green-400" />
                 </button>
                 <button
                   onClick={handleCancelEdit}
                   disabled={isPending}
-                  className="p-1 hover:bg-slate-800 rounded transition"
+                  className="rounded p-1 transition hover:bg-slate-800"
                 >
                   <X size={14} className="text-slate-400" />
                 </button>
@@ -211,49 +191,32 @@ export default function ChapterItem({
                 onClick={() => onToggleSelect?.(chapter.id)}
                 className="block w-full text-left"
               >
-                <h3 className="font-medium truncate">
-                  <HighlightedText
-                    text={chapter.title}
-                    query={searchQuery}
-                  />
+                <h3 className="truncate font-medium">
+                  <HighlightedText text={chapter.title} query={searchQuery} />
                 </h3>
                 {!chapter.is_visible_to_players && isDm && (
-                  <span className="text-xs text-amber-400/80">
-                    Скрыта от игроков
-                  </span>
+                  <span className="text-xs text-amber-400/80">Скрыта от игроков</span>
                 )}
               </button>
             ) : (
-              <Link
-                href={`/campaign/${campaignId}/chapters/${chapter.id}`}
-                className="block"
-              >
-                <h3 className="font-medium truncate hover:text-indigo-400 transition">
-                  <HighlightedText
-                    text={chapter.title}
-                    query={searchQuery}
-                  />
+              <Link href={`/campaign/${campaignId}/chapters/${chapter.id}`} className="block">
+                <h3 className="truncate font-medium transition hover:text-indigo-400">
+                  <HighlightedText text={chapter.title} query={searchQuery} />
                 </h3>
                 {!chapter.is_visible_to_players && isDm && (
-                  <span className="text-xs text-amber-400/80">
-                    Скрыта от игроков
-                  </span>
+                  <span className="text-xs text-amber-400/80">Скрыта от игроков</span>
                 )}
               </Link>
             )}
           </div>
 
           {isDm && !isEditing && !isSelectionMode && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+            <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
               <button
                 onClick={handleToggleVisibility}
                 disabled={isPending}
-                className="p-2 hover:bg-slate-800 rounded-lg transition"
-                title={
-                  chapter.is_visible_to_players
-                    ? 'Скрыть от игроков'
-                    : 'Показать игрокам'
-                }
+                className="rounded-lg p-2 transition hover:bg-slate-800"
+                title={chapter.is_visible_to_players ? 'Скрыть от игроков' : 'Показать игрокам'}
               >
                 {chapter.is_visible_to_players ? (
                   <Eye size={16} className="text-green-400" />
@@ -265,7 +228,7 @@ export default function ChapterItem({
               <button
                 onClick={() => setIsEditing(true)}
                 disabled={isPending}
-                className="p-2 hover:bg-slate-800 rounded-lg transition"
+                className="rounded-lg p-2 transition hover:bg-slate-800"
                 title="Переименовать"
               >
                 <Pencil size={16} className="text-slate-400" />
@@ -274,7 +237,7 @@ export default function ChapterItem({
               <button
                 onClick={handleDuplicate}
                 disabled={isPending}
-                className="p-2 hover:bg-slate-800 rounded-lg transition"
+                className="rounded-lg p-2 transition hover:bg-slate-800"
                 title="Дублировать главу"
               >
                 <Copy size={16} className="text-slate-400" />
@@ -283,7 +246,7 @@ export default function ChapterItem({
               <button
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isPending}
-                className="p-2 hover:bg-red-950/50 rounded-lg transition"
+                className="rounded-lg p-2 transition hover:bg-red-950/50"
                 title="Удалить"
               >
                 <Trash2 size={16} className="text-red-400" />
@@ -294,25 +257,24 @@ export default function ChapterItem({
       </div>
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">Удалить главу?</h3>
-            <p className="text-slate-400 text-sm mb-6">
-              «{chapter.title}» будет удалена со всем содержимым. Восстановить
-              нельзя.
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h3 className="mb-2 text-lg font-semibold">Удалить главу?</h3>
+            <p className="mb-6 text-sm text-slate-400">
+              «{chapter.title}» будет удалена со всем содержимым. Восстановить нельзя.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isPending}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+                className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
               >
                 Отмена
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500 disabled:opacity-50"
               >
                 {isPending ? 'Удаляем...' : 'Удалить'}
               </button>

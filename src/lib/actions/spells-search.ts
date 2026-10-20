@@ -16,9 +16,7 @@ export interface SrdSpell {
   data: any
 }
 
-export async function searchSrdSpellsAction(
-  filters: SpellFilters = {}
-): Promise<SrdSpell[]> {
+export async function searchSrdSpellsAction(filters: SpellFilters = {}): Promise<SrdSpell[]> {
   const supabase = await createClient()
   const { query, level, school, limit = 100 } = filters
 
@@ -50,10 +48,7 @@ export async function searchSrdSpellsAction(
 
 export async function getAvailableSpellLevels(): Promise<number[]> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('srd_spells')
-    .select('data->>level')
-    .limit(10000)
+  const { data } = await supabase.from('srd_spells').select('data->>level').limit(10000)
 
   const levels = new Set<number>()
   data?.forEach((row: any) => {

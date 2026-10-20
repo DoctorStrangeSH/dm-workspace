@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  useState,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, CornerDownLeft } from 'lucide-react'
 import { fuzzyFilter } from '@/lib/fuzzy'
@@ -30,13 +24,7 @@ const KIND_LABELS: Record<string, string> = {
   entity: 'Сущности',
 }
 
-export default function CommandPalette({
-  isOpen,
-  onClose,
-  campaignId,
-  chapters,
-  entities,
-}: Props) {
+export default function CommandPalette({ isOpen, onClose, campaignId, chapters, entities }: Props) {
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
@@ -122,7 +110,7 @@ export default function CommandPalette({
         label: 'Открыть сцены',
         icon: '🗺️',
         href: `/campaign/${campaignId}/scenes`,
-      },
+      }
     )
 
     for (const ch of chapters) {
@@ -194,10 +182,10 @@ export default function CommandPalette({
   }
 
   useEffect(() => {
-   if (!isOpen) return
-   const t = setTimeout(() => inputRef.current?.focus(), 50)
-   return () => clearTimeout(t)
-}, [isOpen])
+    if (!isOpen) return
+    const t = setTimeout(() => inputRef.current?.focus(), 50)
+    return () => clearTimeout(t)
+  }, [isOpen])
 
   // Этот useEffect оставлен: он не setState, а side-effect на DOM (scrollIntoView)
   useEffect(() => {
@@ -237,15 +225,15 @@ export default function CommandPalette({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[5vh] sm:pt-[15vh] px-0 sm:px-4"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 px-0 pt-[5vh] backdrop-blur-sm sm:px-4 sm:pt-[15vh]"
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border-y sm:border border-slate-700 sm:rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden h-[90vh] sm:h-auto sm:max-h-[70vh] flex flex-col"
+        className="flex h-[90vh] w-full max-w-2xl flex-col overflow-hidden border-y border-slate-700 bg-slate-900 shadow-2xl sm:h-auto sm:max-h-[70vh] sm:rounded-2xl sm:border"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800 shrink-0">
-          <Search size={18} className="text-slate-500 shrink-0" />
+        <div className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-4 py-3">
+          <Search size={18} className="shrink-0 text-slate-500" />
           <input
             ref={inputRef}
             type="text"
@@ -253,17 +241,14 @@ export default function CommandPalette({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Поиск: главы, сущности, действия..."
-            className="flex-1 bg-transparent text-white placeholder:text-slate-600 focus:outline-none text-base"
+            className="flex-1 bg-transparent text-base text-white placeholder:text-slate-600 focus:outline-none"
           />
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-xs text-slate-500 bg-slate-800 border border-slate-700 rounded">
+          <kbd className="hidden items-center gap-1 rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs text-slate-500 sm:inline-flex">
             Esc
           </kbd>
         </div>
 
-        <div
-          ref={listRef}
-          className="flex-1 overflow-y-auto py-2"
-        >
+        <div ref={listRef} className="flex-1 overflow-y-auto py-2">
           {filtered.length === 0 ? (
             <div className="px-4 py-10">
               <EmptyState
@@ -277,13 +262,12 @@ export default function CommandPalette({
           ) : (
             filtered.map((cmd, i) => {
               const isActive = i === activeIndex
-              const showKindLabel =
-                i === 0 || filtered[i - 1].kind !== cmd.kind
+              const showKindLabel = i === 0 || filtered[i - 1].kind !== cmd.kind
 
               return (
                 <div key={cmd.id}>
                   {showKindLabel && (
-                    <div className="px-4 pt-2 pb-1 text-[10px] text-slate-600 uppercase tracking-wider">
+                    <div className="px-4 pt-2 pb-1 text-[10px] tracking-wider text-slate-600 uppercase">
                       {KIND_LABELS[cmd.kind]}
                     </div>
                   )}
@@ -291,33 +275,26 @@ export default function CommandPalette({
                     onMouseEnter={() => setActiveIndex(i)}
                     onClick={() => execute(cmd)}
                     className={cn(
-                      'w-full flex items-center gap-3 px-4 py-2 text-left transition',
+                      'flex w-full items-center gap-3 px-4 py-2 text-left transition',
                       isActive
                         ? 'bg-indigo-950/60 text-white'
                         : 'text-slate-300 hover:bg-slate-800/60'
                     )}
                   >
-                    <span className="text-lg shrink-0">{cmd.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {cmd.label}
-                      </div>
+                    <span className="shrink-0 text-lg">{cmd.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{cmd.label}</div>
                       {cmd.description && (
-                        <div className="text-xs text-slate-500 truncate">
-                          {cmd.description}
-                        </div>
+                        <div className="truncate text-xs text-slate-500">{cmd.description}</div>
                       )}
                     </div>
                     {cmd.shortcut && (
-                      <kbd className="text-[10px] text-slate-500 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
+                      <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-500">
                         {cmd.shortcut}
                       </kbd>
                     )}
                     {isActive && !cmd.shortcut && (
-                      <CornerDownLeft
-                        size={12}
-                        className="text-slate-500"
-                      />
+                      <CornerDownLeft size={12} className="text-slate-500" />
                     )}
                   </button>
                 </div>
@@ -326,21 +303,15 @@ export default function CommandPalette({
           )}
         </div>
 
-        <div className="hidden sm:flex px-4 py-2 border-t border-slate-800 items-center justify-between text-xs text-slate-500 shrink-0">
+        <div className="hidden shrink-0 items-center justify-between border-t border-slate-800 px-4 py-2 text-xs text-slate-500 sm:flex">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="bg-slate-800 border border-slate-700 rounded px-1 py-0.5">
-                ↑
-              </kbd>
-              <kbd className="bg-slate-800 border border-slate-700 rounded px-1 py-0.5">
-                ↓
-              </kbd>
+              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5">↑</kbd>
+              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5">↓</kbd>
               навигация
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="bg-slate-800 border border-slate-700 rounded px-1 py-0.5">
-                ⏎
-              </kbd>
+              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5">⏎</kbd>
               выбрать
             </span>
           </div>

@@ -8,10 +8,7 @@ import { getCampaignAccess } from '@/lib/queries/access'
  * Добавляет монстра из SRD в кампанию как entity.
  * Создает КОПИЮ в entities, а не ссылку — чтобы можно было редактировать.
  */
-export async function addMonsterToCampaign(
-  monsterKey: string,
-  campaignId: string
-) {
+export async function addMonsterToCampaign(monsterKey: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -31,9 +28,7 @@ export async function addMonsterToCampaign(
   // ВАЖНО: в srd_monsters поле data — это JSONB (объект), а не строка.
   // Но на всякий случай поддержим и строку.
   const monsterData: any =
-    typeof srdMonster.data === 'string'
-      ? JSON.parse(srdMonster.data)
-      : srdMonster.data ?? {}
+    typeof srdMonster.data === 'string' ? JSON.parse(srdMonster.data) : (srdMonster.data ?? {})
 
   const dataJson = parseMonsterData(monsterData)
 
@@ -82,7 +77,7 @@ function extractHP(value: unknown): number {
     const dice = value.match(/^(\d+)d(\d+)([+-]\d+)?$/i)
     if (dice) {
       const [, n, d, mod] = dice
-      return Math.floor(Number(n) * (Number(d) + 1) / 2) + Number(mod ?? 0)
+      return Math.floor((Number(n) * (Number(d) + 1)) / 2) + Number(mod ?? 0)
     }
   }
 
@@ -105,9 +100,7 @@ function parseMonsterData(srd: any): Record<string, unknown> {
 
   // AC: может быть числом или массивом [{ value: 17, type: "natural armor" }]
   const ac =
-    typeof srd.armor_class === 'number'
-      ? srd.armor_class
-      : srd.armor_class?.[0]?.value ?? 10
+    typeof srd.armor_class === 'number' ? srd.armor_class : (srd.armor_class?.[0]?.value ?? 10)
 
   const cr = srd.challenge_rating ?? srd.cr ?? '0'
 

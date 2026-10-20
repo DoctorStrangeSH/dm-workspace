@@ -11,9 +11,7 @@ interface WikilinkTrigger {
   position: { top: number; left: number } | null
 }
 
-export function useWikilinkTrigger(
-  view: EditorView | undefined,
-) {
+export function useWikilinkTrigger(view: EditorView | undefined) {
   const [trigger, setTrigger] = useState<WikilinkTrigger>({
     isOpen: false,
     query: '',

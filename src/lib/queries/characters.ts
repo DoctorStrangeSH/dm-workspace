@@ -4,9 +4,7 @@ import type { Character, CharacterWithOwner } from '@/lib/types'
 /**
  * Возвращает всех персонажей кампании (с владельцем).
  */
-export async function getCampaignCharacters(
-  campaignId: string
-): Promise<CharacterWithOwner[]> {
+export async function getCampaignCharacters(campaignId: string): Promise<CharacterWithOwner[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -43,9 +41,7 @@ export async function getCampaignCharacters(
 /**
  * Возвращает персонажей текущего игрока в кампании.
  */
-export async function getMyCharacters(
-  campaignId: string
-): Promise<Character[]> {
+export async function getMyCharacters(campaignId: string): Promise<Character[]> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -68,9 +64,7 @@ export async function getMyCharacters(
 /**
  * Возвращает одного персонажа.
  */
-export async function getCharacter(
-  characterId: string
-): Promise<Character | null> {
+export async function getCharacter(characterId: string): Promise<Character | null> {
   const supabase = await createClient()
 
   const { data, error } = await supabase

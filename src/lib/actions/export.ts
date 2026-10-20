@@ -76,9 +76,7 @@ export async function getCampaignForExport(campaignId: string): Promise<{
 
   const { data: chapters, error } = await supabase
     .from('chapters')
-    .select(
-      'title, content_md, order_index, is_visible_to_players, created_at, updated_at'
-    )
+    .select('title, content_md, order_index, is_visible_to_players, created_at, updated_at')
     .eq('campaign_id', campaignId)
     .order('order_index', { ascending: true })
 

@@ -12,8 +12,7 @@ export const customTheme = EditorView.theme(
       height: '100%',
     },
     '.cm-content': {
-      fontFamily:
-        'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
       padding: '16px 0',
       lineHeight: '1.7',
       caretColor: 'rgb(129 140 248)', // indigo-400
@@ -46,8 +45,7 @@ export const customTheme = EditorView.theme(
     },
     '.cm-scroller': {
       overflow: 'auto',
-      fontFamily:
-        'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
     },
     '.cm-tooltip': {
       backgroundColor: 'rgb(15 23 42)',

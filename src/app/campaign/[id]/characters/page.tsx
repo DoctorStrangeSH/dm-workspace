@@ -10,11 +10,7 @@ import EmptyState from '@/components/empty-state'
 import CreateCharacterButton from './create-character-button'
 import { Sword } from 'lucide-react'
 
-export default async function CharactersPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function CharactersPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
 
   const { id: campaignId } = await params
@@ -36,15 +32,14 @@ export default async function CharactersPage({
         className="mb-4"
       />
 
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Sword size={22} className="text-amber-400" />
             Персонажи
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {characters.length}{' '}
-            {characters.length === 1 ? 'персонаж' : 'персонажей'}
+          <p className="mt-1 text-sm text-slate-400">
+            {characters.length} {characters.length === 1 ? 'персонаж' : 'персонажей'}
           </p>
         </div>
         <CreateCharacterButton campaignId={campaignId} />
@@ -62,19 +57,19 @@ export default async function CharactersPage({
           size="lg"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {characters.map((char) => (
             <Link
               key={char.id}
               href={`/campaign/${campaignId}/characters/${char.id}`}
-              className="group bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl p-4 transition block"
+              className="group block rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700"
             >
               <div className="flex items-start gap-3">
-                <div className="shrink-0 w-12 h-12 rounded-lg bg-amber-950/40 border border-amber-900/50 flex items-center justify-center text-xl">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-amber-900/50 bg-amber-950/40 text-xl">
                   ⚔️
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold truncate group-hover:text-amber-400 transition">
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-semibold transition group-hover:text-amber-400">
                     {char.name}
                   </h3>
                   <div className="text-xs text-slate-500">
@@ -88,7 +83,7 @@ export default async function CharactersPage({
                     {' · '}
                     <span>Уровень {char.data_json.level ?? 1}</span>
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">
+                  <div className="mt-1 text-xs text-slate-500">
                     Владелец: {char.owner.display_name ?? char.owner.username}
                   </div>
                 </div>

@@ -23,14 +23,7 @@ interface Props {
   onUpdate: () => void
 }
 
-export default function TokenMenu({
-  token,
-  scene,
-  isDm,
-  currentUserId,
-  onClose,
-  onUpdate,
-}: Props) {
+export default function TokenMenu({ token, scene, isDm, currentUserId, onClose, onUpdate }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -93,7 +86,7 @@ export default function TokenMenu({
     })
   }
 
-  const handleToggleCondition = (cond: typeof CONDITION_LIST[0]) => {
+  const handleToggleCondition = (cond: (typeof CONDITION_LIST)[0]) => {
     const existing = token.conditions.find((c) => c.name === cond.name)
     const newConditions: TokenCondition[] = existing
       ? token.conditions.filter((c) => c.name !== cond.name)
@@ -108,17 +101,17 @@ export default function TokenMenu({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col"
+        className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl border border-slate-800 bg-slate-900"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-800">
+        <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg"
+              className="flex h-10 w-10 items-center justify-center rounded-full border-2 text-lg"
               style={{
                 borderColor: token.color,
                 backgroundColor: `${token.color}33`,
@@ -133,15 +126,15 @@ export default function TokenMenu({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-slate-800 rounded">
+          <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
             <X size={18} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {token.hp_max !== null && localHP !== null && (
             <div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Heart size={14} className="text-red-400" />
                 <span className="text-sm font-medium">HP</span>
                 <span className="text-sm text-slate-400">
@@ -149,7 +142,7 @@ export default function TokenMenu({
                 </span>
               </div>
 
-              <div className="h-2 bg-slate-950 rounded overflow-hidden mb-2">
+              <div className="mb-2 h-2 overflow-hidden rounded bg-slate-950">
                 <div
                   className="h-full bg-red-500 transition-all"
                   style={{ width: `${(localHP / token.hp_max) * 100}%` }}
@@ -162,28 +155,28 @@ export default function TokenMenu({
                     <button
                       onClick={() => handleHP(-5)}
                       disabled={isPending}
-                      className="px-2 py-1.5 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-xs hover:bg-red-950/60 transition disabled:opacity-50"
+                      className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-50"
                     >
                       −5
                     </button>
                     <button
                       onClick={() => handleHP(-1)}
                       disabled={isPending}
-                      className="px-2 py-1.5 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-xs hover:bg-red-950/60 transition disabled:opacity-50"
+                      className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-50"
                     >
                       −1
                     </button>
                     <button
                       onClick={() => handleHP(1)}
                       disabled={isPending}
-                      className="px-2 py-1.5 bg-green-950/40 border border-green-900/50 text-green-300 rounded text-xs hover:bg-green-950/60 transition disabled:opacity-50"
+                      className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-50"
                     >
                       +1
                     </button>
                     <button
                       onClick={() => handleHP(5)}
                       disabled={isPending}
-                      className="px-2 py-1.5 bg-green-950/40 border border-green-900/50 text-green-300 rounded text-xs hover:bg-green-950/60 transition disabled:opacity-50"
+                      className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-50"
                     >
                       +5
                     </button>
@@ -195,19 +188,19 @@ export default function TokenMenu({
                       onChange={(e) => setHpInput(e.target.value)}
                       placeholder="N"
                       min={1}
-                      className="flex-1 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-sm text-white"
+                      className="flex-1 rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm text-white"
                     />
                     <button
                       onClick={() => handleCustomHP(-1)}
                       disabled={isPending || !hpInput}
-                      className="px-2 py-1.5 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-xs transition disabled:opacity-50"
+                      className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition disabled:opacity-50"
                     >
                       <Minus size={12} />
                     </button>
                     <button
                       onClick={() => handleCustomHP(1)}
                       disabled={isPending || !hpInput}
-                      className="px-2 py-1.5 bg-green-950/40 border border-green-900/50 text-green-300 rounded text-xs transition disabled:opacity-50"
+                      className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition disabled:opacity-50"
                     >
                       <Plus size={12} />
                     </button>
@@ -219,22 +212,20 @@ export default function TokenMenu({
 
           {canEdit && (
             <div>
-              <div className="text-sm font-medium mb-2">Состояния</div>
+              <div className="mb-2 text-sm font-medium">Состояния</div>
               <div className="grid grid-cols-2 gap-1">
                 {CONDITION_LIST.map((cond) => {
-                  const active = token.conditions.some(
-                    (c) => c.name === cond.name
-                  )
+                  const active = token.conditions.some((c) => c.name === cond.name)
                   return (
                     <button
                       key={cond.name}
                       onClick={() => handleToggleCondition(cond)}
                       disabled={isPending}
                       className={cn(
-                        'flex items-center gap-1.5 px-2 py-1.5 rounded text-xs text-left transition',
+                        'flex items-center gap-1.5 rounded px-2 py-1.5 text-left text-xs transition',
                         active
-                          ? 'bg-amber-950/40 border border-amber-900/50 text-amber-300'
-                          : 'bg-slate-950 border border-slate-800 text-slate-400 hover:border-slate-700'
+                          ? 'border border-amber-900/50 bg-amber-950/40 text-amber-300'
+                          : 'border border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
                       )}
                     >
                       <span>{cond.icon}</span>
@@ -247,15 +238,15 @@ export default function TokenMenu({
           )}
 
           {isDm && (
-            <div className="space-y-2 pt-3 border-t border-slate-800">
+            <div className="space-y-2 border-t border-slate-800 pt-3">
               <button
                 onClick={handleToggleVisibility}
                 disabled={isPending}
                 className={cn(
-                  'w-full flex items-center gap-2 px-3 py-2 rounded text-sm transition',
+                  'flex w-full items-center gap-2 rounded px-3 py-2 text-sm transition',
                   token.is_hidden
-                    ? 'bg-amber-950/40 border border-amber-900/50 text-amber-300'
-                    : 'bg-slate-800 border border-slate-700 text-slate-300'
+                    ? 'border border-amber-900/50 bg-amber-950/40 text-amber-300'
+                    : 'border border-slate-700 bg-slate-800 text-slate-300'
                 )}
               >
                 {token.is_hidden ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -265,7 +256,7 @@ export default function TokenMenu({
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-sm hover:bg-red-950/60 transition disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded border border-red-900/50 bg-red-950/40 px-3 py-2 text-sm text-red-300 transition hover:bg-red-950/60 disabled:opacity-50"
               >
                 <Trash2 size={14} />
                 Удалить токен

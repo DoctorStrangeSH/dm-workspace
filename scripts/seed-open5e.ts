@@ -33,7 +33,7 @@ function makeKey(item: any): string {
 const CASTING_TIME_MAP: Record<string, string> = {
   action: '1 действие',
   'bonus action': '1 бонусное действие',
-  'bonus_action': '1 бонусное действие',
+  bonus_action: '1 бонусное действие',
   reaction: '1 реакция',
   minute: '1 минута',
   hour: '1 час',
@@ -45,11 +45,7 @@ function transformSpell(spell: any): any {
   if (spell.verbal) parts.push('V')
   if (spell.somatic) parts.push('S')
   if (spell.material) {
-    parts.push(
-      spell.material_specified
-        ? `M (${spell.material_specified})`
-        : 'M'
-    )
+    parts.push(spell.material_specified ? `M (${spell.material_specified})` : 'M')
   }
   const components = parts.join(', ')
 
@@ -58,17 +54,13 @@ function transformSpell(spell: any): any {
     level: Number(spell.level) || 0,
     school: spell.school?.name ?? '',
     castingTime:
-      CASTING_TIME_MAP[String(spell.casting_time).toLowerCase()] ??
-      spell.casting_time ??
-      '',
+      CASTING_TIME_MAP[String(spell.casting_time).toLowerCase()] ?? spell.casting_time ?? '',
     range: spell.range_text ?? String(spell.range ?? ''),
     components,
     duration: spell.duration ?? '',
     description: spell.desc ?? '',
     higherLevel: spell.higher_level ?? '',
-    classes: (spell.classes ?? []).map((c: any) =>
-      typeof c === 'string' ? c : c.name
-    ),
+    classes: (spell.classes ?? []).map((c: any) => (typeof c === 'string' ? c : c.name)),
     ritual: Boolean(spell.ritual),
     concentration: Boolean(spell.concentration),
   }
@@ -97,7 +89,10 @@ function transformCreature(creature: any): any {
       speed = creature.speed
     } else if (typeof creature.speed === 'object') {
       const walk = creature.speed.walk
-      speed = typeof walk === 'number' ? walk : parseInt(String(walk ?? '30').replace(/\D/g, ''), 10) || 30
+      speed =
+        typeof walk === 'number'
+          ? walk
+          : parseInt(String(walk ?? '30').replace(/\D/g, ''), 10) || 30
     }
   }
 
@@ -116,15 +111,11 @@ function transformCreature(creature: any): any {
     cr: String(cr),
     xp: creature.experience_points ?? 0,
     abilities,
-    resistances:
-      creature.resistances_and_immunities?.damage_resistances_display ?? '',
-    immunities:
-      creature.resistances_and_immunities?.damage_immunities_display ?? '',
+    resistances: creature.resistances_and_immunities?.damage_resistances_display ?? '',
+    immunities: creature.resistances_and_immunities?.damage_immunities_display ?? '',
     senses: creature.languages?.as_string ?? '',
     languages: creature.languages?.as_string ?? '',
-    traits: (creature.traits ?? [])
-      .map((t: any) => `**${t.name}.** ${t.desc}`)
-      .join('\n\n'),
+    traits: (creature.traits ?? []).map((t: any) => `**${t.name}.** ${t.desc}`).join('\n\n'),
     actions: (creature.actions ?? [])
       .filter((a: any) => a.action_type !== 'LEGENDARY_ACTION')
       .map((a: any) => `**${a.name}.** ${a.desc}`)
@@ -157,9 +148,7 @@ function transformSpecies(species: any): any {
     name: species.name,
     speed: species.speed ?? 30,
     size: species.size?.name ?? 'Medium',
-    traits: (species.traits ?? [])
-      .map((t: any) => `**${t.name}.** ${t.desc}`)
-      .join('\n\n'),
+    traits: (species.traits ?? []).map((t: any) => `**${t.name}.** ${t.desc}`).join('\n\n'),
   }
 }
 
@@ -167,9 +156,7 @@ function transformClass(cls: any): any {
   return {
     name: cls.name,
     hit_die: cls.hit_dice ?? cls.hit_die ?? 8,
-    saving_throws: (cls.saving_throws ?? []).map((s: any) =>
-      typeof s === 'string' ? s : s.name
-    ),
+    saving_throws: (cls.saving_throws ?? []).map((s: any) => (typeof s === 'string' ? s : s.name)),
     primary_ability: cls.primary_ability,
   }
 }
@@ -177,9 +164,7 @@ function transformClass(cls: any): any {
 function transformBackground(bg: any): any {
   return {
     name: bg.name,
-    skills: (bg.skill_proficiencies ?? []).map((s: any) =>
-      typeof s === 'string' ? s : s.name
-    ),
+    skills: (bg.skill_proficiencies ?? []).map((s: any) => (typeof s === 'string' ? s : s.name)),
   }
 }
 
@@ -187,11 +172,7 @@ function transformBackground(bg: any): any {
 // seedTable
 // ============================================================
 
-async function seedTable(
-  table: string,
-  items: any[],
-  transform?: (item: any) => any
-) {
+async function seedTable(table: string, items: any[], transform?: (item: any) => any) {
   console.log(`\n📦 ${table}: ${items.length} записей`)
   if (items.length === 0) return
 
@@ -205,9 +186,7 @@ async function seedTable(
       data: transform ? transform(item) : item,
     }))
 
-    const { error } = await supabase
-      .from(table)
-      .upsert(rows, { onConflict: 'key' })
+    const { error } = await supabase.from(table).upsert(rows, { onConflict: 'key' })
 
     if (error) {
       console.error(`  ❌ batch ${i}: ${error.message}`)

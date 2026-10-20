@@ -49,42 +49,43 @@ export default function SecurityForm({ currentEmail }: Props) {
   return (
     <div className="space-y-3">
       {/* Email */}
-      <div className="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg">
-        <div className="flex items-center gap-2 min-w-0">
-          <Mail size={14} className="text-slate-400 shrink-0" />
-          <span className="text-sm text-slate-300 truncate">
-            {currentEmail}
-          </span>
+      <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Mail size={14} className="shrink-0 text-slate-400" />
+          <span className="truncate text-sm text-slate-300">{currentEmail}</span>
         </div>
         <button
           onClick={() => setShowEmailForm(!showEmailForm)}
-          className="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition shrink-0"
+          className="shrink-0 rounded bg-slate-800 px-3 py-1 text-xs text-slate-300 transition hover:bg-slate-700"
         >
           Изменить
         </button>
       </div>
 
       {showEmailForm && (
-        <form onSubmit={handleEmail} className="space-y-2 p-3 bg-slate-950/50 border border-slate-800 rounded-lg">
+        <form
+          onSubmit={handleEmail}
+          className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
+        >
           <input
             name="email"
             type="email"
             required
             placeholder="Новый email"
-            className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
           />
-          <div className="flex gap-2 justify-end">
+          <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setShowEmailForm(false)}
-              className="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded transition"
+              className="rounded bg-slate-800 px-3 py-1 text-xs transition hover:bg-slate-700"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded transition disabled:opacity-50"
+              className="rounded bg-indigo-600 px-3 py-1 text-xs text-white transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Сохраняем...' : 'Сохранить'}
             </button>
@@ -93,41 +94,44 @@ export default function SecurityForm({ currentEmail }: Props) {
       )}
 
       {/* Пароль */}
-      <div className="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg">
+      <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3">
         <div className="flex items-center gap-2">
           <Key size={14} className="text-slate-400" />
           <span className="text-sm text-slate-300">Пароль</span>
         </div>
         <button
           onClick={() => setShowPasswordForm(!showPasswordForm)}
-          className="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded transition"
+          className="rounded bg-slate-800 px-3 py-1 text-xs text-slate-300 transition hover:bg-slate-700"
         >
           Изменить
         </button>
       </div>
 
       {showPasswordForm && (
-        <form onSubmit={handlePassword} className="space-y-2 p-3 bg-slate-950/50 border border-slate-800 rounded-lg">
+        <form
+          onSubmit={handlePassword}
+          className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
+        >
           <input
             name="password"
             type="password"
             required
             minLength={8}
             placeholder="Новый пароль (мин. 8)"
-            className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
           />
-          <div className="flex gap-2 justify-end">
+          <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setShowPasswordForm(false)}
-              className="px-3 py-1 text-xs bg-slate-800 hover:bg-slate-700 rounded transition"
+              className="rounded bg-slate-800 px-3 py-1 text-xs transition hover:bg-slate-700"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-3 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded transition disabled:opacity-50"
+              className="rounded bg-indigo-600 px-3 py-1 text-xs text-white transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Сохраняем...' : 'Сохранить'}
             </button>

@@ -19,12 +19,7 @@ function formatTime(iso: string): string {
   })
 }
 
-export default function MessageList({
-  messages,
-  currentUserId,
-  isDm,
-  onDelete,
-}: Props) {
+export default function MessageList({ messages, currentUserId, isDm, onDelete }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -33,20 +28,18 @@ export default function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6 text-center">
+      <div className="flex flex-1 items-center justify-center p-6 text-center">
         <div>
-          <Dices size={32} className="text-slate-700 mx-auto mb-2" />
+          <Dices size={32} className="mx-auto mb-2 text-slate-700" />
           <p className="text-sm text-slate-500">Пока нет сообщений</p>
-          <p className="text-xs text-slate-600 mt-1">
-            Броски и сообщения появятся здесь
-          </p>
+          <p className="mt-1 text-xs text-slate-600">Броски и сообщения появятся здесь</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+    <div className="flex-1 space-y-2 overflow-y-auto p-3">
       {messages.map((msg) => {
         const isOwn = msg.user_id === currentUserId
         const isRoll = msg.type === 'roll'
@@ -57,23 +50,14 @@ export default function MessageList({
 
         if (isSystem) {
           return (
-            <div
-              key={msg.id}
-              className="text-center text-xs text-slate-500 italic py-1"
-            >
+            <div key={msg.id} className="py-1 text-center text-xs text-slate-500 italic">
               {msg.content}
             </div>
           )
         }
 
         return (
-          <div
-            key={msg.id}
-            className={cn(
-              'group flex flex-col gap-0.5',
-              isOwn && 'items-end'
-            )}
-          >
+          <div key={msg.id} className={cn('group flex flex-col gap-0.5', isOwn && 'items-end')}>
             {/* Автор */}
             <div className="flex items-center gap-2 text-xs">
               <span
@@ -88,9 +72,7 @@ export default function MessageList({
               >
                 {msg.author?.display_name ?? msg.author?.username ?? '???'}
               </span>
-              <span className="text-slate-600">
-                {formatTime(msg.created_at)}
-              </span>
+              <span className="text-slate-600">{formatTime(msg.created_at)}</span>
               {canDelete && onDelete && (
                 <button
                   onClick={() => {
@@ -98,7 +80,7 @@ export default function MessageList({
                       onDelete(msg.id)
                     }
                   }}
-                  className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition text-[10px]"
+                  className="text-[10px] text-red-400 opacity-0 transition group-hover:opacity-100 hover:text-red-300"
                 >
                   ×
                 </button>
@@ -109,26 +91,15 @@ export default function MessageList({
             {isRoll && roll ? (
               <div
                 className={cn(
-                  'rounded-lg border px-3 py-2 max-w-[280px]',
-                  isOwn
-                    ? 'bg-indigo-950/40 border-indigo-900/50'
-                    : 'bg-slate-900 border-slate-800'
+                  'max-w-[280px] rounded-lg border px-3 py-2',
+                  isOwn ? 'border-indigo-900/50 bg-indigo-950/40' : 'border-slate-800 bg-slate-900'
                 )}
               >
-                {roll.label && (
-                  <div className="text-xs text-slate-400 mb-1">
-                    {roll.label}
-                  </div>
-                )}
+                {roll.label && <div className="mb-1 text-xs text-slate-400">{roll.label}</div>}
                 <div className="flex items-center gap-2">
-                  <Dices
-                    size={14}
-                    className="text-violet-400 shrink-0"
-                  />
-                  <span className="text-lg font-bold text-violet-300">
-                    {roll.total}
-                  </span>
-                  <span className="text-xs text-slate-500 font-mono">
+                  <Dices size={14} className="shrink-0 text-violet-400" />
+                  <span className="text-lg font-bold text-violet-300">{roll.total}</span>
+                  <span className="font-mono text-xs text-slate-500">
                     [{roll.rolls.join(', ')}]
                     {roll.modifier !== 0 && (
                       <>
@@ -139,17 +110,13 @@ export default function MessageList({
                     )}
                   </span>
                 </div>
-                <div className="text-[10px] text-slate-600 mt-0.5 font-mono">
-                  {roll.expression}
-                </div>
+                <div className="mt-0.5 font-mono text-[10px] text-slate-600">{roll.expression}</div>
               </div>
             ) : (
               <div
                 className={cn(
-                  'rounded-lg px-3 py-1.5 max-w-[280px] text-sm whitespace-pre-wrap break-words',
-                  isOwn
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-800 text-slate-200'
+                  'max-w-[280px] rounded-lg px-3 py-1.5 text-sm break-words whitespace-pre-wrap',
+                  isOwn ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-200'
                 )}
               >
                 {msg.content}

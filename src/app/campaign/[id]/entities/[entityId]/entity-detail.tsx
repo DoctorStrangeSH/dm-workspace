@@ -17,13 +17,7 @@ import SaveAsTemplateButton from './save-as-template-button'
 import LocationBreadcrumbs from './locations/location-breadcrumbs'
 import LocationChildrenTree from './locations/location-children-tree'
 import { cn } from '@/lib/utils'
-import type {
-  Entity,
-  EntityRelation,
-  EntityTag,
-  Tag,
-  EntityType,
-} from '@/lib/types'
+import type { Entity, EntityRelation, EntityTag, Tag, EntityType } from '@/lib/types'
 import type { BacklinkChapter } from '@/lib/queries/backlinks'
 
 interface Props {
@@ -99,9 +93,7 @@ export default function EntityDetail({
         toast.error(res.error ?? 'Ошибка')
         setIsVisible(!newVal)
       } else {
-        toast.success(
-          newVal ? 'Сущность видна игрокам' : 'Сущность скрыта от игроков'
-        )
+        toast.success(newVal ? 'Сущность видна игрокам' : 'Сущность скрыта от игроков')
       }
     })
   }
@@ -135,20 +127,15 @@ export default function EntityDetail({
       )}
 
       {/* Крошки локаций (иерархия) */}
-      {entity.type === 'location' &&
-        locationPath &&
-        locationPath.length > 1 && (
-          <LocationBreadcrumbs
-            campaignId={campaignId}
-            path={locationPath}
-          />
-        )}
+      {entity.type === 'location' && locationPath && locationPath.length > 1 && (
+        <LocationBreadcrumbs campaignId={campaignId} path={locationPath} />
+      )}
 
       {/* Заголовок */}
-      <div className="flex items-start gap-4 mb-6">
+      <div className="mb-6 flex items-start gap-4">
         <div
           className={cn(
-            'shrink-0 w-14 h-14 rounded-xl border flex items-center justify-center text-2xl',
+            'flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border text-2xl',
             style.bg,
             style.border
           )}
@@ -156,13 +143,13 @@ export default function EntityDetail({
           {style.icon}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="text-xs text-slate-500 mb-1">{style.label}</div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 text-xs text-slate-500">{style.label}</div>
           {isDm ? (
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-2xl font-bold bg-transparent border-b border-transparent hover:border-slate-700 focus:border-indigo-500 focus:outline-none transition pb-1"
+              className="w-full border-b border-transparent bg-transparent pb-1 text-2xl font-bold transition hover:border-slate-700 focus:border-indigo-500 focus:outline-none"
             />
           ) : (
             <h1 className="text-2xl font-bold">{name}</h1>
@@ -178,15 +165,15 @@ export default function EntityDetail({
 
       {/* Панель управления (только ГМ) */}
       {isDm && (
-        <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-slate-800">
+        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4">
           <button
             onClick={handleToggleVisibility}
             disabled={isPending}
             className={cn(
-              'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition border',
+              'flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition',
               isVisible
-                ? 'bg-green-950/40 border-green-900/50 text-green-300'
-                : 'bg-amber-950/40 border-amber-900/50 text-amber-300'
+                ? 'border-green-900/50 bg-green-950/40 text-green-300'
+                : 'border-amber-900/50 bg-amber-950/40 text-amber-300'
             )}
           >
             {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -202,7 +189,7 @@ export default function EntityDetail({
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isPending}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-red-950/40 border border-red-900/50 text-red-300 hover:bg-red-950/60 transition"
+            className="flex items-center gap-2 rounded-lg border border-red-900/50 bg-red-950/40 px-3 py-1.5 text-sm text-red-300 transition hover:bg-red-950/60"
           >
             <Trash2 size={14} />
             Удалить
@@ -211,17 +198,17 @@ export default function EntityDetail({
       )}
 
       {/* Описание */}
-      <div className="bg-slate-900 border border-slate-800 rounded-lg p-4">
+      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
         {isDm ? (
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={6}
             placeholder="Описание, лор, внешность..."
-            className="w-full bg-transparent border-none text-slate-200 focus:outline-none resize-none"
+            className="w-full resize-none border-none bg-transparent text-slate-200 focus:outline-none"
           />
         ) : (
-          <p className="text-slate-300 whitespace-pre-wrap">
+          <p className="whitespace-pre-wrap text-slate-300">
             {description || 'Описание отсутствует'}
           </p>
         )}
@@ -248,10 +235,7 @@ export default function EntityDetail({
       {/* Вложенные локации */}
       {entity.type === 'location' && locationDescendants && (
         <div className="mt-8">
-          <LocationChildrenTree
-            campaignId={campaignId}
-            descendants={locationDescendants}
-          />
+          <LocationChildrenTree campaignId={campaignId} descendants={locationDescendants} />
         </div>
       )}
 
@@ -267,33 +251,28 @@ export default function EntityDetail({
 
       {/* Беклинки */}
       <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-3">Упоминается в</h2>
-        <EntityBacklinks
-          campaignId={campaignId}
-          backlinks={backlinks}
-        />
+        <h2 className="mb-3 text-lg font-semibold">Упоминается в</h2>
+        <EntityBacklinks campaignId={campaignId} backlinks={backlinks} />
       </div>
 
       {/* Подтверждение удаления */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">Удалить сущность?</h3>
-            <p className="text-slate-400 text-sm mb-6">
-              «{entity.name}» будет удалена навсегда.
-            </p>
-            <div className="flex gap-3 justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h3 className="mb-2 text-lg font-semibold">Удалить сущность?</h3>
+            <p className="mb-6 text-sm text-slate-400">«{entity.name}» будет удалена навсегда.</p>
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isPending}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+                className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
               >
                 Отмена
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500 disabled:opacity-50"
               >
                 {isPending ? 'Удаляем...' : 'Удалить'}
               </button>

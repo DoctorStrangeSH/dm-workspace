@@ -58,10 +58,7 @@ export async function createRelation(
   return { success: true, relationId: data.id }
 }
 
-export async function deleteRelation(
-  relationId: string,
-  campaignId: string
-) {
+export async function deleteRelation(relationId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 

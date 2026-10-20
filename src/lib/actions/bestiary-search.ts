@@ -17,9 +17,7 @@ export interface SrdMonster {
   data: any
 }
 
-export async function searchSrdMonstersAction(
-  filters: MonsterFilters = {}
-): Promise<SrdMonster[]> {
+export async function searchSrdMonstersAction(filters: MonsterFilters = {}): Promise<SrdMonster[]> {
   const supabase = await createClient()
   const { query, cr, type, size, limit = 100 } = filters
 
@@ -55,10 +53,7 @@ export async function searchSrdMonstersAction(
 
 export async function getAvailableCRs(): Promise<string[]> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('srd_monsters')
-    .select('data->>cr')
-    .limit(10000)
+  const { data } = await supabase.from('srd_monsters').select('data->>cr').limit(10000)
 
   const crs = new Set<string>()
   data?.forEach((row: any) => {

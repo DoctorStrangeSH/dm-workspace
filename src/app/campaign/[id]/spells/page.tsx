@@ -8,11 +8,7 @@ import { searchSrdSpellsAction } from '@/lib/actions/spells-search'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import SpellsClient from './spells-client'
 
-export default async function SpellsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function SpellsPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
 
   const { id: campaignId } = await params
@@ -52,7 +48,7 @@ export default async function SpellsPage({
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Справочник заклинаний</h1>
-        <p className="text-slate-400 text-sm mt-1">
+        <p className="mt-1 text-sm text-slate-400">
           Поиск заклинаний SRD 2024. Добавь заклинание своему персонажу.
         </p>
       </div>

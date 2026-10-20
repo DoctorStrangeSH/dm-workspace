@@ -2,12 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { BACKGROUNDS, type ClassInfo } from '@/lib/dnd/constants'
-import {
-  ABILITY_LABELS,
-  SKILL_LABELS,
-  SKILL_ABILITY,
-  type SkillKey,
-} from '@/lib/types'
+import { ABILITY_LABELS, SKILL_LABELS, SKILL_ABILITY, type SkillKey } from '@/lib/types'
 
 interface Props {
   classInfo: ClassInfo | undefined
@@ -46,30 +41,26 @@ export default function WizardStep3({
     <div className="space-y-6">
       {/* Предыстория */}
       <div>
-        <label className="block text-sm text-slate-300 mb-2">
+        <label className="mb-2 block text-sm text-slate-300">
           Предыстория <span className="text-red-400">*</span>
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BACKGROUNDS.map((bg) => (
             <button
               key={bg.slug}
               type="button"
               onClick={() => {
                 setBackgroundSlug(bg.slug)
-                const oldBg = BACKGROUNDS.find(
-                  (b) => b.slug === backgroundSlug
-                )
+                const oldBg = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
                 if (oldBg) {
-                  setChosenSkills(
-                    chosenSkills.filter((s) => !oldBg.skills.includes(s))
-                  )
+                  setChosenSkills(chosenSkills.filter((s) => !oldBg.skills.includes(s)))
                 }
               }}
               className={cn(
-                'px-3 py-2 text-sm rounded-lg border transition text-left',
+                'rounded-lg border px-3 py-2 text-left text-sm transition',
                 backgroundSlug === bg.slug
-                  ? 'bg-indigo-950/60 border-indigo-600 text-white'
-                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
+                  ? 'border-indigo-600 bg-indigo-950/60 text-white'
+                  : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
               )}
             >
               {bg.name}
@@ -77,9 +68,8 @@ export default function WizardStep3({
           ))}
         </div>
         {background && (
-          <p className="text-xs text-slate-500 mt-2">
-            Даёт владение:{' '}
-            {background.skills.map((s) => SKILL_LABELS[s]).join(', ')}
+          <p className="mt-2 text-xs text-slate-500">
+            Даёт владение: {background.skills.map((s) => SKILL_LABELS[s]).join(', ')}
           </p>
         )}
       </div>
@@ -87,16 +77,14 @@ export default function WizardStep3({
       {/* Навыки от класса */}
       {classInfo && (
         <div>
-          <label className="block text-sm text-slate-300 mb-2">
+          <label className="mb-2 block text-sm text-slate-300">
             Навыки класса (выбрано {chosenSkills.length} из {maxSkills})
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-80 overflow-y-auto">
+          <div className="grid max-h-80 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
             {availableSkills.map((skill) => {
               const isChosen = chosenSkills.includes(skill)
               const isFromBackground = backgroundSkills.includes(skill)
-              const isDisabled =
-                isFromBackground ||
-                (!isChosen && chosenSkills.length >= maxSkills)
+              const isDisabled = isFromBackground || (!isChosen && chosenSkills.length >= maxSkills)
 
               return (
                 <button
@@ -105,14 +93,11 @@ export default function WizardStep3({
                   onClick={() => toggleSkill(skill)}
                   disabled={isDisabled}
                   className={cn(
-                    'px-3 py-2 text-sm rounded-lg border transition text-left',
+                    'rounded-lg border px-3 py-2 text-left text-sm transition',
                     isChosen || isFromBackground
-                      ? 'bg-green-950/60 border-green-800 text-green-300'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700',
-                    isDisabled &&
-                      !isChosen &&
-                      !isFromBackground &&
-                      'opacity-40'
+                      ? 'border-green-800 bg-green-950/60 text-green-300'
+                      : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700',
+                    isDisabled && !isChosen && !isFromBackground && 'opacity-40'
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -126,7 +111,7 @@ export default function WizardStep3({
             })}
           </div>
           {chosenSkills.length < maxSkills && (
-            <p className="text-xs text-amber-400 mt-2">
+            <p className="mt-2 text-xs text-amber-400">
               ⚠️ Выбери ещё {maxSkills - chosenSkills.length} навык(а)
             </p>
           )}

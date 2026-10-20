@@ -32,9 +32,7 @@ export async function getTemplates(
   return (data ?? []).map(mapTemplate)
 }
 
-export async function getTemplatesForCampaign(
-  campaignId: string
-): Promise<EntityTemplate[]> {
+export async function getTemplatesForCampaign(campaignId: string): Promise<EntityTemplate[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase

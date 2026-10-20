@@ -10,11 +10,7 @@ interface Options {
   enabled?: boolean
 }
 
-export function useRealtimeMessages({
-  campaignId,
-  initialMessages,
-  enabled = true,
-}: Options) {
+export function useRealtimeMessages({ campaignId, initialMessages, enabled = true }: Options) {
   const [messages, setMessages] = useState<MessageWithAuthor[]>(initialMessages)
 
   // CHANGES: убран useEffect(setMessages) → паттерн «props → state».
@@ -58,9 +54,7 @@ export function useRealtimeMessages({
       .on('broadcast', { event: 'UPDATE' }, (payload) => {
         const updated = payload.payload.record as MessageWithAuthor
         if (!updated) return
-        setMessages((prev) =>
-          prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m))
-        )
+        setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)))
       })
       .on('broadcast', { event: 'DELETE' }, (payload) => {
         const old = payload.payload.old_record as { id: string }

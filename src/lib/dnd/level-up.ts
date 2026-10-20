@@ -6,10 +6,7 @@ import { getSpellSlotsForLevel } from '@/lib/dnd/spell-slots'
  * Возвращает среднее HP при повышении уровня (D&D правило: average).
  * floor(hitDie / 2) + 1 + con_mod.
  */
-export function getAverageHP(
-  classSlug: string,
-  conMod: number
-): number {
+export function getAverageHP(classSlug: string, conMod: number): number {
   const cls = CLASSES.find((c) => c.slug === classSlug)
   if (!cls) return 0
 
@@ -58,10 +55,7 @@ export function applyLevelUp(
   if (abilityChanges) {
     for (const [key, delta] of Object.entries(abilityChanges)) {
       const abilityKey = key as keyof typeof newAbilities
-      newAbilities[abilityKey] = Math.min(
-        20,
-        (newAbilities[abilityKey] ?? 10) + (delta ?? 0)
-      )
+      newAbilities[abilityKey] = Math.min(20, (newAbilities[abilityKey] ?? 10) + (delta ?? 0))
     }
   }
 

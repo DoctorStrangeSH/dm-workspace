@@ -6,11 +6,7 @@ import { getCampaignAccess } from '@/lib/queries/access'
 
 async function getSceneCampaign(sceneId: string): Promise<string | null> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('scenes')
-    .select('campaign_id')
-    .eq('id', sceneId)
-    .single()
+  const { data } = await supabase.from('scenes').select('campaign_id').eq('id', sceneId).single()
   return data?.campaign_id ?? null
 }
 
@@ -55,10 +51,7 @@ export async function clearFog(sceneId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
-    .from('fog_areas')
-    .delete()
-    .eq('scene_id', sceneId)
+  const { error } = await supabase.from('fog_areas').delete().eq('scene_id', sceneId)
 
   if (error) return { error: 'Не удалось очистить' }
 

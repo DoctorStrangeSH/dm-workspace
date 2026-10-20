@@ -1,9 +1,4 @@
-import type {
-  AbilityKey,
-  CharacterData,
-  CharacterHP,
-  SkillKey,
-} from '@/lib/types'
+import type { AbilityKey, CharacterData, CharacterHP, SkillKey } from '@/lib/types'
 import {
   POINT_BUY_COSTS,
   POINT_BUY_TOTAL,
@@ -11,9 +6,7 @@ import {
   type ClassInfo,
   type RaceInfo,
 } from '@/lib/dnd/constants'
-import {
-  abilityModifier,
-} from '@/lib/dnd/formulas'
+import { abilityModifier } from '@/lib/dnd/formulas'
 import { SKILL_ABILITY, SKILL_LABELS } from '@/lib/types'
 
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
@@ -23,10 +16,7 @@ const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 // ============================================================
 
 export function getPointsSpent(abilities: Record<AbilityKey, number>): number {
-  return ABILITIES.reduce(
-    (sum, ab) => sum + (POINT_BUY_COSTS[abilities[ab]] ?? 0),
-    0
-  )
+  return ABILITIES.reduce((sum, ab) => sum + (POINT_BUY_COSTS[abilities[ab]] ?? 0), 0)
 }
 
 export function getPointsRemaining(abilities: Record<AbilityKey, number>): number {

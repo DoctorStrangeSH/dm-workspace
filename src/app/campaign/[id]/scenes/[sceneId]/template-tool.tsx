@@ -9,15 +9,10 @@ interface Props {
   scene: Scene
   isActive: boolean
   type: TemplateType
-  size: number  // в футах
+  size: number // в футах
 }
 
-export default function TemplateTool({
-  scene,
-  isActive,
-  type,
-  size,
-}: Props) {
+export default function TemplateTool({ scene, isActive, type, size }: Props) {
   const [start, setStart] = useState<{ x: number; y: number } | null>(null)
   const [end, setEnd] = useState<{ x: number; y: number } | null>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -156,7 +151,7 @@ export default function TemplateTool({
       <svg
         width={width}
         height={height}
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0"
         style={{ width: '100%', height: '100%' }}
       >
         {renderShape()}

@@ -24,10 +24,7 @@ export async function createPlaylist(campaignId: string, name: string) {
   return { success: true, playlistId: data.id }
 }
 
-export async function deletePlaylist(
-  playlistId: string,
-  campaignId: string
-) {
+export async function deletePlaylist(playlistId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -44,11 +41,7 @@ export async function deletePlaylist(
   return { success: true }
 }
 
-export async function addTrack(
-  playlistId: string,
-  campaignId: string,
-  formData: FormData
-) {
+export async function addTrack(playlistId: string, campaignId: string, formData: FormData) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -63,9 +56,7 @@ export async function addTrack(
   const ext = file.name.split('.').pop() ?? 'mp3'
   const fileName = `${campaignId}/${playlistId}-${Date.now()}.${ext}`
 
-  const { error: uploadError } = await supabase.storage
-    .from('music')
-    .upload(fileName, file)
+  const { error: uploadError } = await supabase.storage.from('music').upload(fileName, file)
 
   if (uploadError) {
     console.error('Upload error:', uploadError)
@@ -115,24 +106,18 @@ export async function removeTrack(trackId: string, campaignId: string) {
   return { success: true }
 }
 
-export async function playTrack(
-  campaignId: string,
-  trackId: string,
-  isPlaying: boolean
-) {
+export async function playTrack(campaignId: string, trackId: string, isPlaying: boolean) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('music_player_state')
-    .upsert({
-      campaign_id: campaignId,
-      current_track_id: trackId,
-      is_playing: isPlaying,
-      position_seconds: 0,
-    })
+  const { error } = await supabase.from('music_player_state').upsert({
+    campaign_id: campaignId,
+    current_track_id: trackId,
+    is_playing: isPlaying,
+    position_seconds: 0,
+  })
 
   if (error) return { error: 'Не удалось воспроизвести' }
 
@@ -146,14 +131,12 @@ export async function stopMusic(campaignId: string) {
 
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('music_player_state')
-    .upsert({
-      campaign_id: campaignId,
-      current_track_id: null,
-      is_playing: false,
-      position_seconds: 0,
-    })
+  const { error } = await supabase.from('music_player_state').upsert({
+    campaign_id: campaignId,
+    current_track_id: null,
+    is_playing: false,
+    position_seconds: 0,
+  })
 
   if (error) return { error: 'Не удалось остановить' }
 

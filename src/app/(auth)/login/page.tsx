@@ -37,37 +37,35 @@ function LoginForm() {
   }
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-8 shadow-2xl">
-      <h1 className="text-2xl font-bold text-white mb-1">Вход</h1>
-      <p className="text-slate-400 text-sm mb-6">
-        Мастерская ГМа ждёт тебя
-      </p>
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur">
+      <h1 className="mb-1 text-2xl font-bold text-white">Вход</h1>
+      <p className="mb-6 text-sm text-slate-400">Мастерская ГМа ждёт тебя</p>
 
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-300 mb-1">Email</label>
+          <label className="mb-1 block text-sm text-slate-300">Email</label>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-slate-300 mb-1">Пароль</label>
+          <label className="mb-1 block text-sm text-slate-300">Пароль</label>
           <input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
           />
         </div>
 
         {error && (
-          <div className="text-red-400 text-sm bg-red-950/30 border border-red-900/50 rounded-lg p-2">
+          <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
             {error}
           </div>
         )}
@@ -75,13 +73,13 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+          className="w-full rounded-lg bg-indigo-600 py-2 font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
         >
           {loading ? 'Входим...' : 'Войти'}
         </button>
       </form>
 
-      <p className="text-slate-400 text-sm mt-6 text-center">
+      <p className="mt-6 text-center text-sm text-slate-400">
         Нет аккаунта?{' '}
         <Link
           href={`/signup${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`}
@@ -98,7 +96,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="bg-slate-900/80 backdrop-blur border border-slate-800 rounded-2xl p-8 shadow-2xl text-center">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-8 text-center shadow-2xl backdrop-blur">
           <p className="text-slate-400">Загрузка...</p>
         </div>
       }

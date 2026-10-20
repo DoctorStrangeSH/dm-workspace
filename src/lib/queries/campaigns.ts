@@ -54,9 +54,7 @@ export async function getUserCampaigns(userId: string): Promise<{
   const asPlayer: CampaignWithRole[] = []
 
   for (const campaign of campaigns ?? []) {
-    const membership = memberships.find(
-      (m) => m.campaign_id === campaign.id
-    )
+    const membership = memberships.find((m) => m.campaign_id === campaign.id)
     if (!membership) continue
 
     const item: CampaignWithRole = {
@@ -69,14 +67,8 @@ export async function getUserCampaigns(userId: string): Promise<{
   }
 
   // Сортируем по updated_at
-  asDm.sort(
-    (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  )
-  asPlayer.sort(
-    (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  )
+  asDm.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+  asPlayer.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
 
   return { asDm, asPlayer }
 }

@@ -18,11 +18,7 @@ interface Props {
   className?: string
 }
 
-export function Breadcrumbs({
-  items,
-  collapseOnMobile = true,
-  className,
-}: Props) {
+export function Breadcrumbs({ items, collapseOnMobile = true, className }: Props) {
   if (items.length === 0) return null
 
   // На мобиле сворачиваем: [Home] → ... → [предпоследний] → [текущий]
@@ -36,7 +32,7 @@ export function Breadcrumbs({
   return (
     <nav
       aria-label="Хлебные крошки"
-      className={cn('flex items-center gap-1 text-sm min-w-0', className)}
+      className={cn('flex min-w-0 items-center gap-1 text-sm', className)}
     >
       {visible.map((item, i) => {
         const isLastVisible = i === visible.length - 1
@@ -61,7 +57,7 @@ export function Breadcrumbs({
                   style={{ color: 'var(--text-subtle)' }}
                 />
                 <button
-                  className="flex items-center px-1 py-0.5 rounded hover:bg-[var(--bg-secondary)] transition"
+                  className="flex items-center rounded px-1 py-0.5 transition hover:bg-[var(--bg-secondary)]"
                   title={items
                     .slice(1, -2)
                     .map((it) => it.label)
@@ -74,9 +70,7 @@ export function Breadcrumbs({
             )}
 
             {/* Сам элемент — если не многоточие */}
-            {(!hasHidden || i > 0) && (
-              <BreadcrumbLink item={item} isLast={isLastVisible} />
-            )}
+            {(!hasHidden || i > 0) && <BreadcrumbLink item={item} isLast={isLastVisible} />}
           </Fragment>
         )
       })}
@@ -84,17 +78,11 @@ export function Breadcrumbs({
   )
 }
 
-function BreadcrumbLink({
-  item,
-  isLast,
-}: {
-  item: BreadcrumbItem
-  isLast: boolean
-}) {
+function BreadcrumbLink({ item, isLast }: { item: BreadcrumbItem; isLast: boolean }) {
   const isHome = item.label === 'Дашборд' || item.label === 'На главную'
 
   const content = (
-    <span className="flex items-center gap-1.5 truncate max-w-[200px]">
+    <span className="flex max-w-[200px] items-center gap-1.5 truncate">
       {item.icon ?? (isHome && <Home size={12} />)}
       <span className="truncate">{item.label}</span>
     </span>
@@ -103,7 +91,7 @@ function BreadcrumbLink({
   if (isLast || !item.href) {
     return (
       <span
-        className="font-medium truncate min-w-0"
+        className="min-w-0 truncate font-medium"
         style={{ color: 'var(--text-primary)' }}
         aria-current="page"
       >
@@ -115,7 +103,7 @@ function BreadcrumbLink({
   return (
     <Link
       href={item.href}
-      className="truncate min-w-0 hover:underline transition"
+      className="min-w-0 truncate transition hover:underline"
       style={{ color: 'var(--text-muted)' }}
     >
       {content}

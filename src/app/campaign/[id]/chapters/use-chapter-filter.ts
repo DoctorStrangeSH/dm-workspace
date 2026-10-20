@@ -15,10 +15,7 @@ interface FilterResult {
  * Фильтрует главы по названию и содержимому.
  * Debounce 200мс — не фильтрует на каждое нажатие.
  */
-export function useChapterFilter(
-  chapters: Chapter[],
-  query: string
-): FilterResult {
+export function useChapterFilter(chapters: Chapter[], query: string): FilterResult {
   const debouncedQuery = useDebouncedValue(query, 200)
 
   return useMemo(() => {

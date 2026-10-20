@@ -17,11 +17,7 @@ interface Props {
   isDm: boolean
 }
 
-export default function ScenesClient({
-  campaignId,
-  initialScenes,
-  isDm,
-}: Props) {
+export default function ScenesClient({ campaignId, initialScenes, isDm }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -53,20 +49,20 @@ export default function ScenesClient({
 
   return (
     <>
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Map size={22} className="text-emerald-400" />
             Сцены
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p className="mt-1 text-sm text-slate-400">
             {scenes.length} {scenes.length === 1 ? 'сцена' : 'сцен'}
           </p>
         </div>
         {isDm && (
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition font-medium"
+            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500"
           >
             <Plus size={18} />
             Новая сцена
@@ -79,34 +75,32 @@ export default function ScenesClient({
           icon="🗺️"
           title="Пока нет сцен"
           description={
-            isDm
-              ? 'Загрузи карту подземелья или поля боя.'
-              : 'ГМ пока не добавил сцены.'
+            isDm ? 'Загрузи карту подземелья или поля боя.' : 'ГМ пока не добавил сцены.'
           }
           size="lg"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {scenes.map((scene) => (
             <div
               key={scene.id}
-              className="group bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl overflow-hidden transition"
+              className="group overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 transition hover:border-slate-700"
             >
               <Link href={`/campaign/${campaignId}/scenes/${scene.id}`}>
-                <div className="aspect-video bg-slate-950 relative overflow-hidden">
+                <div className="relative aspect-video overflow-hidden bg-slate-950">
                   {scene.image_url ? (
                     <img
                       src={scene.image_url}
                       alt={scene.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition"
+                      className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-slate-700">
+                    <div className="flex h-full items-center justify-center text-slate-700">
                       <Map size={48} />
                     </div>
                   )}
                   {scene.is_active && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 bg-green-600 text-white rounded-full text-xs">
+                    <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-green-600 px-2 py-1 text-xs text-white">
                       <Eye size={10} />
                       Активна
                     </div>
@@ -115,18 +109,18 @@ export default function ScenesClient({
               </Link>
 
               <div className="p-3">
-                <h3 className="font-semibold truncate">{scene.name}</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <h3 className="truncate font-semibold">{scene.name}</h3>
+                <p className="mt-0.5 text-xs text-slate-500">
                   {scene.width}×{scene.height} клеток · {scene.grid_size}px
                 </p>
 
                 {isDm && (
-                  <div className="flex items-center gap-1 mt-2">
+                  <div className="mt-2 flex items-center gap-1">
                     {!scene.is_active && (
                       <button
                         onClick={() => handleActivate(scene.id)}
                         disabled={isPending}
-                        className="flex items-center gap-1 px-2 py-1 text-xs bg-green-950/40 border border-green-900/50 text-green-300 hover:bg-green-950/60 rounded transition disabled:opacity-50"
+                        className="flex items-center gap-1 rounded border border-green-900/50 bg-green-950/40 px-2 py-1 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-50"
                       >
                         <Eye size={10} />
                         Активировать
@@ -135,7 +129,7 @@ export default function ScenesClient({
                     <button
                       onClick={() => handleDelete(scene.id, scene.name)}
                       disabled={isPending}
-                      className="ml-auto p-1 hover:bg-red-950/40 rounded transition disabled:opacity-50"
+                      className="ml-auto rounded p-1 transition hover:bg-red-950/40 disabled:opacity-50"
                       title="Удалить"
                     >
                       <Trash2 size={12} className="text-red-400" />
@@ -149,10 +143,7 @@ export default function ScenesClient({
       )}
 
       {showModal && (
-        <CreateSceneModal
-          campaignId={campaignId}
-          onClose={() => setShowModal(false)}
-        />
+        <CreateSceneModal campaignId={campaignId} onClose={() => setShowModal(false)} />
       )}
     </>
   )

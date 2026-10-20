@@ -1,13 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import {
-  Trash2,
-  Eye,
-  EyeOff,
-  Download,
-  Loader2,
-} from 'lucide-react'
+import { Trash2, Eye, EyeOff, Download, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -17,12 +11,7 @@ interface Props {
   onExport: () => Promise<void>
 }
 
-export default function BulkActionsBar({
-  selectedCount,
-  onDelete,
-  onSetVisible,
-  onExport,
-}: Props) {
+export default function BulkActionsBar({ selectedCount, onDelete, onSetVisible, onExport }: Props) {
   const [isPending, startTransition] = useTransition()
   const [action, setAction] = useState<string | null>(null)
 
@@ -40,11 +29,10 @@ export default function BulkActionsBar({
   if (selectedCount === 0) return null
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-      <div className="flex items-center gap-2 px-4 py-3 bg-slate-900 border border-slate-800 rounded-full shadow-2xl pointer-events-auto">
-        <span className="text-sm text-slate-400 pr-2 border-r border-slate-800">
-          Выбрано:{' '}
-          <span className="text-white font-medium">{selectedCount}</span>
+    <div className="pointer-events-none fixed bottom-6 left-1/2 z-40 -translate-x-1/2">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900 px-4 py-3 shadow-2xl">
+        <span className="border-r border-slate-800 pr-2 text-sm text-slate-400">
+          Выбрано: <span className="font-medium text-white">{selectedCount}</span>
         </span>
 
         <ActionButton
@@ -71,7 +59,7 @@ export default function BulkActionsBar({
           loading={action === 'export'}
         />
 
-        <div className="w-px h-6 bg-slate-800" />
+        <div className="h-6 w-px bg-slate-800" />
 
         <ActionButton
           icon={<Trash2 size={16} />}
@@ -106,7 +94,7 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition disabled:opacity-50',
+        'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition disabled:opacity-50',
         variant === 'danger'
           ? 'text-red-400 hover:bg-red-950/50'
           : 'text-slate-300 hover:bg-slate-800 hover:text-white'

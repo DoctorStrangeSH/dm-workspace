@@ -11,18 +11,14 @@ interface Props {
   templates: EntityTemplate[]
 }
 
-export default function CreateEntityButton({
-  campaignId,
-  defaultType,
-  templates,
-}: Props) {
+export default function CreateEntityButton({ campaignId, defaultType, templates }: Props) {
   const [open, setOpen] = useState(false)
 
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition font-medium"
+        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500"
       >
         <Plus size={18} />
         Новая сущность

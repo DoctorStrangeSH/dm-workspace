@@ -28,27 +28,22 @@ export default async function CampaignOverviewPage({
   return (
     <div className="max-w-5xl">
       <Breadcrumbs
-        items={[
-          { label: 'Дашборд', href: '/dashboard' },
-          { label: campaign.name },
-        ]}
+        items={[{ label: 'Дашборд', href: '/dashboard' }, { label: campaign.name }]}
         className="mb-4"
       />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{campaign.name}</h1>
+        <h1 className="mb-2 text-3xl font-bold">{campaign.name}</h1>
         {campaign.genre && (
-          <span className="text-xs px-2 py-1 bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 rounded-full">
+          <span className="rounded-full border border-indigo-900/50 bg-indigo-950/60 px-2 py-1 text-xs text-indigo-300">
             {campaign.genre}
           </span>
         )}
-        {campaign.description && (
-          <p className="text-slate-400 mt-4">{campaign.description}</p>
-        )}
+        {campaign.description && <p className="mt-4 text-slate-400">{campaign.description}</p>}
       </div>
 
       {isDm && (
-        <div className="mb-6 flex items-center gap-2 text-sm text-amber-400 bg-amber-950/20 border border-amber-900/30 rounded-lg px-3 py-2">
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-amber-900/30 bg-amber-950/20 px-3 py-2 text-sm text-amber-400">
           <Crown size={14} />
           <span>Ты — ГМ этой кампании</span>
         </div>
@@ -63,16 +58,17 @@ export default async function CampaignOverviewPage({
         </>
       )}
 
-      {!stats || (stats.chapters.total === 0 && stats.entities.total === 0) && (
-        <div className="border-2 border-dashed border-slate-800 rounded-2xl p-12 text-center">
-          <p className="text-slate-400 mb-2">Кампания пока пустая</p>
-          <p className="text-slate-500 text-sm">
-            {isDm
-              ? 'Начни с создания первой главы или сущности.'
-              : 'ГМ пока не добавил материалы.'}
-          </p>
-        </div>
-      )}
+      {!stats ||
+        (stats.chapters.total === 0 && stats.entities.total === 0 && (
+          <div className="rounded-2xl border-2 border-dashed border-slate-800 p-12 text-center">
+            <p className="mb-2 text-slate-400">Кампания пока пустая</p>
+            <p className="text-sm text-slate-500">
+              {isDm
+                ? 'Начни с создания первой главы или сущности.'
+                : 'ГМ пока не добавил материалы.'}
+            </p>
+          </div>
+        ))}
     </div>
   )
 }

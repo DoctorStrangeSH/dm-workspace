@@ -48,24 +48,22 @@ export default function CombatStats({
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
           <div
             key={stat.label}
-            className="group relative bg-slate-900 border border-slate-800 rounded-xl p-3 text-center"
+            className="group relative rounded-xl border border-slate-800 bg-slate-900 p-3 text-center"
           >
             <Icon size={14} className={cn(stat.color, 'mx-auto mb-1')} />
             <div className="text-lg font-bold">{stat.value}</div>
-            <div className="text-[10px] text-slate-500 uppercase">
-              {stat.label}
-            </div>
+            <div className="text-[10px] text-slate-500 uppercase">{stat.label}</div>
             {stat.onRoll && (
               <button
                 type="button"
                 onClick={stat.onRoll}
-                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-800 rounded transition"
+                className="absolute top-1.5 right-1.5 rounded p-1 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800"
                 title="Бросок инициативы"
               >
                 <Dices size={10} className="text-slate-400" />

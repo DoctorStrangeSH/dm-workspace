@@ -12,11 +12,7 @@ interface Props {
   onClose: () => void
 }
 
-export default function AddItemDialog({
-  characterId,
-  campaignId,
-  onClose,
-}: Props) {
+export default function AddItemDialog({ characterId, campaignId, onClose }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -50,22 +46,22 @@ export default function AddItemDialog({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full">
-        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <h2 className="font-semibold">Новый предмет</h2>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="p-1 hover:bg-slate-800 rounded transition"
+            className="rounded p-1 transition hover:bg-slate-800"
           >
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3 p-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
+            <label className="mb-1 block text-sm text-slate-300">
               Название <span className="text-red-400">*</span>
             </label>
             <input
@@ -74,27 +70,23 @@ export default function AddItemDialog({
               onChange={(e) => setName(e.target.value)}
               placeholder="Меч длинный"
               autoFocus
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Количество
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Количество</label>
               <input
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
                 min={1}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Вес 1 шт (lb)
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Вес 1 шт (lb)</label>
               <input
                 type="number"
                 value={weight}
@@ -102,37 +94,35 @@ export default function AddItemDialog({
                 min={0}
                 step="0.1"
                 placeholder="3"
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
-              Заметки
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">Заметки</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Описание..."
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500 resize-none"
+              className="w-full resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition disabled:opacity-50 font-medium"
+              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Добавляем...' : 'Добавить'}
             </button>

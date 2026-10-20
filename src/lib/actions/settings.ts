@@ -69,10 +69,7 @@ export async function updateProfile(formData: FormData) {
   if (!user) return { error: 'Не авторизован' }
 
   const displayName = (formData.get('display_name') as string)?.trim()
-  const username = (formData.get('username') as string)
-    ?.trim()
-    .toLowerCase()
-    .replace(/\s+/g, '_')
+  const username = (formData.get('username') as string)?.trim().toLowerCase().replace(/\s+/g, '_')
 
   if (!displayName || displayName.length < 2) {
     return { error: 'Имя должно быть минимум 2 символа' }
@@ -125,14 +122,10 @@ export async function uploadAvatar(formData: FormData) {
   const ext = file.name.split('.').pop() ?? 'png'
   const fileName = `${user.id}/avatar.${ext}`
 
-  const { data: existing } = await supabase.storage
-    .from('avatars')
-    .list(user.id)
+  const { data: existing } = await supabase.storage.from('avatars').list(user.id)
 
   if (existing && existing.length > 0) {
-    await supabase.storage
-      .from('avatars')
-      .remove(existing.map((f) => `${user.id}/${f.name}`))
+    await supabase.storage.from('avatars').remove(existing.map((f) => `${user.id}/${f.name}`))
   }
 
   const { error: uploadError } = await supabase.storage
@@ -216,10 +209,7 @@ export async function deleteAccount(password: string) {
   }
 
   // Удаляем профиль (каскадно удалит всё)
-  const { error } = await supabase
-    .from('profiles')
-    .delete()
-    .eq('id', user.id)
+  const { error } = await supabase.from('profiles').delete().eq('id', user.id)
 
   if (error) return { error: 'Не удалось удалить' }
 

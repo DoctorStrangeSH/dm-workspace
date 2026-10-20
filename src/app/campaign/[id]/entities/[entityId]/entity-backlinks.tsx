@@ -14,24 +14,23 @@ interface Props {
 
 export default function EntityBacklinks({ campaignId, backlinks }: Props) {
   if (backlinks.length === 0) {
-  return (
-    <EmptyState
-      icon="📖"
-      title="Пока не упоминается"
-      description="Эта сущность не упоминается ни в одной главе. Добавь [[Название]] в текст главы."
-      size="sm"
-      dashed={false}
-    />
-  )
-}
+    return (
+      <EmptyState
+        icon="📖"
+        title="Пока не упоминается"
+        description="Эта сущность не упоминается ни в одной главе. Добавь [[Название]] в текст главы."
+        size="sm"
+        dashed={false}
+      />
+    )
+  }
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+      <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
         <BookOpen size={14} />
         <span>
-          Упоминается в {backlinks.length}{' '}
-          {backlinks.length === 1 ? 'главе' : 'главах'}
+          Упоминается в {backlinks.length} {backlinks.length === 1 ? 'главе' : 'главах'}
         </span>
       </div>
 
@@ -39,25 +38,22 @@ export default function EntityBacklinks({ campaignId, backlinks }: Props) {
         <Link
           key={b.chapterId}
           href={`/campaign/${campaignId}/chapters/${b.chapterId}`}
-          className="group block bg-slate-900/60 border border-slate-800 hover:border-indigo-800/60 rounded-lg p-4 transition"
+          className="group block rounded-lg border border-slate-800 bg-slate-900/60 p-4 transition hover:border-indigo-800/60"
         >
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <h4 className="font-medium text-slate-200 group-hover:text-indigo-300 transition">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <h4 className="font-medium text-slate-200 transition group-hover:text-indigo-300">
               {b.chapterTitle}
             </h4>
             <ExternalLink
               size={14}
-              className="text-slate-600 group-hover:text-indigo-400 shrink-0 mt-1 transition"
+              className="mt-1 shrink-0 text-slate-600 transition group-hover:text-indigo-400"
             />
           </div>
 
           {b.snippets.length > 0 && (
             <div className="space-y-1.5">
               {b.snippets.map((snippet, i) => (
-                <p
-                  key={i}
-                  className="text-xs text-slate-500 line-clamp-2 leading-relaxed"
-                >
+                <p key={i} className="line-clamp-2 text-xs leading-relaxed text-slate-500">
                   …{snippet}…
                 </p>
               ))}

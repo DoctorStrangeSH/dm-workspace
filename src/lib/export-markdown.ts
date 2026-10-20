@@ -9,9 +9,7 @@ interface ChapterExportInput {
 /**
  * Формирует Markdown-файл с YAML frontmatter.
  */
-export function formatChapterAsMarkdown(
-  data: ChapterExportInput
-): string {
+export function formatChapterAsMarkdown(data: ChapterExportInput): string {
   const frontmatter = [
     '---',
     `title: ${escapeYaml(data.chapterTitle)}`,
@@ -25,10 +23,9 @@ export function formatChapterAsMarkdown(
   const header = `# ${data.chapterTitle}\n\n`
 
   // Если контент уже начинается с # (заголовок), не дублируем
-  const content =
-    data.chapterContent.trim().startsWith('#')
-      ? data.chapterContent
-      : header + data.chapterContent
+  const content = data.chapterContent.trim().startsWith('#')
+    ? data.chapterContent
+    : header + data.chapterContent
 
   return frontmatter + content
 }
@@ -48,9 +45,7 @@ interface CampaignExportInput {
 /**
  * Формирует Markdown-файл всей кампании.
  */
-export function formatCampaignAsMarkdown(
-  data: CampaignExportInput
-): string {
+export function formatCampaignAsMarkdown(data: CampaignExportInput): string {
   const parts: string[] = []
 
   // Заголовок кампании

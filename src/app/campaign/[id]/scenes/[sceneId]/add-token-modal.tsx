@@ -36,7 +36,7 @@ function parseMonsterHP(raw: unknown): [string, number | null] {
     const dice = raw.match(/^(\d+)d(\d+)([+-]\d+)?$/i)
     if (dice) {
       const [, n, d, mod] = dice
-      const avg = Math.floor(Number(n) * (Number(d) + 1) / 2) + Number(mod ?? 0)
+      const avg = Math.floor((Number(n) * (Number(d) + 1)) / 2) + Number(mod ?? 0)
       return [`${raw} (ср. ${avg})`, avg]
     }
   }
@@ -78,26 +78,41 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[80vh] flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <h2 className="font-semibold">Добавить токен</h2>
-          <button onClick={onClose} disabled={isPending} className="p-1 hover:bg-slate-800 rounded">
+          <button onClick={onClose} disabled={isPending} className="rounded p-1 hover:bg-slate-800">
             <X size={18} />
           </button>
         </div>
 
-        <div className="flex items-center gap-1 p-2 border-b border-slate-800">
-          <TabButton active={tab === 'character'} onClick={() => setTab('character')} icon={<User size={14} />} label="Персонаж" />
-          <TabButton active={tab === 'monster'} onClick={() => setTab('monster')} icon={<Skull size={14} />} label="Монстр" />
-          <TabButton active={tab === 'custom'} onClick={() => setTab('custom')} icon={<Plus size={14} />} label="Свой" />
+        <div className="flex items-center gap-1 border-b border-slate-800 p-2">
+          <TabButton
+            active={tab === 'character'}
+            onClick={() => setTab('character')}
+            icon={<User size={14} />}
+            label="Персонаж"
+          />
+          <TabButton
+            active={tab === 'monster'}
+            onClick={() => setTab('monster')}
+            icon={<Skull size={14} />}
+            label="Монстр"
+          />
+          <TabButton
+            active={tab === 'custom'}
+            onClick={() => setTab('custom')}
+            icon={<Plus size={14} />}
+            label="Свой"
+          />
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
           {tab === 'character' && (
             <div className="space-y-1">
               {characters.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-6">Нет персонажей</p>
+                <p className="py-6 text-center text-sm text-slate-500">Нет персонажей</p>
               ) : (
                 characters.map((char) => (
                   <button
@@ -111,11 +126,13 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
                       })
                     }
                     disabled={isPending}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-left disabled:opacity-50"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-800 disabled:opacity-50"
                   >
-                    <div className="w-8 h-8 rounded-full bg-amber-950/40 border border-amber-900/50 flex items-center justify-center">⚔️</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">{char.name}</div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-amber-900/50 bg-amber-950/40">
+                      ⚔️
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">{char.name}</div>
                       <div className="text-xs text-slate-500">
                         HP {char.data_json.hp.current}/{char.data_json.hp.max}
                       </div>
@@ -129,11 +146,12 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
           {tab === 'monster' && (
             <div className="space-y-1">
               {monsters.length === 0 ? (
-                <p className="text-sm text-slate-500 text-center py-6">Нет монстров в кампании</p>
+                <p className="py-6 text-center text-sm text-slate-500">Нет монстров в кампании</p>
               ) : (
                 monsters.map((m) => {
                   // data_json у монстров приходит как объект; но на всякий случай — строка
-                  const dj: unknown = typeof m.data_json === 'string' ? JSON.parse(m.data_json) : m.data_json
+                  const dj: unknown =
+                    typeof m.data_json === 'string' ? JSON.parse(m.data_json) : m.data_json
                   const rawHp = dj?.hp ?? dj?.hit_points ?? dj?.hp_max
                   const [hpDisplay, hpNum] = parseMonsterHP(rawHp)
                   return (
@@ -147,11 +165,13 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
                         })
                       }
                       disabled={isPending}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition text-left disabled:opacity-50"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-800 disabled:opacity-50"
                     >
-                      <div className="w-8 h-8 rounded-full bg-red-950/40 border border-red-900/50 flex items-center justify-center">👹</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{m.name}</div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-red-900/50 bg-red-950/40">
+                        👹
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium">{m.name}</div>
                         <div className="text-xs text-slate-500">HP {hpDisplay}</div>
                       </div>
                     </button>
@@ -164,19 +184,19 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
           {tab === 'custom' && (
             <div className="space-y-3">
               <div>
-                <label className="block text-sm text-slate-300 mb-1">Имя токена</label>
+                <label className="mb-1 block text-sm text-slate-300">Имя токена</label>
                 <input
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
                   placeholder="Неизвестный"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
                 />
               </div>
               <button
                 onClick={() => handleAdd(customName || 'Неизвестный', {})}
                 disabled={isPending}
-                className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition disabled:opacity-50"
+                className="w-full rounded-lg bg-indigo-600 px-4 py-2 text-white transition hover:bg-indigo-500 disabled:opacity-50"
               >
                 {isPending ? 'Создаём...' : 'Создать токен'}
               </button>
@@ -188,12 +208,22 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
   )
 }
 
-function TabButton({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  label: string
+}) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition',
+        'flex items-center gap-1.5 rounded px-3 py-1.5 text-sm transition',
         active ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
       )}
     >

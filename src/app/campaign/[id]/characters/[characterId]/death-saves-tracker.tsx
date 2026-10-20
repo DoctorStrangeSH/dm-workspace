@@ -15,12 +15,7 @@ interface Props {
   canEdit: boolean
 }
 
-export default function DeathSavesTracker({
-  characterId,
-  campaignId,
-  deathSaves,
-  canEdit,
-}: Props) {
+export default function DeathSavesTracker({ characterId, campaignId, deathSaves, canEdit }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -70,7 +65,7 @@ export default function DeathSavesTracker({
   return (
     <div
       className={cn(
-        'bg-red-950/20 border rounded-xl p-4',
+        'rounded-xl border bg-red-950/20 p-4',
         isDead
           ? 'border-red-800/60'
           : isStabilized
@@ -78,7 +73,7 @@ export default function DeathSavesTracker({
             : 'border-red-900/40'
       )}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {isDead ? (
             <Skull size={16} className="text-red-500" />
@@ -90,18 +85,10 @@ export default function DeathSavesTracker({
           <span
             className={cn(
               'text-sm font-semibold',
-              isDead
-                ? 'text-red-400'
-                : isStabilized
-                  ? 'text-green-400'
-                  : 'text-red-300'
+              isDead ? 'text-red-400' : isStabilized ? 'text-green-400' : 'text-red-300'
             )}
           >
-            {isDead
-              ? 'Мёртв'
-              : isStabilized
-                ? 'Стабилизирован'
-                : 'Спасброски от смерти'}
+            {isDead ? 'Мёртв' : isStabilized ? 'Стабилизирован' : 'Спасброски от смерти'}
           </span>
         </div>
 
@@ -110,7 +97,7 @@ export default function DeathSavesTracker({
             <button
               onClick={handleRoll}
               disabled={isPending}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs bg-red-900/40 border border-red-800/60 text-red-200 rounded hover:bg-red-900/60 transition disabled:opacity-50"
+              className="flex items-center gap-1 rounded border border-red-800/60 bg-red-900/40 px-2.5 py-1 text-xs text-red-200 transition hover:bg-red-900/60 disabled:opacity-50"
               title="Бросок 1d20"
             >
               <Dices size={12} />
@@ -119,7 +106,7 @@ export default function DeathSavesTracker({
             <button
               onClick={handleReset}
               disabled={isPending}
-              className="p-1 hover:bg-slate-800 rounded transition disabled:opacity-50"
+              className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
               title="Сбросить"
             >
               <RotateCcw size={12} className="text-slate-400" />
@@ -130,46 +117,38 @@ export default function DeathSavesTracker({
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">
-            Успехи
-          </div>
+          <div className="mb-2 text-[10px] tracking-wider text-slate-500 uppercase">Успехи</div>
           <div className="flex gap-1.5">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
                 className={cn(
-                  'w-6 h-6 rounded-full border-2 flex items-center justify-center transition',
+                  'flex h-6 w-6 items-center justify-center rounded-full border-2 transition',
                   deathSaves.successes >= i
-                    ? 'bg-green-600 border-green-500 text-white'
+                    ? 'border-green-500 bg-green-600 text-white'
                     : 'border-slate-700'
                 )}
               >
-                {deathSaves.successes >= i && (
-                  <span className="text-xs">✓</span>
-                )}
+                {deathSaves.successes >= i && <span className="text-xs">✓</span>}
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">
-            Провалы
-          </div>
+          <div className="mb-2 text-[10px] tracking-wider text-slate-500 uppercase">Провалы</div>
           <div className="flex gap-1.5">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
                 className={cn(
-                  'w-6 h-6 rounded-full border-2 flex items-center justify-center transition',
+                  'flex h-6 w-6 items-center justify-center rounded-full border-2 transition',
                   deathSaves.failures >= i
-                    ? 'bg-red-600 border-red-500 text-white'
+                    ? 'border-red-500 bg-red-600 text-white'
                     : 'border-slate-700'
                 )}
               >
-                {deathSaves.failures >= i && (
-                  <span className="text-xs">✗</span>
-                )}
+                {deathSaves.failures >= i && <span className="text-xs">✗</span>}
               </div>
             ))}
           </div>
@@ -177,15 +156,11 @@ export default function DeathSavesTracker({
       </div>
 
       {isDead && (
-        <p className="mt-3 text-xs text-red-400">
-          Персонаж мёртв. Обратись к ГМу для воскрешения.
-        </p>
+        <p className="mt-3 text-xs text-red-400">Персонаж мёртв. Обратись к ГМу для воскрешения.</p>
       )}
 
       {isStabilized && (
-        <p className="mt-3 text-xs text-green-400">
-          Стабилизирован — без сознания, но не умирает.
-        </p>
+        <p className="mt-3 text-xs text-green-400">Стабилизирован — без сознания, но не умирает.</p>
       )}
     </div>
   )

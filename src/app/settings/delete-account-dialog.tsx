@@ -17,8 +17,7 @@ export default function DeleteAccountDialog({ onClose }: Props) {
   const [confirmText, setConfirmText] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  const canDelete =
-    password.length > 0 && confirmText.toLowerCase() === 'удалить'
+  const canDelete = password.length > 0 && confirmText.toLowerCase() === 'удалить'
 
   const handleDelete = () => {
     if (!canDelete) return
@@ -36,33 +35,27 @@ export default function DeleteAccountDialog({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-red-900/50 rounded-2xl p-6 max-w-md w-full">
-        <div className="flex items-start gap-3 mb-4">
-          <div className="p-2 bg-red-950/40 border border-red-900/50 rounded-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-red-900/50 bg-slate-900 p-6">
+        <div className="mb-4 flex items-start gap-3">
+          <div className="rounded-lg border border-red-900/50 bg-red-950/40 p-2">
             <AlertTriangle size={20} className="text-red-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-red-300">
-              Удалить аккаунт?
-            </h3>
-            <p className="text-sm text-slate-400 mt-1">
+            <h3 className="text-lg font-semibold text-red-300">Удалить аккаунт?</h3>
+            <p className="mt-1 text-sm text-slate-400">
               Все кампании, персонажи, данные — будут удалены{' '}
-              <strong className="text-red-300">навсегда</strong>. Восстановить
-              нельзя.
+              <strong className="text-red-300">навсегда</strong>. Восстановить нельзя.
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-800 rounded"
-          >
+          <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
+            <label className="mb-1 block text-sm text-slate-300">
               Твой пароль (для подтверждения)
             </label>
             <input
@@ -70,36 +63,35 @@ export default function DeleteAccountDialog({ onClose }: Props) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-red-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
-              Напиши <strong className="text-red-400">удалить</strong> для
-              подтверждения
+            <label className="mb-1 block text-sm text-slate-300">
+              Напиши <strong className="text-red-400">удалить</strong> для подтверждения
             </label>
             <input
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="удалить"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-red-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-red-500 focus:outline-none"
             />
           </div>
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
             >
               Отмена
             </button>
             <button
               onClick={handleDelete}
               disabled={!canDelete || isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-500 disabled:opacity-50"
             >
               {isPending ? (
                 <>

@@ -3,10 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
-import type {
-  CharacterData,
-  CharacterInventoryItem,
-} from '@/lib/types'
+import type { CharacterData, CharacterInventoryItem } from '@/lib/types'
 
 export async function addSrdItemToCharacter(
   itemKey: string,
@@ -23,11 +20,7 @@ export async function addSrdItemToCharacter(
   const { isDm } = await getCampaignAccess(campaignId)
 
   // Загружаем предмет
-  const { data: srdItem } = await supabase
-    .from('srd_items')
-    .select('*')
-    .eq('key', itemKey)
-    .single()
+  const { data: srdItem } = await supabase.from('srd_items').select('*').eq('key', itemKey).single()
 
   if (!srdItem) return { error: 'Предмет не найден' }
 

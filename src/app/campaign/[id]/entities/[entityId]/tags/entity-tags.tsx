@@ -16,13 +16,7 @@ interface Props {
   isDm: boolean
 }
 
-export default function EntityTags({
-  entityId,
-  campaignId,
-  tags,
-  availableTags,
-  isDm,
-}: Props) {
+export default function EntityTags({ entityId, campaignId, tags, availableTags, isDm }: Props) {
   const toast = useToast()
   const [startTransition] = useTransition()
 
@@ -39,24 +33,18 @@ export default function EntityTags({
 
   return (
     <div className="mt-6">
-      <div className="flex items-center gap-2 mb-3">
+      <div className="mb-3 flex items-center gap-2">
         <Hash size={16} className="text-slate-400" />
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          Теги
-        </h2>
+        <h2 className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Теги</h2>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
         {tags.map((tag) => (
-          <TagChip
-            key={tag.id}
-            tag={tag}
-            onRemove={isDm ? handleRemove : undefined}
-          />
+          <TagChip key={tag.id} tag={tag} onRemove={isDm ? handleRemove : undefined} />
         ))}
 
         {isDm && (
-          <div className="flex-1 min-w-[180px] max-w-[280px]">
+          <div className="max-w-[280px] min-w-[180px] flex-1">
             <TagInput
               entityId={entityId}
               campaignId={campaignId}
@@ -68,7 +56,7 @@ export default function EntityTags({
 
         {!isDm && tags.length === 0 && (
           <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              Нет тегов
+            Нет тегов
           </span>
         )}
       </div>

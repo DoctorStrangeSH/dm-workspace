@@ -11,11 +11,7 @@ interface Props {
   defaultName: string
 }
 
-export default function SaveAsTemplateButton({
-  entityId,
-  campaignId,
-  defaultName,
-}: Props) {
+export default function SaveAsTemplateButton({ entityId, campaignId, defaultName }: Props) {
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [showDialog, setShowDialog] = useState(false)
@@ -24,11 +20,7 @@ export default function SaveAsTemplateButton({
 
   const handleSave = () => {
     startTransition(async () => {
-      const res = await createTemplateFromEntity(
-        entityId,
-        campaignId,
-        name
-      )
+      const res = await createTemplateFromEntity(entityId, campaignId, name)
       if ('error' in res) {
         toast.error(res.error ?? 'Ошибка')
         return
@@ -46,45 +38,41 @@ export default function SaveAsTemplateButton({
     <>
       <button
         onClick={() => setShowDialog(true)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-slate-800 border border-slate-700 hover:border-indigo-600 text-slate-300 transition"
+        className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm text-slate-300 transition hover:border-indigo-600"
       >
         <Sparkles size={14} />
         Сохранить как шаблон
       </button>
 
       {showDialog && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">
-              Сохранить как шаблон?
-            </h3>
-            <p className="text-slate-400 text-sm mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h3 className="mb-2 text-lg font-semibold">Сохранить как шаблон?</h3>
+            <p className="mb-4 text-sm text-slate-400">
               Шаблон будет доступен для создания новых сущностей этого типа.
             </p>
 
-            <label className="block text-sm text-slate-300 mb-1">
-              Название шаблона
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">Название шаблона</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={100}
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500 mb-4"
+              className="mb-4 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
 
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDialog(false)}
                 disabled={isPending}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+                className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
               >
                 Отмена
               </button>
               <button
                 onClick={handleSave}
                 disabled={isPending || !name.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 transition hover:bg-indigo-500 disabled:opacity-50"
               >
                 {done ? (
                   <>

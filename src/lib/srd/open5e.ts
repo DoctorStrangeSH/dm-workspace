@@ -10,12 +10,10 @@ interface ListResponse<T> {
 /**
  * Загружает ВСЕ записи с пагинацией.
  */
-export async function fetchAllPages<T>(
-  endpoint: string,
-  filters: string = ''
-): Promise<T[]> {
+export async function fetchAllPages<T>(endpoint: string, filters: string = ''): Promise<T[]> {
   const all: T[] = []
-  let url: string | null = `${BASE_URL}${endpoint}?document__key=${DOCUMENT_KEY}&limit=100${filters}`
+  let url: string | null =
+    `${BASE_URL}${endpoint}?document__key=${DOCUMENT_KEY}&limit=100${filters}`
 
   while (url) {
     const res = await fetch(url)

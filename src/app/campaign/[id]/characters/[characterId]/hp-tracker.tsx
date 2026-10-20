@@ -14,12 +14,7 @@ interface Props {
   canEdit: boolean
 }
 
-export default function HPTracker({
-  characterId,
-  campaignId,
-  hp,
-  canEdit,
-}: Props) {
+export default function HPTracker({ characterId, campaignId, hp, canEdit }: Props) {
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [customValue, setCustomValue] = useState('')
@@ -41,27 +36,18 @@ export default function HPTracker({
     const value = parseInt(customValue, 10)
     if (isNaN(value) || value <= 0) return
 
-    const newCurrent = Math.max(
-      0,
-      Math.min(hp.max, hp.current + sign * value)
-    )
+    const newCurrent = Math.max(0, Math.min(hp.max, hp.current + sign * value))
     updateHP({ current: newCurrent })
     setCustomValue('')
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
+    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Heart
             size={16}
-            className={cn(
-              isDead
-                ? 'text-red-500'
-                : isLow
-                  ? 'text-red-400'
-                  : 'text-red-400'
-            )}
+            className={cn(isDead ? 'text-red-500' : isLow ? 'text-red-400' : 'text-red-400')}
           />
           <span className="text-sm font-medium text-slate-300">HP</span>
         </div>
@@ -74,15 +60,11 @@ export default function HPTracker({
       </div>
 
       {/* Полоска HP */}
-      <div className="relative h-6 bg-slate-950 border border-slate-800 rounded overflow-hidden mb-3">
+      <div className="relative mb-3 h-6 overflow-hidden rounded border border-slate-800 bg-slate-950">
         <div
           className={cn(
             'h-full transition-all duration-300',
-            isDead
-              ? 'bg-red-700'
-              : isLow
-                ? 'bg-red-500'
-                : 'bg-red-600'
+            isDead ? 'bg-red-700' : isLow ? 'bg-red-500' : 'bg-red-600'
           )}
           style={{ width: `${Math.max(0, Math.min(100, percent))}%` }}
         />
@@ -92,7 +74,7 @@ export default function HPTracker({
       </div>
 
       {isDead && (
-        <div className="flex items-center gap-2 text-xs text-red-400 mb-3 bg-red-950/30 border border-red-900/50 rounded p-2">
+        <div className="mb-3 flex items-center gap-2 rounded border border-red-900/50 bg-red-950/30 p-2 text-xs text-red-400">
           <Skull size={12} />
           <span>Спасброски от смерти: 3 успеха / 3 провала</span>
         </div>
@@ -106,7 +88,7 @@ export default function HPTracker({
               type="button"
               onClick={() => updateHP({ current: Math.max(0, hp.current - 5) })}
               disabled={isPending || hp.current === 0}
-              className="px-2 py-1.5 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-xs hover:bg-red-950/60 transition disabled:opacity-40"
+              className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-40"
             >
               −5
             </button>
@@ -114,27 +96,23 @@ export default function HPTracker({
               type="button"
               onClick={() => updateHP({ current: Math.max(0, hp.current - 1) })}
               disabled={isPending || hp.current === 0}
-              className="px-2 py-1.5 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-xs hover:bg-red-950/60 transition disabled:opacity-40"
+              className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-40"
             >
               −1
             </button>
             <button
               type="button"
-              onClick={() =>
-                updateHP({ current: Math.min(hp.max, hp.current + 1) })
-              }
+              onClick={() => updateHP({ current: Math.min(hp.max, hp.current + 1) })}
               disabled={isPending || hp.current === hp.max}
-              className="px-2 py-1.5 bg-green-950/40 border border-green-900/50 text-green-300 rounded text-xs hover:bg-green-950/60 transition disabled:opacity-40"
+              className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-40"
             >
               +1
             </button>
             <button
               type="button"
-              onClick={() =>
-                updateHP({ current: Math.min(hp.max, hp.current + 5) })
-              }
+              onClick={() => updateHP({ current: Math.min(hp.max, hp.current + 5) })}
               disabled={isPending || hp.current === hp.max}
-              className="px-2 py-1.5 bg-green-950/40 border border-green-900/50 text-green-300 rounded text-xs hover:bg-green-950/60 transition disabled:opacity-40"
+              className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-40"
             >
               +5
             </button>
@@ -147,13 +125,13 @@ export default function HPTracker({
               onChange={(e) => setCustomValue(e.target.value)}
               placeholder="N"
               min={1}
-              className="flex-1 px-2 py-1.5 bg-slate-950 border border-slate-800 rounded text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500"
+              className="flex-1 rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
             />
             <button
               type="button"
               onClick={() => applyCustom(-1)}
               disabled={isPending || !customValue}
-              className="px-2 py-1.5 bg-red-950/40 border border-red-900/50 text-red-300 rounded text-xs hover:bg-red-950/60 transition disabled:opacity-40"
+              className="rounded border border-red-900/50 bg-red-950/40 px-2 py-1.5 text-xs text-red-300 transition hover:bg-red-950/60 disabled:opacity-40"
             >
               <Minus size={12} />
             </button>
@@ -161,7 +139,7 @@ export default function HPTracker({
               type="button"
               onClick={() => applyCustom(1)}
               disabled={isPending || !customValue}
-              className="px-2 py-1.5 bg-green-950/40 border border-green-900/50 text-green-300 rounded text-xs hover:bg-green-950/60 transition disabled:opacity-40"
+              className="rounded border border-green-900/50 bg-green-950/40 px-2 py-1.5 text-xs text-green-300 transition hover:bg-green-950/60 disabled:opacity-40"
             >
               <Plus size={12} />
             </button>

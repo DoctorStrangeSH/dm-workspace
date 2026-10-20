@@ -10,11 +10,7 @@ interface Props {
   canHide?: boolean
 }
 
-export default function MessageInput({
-  onSend,
-  disabled,
-  canHide = false,
-}: Props) {
+export default function MessageInput({ onSend, disabled, canHide = false }: Props) {
   const [content, setContent] = useState('')
   const [isHidden, setIsHidden] = useState(false)
 
@@ -40,7 +36,7 @@ export default function MessageInput({
           type="button"
           onClick={() => setIsHidden(!isHidden)}
           className={cn(
-            'flex items-center gap-1.5 text-xs mb-2 transition',
+            'mb-2 flex items-center gap-1.5 text-xs transition',
             isHidden ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
           )}
         >
@@ -57,13 +53,13 @@ export default function MessageInput({
           placeholder="Сообщение..."
           disabled={disabled}
           rows={1}
-          className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 resize-none max-h-32"
+          className="max-h-32 flex-1 resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
           style={{ minHeight: '40px' }}
         />
         <button
           type="submit"
           disabled={disabled || !content.trim()}
-          className="p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition disabled:opacity-50"
+          className="rounded-lg bg-indigo-600 p-2.5 text-white transition hover:bg-indigo-500 disabled:opacity-50"
           title="Отправить (Enter)"
         >
           <Send size={16} />

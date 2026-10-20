@@ -4,11 +4,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { updateEntity } from '@/lib/actions/entities'
 import { useAutosave } from '@/lib/hooks/use-autosave'
 import SaveStatus from '../../chapters/[chapterId]/save-status'
-import {
-  ENTITY_SCHEMAS,
-  groupFieldsBySection,
-  type FieldSchema,
-} from '@/lib/entity-schemas'
+import { ENTITY_SCHEMAS, groupFieldsBySection, type FieldSchema } from '@/lib/entity-schemas'
 import TextField from './fields/text-field'
 import NumberField from './fields/number-field'
 import SelectField from './fields/select-field'
@@ -24,10 +20,7 @@ interface Props {
   isDm: boolean
 }
 
-function getNestedValue(
-  obj: Record<string, unknown>,
-  path: string
-): unknown {
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   return path.split('.').reduce<unknown>((acc, key) => {
     if (acc && typeof acc === 'object' && key in acc) {
       return (acc as Record<string, unknown>)[key]
@@ -60,13 +53,7 @@ function setNestedValue(
   return result
 }
 
-export default function EntityDataForm({
-  entityId,
-  campaignId,
-  type,
-  initialData,
-  isDm,
-}: Props) {
+export default function EntityDataForm({ entityId, campaignId, type, initialData, isDm }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(initialData)
 
   // CHANGES: schema и sections вычисляются через useMemo с зависимостью от type.
@@ -91,12 +78,9 @@ export default function EntityDataForm({
     enabled: isDm,
   })
 
-  const handleFieldChange = useCallback(
-    (fieldKey: string, value: unknown) => {
-      setData((prev) => setNestedValue(prev, fieldKey, value))
-    },
-    []
-  )
+  const handleFieldChange = useCallback((fieldKey: string, value: unknown) => {
+    setData((prev) => setNestedValue(prev, fieldKey, value))
+  }, [])
 
   if (schema.length === 0) {
     return null
@@ -104,22 +88,20 @@ export default function EntityDataForm({
 
   return (
     <div className="mt-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">Характеристики</h2>
-        {isDm && (
-          <SaveStatus status={status} lastSaved={lastSaved} error={error} />
-        )}
+        {isDm && <SaveStatus status={status} lastSaved={lastSaved} error={error} />}
       </div>
 
       <div className="space-y-6">
         {Object.entries(sections).map(([sectionName, fields]) => (
           <div key={sectionName}>
             {Object.keys(sections).length > 1 && (
-              <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-3">
+              <h3 className="mb-3 text-sm font-medium tracking-wider text-slate-400 uppercase">
                 {sectionName}
               </h3>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {fields.map((field) => (
                 <FieldRenderer
                   key={field.key}

@@ -41,10 +41,7 @@ export function useDmScreen() {
 
   const addToRecent = useCallback((entityId: string) => {
     setRecentIds((prev) => {
-      const next = [entityId, ...prev.filter((id) => id !== entityId)].slice(
-        0,
-        MAX_RECENT
-      )
+      const next = [entityId, ...prev.filter((id) => id !== entityId)].slice(0, MAX_RECENT)
       try {
         localStorage.setItem(STORAGE_KEY_RECENT, JSON.stringify(next))
       } catch {

@@ -32,14 +32,14 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full">
-        <div className="flex justify-between items-center mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6">
+        <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold">Новая кампания</h2>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="p-1 hover:bg-slate-800 rounded-lg transition"
+            className="rounded-lg p-1 transition hover:bg-slate-800"
           >
             <X size={20} />
           </button>
@@ -47,7 +47,7 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
+            <label className="mb-1 block text-sm text-slate-300">
               Название <span className="text-red-400">*</span>
             </label>
             <input
@@ -58,15 +58,15 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
               maxLength={100}
               placeholder="Проклятие Страда"
               autoFocus
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">Жанр</label>
+            <label className="mb-1 block text-sm text-slate-300">Жанр</label>
             <select
               name="genre"
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
               defaultValue=""
             >
               <option value="">— Не выбран —</option>
@@ -79,37 +79,35 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
-              Описание
-            </label>
+            <label className="mb-1 block text-sm text-slate-300">Описание</label>
             <textarea
               name="description"
               rows={4}
               maxLength={500}
               placeholder="Краткое описание кампании..."
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500 resize-none"
+              className="w-full resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm bg-red-950/30 border border-red-900/50 rounded-lg p-2">
+            <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
               {error}
             </div>
           )}
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition disabled:opacity-50 font-medium"
+              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Создаём...' : 'Создать'}
             </button>

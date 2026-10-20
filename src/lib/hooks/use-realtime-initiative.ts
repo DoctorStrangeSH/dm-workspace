@@ -10,13 +10,8 @@ interface Options {
   enabled?: boolean
 }
 
-export function useRealtimeInitiative({
-  sceneId,
-  initialInitiative,
-  enabled = true,
-}: Options) {
-  const [initiative, setInitiative] =
-    useState<InitiativeEntryWithToken[]>(initialInitiative)
+export function useRealtimeInitiative({ sceneId, initialInitiative, enabled = true }: Options) {
+  const [initiative, setInitiative] = useState<InitiativeEntryWithToken[]>(initialInitiative)
 
   // CHANGES: убран useEffect(setInitiative) → паттерн «props → state».
   const [prevInitial, setPrevInitial] = useState(initialInitiative)

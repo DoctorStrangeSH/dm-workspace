@@ -34,24 +34,23 @@ export default async function ScenePage({
   } = await supabase.auth.getUser()
 
   // Параллельная загрузка
-  const [tokens, charactersRes, monstersRes, initiative, fog] =
-    await Promise.all([
-      getSceneTokens(sceneId),
-      supabase
-        .from('characters')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('is_active', true)
-        .order('name'),
-      supabase
-        .from('entities')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .eq('type', 'monster')
-        .order('name'),
-      getInitiative(sceneId),
-      getFogAreas(sceneId),
-    ])
+  const [tokens, charactersRes, monstersRes, initiative, fog] = await Promise.all([
+    getSceneTokens(sceneId),
+    supabase
+      .from('characters')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .eq('is_active', true)
+      .order('name'),
+    supabase
+      .from('entities')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .eq('type', 'monster')
+      .order('name'),
+    getInitiative(sceneId),
+    getFogAreas(sceneId),
+  ])
 
   const characters = (charactersRes.data ?? []) as Character[]
   const monsters = (monstersRes.data ?? []) as Entity[]

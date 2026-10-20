@@ -57,11 +57,7 @@ export default async function EntityPage({
     getEntityRelations(entityId),
     getEntityTags(entityId),
     getCampaignTags(campaignId),
-    supabase
-      .from('entities')
-      .select('*')
-      .eq('campaign_id', campaignId)
-      .order('name'),
+    supabase.from('entities').select('*').eq('campaign_id', campaignId).order('name'),
     isLocation ? getLocationPath(entityId) : Promise.resolve([]),
     isLocation ? getLocationDescendants(entityId) : Promise.resolve([]),
   ])

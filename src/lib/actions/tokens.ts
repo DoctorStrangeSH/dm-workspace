@@ -7,11 +7,7 @@ import type { TokenCondition } from '@/lib/types'
 
 async function getSceneCampaign(sceneId: string): Promise<string | null> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('scenes')
-    .select('campaign_id')
-    .eq('id', sceneId)
-    .single()
+  const { data } = await supabase.from('scenes').select('campaign_id').eq('id', sceneId).single()
   return data?.campaign_id ?? null
 }
 
@@ -23,7 +19,7 @@ function normalizeMonsterHP(value: unknown): number | null {
     const avg = value.match(/^(\d+)d(\d+)([+-]\d+)?$/i)
     if (avg) {
       const [, n, d, mod] = avg
-      return Math.floor(Number(n) * (Number(d) + 1) / 2) + Number(mod ?? 0)
+      return Math.floor((Number(n) * (Number(d) + 1)) / 2) + Number(mod ?? 0)
     }
     const num = Number(value)
     if (Number.isFinite(num)) return num
@@ -98,7 +94,7 @@ export async function createToken(
       name,
       character_id: data.characterId ?? null,
       entity_id: data.entityId ?? null,
-      owner_id: isDm ? data.owner_id ?? null : user.id,
+      owner_id: isDm ? (data.owner_id ?? null) : user.id,
       x: data.x,
       y: data.y,
       size: data.size ?? 1,
@@ -119,12 +115,7 @@ export async function createToken(
   return { success: true, tokenId: token.id }
 }
 
-export async function moveToken(
-  tokenId: string,
-  sceneId: string,
-  x: number,
-  y: number
-) {
+export async function moveToken(tokenId: string, sceneId: string, x: number, y: number) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -157,11 +148,7 @@ export async function moveToken(
   return { success: true }
 }
 
-export async function updateTokenHP(
-  tokenId: string,
-  sceneId: string,
-  hp_current: number
-) {
+export async function updateTokenHP(tokenId: string, sceneId: string, hp_current: number) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -266,11 +253,7 @@ export async function deleteToken(tokenId: string, sceneId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
-    .from('tokens')
-    .delete()
-    .eq('id', tokenId)
-    .eq('scene_id', sceneId)
+  const { error } = await supabase.from('tokens').delete().eq('id', tokenId).eq('scene_id', sceneId)
 
   if (error) return { error: 'Не удалось удалить' }
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)

@@ -13,23 +13,18 @@ interface Props {
   backlinksCount?: number
 }
 
-export default function EntityCard({
-  entity,
-  campaignId,
-  isDm,
-  backlinksCount = 0,
-}: Props) {
+export default function EntityCard({ entity, campaignId, isDm, backlinksCount = 0 }: Props) {
   const style = ENTITY_STYLES[entity.type]
 
   return (
     <Link
       href={`/campaign/${campaignId}/entities/${entity.id}`}
-      className="group bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl p-4 transition block"
+      className="group block rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700"
     >
       <div className="flex items-start gap-3">
         <div
           className={cn(
-            'shrink-0 w-10 h-10 rounded-lg border flex items-center justify-center text-lg',
+            'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border text-lg',
             style.bg,
             style.border
           )}
@@ -37,33 +32,31 @@ export default function EntityCard({
           {style.icon}
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold truncate group-hover:text-indigo-400 transition">
+            <h3 className="truncate font-semibold transition group-hover:text-indigo-400">
               {entity.name}
             </h3>
             {isDm && !entity.is_visible_to_players && (
-              <span title="Скрыта от игроков" className="shrink-0 mt-1">
+              <span title="Скрыта от игроков" className="mt-1 shrink-0">
                 <EyeOff size={14} className="text-amber-400" />
               </span>
             )}
             {isDm && entity.is_visible_to_players && (
-              <span title="Видна игрокам" className="shrink-0 mt-1">
+              <span title="Видна игрокам" className="mt-1 shrink-0">
                 <Eye size={14} className="text-green-400/60" />
               </span>
             )}
           </div>
 
-          <div className="text-xs text-slate-500 mb-2">{style.label}</div>
+          <div className="mb-2 text-xs text-slate-500">{style.label}</div>
 
           {entity.description && (
-            <p className="text-sm text-slate-400 line-clamp-2">
-              {entity.description}
-            </p>
+            <p className="line-clamp-2 text-sm text-slate-400">{entity.description}</p>
           )}
 
           {backlinksCount > 0 && (
-            <div className="flex items-center gap-1 text-xs text-slate-500 mt-2">
+            <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
               <Link2 size={12} />
               <span>
                 {backlinksCount}{' '}

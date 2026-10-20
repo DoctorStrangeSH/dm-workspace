@@ -23,11 +23,7 @@ import ChaptersSearchHotkey from './chapters-search-hotkey'
 import SelectionBar from './selection-bar'
 import BulkActionsBar from './bulk-actions-bar'
 import { useChapterFilter } from './use-chapter-filter'
-import {
-  reorderChapters,
-  bulkDeleteChapters,
-  bulkSetVisibility,
-} from '@/lib/actions/chapters'
+import { reorderChapters, bulkDeleteChapters, bulkSetVisibility } from '@/lib/actions/chapters'
 import { getChapterForExport } from '@/lib/actions/export'
 import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
@@ -41,11 +37,7 @@ interface Props {
   isDm: boolean
 }
 
-export default function ChaptersList({
-  campaignId,
-  initialChapters,
-  isDm,
-}: Props) {
+export default function ChaptersList({ campaignId, initialChapters, isDm }: Props) {
   const toast = useToast()
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
   const [query, setQuery] = useState('')
@@ -60,8 +52,7 @@ export default function ChaptersList({
     setChapters(initialChapters)
   }
 
-  const { filtered, totalCount, matchedCount, isSearching } =
-    useChapterFilter(chapters, query)
+  const { filtered, totalCount, matchedCount, isSearching } = useChapterFilter(chapters, query)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -115,8 +106,7 @@ export default function ChaptersList({
     })
   }, [])
 
-  const allSelected =
-    filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id))
+  const allSelected = filtered.length > 0 && filtered.every((c) => selectedIds.has(c.id))
 
   const toggleAll = useCallback(() => {
     if (allSelected) {
@@ -140,9 +130,7 @@ export default function ChaptersList({
       toast.error(res.error ?? 'Ошибка')
       return
     }
-    toast.success(
-      `Удалено ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
-    )
+    toast.success(`Удалено ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`)
     setSelectedIds(new Set())
     setIsSelectionMode(false)
   }, [selectedIds, campaignId, toast])
@@ -188,9 +176,7 @@ export default function ChaptersList({
 
     const content = parts.join('')
     downloadText(content, `chapters-export-${Date.now()}.md`)
-    toast.success(
-      `Экспортировано ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
-    )
+    toast.success(`Экспортировано ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`)
     setSelectedIds(new Set())
     setIsSelectionMode(false)
   }, [selectedIds, campaignId, toast])
@@ -223,7 +209,7 @@ export default function ChaptersList({
     <div>
       <ChaptersSearchHotkey onFocus={focusSearch} />
 
-      <div className="flex items-center gap-3 mb-4">
+      <div className="mb-4 flex items-center gap-3">
         <ChaptersSearch
           ref={searchInputRef}
           value={query}

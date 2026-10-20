@@ -11,10 +11,7 @@ interface Props {
   currentUsername: string
 }
 
-export default function ProfileForm({
-  currentDisplayName,
-  currentUsername,
-}: Props) {
+export default function ProfileForm({ currentDisplayName, currentUsername }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [displayName, setDisplayName] = useState(currentDisplayName)
@@ -39,9 +36,7 @@ export default function ProfileForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="block text-sm text-slate-300 mb-1">
-          Имя для отображения
-        </label>
+        <label className="mb-1 block text-sm text-slate-300">Имя для отображения</label>
         <input
           name="display_name"
           type="text"
@@ -50,12 +45,12 @@ export default function ProfileForm({
           required
           minLength={2}
           maxLength={50}
-          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
         />
       </div>
 
       <div>
-        <label className="block text-sm text-slate-300 mb-1">Username</label>
+        <label className="mb-1 block text-sm text-slate-300">Username</label>
         <input
           name="username"
           type="text"
@@ -65,17 +60,15 @@ export default function ProfileForm({
           minLength={3}
           maxLength={30}
           pattern="[a-zA-Z0-9_]+"
-          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
         />
-        <p className="text-xs text-slate-500 mt-1">
-          Буквы, цифры и подчёркивания
-        </p>
+        <p className="mt-1 text-xs text-slate-500">Буквы, цифры и подчёркивания</p>
       </div>
 
       <button
         type="submit"
         disabled={isPending}
-        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition font-medium disabled:opacity-50"
+        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
       >
         {isPending ? (
           <>

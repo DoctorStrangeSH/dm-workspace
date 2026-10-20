@@ -9,11 +9,7 @@ import EmptyState from '@/components/empty-state'
 import SpellCard from './spell-card'
 import SpellSlotsTracker from './spell-slots-tracker'
 import AddSpellDialog from './add-spell-dialog'
-import {
-  abilityModifier,
-  formatModifier,
-  proficiencyBonus,
-} from '@/lib/dnd/formulas'
+import { abilityModifier, formatModifier, proficiencyBonus } from '@/lib/dnd/formulas'
 import type { Character, CharacterSpell, CharacterData } from '@/lib/types'
 
 interface Props {
@@ -33,10 +29,7 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   // CHANGES: обёрнуто в useMemo, чтобы ссылка на spells была стабильной.
   // Раньше `data.spells ?? []` создавал новый [] каждый рендер,
   // из-за чего useMemo(spellsByLevel) пересчитывался всегда.
-  const spells = useMemo(
-    () => character.data_json.spells ?? [],
-    [character.data_json.spells]
-  )
+  const spells = useMemo(() => character.data_json.spells ?? [], [character.data_json.spells])
   const slots = data.spellSlots ?? {}
 
   const spellsByLevel = useMemo(() => {
@@ -52,11 +45,7 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   }, [spells])
 
   const handleLongRest = () => {
-    if (
-      !confirm(
-        'Завершить долгий отдых? Восстановятся HP, ячейки заклинаний и death saves.'
-      )
-    ) {
+    if (!confirm('Завершить долгий отдых? Восстановятся HP, ячейки заклинаний и death saves.')) {
       return
     }
 
@@ -97,12 +86,12 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         {canEdit && (
           <>
             <button
               onClick={() => setShowAddDialog(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm transition"
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-500"
             >
               <Plus size={14} />
               Добавить заклинание
@@ -111,7 +100,7 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
             <button
               onClick={handleLongRest}
               disabled={isPending}
-              className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
             >
               <Moon size={14} />
               Долгий отдых
@@ -119,9 +108,7 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
           </>
         )}
 
-        <div className="ml-auto text-sm text-slate-500">
-          Всего: {spells.length}
-        </div>
+        <div className="ml-auto text-sm text-slate-500">Всего: {spells.length}</div>
       </div>
 
       <SpellSlotsTracker
@@ -147,12 +134,10 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
         <div className="space-y-4">
           {levelKeys.map((level) => (
             <div key={level}>
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wider text-slate-400 uppercase">
                 <Sparkles size={14} className="text-violet-400" />
                 {level === 0 ? 'Заговоры' : `${level} уровень`}
-                <span className="text-slate-600 font-normal">
-                  ({spellsByLevel[level].length})
-                </span>
+                <span className="font-normal text-slate-600">({spellsByLevel[level].length})</span>
               </h3>
 
               <div className="space-y-1.5">

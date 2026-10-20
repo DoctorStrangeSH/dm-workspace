@@ -19,12 +19,7 @@ function formatModifier(score: number | undefined): string {
   return mod >= 0 ? `+${mod}` : `${mod}`
 }
 
-export default function MonsterDetailDialog({
-  monster,
-  campaignId,
-  canEdit,
-  onClose,
-}: Props) {
+export default function MonsterDetailDialog({ monster, campaignId, canEdit, onClose }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -54,27 +49,22 @@ export default function MonsterDetailDialog({
   ]
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col my-auto">
-        <div className="flex items-start justify-between gap-4 p-4 border-b border-slate-800">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold">
-              {monster.name_ru ?? monster.name}
-            </h2>
-            <p className="text-sm text-slate-400 italic mt-0.5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
+      <div className="my-auto flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-800 p-4">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold">{monster.name_ru ?? monster.name}</h2>
+            <p className="mt-0.5 text-sm text-slate-400 italic">
               {data.size} {data.type}, {data.alignment || '—'}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-slate-800 rounded transition shrink-0"
-          >
+          <button onClick={onClose} className="shrink-0 rounded p-1 transition hover:bg-slate-800">
             <X size={18} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
-          <div className="space-y-1 p-3 bg-slate-950/50 rounded-lg">
+        <div className="flex-1 space-y-4 overflow-y-auto p-4 text-sm">
+          <div className="space-y-1 rounded-lg bg-slate-950/50 p-3">
             <div>
               <span className="text-slate-500">AC:</span>{' '}
               <span className="text-slate-200">{data.ac ?? '—'}</span>
@@ -93,20 +83,16 @@ export default function MonsterDetailDialog({
             {abilities.map((a) => (
               <div
                 key={a.label}
-                className="text-center bg-slate-950 border border-slate-800 rounded p-2"
+                className="rounded border border-slate-800 bg-slate-950 p-2 text-center"
               >
-                <div className="text-[10px] text-slate-500 uppercase">
-                  {a.label}
-                </div>
+                <div className="text-[10px] text-slate-500 uppercase">{a.label}</div>
                 <div className="text-base font-bold">{a.score ?? 10}</div>
-                <div className="text-[10px] text-slate-500">
-                  {formatModifier(a.score)}
-                </div>
+                <div className="text-[10px] text-slate-500">{formatModifier(a.score)}</div>
               </div>
             ))}
           </div>
 
-          <div className="p-3 bg-amber-950/20 border border-amber-900/40 rounded-lg">
+          <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">
             <div className="flex items-center justify-between text-sm">
               <div>
                 <strong className="text-amber-300">CR:</strong>{' '}
@@ -121,26 +107,24 @@ export default function MonsterDetailDialog({
 
           {data.description && (
             <div>
-              <h3 className="font-semibold text-slate-300 mb-2">Описание</h3>
-              <div className="text-slate-400 whitespace-pre-wrap text-xs">
-                {data.description}
-              </div>
+              <h3 className="mb-2 font-semibold text-slate-300">Описание</h3>
+              <div className="text-xs whitespace-pre-wrap text-slate-400">{data.description}</div>
             </div>
           )}
         </div>
 
         {canEdit && (
-          <div className="p-4 border-t border-slate-800 flex justify-end gap-2">
+          <div className="flex justify-end gap-2 border-t border-slate-800 p-4">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition text-sm"
+              className="rounded-lg bg-slate-800 px-4 py-2 text-sm transition hover:bg-slate-700"
             >
               Закрыть
             </button>
             <button
               onClick={handleAdd}
               disabled={isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition text-sm font-medium disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? (
                 <>

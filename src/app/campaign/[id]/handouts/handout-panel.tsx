@@ -2,21 +2,8 @@
 
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Image as ImageIcon,
-  X,
-  Eye,
-  EyeOff,
-  Trash2,
-  Upload,
-  Loader2,
-} from 'lucide-react'
-import {
-  createHandout,
-  deleteHandout,
-  showHandout,
-  hideHandout,
-} from '@/lib/actions/handouts'
+import { Image as ImageIcon, X, Eye, EyeOff, Trash2, Upload, Loader2 } from 'lucide-react'
+import { createHandout, deleteHandout, showHandout, hideHandout } from '@/lib/actions/handouts'
 import { useToast } from '@/components/toast/toast-provider'
 import type { Handout } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -27,11 +14,7 @@ interface Props {
   onClose: () => void
 }
 
-export default function HandoutPanel({
-  campaignId,
-  handouts,
-  onClose,
-}: Props) {
+export default function HandoutPanel({ campaignId, handouts, onClose }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -102,28 +85,25 @@ export default function HandoutPanel({
   }
 
   return (
-    <aside className="fixed top-0 right-0 z-40 h-screen w-full sm:w-[400px] bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-slate-800">
+    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl sm:w-[400px]">
+      <div className="flex items-center justify-between border-b border-slate-800 p-4">
         <div className="flex items-center gap-2">
           <ImageIcon size={18} className="text-amber-400" />
           <h2 className="font-semibold">Хендауты</h2>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-slate-800 rounded"
-        >
+        <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
           <X size={18} />
         </button>
       </div>
 
       {/* Загрузка */}
-      <div className="p-3 border-b border-slate-800 space-y-2">
+      <div className="space-y-2 border-b border-slate-800 p-3">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Название (письмо, карта...)"
-          className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
+          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white"
         />
         <div className="flex gap-2">
           <input
@@ -136,10 +116,10 @@ export default function HandoutPanel({
           <button
             onClick={() => fileInputRef.current?.click()}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm rounded-lg transition',
+              'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm transition',
               pendingFile
-                ? 'bg-green-950/40 border border-green-900/50 text-green-300'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                ? 'border border-green-900/50 bg-green-950/40 text-green-300'
+                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
             )}
           >
             <Upload size={14} />
@@ -148,7 +128,7 @@ export default function HandoutPanel({
           <button
             onClick={handleUpload}
             disabled={isPending || isUploading || !pendingFile || !name.trim()}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm transition disabled:opacity-50"
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white transition hover:bg-indigo-500 disabled:opacity-50"
           >
             {isUploading ? <Loader2 size={14} className="animate-spin" /> : 'Загрузить'}
           </button>
@@ -156,44 +136,38 @@ export default function HandoutPanel({
       </div>
 
       {/* Список */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {handouts.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-6">
-            Нет хендаутов
-          </p>
+          <p className="py-6 text-center text-sm text-slate-500">Нет хендаутов</p>
         ) : (
           handouts.map((handout) => (
             <div
               key={handout.id}
               className={cn(
-                'bg-slate-950 border rounded-lg overflow-hidden transition',
-                handout.is_visible
-                  ? 'border-green-800/50'
-                  : 'border-slate-800'
+                'overflow-hidden rounded-lg border bg-slate-950 transition',
+                handout.is_visible ? 'border-green-800/50' : 'border-slate-800'
               )}
             >
-              <div className="aspect-video bg-slate-900 relative overflow-hidden">
+              <div className="relative aspect-video overflow-hidden bg-slate-900">
                 <img
                   src={handout.image_url}
                   alt={handout.name}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                 />
                 {handout.is_visible && (
-                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-green-600 text-white rounded text-xs">
+                  <div className="absolute top-2 right-2 rounded bg-green-600 px-2 py-0.5 text-xs text-white">
                     Видно игрокам
                   </div>
                 )}
               </div>
               <div className="p-2">
-                <div className="text-sm font-medium truncate mb-2">
-                  {handout.name}
-                </div>
+                <div className="mb-2 truncate text-sm font-medium">{handout.name}</div>
                 <div className="flex items-center gap-1">
                   {handout.is_visible ? (
                     <button
                       onClick={() => handleHide(handout.id)}
                       disabled={isPending}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs bg-amber-950/40 border border-amber-900/50 text-amber-300 rounded transition disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1 rounded border border-amber-900/50 bg-amber-950/40 px-2 py-1 text-xs text-amber-300 transition disabled:opacity-50"
                     >
                       <EyeOff size={10} />
                       Скрыть
@@ -202,7 +176,7 @@ export default function HandoutPanel({
                     <button
                       onClick={() => handleShow(handout.id)}
                       disabled={isPending}
-                      className="flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs bg-green-950/40 border border-green-900/50 text-green-300 rounded transition disabled:opacity-50"
+                      className="flex flex-1 items-center justify-center gap-1 rounded border border-green-900/50 bg-green-950/40 px-2 py-1 text-xs text-green-300 transition disabled:opacity-50"
                     >
                       <Eye size={10} />
                       Показать
@@ -211,7 +185,7 @@ export default function HandoutPanel({
                   <button
                     onClick={() => handleDelete(handout.id, handout.name)}
                     disabled={isPending}
-                    className="p-1 hover:bg-red-950/40 rounded transition disabled:opacity-50"
+                    className="rounded p-1 transition hover:bg-red-950/40 disabled:opacity-50"
                     title="Удалить"
                   >
                     <Trash2 size={10} className="text-red-400" />

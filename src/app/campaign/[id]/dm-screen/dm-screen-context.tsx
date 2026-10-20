@@ -9,11 +9,7 @@ const DmScreenContext = createContext<DmScreenContextValue | null>(null)
 
 export function DmScreenProvider({ children }: { children: ReactNode }) {
   const value = useDmScreen()
-  return (
-    <DmScreenContext.Provider value={value}>
-      {children}
-    </DmScreenContext.Provider>
-  )
+  return <DmScreenContext.Provider value={value}>{children}</DmScreenContext.Provider>
 }
 
 export function useDmScreenContext() {

@@ -11,11 +11,7 @@ interface Props {
   currentTrack: Track | null
 }
 
-export function MusicPlayer({
-  campaignId,
-  initialState,
-  currentTrack,
-}: Props) {
+export function MusicPlayer({ campaignId, initialState, currentTrack }: Props) {
   const state = useRealtimeMusic({ campaignId, initialState })
   const audioRef = useRef<HTMLAudioElement>(null)
   const [localVolume, setLocalVolume] = useState(50)
@@ -40,17 +36,15 @@ export function MusicPlayer({
   if (!currentTrack || !state || !state.is_playing) return null
 
   return (
-    <div className="fixed bottom-4 left-4 z-30 flex items-center gap-3 px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl">
+    <div className="fixed bottom-4 left-4 z-30 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 shadow-2xl">
       <div className="flex items-center gap-2">
-        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-        <span className="text-sm text-slate-200 truncate max-w-[180px]">
-          ♪ {currentTrack.name}
-        </span>
+        <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+        <span className="max-w-[180px] truncate text-sm text-slate-200">♪ {currentTrack.name}</span>
       </div>
 
       <button
         onClick={() => setMuted(!muted)}
-        className="p-1 hover:bg-slate-800 rounded transition"
+        className="rounded p-1 transition hover:bg-slate-800"
         title={muted ? 'Включить звук' : 'Выключить звук'}
       >
         {muted ? (
@@ -69,12 +63,7 @@ export function MusicPlayer({
         className="w-20 accent-indigo-500"
       />
 
-      <audio
-        ref={audioRef}
-        src={currentTrack.audio_url}
-        loop
-        preload="auto"
-      />
+      <audio ref={audioRef} src={currentTrack.audio_url} loop preload="auto" />
     </div>
   )
 }

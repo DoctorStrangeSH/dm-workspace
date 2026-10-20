@@ -4,21 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 
-export async function addSrdItemToCampaign(
-  itemKey: string,
-  campaignId: string
-) {
+export async function addSrdItemToCampaign(itemKey: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
 
   // Загружаем предмет
-  const { data: srdItem } = await supabase
-    .from('srd_items')
-    .select('*')
-    .eq('key', itemKey)
-    .single()
+  const { data: srdItem } = await supabase.from('srd_items').select('*').eq('key', itemKey).single()
 
   if (!srdItem) return { error: 'Предмет не найден' }
 

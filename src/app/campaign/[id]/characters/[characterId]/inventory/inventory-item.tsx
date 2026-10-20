@@ -20,12 +20,7 @@ interface Props {
   canEdit: boolean
 }
 
-export default function InventoryItem({
-  item,
-  characterId,
-  campaignId,
-  canEdit,
-}: Props) {
+export default function InventoryItem({ item, characterId, campaignId, canEdit }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -88,16 +83,16 @@ export default function InventoryItem({
   }
 
   return (
-    <div className="group bg-slate-900 border border-slate-800 rounded-lg p-3 flex items-center gap-3">
-      <div className="flex flex-col gap-1 shrink-0">
+    <div className="group flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900 p-3">
+      <div className="flex shrink-0 flex-col gap-1">
         {canEdit ? (
           <button
             onClick={handleToggleEquipped}
             disabled={isPending}
             className={cn(
-              'w-5 h-5 rounded border-2 flex items-center justify-center transition',
+              'flex h-5 w-5 items-center justify-center rounded border-2 transition',
               item.equipped
-                ? 'bg-sky-600 border-sky-500'
+                ? 'border-sky-500 bg-sky-600'
                 : 'border-slate-700 hover:border-slate-500'
             )}
             title={item.equipped ? 'Снять' : 'Экипировать'}
@@ -110,26 +105,26 @@ export default function InventoryItem({
         {item.attuned && <Sparkles size={14} className="text-violet-400" />}
       </div>
 
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         {isEditing ? (
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="flex-1 px-2 py-1 bg-slate-950 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="flex-1 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white focus:border-indigo-500 focus:outline-none"
             />
             <input
               type="number"
               value={editQuantity}
               onChange={(e) => setEditQuantity(Number(e.target.value))}
               min={1}
-              className="w-16 px-2 py-1 bg-slate-950 border border-slate-700 rounded text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="w-16 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-white focus:border-indigo-500 focus:outline-none"
             />
             <button
               onClick={handleSaveEdit}
               disabled={isPending}
-              className="p-1 hover:bg-slate-800 rounded"
+              className="rounded p-1 hover:bg-slate-800"
             >
               <Check size={14} className="text-green-400" />
             </button>
@@ -139,7 +134,7 @@ export default function InventoryItem({
                 setEditName(item.name)
                 setEditQuantity(item.quantity)
               }}
-              className="p-1 hover:bg-slate-800 rounded"
+              className="rounded p-1 hover:bg-slate-800"
             >
               <X size={14} className="text-slate-400" />
             </button>
@@ -147,35 +142,31 @@ export default function InventoryItem({
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <span className="font-medium text-slate-200 truncate">
-                {item.name}
-              </span>
+              <span className="truncate font-medium text-slate-200">{item.name}</span>
               {item.quantity > 1 && (
-                <span className="text-xs px-1.5 py-0.5 bg-slate-800 text-slate-400 rounded">
+                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">
                   ×{item.quantity}
                 </span>
               )}
             </div>
-            {item.notes && (
-              <p className="text-xs text-slate-500 truncate">{item.notes}</p>
-            )}
+            {item.notes && <p className="truncate text-xs text-slate-500">{item.notes}</p>}
           </>
         )}
       </div>
 
       {item.weight && item.weight > 0 && (
-        <span className="text-xs text-slate-500 shrink-0">
+        <span className="shrink-0 text-xs text-slate-500">
           {(item.weight * item.quantity).toFixed(1)} lb
         </span>
       )}
 
       {canEdit && !isEditing && (
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
+        <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
           <button
             onClick={handleToggleAttuned}
             disabled={isPending}
             className={cn(
-              'p-1.5 rounded transition',
+              'rounded p-1.5 transition',
               item.attuned
                 ? 'text-violet-400 hover:bg-violet-950/40'
                 : 'text-slate-500 hover:bg-slate-800 hover:text-violet-400'
@@ -187,7 +178,7 @@ export default function InventoryItem({
           <button
             onClick={() => setIsEditing(true)}
             disabled={isPending}
-            className="p-1.5 hover:bg-slate-800 rounded transition"
+            className="rounded p-1.5 transition hover:bg-slate-800"
             title="Редактировать"
           >
             <Pencil size={12} className="text-slate-400" />
@@ -195,7 +186,7 @@ export default function InventoryItem({
           <button
             onClick={handleDelete}
             disabled={isPending}
-            className="p-1.5 hover:bg-red-950/40 rounded transition"
+            className="rounded p-1.5 transition hover:bg-red-950/40"
             title="Удалить"
           >
             <Trash2 size={12} className="text-red-400" />

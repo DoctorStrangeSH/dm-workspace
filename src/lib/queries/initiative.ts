@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { InitiativeEntryWithToken, Token } from '@/lib/types'
 
-export async function getInitiative(
-  sceneId: string
-): Promise<InitiativeEntryWithToken[]> {
+export async function getInitiative(sceneId: string): Promise<InitiativeEntryWithToken[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase

@@ -10,14 +10,11 @@ interface Props {
 }
 
 export default function TagChip({ tag, onRemove, size = 'md' }: Props) {
-  const sizeClasses =
-    size === 'sm'
-      ? 'text-[10px] px-1.5 py-0.5'
-      : 'text-xs px-2 py-1'
+  const sizeClasses = size === 'sm' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-1'
 
   return (
     <span
-      className={`group inline-flex items-center gap-1 rounded-full font-medium border transition ${sizeClasses}`}
+      className={`group inline-flex items-center gap-1 rounded-full border font-medium transition ${sizeClasses}`}
       style={{
         color: tag.color,
         backgroundColor: `${tag.color}20`,
@@ -28,7 +25,7 @@ export default function TagChip({ tag, onRemove, size = 'md' }: Props) {
       {onRemove && (
         <button
           onClick={() => onRemove(tag.id)}
-          className="opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded-full p-0.5 transition"
+          className="rounded-full p-0.5 opacity-0 transition group-hover:opacity-100 hover:bg-white/10"
           title="Удалить тег"
         >
           <X size={size === 'sm' ? 8 : 10} />

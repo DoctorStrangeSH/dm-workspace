@@ -47,11 +47,9 @@ export default function RulerTool({ scene, isActive }: Props) {
 
   // Вычисляем расстояние
   const distance =
-    start && end
-      ? Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2))
-      : 0
+    start && end ? Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)) : 0
 
-  const feet = Math.round(distance * 5)  // 5 футов на клетку
+  const feet = Math.round(distance * 5) // 5 футов на клетку
 
   // Для отрисовки
   const startPx = start ? { x: start.x * gridSize, y: start.y * gridSize } : null
@@ -69,7 +67,7 @@ export default function RulerTool({ scene, isActive }: Props) {
       <svg
         width={width}
         height={height}
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0"
         style={{ width: '100%', height: '100%' }}
       >
         {startPx && endPx && (

@@ -41,8 +41,8 @@ export default function NeedsAttention({ campaignId, stats }: Props) {
   if (issues.length === 0) return null
 
   return (
-    <div className="bg-amber-950/20 border border-amber-900/40 rounded-xl p-5 mb-8">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-amber-300 uppercase tracking-wider mb-4">
+    <div className="mb-8 rounded-xl border border-amber-900/40 bg-amber-950/20 p-5">
+      <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold tracking-wider text-amber-300 uppercase">
         <AlertCircle size={14} />
         Требует внимания
       </h2>
@@ -52,12 +52,12 @@ export default function NeedsAttention({ campaignId, stats }: Props) {
           <Link
             key={i}
             href={issue.href}
-            className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg hover:bg-amber-950/30 transition group"
+            className="group flex items-center justify-between gap-2 rounded-lg px-3 py-2 transition hover:bg-amber-950/30"
           >
             <span className="text-sm text-amber-200">{issue.label}</span>
             <ChevronRight
               size={14}
-              className="text-amber-500 group-hover:translate-x-0.5 transition shrink-0"
+              className="shrink-0 text-amber-500 transition group-hover:translate-x-0.5"
             />
           </Link>
         ))}

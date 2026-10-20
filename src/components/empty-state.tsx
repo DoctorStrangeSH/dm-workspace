@@ -88,7 +88,7 @@ export default function EmptyState({
 
       {description && (
         <p
-          className={cn('mt-1 max-w-md mx-auto', s.description)}
+          className={cn('mx-auto mt-1 max-w-md', s.description)}
           style={{ color: 'var(--text-muted)' }}
         >
           {description}
@@ -116,12 +116,7 @@ export default function EmptyState({
 
             if (action.href) {
               return (
-                <Link
-                  key={i}
-                  href={action.href}
-                  className={classes}
-                  style={style}
-                >
+                <Link key={i} href={action.href} className={classes} style={style}>
                   {action.icon}
                   {action.label}
                 </Link>
@@ -129,12 +124,7 @@ export default function EmptyState({
             }
 
             return (
-              <button
-                key={i}
-                onClick={action.onClick}
-                className={classes}
-                style={style}
-              >
+              <button key={i} onClick={action.onClick} className={classes} style={style}>
                 {action.icon}
                 {action.label}
               </button>

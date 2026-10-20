@@ -14,12 +14,7 @@ interface Props {
   canEdit: boolean
 }
 
-export default function SpellsClient({
-  campaignId,
-  initialSpells,
-  characters,
-  canEdit,
-}: Props) {
+export default function SpellsClient({ campaignId, initialSpells, characters, canEdit }: Props) {
   const [spells, setSpells] = useState(initialSpells)
   const [query, setQuery] = useState('')
   const [levels, setLevels] = useState<number[]>([])
@@ -64,7 +59,7 @@ export default function SpellsClient({
           size="md"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {spells.map((spell) => (
             <SrdSpellCard
               key={spell.key}

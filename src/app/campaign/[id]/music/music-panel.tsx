@@ -4,17 +4,7 @@
 
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Music,
-  Plus,
-  X,
-  Play,
-  Pause,
-  Square,
-  Trash2,
-  Upload,
-  Loader2,
-} from 'lucide-react'
+import { Music, Plus, X, Play, Pause, Square, Trash2, Upload, Loader2 } from 'lucide-react'
 import {
   createPlaylist,
   deletePlaylist,
@@ -35,19 +25,12 @@ interface Props {
   onClose: () => void
 }
 
-export default function MusicPanel({
-  campaignId,
-  playlists,
-  playerState,
-  onClose,
-}: Props) {
+export default function MusicPanel({ campaignId, playlists, playerState, onClose }: Props) {
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [newPlaylistName, setNewPlaylistName] = useState('')
-  const [uploadingToPlaylist, setUploadingToPlaylist] = useState<string | null>(
-    null
-  )
+  const [uploadingToPlaylist, setUploadingToPlaylist] = useState<string | null>(null)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const handleCreatePlaylist = () => {
@@ -111,8 +94,7 @@ export default function MusicPanel({
   }
 
   const handlePlay = (track: Track) => {
-    const isSame =
-      playerState?.current_track_id === track.id && playerState.is_playing
+    const isSame = playerState?.current_track_id === track.id && playerState.is_playing
     startTransition(async () => {
       if (isSame) {
         const res = await playTrack(campaignId, track.id, false)
@@ -135,26 +117,23 @@ export default function MusicPanel({
   }
 
   return (
-    <aside className="fixed top-0 right-0 z-40 h-screen w-full sm:w-[420px] bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-slate-800">
+    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl sm:w-[420px]">
+      <div className="flex items-center justify-between border-b border-slate-800 p-4">
         <div className="flex items-center gap-2">
           <Music size={18} className="text-violet-400" />
           <h2 className="font-semibold">Музыка</h2>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-slate-800 rounded"
-        >
+        <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
           <X size={18} />
         </button>
       </div>
 
       {playerState?.is_playing && (
-        <div className="p-3 border-b border-slate-800">
+        <div className="border-b border-slate-800 p-3">
           <button
             onClick={handleStop}
             disabled={isPending}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition text-sm disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm text-white transition hover:bg-red-500 disabled:opacity-50"
           >
             <Square size={14} />
             Остановить всё
@@ -162,7 +141,7 @@ export default function MusicPanel({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto p-3">
         <div className="flex gap-2">
           <input
             type="text"
@@ -170,30 +149,28 @@ export default function MusicPanel({
             onChange={(e) => setNewPlaylistName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreatePlaylist()}
             placeholder="Новый плейлист..."
-            className="flex-1 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white"
+            className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white"
           />
           <button
             onClick={handleCreatePlaylist}
             disabled={isPending || !newPlaylistName.trim()}
-            className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition disabled:opacity-50"
+            className="rounded-lg bg-indigo-600 p-2 text-white transition hover:bg-indigo-500 disabled:opacity-50"
           >
             <Plus size={16} />
           </button>
         </div>
 
         {playlists.length === 0 ? (
-          <p className="text-sm text-slate-500 text-center py-6">
-            Нет плейлистов. Создай первый!
-          </p>
+          <p className="py-6 text-center text-sm text-slate-500">Нет плейлистов. Создай первый!</p>
         ) : (
           <div className="space-y-3">
             {playlists.map((playlist) => (
               <div
                 key={playlist.id}
-                className="bg-slate-950 border border-slate-800 rounded-lg p-3"
+                className="rounded-lg border border-slate-800 bg-slate-950 p-3"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium text-sm">{playlist.name}</h3>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-sm font-medium">{playlist.name}</h3>
                   <div className="flex items-center gap-1">
                     <input
                       ref={(el) => {
@@ -205,11 +182,9 @@ export default function MusicPanel({
                       className="hidden"
                     />
                     <button
-                      onClick={() =>
-                        fileInputRefs.current[playlist.id]?.click()
-                      }
+                      onClick={() => fileInputRefs.current[playlist.id]?.click()}
                       disabled={uploadingToPlaylist === playlist.id}
-                      className="p-1 hover:bg-slate-800 rounded transition disabled:opacity-50"
+                      className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
                       title="Добавить трек"
                     >
                       {uploadingToPlaylist === playlist.id ? (
@@ -219,10 +194,8 @@ export default function MusicPanel({
                       )}
                     </button>
                     <button
-                      onClick={() =>
-                        handleDeletePlaylist(playlist.id, playlist.name)
-                      }
-                      className="p-1 hover:bg-red-950/40 rounded transition"
+                      onClick={() => handleDeletePlaylist(playlist.id, playlist.name)}
+                      className="rounded p-1 transition hover:bg-red-950/40"
                       title="Удалить плейлист"
                     >
                       <Trash2 size={12} className="text-red-400" />
@@ -231,27 +204,24 @@ export default function MusicPanel({
                 </div>
 
                 {playlist.tracks.length === 0 ? (
-                  <p className="text-xs text-slate-600 text-center py-2">
-                    Нет треков
-                  </p>
+                  <p className="py-2 text-center text-xs text-slate-600">Нет треков</p>
                 ) : (
                   <div className="space-y-1">
                     {playlist.tracks.map((track) => {
                       const isPlaying =
-                        playerState?.current_track_id === track.id &&
-                        playerState.is_playing
+                        playerState?.current_track_id === track.id && playerState.is_playing
                       return (
                         <div
                           key={track.id}
                           className={cn(
-                            'flex items-center gap-2 px-2 py-1.5 rounded transition',
+                            'flex items-center gap-2 rounded px-2 py-1.5 transition',
                             isPlaying && 'bg-violet-950/40'
                           )}
                         >
                           <button
                             onClick={() => handlePlay(track)}
                             disabled={isPending}
-                            className="p-1 hover:bg-slate-800 rounded transition disabled:opacity-50"
+                            className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
                           >
                             {isPlaying ? (
                               <Pause size={12} className="text-violet-400" />
@@ -261,7 +231,7 @@ export default function MusicPanel({
                           </button>
                           <span
                             className={cn(
-                              'flex-1 text-xs truncate',
+                              'flex-1 truncate text-xs',
                               isPlaying ? 'text-violet-300' : 'text-slate-300'
                             )}
                           >
@@ -270,7 +240,7 @@ export default function MusicPanel({
                           <button
                             onClick={() => handleRemoveTrack(track.id)}
                             disabled={isPending}
-                            className="p-1 hover:bg-red-950/40 rounded transition opacity-50 hover:opacity-100"
+                            className="rounded p-1 opacity-50 transition hover:bg-red-950/40 hover:opacity-100"
                           >
                             <X size={10} className="text-red-400" />
                           </button>

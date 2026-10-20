@@ -7,11 +7,7 @@ import { getScenes } from '@/lib/queries/scenes'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import ScenesClient from './scenes-client'
 
-export default async function ScenesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function ScenesPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
 
   const { id: campaignId } = await params
@@ -33,11 +29,7 @@ export default async function ScenesPage({
         className="mb-4"
       />
 
-      <ScenesClient
-        campaignId={campaignId}
-        initialScenes={scenes}
-        isDm={isDm}
-      />
+      <ScenesClient campaignId={campaignId} initialScenes={scenes} isDm={isDm} />
     </div>
   )
 }

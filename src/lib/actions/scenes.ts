@@ -105,10 +105,7 @@ export async function deleteScene(sceneId: string, campaignId: string) {
   return { success: true }
 }
 
-export async function setActiveScene(
-  sceneId: string,
-  campaignId: string
-) {
+export async function setActiveScene(sceneId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -138,11 +135,7 @@ export async function setActiveScene(
   return { success: true }
 }
 
-export async function uploadMap(
-  sceneId: string,
-  campaignId: string,
-  file: File
-) {
+export async function uploadMap(sceneId: string, campaignId: string, file: File) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 

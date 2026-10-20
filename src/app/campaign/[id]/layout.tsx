@@ -67,44 +67,57 @@ export default async function CampaignLayout({
     chapters = (chaptersRes.data ?? []) as Chapter[]
   } else {
     const [entitiesRes, chaptersRes] = await Promise.all([
-      supabase.from('entities').select('*').eq('campaign_id', id).eq('is_visible_to_players', true).order('name'),
-      supabase.from('chapters').select('*').eq('campaign_id', id).eq('is_visible_to_players', true).order('order_index'),
+      supabase
+        .from('entities')
+        .select('*')
+        .eq('campaign_id', id)
+        .eq('is_visible_to_players', true)
+        .order('name'),
+      supabase
+        .from('chapters')
+        .select('*')
+        .eq('campaign_id', id)
+        .eq('is_visible_to_players', true)
+        .order('order_index'),
     ])
     entities = (entitiesRes.data ?? []) as Entity[]
     chapters = (chaptersRes.data ?? []) as Chapter[]
   }
 
-  const [messages, playlists, playerState, currentTrack, handouts, sessionLog] =
-    await Promise.all([
-      getCampaignMessages(id, 50),
-      getPlaylists(id),
-      getMusicState(id),
-      getCurrentTrack(id),
-      getHandouts(id),
-      getSessionLog(id, 100),
-    ])
+  const [messages, playlists, playerState, currentTrack, handouts, sessionLog] = await Promise.all([
+    getCampaignMessages(id, 50),
+    getPlaylists(id),
+    getMusicState(id),
+    getCurrentTrack(id),
+    getHandouts(id),
+    getSessionLog(id, 100),
+  ])
 
   return (
     <DmScreenProvider>
       <div className="min-h-screen">
         <header
-          className="border-b sticky top-0 z-30 backdrop-blur"
+          className="sticky top-0 z-30 border-b backdrop-blur"
           style={{
             borderColor: 'var(--border-default)',
             backgroundColor: 'color-mix(in srgb, var(--bg-app) 95%, transparent)',
           }}
         >
-          <div className="px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
             <MobileSidebar campaignId={id} isDm={role === 'dm'} />
 
-            <Link href="/dashboard" className="hidden md:flex p-2 hover:bg-slate-800 rounded-lg transition" title="Назад к кампаниям">
+            <Link
+              href="/dashboard"
+              className="hidden rounded-lg p-2 transition hover:bg-slate-800 md:flex"
+              title="Назад к кампаниям"
+            >
               <ArrowLeft size={18} />
             </Link>
 
-            <div className="flex-1 min-w-0">
-              <h1 className="text-base sm:text-lg font-bold truncate">{campaign.name}</h1>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-base font-bold sm:text-lg">{campaign.name}</h1>
               {campaign.genre && (
-                <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                <p className="truncate text-xs" style={{ color: 'var(--text-muted)' }}>
                   {campaign.genre} · {role === 'dm' ? 'ГМ' : 'Игрок'}
                 </p>
               )}
@@ -140,7 +153,7 @@ export default async function CampaignLayout({
 
         <div className="flex">
           <CampaignSidebar campaignId={campaign.id} isDm={role === 'dm'} />
-          <main className="flex-1 min-w-0 p-3 sm:p-6">{children}</main>
+          <main className="min-w-0 flex-1 p-3 sm:p-6">{children}</main>
         </div>
 
         {role === 'dm' && <DmScreen entities={entities} campaignId={campaign.id} />}
@@ -154,11 +167,7 @@ export default async function CampaignLayout({
           />
         )}
 
-        <MusicPlayer
-          campaignId={id}
-          initialState={playerState}
-          currentTrack={currentTrack}
-        />
+        <MusicPlayer campaignId={id} initialState={playerState} currentTrack={currentTrack} />
 
         <HandoutViewer campaignId={id} initialHandouts={handouts} />
       </div>

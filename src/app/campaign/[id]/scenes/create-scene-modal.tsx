@@ -44,22 +44,18 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full">
-        <div className="flex justify-between items-center p-4 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-800 p-4">
           <h2 className="font-semibold">Новая сцена</h2>
-          <button
-            onClick={onClose}
-            disabled={isPending}
-            className="p-1 hover:bg-slate-800 rounded"
-          >
+          <button onClick={onClose} disabled={isPending} className="rounded p-1 hover:bg-slate-800">
             <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3 p-4">
           <div>
-            <label className="block text-sm text-slate-300 mb-1">
+            <label className="mb-1 block text-sm text-slate-300">
               Название <span className="text-red-400">*</span>
             </label>
             <input
@@ -68,19 +64,17 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
               onChange={(e) => setName(e.target.value)}
               placeholder="Подземелье гоблинов"
               autoFocus
-              className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Тип сетки
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Тип сетки</label>
               <select
                 value={gridType}
                 onChange={(e) => setGridType(e.target.value as unknown)}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
               >
                 <option value="square">Квадрат</option>
                 <option value="hex">Гекс</option>
@@ -88,62 +82,56 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Размер клетки (px)
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Размер клетки (px)</label>
               <input
                 type="number"
                 value={gridSize}
                 onChange={(e) => setGridSize(Number(e.target.value) || 50)}
                 min={20}
                 max={150}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Ширина (клеток)
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Ширина (клеток)</label>
               <input
                 type="number"
                 value={width}
                 onChange={(e) => setWidth(Number(e.target.value) || 30)}
                 min={5}
                 max={100}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
               />
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">
-                Высота (клеток)
-              </label>
+              <label className="mb-1 block text-sm text-slate-300">Высота (клеток)</label>
               <input
                 type="number"
                 value={height}
                 onChange={(e) => setHeight(Number(e.target.value) || 20)}
                 min={5}
                 max={100}
-                className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-white"
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
               />
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end pt-2">
+          <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
               Отмена
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition disabled:opacity-50 font-medium"
+              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
             >
               {isPending ? 'Создаём...' : 'Создать'}
             </button>

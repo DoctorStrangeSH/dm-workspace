@@ -10,11 +10,7 @@ interface Options {
   enabled?: boolean
 }
 
-export function useRealtimeHandouts({
-  campaignId,
-  initialHandouts,
-  enabled = true,
-}: Options) {
+export function useRealtimeHandouts({ campaignId, initialHandouts, enabled = true }: Options) {
   const [handouts, setHandouts] = useState<Handout[]>(initialHandouts)
 
   // CHANGES: убран useEffect(setHandouts) → паттерн «props → state».
@@ -42,9 +38,7 @@ export function useRealtimeHandouts({
       .on('broadcast', { event: 'UPDATE' }, (payload) => {
         const record = payload.payload.record as Handout
         if (!record) return
-        setHandouts((prev) =>
-          prev.map((h) => (h.id === record.id ? record : h))
-        )
+        setHandouts((prev) => prev.map((h) => (h.id === record.id ? record : h)))
       })
       .on('broadcast', { event: 'DELETE' }, (payload) => {
         const old = payload.payload.old_record as { id: string }

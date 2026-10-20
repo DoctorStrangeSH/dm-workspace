@@ -10,11 +10,7 @@ interface Options {
   enabled?: boolean
 }
 
-export function useRealtimeChapters({
-  campaignId,
-  initialChapters,
-  enabled = true,
-}: Options) {
+export function useRealtimeChapters({ campaignId, initialChapters, enabled = true }: Options) {
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
 
   // CHANGES: убран useEffect(setChapters) → официальный паттерн React
@@ -26,8 +22,7 @@ export function useRealtimeChapters({
   }
 
   const sortChapters = useCallback(
-    (list: Chapter[]) =>
-      [...list].sort((a, b) => a.order_index - b.order_index),
+    (list: Chapter[]) => [...list].sort((a, b) => a.order_index - b.order_index),
     []
   )
 
@@ -64,11 +59,7 @@ export function useRealtimeChapters({
         },
         (payload) => {
           const updated = payload.new as Chapter
-          setChapters((prev) =>
-            sortChapters(
-              prev.map((c) => (c.id === updated.id ? updated : c))
-            )
-          )
+          setChapters((prev) => sortChapters(prev.map((c) => (c.id === updated.id ? updated : c))))
         }
       )
       .on(

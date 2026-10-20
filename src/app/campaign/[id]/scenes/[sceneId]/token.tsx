@@ -14,18 +14,12 @@ interface Props {
   onClick: () => void
 }
 
-export default function Token({
-  token,
-  gridSize,
-  sceneId,
-  canDrag,
-  onClick,
-}: Props) {
+export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Props) {
   const toast = useToast()
   const [dragging, setDragging] = useState(false)
   const [pos, setPos] = useState({ x: token.x, y: token.y })
   const startRef = useRef({ x: 0, y: 0, tokenX: token.x, tokenY: token.y })
-  const lastMovedAtRef = useRef(0)  // ← НОВОЕ
+  const lastMovedAtRef = useRef(0) // ← НОВОЕ
 
   // ⚠️ Синхронизация с Realtime — но не сразу после локального drag
   useEffect(() => {
@@ -87,7 +81,7 @@ export default function Token({
       const newY = Math.max(0, Math.round(startRef.current.tokenY + dy / gridSize))
 
       setPos({ x: newX, y: newY })
-      lastMovedAtRef.current = Date.now()  // ← запоминаем время
+      lastMovedAtRef.current = Date.now() // ← запоминаем время
 
       const res = await moveToken(token.id, sceneId, newX, newY)
       if ('error' in res) {
@@ -105,7 +99,7 @@ export default function Token({
       className={cn(
         'absolute rounded-full border-2 select-none',
         canDrag && 'cursor-grab active:cursor-grabbing',
-        dragging && 'shadow-2xl z-50',
+        dragging && 'z-50 shadow-2xl',
         token.is_hidden && 'opacity-40',
         !dragging && 'transition-[left,top] duration-200'
       )}
@@ -124,26 +118,22 @@ export default function Token({
         <img
           src={token.image_url}
           alt={token.name}
-          className="w-full h-full object-cover rounded-full pointer-events-none"
+          className="pointer-events-none h-full w-full rounded-full object-cover"
           draggable={false}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-2xl pointer-events-none">
+        <div className="pointer-events-none flex h-full w-full items-center justify-center text-2xl">
           ⚔️
         </div>
       )}
 
       {/* HP полоска */}
       {hpPercent !== null && (
-        <div className="absolute -bottom-1 left-0 right-0 h-1 bg-slate-950 rounded overflow-hidden pointer-events-none">
+        <div className="pointer-events-none absolute right-0 -bottom-1 left-0 h-1 overflow-hidden rounded bg-slate-950">
           <div
             className={cn(
               'h-full transition-all',
-              hpPercent > 50
-                ? 'bg-green-500'
-                : hpPercent > 25
-                  ? 'bg-amber-500'
-                  : 'bg-red-500'
+              hpPercent > 50 ? 'bg-green-500' : hpPercent > 25 ? 'bg-amber-500' : 'bg-red-500'
             )}
             style={{ width: `${hpPercent}%` }}
           />
@@ -151,17 +141,17 @@ export default function Token({
       )}
 
       {/* Имя */}
-      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-slate-300 bg-slate-950/80 px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none">
+      <div className="pointer-events-none absolute -bottom-5 left-1/2 -translate-x-1/2 rounded bg-slate-950/80 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-slate-300">
         {token.name}
       </div>
 
       {/* Условия */}
       {token.conditions.length > 0 && (
-        <div className="absolute -top-2 -right-2 flex gap-0.5 pointer-events-none">
+        <div className="pointer-events-none absolute -top-2 -right-2 flex gap-0.5">
           {token.conditions.slice(0, 3).map((c, i) => (
             <span
               key={i}
-              className="w-4 h-4 flex items-center justify-center text-[8px] bg-slate-900 border border-slate-700 rounded-full"
+              className="flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-[8px]"
               title={c.name}
             >
               {c.icon ?? '●'}

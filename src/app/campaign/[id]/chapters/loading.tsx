@@ -4,7 +4,7 @@ export default function ChaptersLoading() {
   return (
     <div className="max-w-4xl">
       {/* Заголовок + кнопка */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="space-y-2">
           <Skeleton width="150px" height="28px" />
           <Skeleton width="80px" height="14px" />

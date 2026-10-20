@@ -12,9 +12,7 @@ export async function getHandouts(campaignId: string): Promise<Handout[]> {
   return (data ?? []) as Handout[]
 }
 
-export async function getActiveHandout(
-  campaignId: string
-): Promise<Handout | null> {
+export async function getActiveHandout(campaignId: string): Promise<Handout | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('handouts')

@@ -442,9 +442,7 @@ export function hasSchema(type: EntityType): boolean {
 /**
  * Группирует поля по секциям.
  */
-export function groupFieldsBySection(
-  fields: FieldSchema[]
-): Record<string, FieldSchema[]> {
+export function groupFieldsBySection(fields: FieldSchema[]): Record<string, FieldSchema[]> {
   const sections: Record<string, FieldSchema[]> = {}
   for (const f of fields) {
     const section = f.section ?? 'Без секции'

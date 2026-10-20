@@ -49,7 +49,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden p-2 hover:bg-slate-800 rounded-lg transition"
+        className="rounded-lg p-2 transition hover:bg-slate-800 md:hidden"
         title="Меню"
         aria-label="Открыть меню"
       >
@@ -65,29 +65,27 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
 
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen w-64 bg-slate-950 border-r border-slate-800 transition-transform md:hidden',
+          'fixed top-0 left-0 z-50 h-screen w-64 border-r border-slate-800 bg-slate-950 transition-transform md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
-          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
+        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+          <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">
             Меню
           </span>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1.5 hover:bg-slate-800 rounded-lg transition"
+            className="rounded-lg p-1.5 transition hover:bg-slate-800"
             title="Закрыть"
           >
             <X size={18} />
           </button>
         </div>
 
-        <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-57px)]">
+        <nav className="h-[calc(100vh-57px)] space-y-1 overflow-y-auto p-4">
           {items.map((item) => {
             const Icon = item.icon
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href)
+            const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
 
             return (
               <Link
@@ -95,9 +93,9 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
                 href={item.href}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
                   isActive
-                    ? 'bg-indigo-950/60 text-indigo-300 border border-indigo-900/50'
+                    ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                 )}
               >
@@ -108,14 +106,14 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
           })}
 
           {isDm && (
-            <div className="mt-6 pt-6 border-t border-slate-800">
+            <div className="mt-6 border-t border-slate-800 pt-6">
               <Link
                 href={`${base}/settings`}
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition',
                   pathname.startsWith(`${base}/settings`)
-                    ? 'bg-indigo-950/60 text-indigo-300 border border-indigo-900/50'
+                    ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                 )}
               >
@@ -123,7 +121,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
                 Настройки
               </Link>
 
-              <div className="mt-3 flex items-center gap-2 text-xs text-amber-400 px-3">
+              <div className="mt-3 flex items-center gap-2 px-3 text-xs text-amber-400">
                 <Crown size={12} />
                 <span>Режим ГМа</span>
               </div>

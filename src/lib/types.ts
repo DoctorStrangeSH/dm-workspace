@@ -62,14 +62,7 @@ export interface Chapter {
 // Сущности
 // ============================================================
 
-export type EntityType =
-  | 'npc'
-  | 'location'
-  | 'item'
-  | 'monster'
-  | 'faction'
-  | 'quest'
-  | 'note'
+export type EntityType = 'npc' | 'location' | 'item' | 'monster' | 'faction' | 'quest' | 'note'
 
 export interface Entity {
   id: string
@@ -256,14 +249,39 @@ export interface RelationTypeInfo {
 export const RELATION_TYPES: Record<RelationType, RelationTypeInfo> = {
   member_of: { label: 'Член', reverseLabel: 'Члены', icon: '⚔️', color: 'text-indigo-300' },
   leader_of: { label: 'Лидер', reverseLabel: 'Лидер', icon: '👑', color: 'text-amber-300' },
-  located_in: { label: 'Находится в', reverseLabel: 'Содержит', icon: '📍', color: 'text-emerald-300' },
+  located_in: {
+    label: 'Находится в',
+    reverseLabel: 'Содержит',
+    icon: '📍',
+    color: 'text-emerald-300',
+  },
   owns: { label: 'Владеет', reverseLabel: 'Принадлежит', icon: '🎁', color: 'text-yellow-300' },
-  quest_giver: { label: 'Выдал квест', reverseLabel: 'Выдан', icon: '📜', color: 'text-violet-300' },
-  quest_target: { label: 'Цель квеста', reverseLabel: 'Цель квеста для', icon: '🎯', color: 'text-red-300' },
+  quest_giver: {
+    label: 'Выдал квест',
+    reverseLabel: 'Выдан',
+    icon: '📜',
+    color: 'text-violet-300',
+  },
+  quest_target: {
+    label: 'Цель квеста',
+    reverseLabel: 'Цель квеста для',
+    icon: '🎯',
+    color: 'text-red-300',
+  },
   ally_of: { label: 'Союзник', reverseLabel: 'Союзник', icon: '🤝', color: 'text-green-300' },
   enemy_of: { label: 'Враг', reverseLabel: 'Враг', icon: '⚔️', color: 'text-red-300' },
-  parent_of: { label: 'Родительская локация', reverseLabel: 'Дочерние локации', icon: '🗺️', color: 'text-emerald-300' },
-  related_to: { label: 'Связано с', reverseLabel: 'Связано с', icon: '🔗', color: 'text-slate-300' },
+  parent_of: {
+    label: 'Родительская локация',
+    reverseLabel: 'Дочерние локации',
+    icon: '🗺️',
+    color: 'text-emerald-300',
+  },
+  related_to: {
+    label: 'Связано с',
+    reverseLabel: 'Связано с',
+    icon: '🔗',
+    color: 'text-slate-300',
+  },
 }
 
 export const ALLOWED_RELATIONS: Record<string, RelationType[]> = {
@@ -316,17 +334,20 @@ export interface EntityTag {
 }
 
 export const TAG_COLORS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b',
-  '#10b981', '#06b6d4', '#3b82f6', '#a855f7', '#84cc16',
+  '#6366f1',
+  '#8b5cf6',
+  '#ec4899',
+  '#ef4444',
+  '#f59e0b',
+  '#10b981',
+  '#06b6d4',
+  '#3b82f6',
+  '#a855f7',
+  '#84cc16',
 ] as const
 
 export function normalizeTagName(input: string): string {
-  return input
-    .trim()
-    .replace(/^#+/, '')
-    .replace(/\s+/g, '-')
-    .toLowerCase()
-    .slice(0, 40)
+  return input.trim().replace(/^#+/, '').replace(/\s+/g, '-').toLowerCase().slice(0, 40)
 }
 
 export interface EntityTemplate {
@@ -348,9 +369,16 @@ export interface EntityTemplate {
 export interface CampaignStats {
   chapters: { total: number; visible: number; hidden: number; empty: number }
   entities: {
-    total: number; visible: number; no_description: number
-    npc: number; location: number; item: number; monster: number
-    faction: number; quest: number; note: number
+    total: number
+    visible: number
+    no_description: number
+    npc: number
+    location: number
+    item: number
+    monster: number
+    faction: number
+    quest: number
+    note: number
   }
   entities_without_stats: number
   relations: number
@@ -543,13 +571,21 @@ export function createEmptyCharacterData(): CharacterData {
 }
 
 export const ABILITY_LABELS: Record<AbilityKey, string> = {
-  str: 'Сила', dex: 'Ловкость', con: 'Телосложение',
-  int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма',
+  str: 'Сила',
+  dex: 'Ловкость',
+  con: 'Телосложение',
+  int: 'Интеллект',
+  wis: 'Мудрость',
+  cha: 'Харизма',
 }
 
 export const ABILITY_SHORT: Record<AbilityKey, string> = {
-  str: 'СИЛ', dex: 'ЛОВ', con: 'ТЕЛ',
-  int: 'ИНТ', wis: 'МДР', cha: 'ХАР',
+  str: 'СИЛ',
+  dex: 'ЛОВ',
+  con: 'ТЕЛ',
+  int: 'ИНТ',
+  wis: 'МДР',
+  cha: 'ХАР',
 }
 
 export const SKILL_LABELS: Record<SkillKey, string> = {

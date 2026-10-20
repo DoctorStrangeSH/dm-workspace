@@ -2,20 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import {
-  Copy,
-  RefreshCw,
-  Trash2,
-  Crown,
-  Users,
-  Check,
-} from 'lucide-react'
+import { Copy, RefreshCw, Trash2, Crown, Users, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CampaignWithRole } from '@/lib/types'
-import {
-  deleteCampaign,
-  regenerateInviteCode,
-} from '@/lib/actions/campaigns'
+import { deleteCampaign, regenerateInviteCode } from '@/lib/actions/campaigns'
 
 interface Props {
   campaign: CampaignWithRole
@@ -67,25 +57,21 @@ export default function CampaignCard({ campaign }: Props) {
   }
 
   return (
-    <div className="group bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl p-5 transition">
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {campaign.role === 'dm' && (
-              <Crown size={16} className="text-amber-400 shrink-0" />
-            )}
-            {campaign.role === 'player' && (
-              <Users size={16} className="text-indigo-400 shrink-0" />
-            )}
+    <div className="group rounded-xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-slate-700">
+      <div className="mb-3 flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex items-center gap-2">
+            {campaign.role === 'dm' && <Crown size={16} className="shrink-0 text-amber-400" />}
+            {campaign.role === 'player' && <Users size={16} className="shrink-0 text-indigo-400" />}
             <Link
               href={`/campaign/${campaign.id}`}
-              className="font-semibold text-lg truncate hover:text-indigo-400 transition"
+              className="truncate text-lg font-semibold transition hover:text-indigo-400"
             >
               {campaign.name}
             </Link>
           </div>
           {campaign.genre && (
-            <span className="text-xs px-2 py-0.5 bg-indigo-950/60 border border-indigo-900/50 text-indigo-300 rounded-full">
+            <span className="rounded-full border border-indigo-900/50 bg-indigo-950/60 px-2 py-0.5 text-xs text-indigo-300">
               {campaign.genre}
             </span>
           )}
@@ -93,23 +79,19 @@ export default function CampaignCard({ campaign }: Props) {
       </div>
 
       {campaign.description && (
-        <p className="text-slate-400 text-sm mb-4 line-clamp-2">
-          {campaign.description}
-        </p>
+        <p className="mb-4 line-clamp-2 text-sm text-slate-400">{campaign.description}</p>
       )}
 
       {campaign.role === 'dm' && (
-        <div className="mt-4 pt-4 border-t border-slate-800">
+        <div className="mt-4 border-t border-slate-800 pt-4">
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2">
-              <code className="text-xs text-slate-300 truncate flex-1">
-                {inviteUrl}
-              </code>
+            <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
+              <code className="flex-1 truncate text-xs text-slate-300">{inviteUrl}</code>
             </div>
             <button
               onClick={handleCopy}
               disabled={isPending}
-              className="p-2 hover:bg-slate-800 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg p-2 transition hover:bg-slate-800 disabled:opacity-50"
               title="Скопировать ссылку"
             >
               {copied ? (
@@ -121,18 +103,15 @@ export default function CampaignCard({ campaign }: Props) {
             <button
               onClick={handleRegenerate}
               disabled={isPending}
-              className="p-2 hover:bg-slate-800 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg p-2 transition hover:bg-slate-800 disabled:opacity-50"
               title="Перегенерировать код"
             >
-              <RefreshCw
-                size={16}
-                className={cn('text-slate-400', isPending && 'animate-spin')}
-              />
+              <RefreshCw size={16} className={cn('text-slate-400', isPending && 'animate-spin')} />
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isPending}
-              className="p-2 hover:bg-red-950/50 rounded-lg transition disabled:opacity-50"
+              className="rounded-lg p-2 transition hover:bg-red-950/50 disabled:opacity-50"
               title="Удалить кампанию"
             >
               <Trash2 size={16} className="text-red-400" />
@@ -142,24 +121,24 @@ export default function CampaignCard({ campaign }: Props) {
       )}
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-2">Удалить кампанию?</h3>
-            <p className="text-slate-400 text-sm mb-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
+            <h3 className="mb-2 text-lg font-semibold">Удалить кампанию?</h3>
+            <p className="mb-6 text-sm text-slate-400">
               «{campaign.name}» будет удалена навсегда. Восстановить нельзя.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isPending}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition"
+                className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
               >
                 Отмена
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isPending}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500 disabled:opacity-50"
               >
                 {isPending ? 'Удаляем...' : 'Удалить'}
               </button>

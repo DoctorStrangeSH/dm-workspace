@@ -1,8 +1,4 @@
-import {
-  CompletionContext,
-  CompletionResult,
-  startCompletion,
-} from '@codemirror/autocomplete'
+import { CompletionContext, CompletionResult, startCompletion } from '@codemirror/autocomplete'
 import { keymap } from '@codemirror/view'
 import type { EntityType } from '@/lib/types'
 import { ENTITY_STYLES } from '@/lib/entity-ui'

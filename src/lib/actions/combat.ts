@@ -76,10 +76,7 @@ export async function endCombat(sceneId: string) {
  * 3. В лог пишется результат броска (для истории сессии).
  * 4. Возвращаем { roll, dexMod, total } — клиент покажет в тосте.
  */
-export async function rollInitiativeForToken(
-  initiativeEntryId: string,
-  sceneId: string
-) {
+export async function rollInitiativeForToken(initiativeEntryId: string, sceneId: string) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -157,10 +154,7 @@ export async function rollAllInitiatives(sceneId: string) {
   if (!isDm) return { error: 'Только ГМ' }
 
   const supabase = await createClient()
-  const { data: entries } = await supabase
-    .from('initiative')
-    .select('id')
-    .eq('scene_id', sceneId)
+  const { data: entries } = await supabase.from('initiative').select('id').eq('scene_id', sceneId)
 
   if (!entries) return { error: 'Нет инициативы' }
 
@@ -182,7 +176,10 @@ async function recalculateTurnOrder(sceneId: string) {
 
   if (!entries) return
   for (let i = 0; i < entries.length; i++) {
-    await supabase.from('initiative').update({ turn_order: i, is_current: i === 0 }).eq('id', entries[i].id)
+    await supabase
+      .from('initiative')
+      .update({ turn_order: i, is_current: i === 0 })
+      .eq('id', entries[i].id)
   }
 }
 
@@ -219,7 +216,8 @@ export async function nextTurn(sceneId: string) {
   await supabase.from('initiative').update({ is_current: false }).eq('id', currentEntry.id)
 
   const nextEntry = entries.find((e) => e.turn_order === nextIndex)
-  if (nextEntry) await supabase.from('initiative').update({ is_current: true }).eq('id', nextEntry.id)
+  if (nextEntry)
+    await supabase.from('initiative').update({ is_current: true }).eq('id', nextEntry.id)
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
@@ -230,7 +228,12 @@ export async function nextTurn(sceneId: string) {
  * 1. Убран `any` — `data_json` типизирован как `{ hp?: { current?: number } }`.
  * 2. Логика не изменилась.
  */
-export async function damageToken(tokenId: string, sceneId: string, amount: number, type: 'damage' | 'heal' | 'set') {
+export async function damageToken(
+  tokenId: string,
+  sceneId: string,
+  amount: number,
+  type: 'damage' | 'heal' | 'set'
+) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -241,7 +244,8 @@ export async function damageToken(tokenId: string, sceneId: string, amount: numb
     .eq('id', tokenId)
     .single()
 
-  if (!token || token.hp_current === null || token.hp_max === null) return { error: 'У токена нет HP' }
+  if (!token || token.hp_current === null || token.hp_max === null)
+    return { error: 'У токена нет HP' }
 
   let newHP = token.hp_current
   if (type === 'damage') newHP = Math.max(0, token.hp_current - amount)
@@ -267,7 +271,11 @@ export async function damageToken(tokenId: string, sceneId: string, amount: numb
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   if (token.character_id) revalidatePath(`/campaign/${campaignId}/characters/${token.character_id}`)
 
-  await logEvent(campaignId, 'token_damage', `${token.name}: ${type === 'damage' ? '-' : '+'}${amount} HP`)
+  await logEvent(
+    campaignId,
+    'token_damage',
+    `${token.name}: ${type === 'damage' ? '-' : '+'}${amount} HP`
+  )
 
   return { success: true, hp: newHP }
 }

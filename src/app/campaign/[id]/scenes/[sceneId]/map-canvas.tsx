@@ -40,7 +40,7 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
 
   return (
     <div
-      className="relative bg-slate-950 border border-slate-800 rounded-lg overflow-hidden"
+      className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950"
       style={{
         width: canvasWidth,
         height: canvasHeight,
@@ -53,7 +53,7 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
         <img
           src={image_url}
           alt={scene.name}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           draggable={false}
         />
       ) : (
@@ -65,7 +65,7 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
       {/* Сетка (SVG) */}
       {gridLines && (
         <svg
-          className="absolute inset-0 pointer-events-none"
+          className="pointer-events-none absolute inset-0"
           width={canvasWidth}
           height={canvasHeight}
           style={{ width: '100%', height: '100%' }}

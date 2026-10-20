@@ -54,11 +54,7 @@ export function useHotkey({
         const target = e.target as HTMLElement | null
         if (target) {
           const tag = target.tagName.toLowerCase()
-          if (
-            tag === 'input' ||
-            tag === 'textarea' ||
-            target.isContentEditable
-          ) {
+          if (tag === 'input' || tag === 'textarea' || target.isContentEditable) {
             // Escape работает всегда
             if (e.code !== 'Escape') return
           }

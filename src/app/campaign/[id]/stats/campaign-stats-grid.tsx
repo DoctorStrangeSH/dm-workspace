@@ -32,10 +32,7 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
       color: 'text-emerald-400',
       value: stats.entities.total,
       subtext:
-        stats.entities.npc +
-          stats.entities.monster +
-          stats.entities.location >
-        0
+        stats.entities.npc + stats.entities.monster + stats.entities.location > 0
           ? `${stats.entities.npc} NPC, ${stats.entities.monster} монстров, ${stats.entities.location} локаций`
           : 'пока нет',
     },
@@ -58,21 +55,19 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
+    <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
       {items.map((item) => {
         const Icon = item.icon
         return (
           <Link
             key={item.label}
             href={item.href}
-            className="bg-slate-900/60 border border-slate-800 hover:border-slate-700 rounded-xl p-4 transition group"
+            className="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700"
           >
             <Icon size={18} className={cn(item.color, 'mb-2')} />
             <div className="text-2xl font-bold">{item.value}</div>
-            <div className="text-xs text-slate-400 mb-1">{item.label}</div>
-            <div className="text-[10px] text-slate-500 line-clamp-2">
-              {item.subtext}
-            </div>
+            <div className="mb-1 text-xs text-slate-400">{item.label}</div>
+            <div className="line-clamp-2 text-[10px] text-slate-500">{item.subtext}</div>
           </Link>
         )
       })}

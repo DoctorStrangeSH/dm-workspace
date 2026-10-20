@@ -12,21 +12,17 @@ interface Props {
 export default function ChapterEntities({ campaignId, entities }: Props) {
   if (entities.length === 0) {
     return (
-      <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4 text-center">
-        <p className="text-xs text-slate-500">
-          В этой главе нет упомянутых сущностей
-        </p>
+      <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-center">
+        <p className="text-xs text-slate-500">В этой главе нет упомянутых сущностей</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4">
-      <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
         <Link2 size={14} />
-        <span>
-          Сущности в главе ({entities.length})
-        </span>
+        <span>Сущности в главе ({entities.length})</span>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -37,7 +33,7 @@ export default function ChapterEntities({ campaignId, entities }: Props) {
               key={e.entityId}
               href={`/campaign/${campaignId}/entities/${e.entityId}`}
               className={cn(
-                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs transition hover:opacity-80',
+                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition hover:opacity-80',
                 style.bg,
                 style.border,
                 style.color

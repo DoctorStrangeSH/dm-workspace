@@ -5,15 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 import type { EntityType } from '@/lib/types'
 
-const VALID_TYPES: EntityType[] = [
-  'npc',
-  'location',
-  'item',
-  'monster',
-  'faction',
-  'quest',
-  'note',
-]
+const VALID_TYPES: EntityType[] = ['npc', 'location', 'item', 'monster', 'faction', 'quest', 'note']
 
 export async function createEntity(campaignId: string, formData: FormData) {
   const { isDm } = await getCampaignAccess(campaignId)
@@ -21,8 +13,7 @@ export async function createEntity(campaignId: string, formData: FormData) {
 
   const name = (formData.get('name') as string)?.trim()
   const type = (formData.get('type') as string)?.trim() as EntityType
-  const description =
-    (formData.get('description') as string)?.trim() || ''
+  const description = (formData.get('description') as string)?.trim() || ''
   const dataJsonRaw = formData.get('data_json') as string | null
 
   // Парсим data_json из формы (если есть)

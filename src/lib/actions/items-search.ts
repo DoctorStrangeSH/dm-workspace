@@ -16,9 +16,7 @@ export interface SrdItem {
   data: any
 }
 
-export async function searchSrdItemsAction(
-  filters: ItemFilters = {}
-): Promise<SrdItem[]> {
+export async function searchSrdItemsAction(filters: ItemFilters = {}): Promise<SrdItem[]> {
   const supabase = await createClient()
   const { query, type, rarity, limit = 100 } = filters
 
@@ -50,10 +48,7 @@ export async function searchSrdItemsAction(
 
 export async function getAvailableItemTypes(): Promise<string[]> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('srd_items')
-    .select('data->>item_type')
-    .limit(10000)
+  const { data } = await supabase.from('srd_items').select('data->>item_type').limit(10000)
 
   const types = new Set<string>()
   data?.forEach((row: any) => {
@@ -65,10 +60,7 @@ export async function getAvailableItemTypes(): Promise<string[]> {
 
 export async function getAvailableRarities(): Promise<string[]> {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('srd_items')
-    .select('data->>rarity')
-    .limit(10000)
+  const { data } = await supabase.from('srd_items').select('data->>rarity').limit(10000)
 
   const rarities = new Set<string>()
   data?.forEach((row: any) => {

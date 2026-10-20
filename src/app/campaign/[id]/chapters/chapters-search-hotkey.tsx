@@ -9,12 +9,7 @@ interface Props {
 export default function ChaptersSearchHotkey({ onFocus }: Props) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (
-        (e.ctrlKey || e.metaKey) &&
-        e.code === 'KeyF' &&
-        !e.shiftKey &&
-        !e.altKey
-      ) {
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF' && !e.shiftKey && !e.altKey) {
         // Проверяем, что мы на странице глав
         const isOnChapters = window.location.pathname.endsWith('/chapters')
         if (!isOnChapters) return

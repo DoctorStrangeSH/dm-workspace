@@ -5,9 +5,7 @@ export interface PlaylistWithTracks extends Playlist {
   tracks: Track[]
 }
 
-export async function getPlaylists(
-  campaignId: string
-): Promise<PlaylistWithTracks[]> {
+export async function getPlaylists(campaignId: string): Promise<PlaylistWithTracks[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -20,15 +18,11 @@ export async function getPlaylists(
 
   return (data ?? []).map((row: any) => ({
     ...row,
-    tracks: (row.tracks ?? []).sort(
-      (a: Track, b: Track) => a.order_index - b.order_index
-    ),
+    tracks: (row.tracks ?? []).sort((a: Track, b: Track) => a.order_index - b.order_index),
   })) as PlaylistWithTracks[]
 }
 
-export async function getMusicState(
-  campaignId: string
-): Promise<MusicPlayerState | null> {
+export async function getMusicState(campaignId: string): Promise<MusicPlayerState | null> {
   const supabase = await createClient()
   const { data } = await supabase
     .from('music_player_state')
@@ -39,9 +33,7 @@ export async function getMusicState(
   return data as MusicPlayerState | null
 }
 
-export async function getCurrentTrack(
-  campaignId: string
-): Promise<Track | null> {
+export async function getCurrentTrack(campaignId: string): Promise<Track | null> {
   const supabase = await createClient()
   const state = await getMusicState(campaignId)
   if (!state?.current_track_id) return null

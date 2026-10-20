@@ -11,7 +11,7 @@ export default function CreateCharacterButton({ campaignId }: Props) {
   return (
     <Link
       href={`/campaign/${campaignId}/characters/new`}
-      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition font-medium"
+      className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500"
     >
       <Plus size={18} />
       Создать персонажа

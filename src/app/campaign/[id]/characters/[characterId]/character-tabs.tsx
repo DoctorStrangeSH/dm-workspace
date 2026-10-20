@@ -1,12 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  Sparkles,
-  BookOpen,
-  Package,
-  Star,
-} from 'lucide-react'
+import { Sparkles, BookOpen, Package, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type TabKey = 'overview' | 'spells' | 'inventory' | 'features'
@@ -44,7 +39,7 @@ export default function CharacterTabs({
 
   return (
     <div>
-      <div className="flex items-center gap-1 mb-4 overflow-x-auto pb-1">
+      <div className="mb-4 flex items-center gap-1 overflow-x-auto pb-1">
         {TABS.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
@@ -53,7 +48,7 @@ export default function CharacterTabs({
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 text-sm rounded-lg whitespace-nowrap transition',
+                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition',
                 isActive
                   ? 'bg-indigo-600 text-white'
                   : 'text-slate-400 hover:bg-slate-800 hover:text-white'

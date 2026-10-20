@@ -13,22 +13,16 @@ interface Props {
   onClick?: () => void
 }
 
-export default function AbilityBox({
-  ability,
-  score,
-  modifier,
-  onRoll,
-  onClick,
-}: Props) {
+export default function AbilityBox({ ability, score, modifier, onRoll, onClick }: Props) {
   return (
     <div
       className={cn(
-        'group relative bg-slate-900 border border-slate-800 hover:border-indigo-700 rounded-xl p-3 text-center transition',
+        'group relative rounded-xl border border-slate-800 bg-slate-900 p-3 text-center transition hover:border-indigo-700',
         (onRoll || onClick) && 'cursor-pointer'
       )}
       onClick={onClick}
     >
-      <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+      <div className="mb-1 text-[10px] tracking-wider text-slate-500 uppercase">
         {ABILITY_SHORT[ability]}
       </div>
 
@@ -36,10 +30,10 @@ export default function AbilityBox({
 
       <div
         className={cn(
-          'mt-1 inline-block px-2 py-0.5 rounded text-xs font-medium',
+          'mt-1 inline-block rounded px-2 py-0.5 text-xs font-medium',
           modifier >= 0
-            ? 'bg-indigo-950/60 text-indigo-300 border border-indigo-900/50'
-            : 'bg-red-950/60 text-red-300 border border-red-900/50'
+            ? 'border border-indigo-900/50 bg-indigo-950/60 text-indigo-300'
+            : 'border border-red-900/50 bg-red-950/60 text-red-300'
         )}
       >
         {formatModifier(modifier)}
@@ -52,7 +46,7 @@ export default function AbilityBox({
             e.stopPropagation()
             onRoll()
           }}
-          className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-800 rounded transition"
+          className="absolute top-1.5 right-1.5 rounded p-1 opacity-0 transition group-hover:opacity-100 hover:bg-slate-800"
           title={`Бросок ${ABILITY_LABELS[ability]}`}
         >
           <Dices size={12} className="text-slate-400" />

@@ -5,9 +5,9 @@ export interface Command {
   kind: CommandKind
   label: string
   description?: string
-  icon: string        // эмодзи или название
-  href?: string       // если нужно перейти
+  icon: string // эмодзи или название
+  href?: string // если нужно перейти
   action?: () => void | Promise<void>
   keywords?: string[] // для поиска
-  shortcut?: string   // "⌘K", "Ctrl+M"
+  shortcut?: string // "⌘K", "Ctrl+M"
 }

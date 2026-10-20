@@ -68,7 +68,7 @@ export default async function ChapterPage({
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{ch.title}</h1>
-        <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+        <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
           <span>
             Обновлено:{' '}
             {new Date(ch.updated_at).toLocaleString('ru-RU', {

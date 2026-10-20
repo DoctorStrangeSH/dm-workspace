@@ -15,13 +15,11 @@ export default function EncumbranceBar({ currentWeight, capacity }: Props) {
   const isHeavilyEncumbered = currentWeight > capacity * 0.83
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
-      <div className="flex items-center justify-between mb-2">
+    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900 p-4">
+      <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Weight size={16} className="text-slate-400" />
-          <span className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-            Вес
-          </span>
+          <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Вес</span>
         </div>
         <span
           className={cn(
@@ -39,7 +37,7 @@ export default function EncumbranceBar({ currentWeight, capacity }: Props) {
         </span>
       </div>
 
-      <div className="relative h-2 bg-slate-950 border border-slate-800 rounded-full overflow-hidden">
+      <div className="relative h-2 overflow-hidden rounded-full border border-slate-800 bg-slate-950">
         <div
           className={cn(
             'h-full transition-all',
@@ -56,10 +54,8 @@ export default function EncumbranceBar({ currentWeight, capacity }: Props) {
       </div>
 
       {(isEncumbered || isOverloaded) && (
-        <p className="text-xs text-amber-400 mt-2">
-          {isOverloaded
-            ? '🚫 Перегрузка — скорость 0'
-            : '⚠️ Перегрузка — скорость −10 футов'}
+        <p className="mt-2 text-xs text-amber-400">
+          {isOverloaded ? '🚫 Перегрузка — скорость 0' : '⚠️ Перегрузка — скорость −10 футов'}
         </p>
       )}
     </div>

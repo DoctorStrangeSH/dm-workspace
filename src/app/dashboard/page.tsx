@@ -21,41 +21,29 @@ export default async function DashboardPage() {
 
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
   const { asDm, asPlayer } = await getUserCampaigns(user.id)
 
   return (
     <div className="min-h-screen">
-      <header
-        className="border-b"
-        style={{ borderColor: 'var(--border-default)' }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+      <header className="border-b" style={{ borderColor: 'var(--border-default)' }}>
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
             {profile?.avatar_url ? (
               <img
                 src={profile.avatar_url}
                 alt=""
-                className="w-8 h-8 rounded-full object-cover border border-slate-700"
+                className="h-8 w-8 rounded-full border border-slate-700 object-cover"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-indigo-950/60 border border-indigo-900/50 flex items-center justify-center text-sm font-bold text-indigo-300">
-                {(profile?.display_name ?? user.email ?? 'U')
-                  .charAt(0)
-                  .toUpperCase()}
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-900/50 bg-indigo-950/60 text-sm font-bold text-indigo-300">
+                {(profile?.display_name ?? user.email ?? 'U').charAt(0).toUpperCase()}
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold">DM Workspace</h1>
-              <p
-                className="text-xs truncate"
-                style={{ color: 'var(--text-muted)' }}
-              >
+              <h1 className="text-lg font-bold sm:text-xl">DM Workspace</h1>
+              <p className="truncate text-xs" style={{ color: 'var(--text-muted)' }}>
                 {profile?.display_name ?? user.email}
               </p>
             </div>
@@ -64,7 +52,7 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-1">
             <Link
               href="/settings"
-              className="p-2 hover:bg-slate-800 rounded-lg transition"
+              className="rounded-lg p-2 transition hover:bg-slate-800"
               title="Настройки"
             >
               <SettingsIcon size={16} />
@@ -75,11 +63,11 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex justify-between items-center mb-8 flex-wrap gap-3">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold">Мои кампании</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
               Всего: {asDm.length + asPlayer.length}
             </p>
           </div>
@@ -88,7 +76,7 @@ export default async function DashboardPage() {
 
         {asDm.length === 0 && asPlayer.length === 0 && (
           <div
-            className="border-2 border-dashed rounded-2xl p-12 text-center"
+            className="rounded-2xl border-2 border-dashed p-12 text-center"
             style={{ borderColor: 'var(--border-default)' }}
           >
             <p className="mb-4" style={{ color: 'var(--text-muted)' }}>
@@ -102,19 +90,16 @@ export default async function DashboardPage() {
 
         {asDm.length > 0 && (
           <section className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <Crown size={20} className="text-amber-400" />
               <h3 className="text-lg font-semibold">
                 Я — ГМ{' '}
-                <span
-                  style={{ color: 'var(--text-subtle)' }}
-                  className="font-normal"
-                >
+                <span style={{ color: 'var(--text-subtle)' }} className="font-normal">
                   ({asDm.length})
                 </span>
               </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {asDm.map((c) => (
                 <CampaignCard key={c.id} campaign={c} />
               ))}
@@ -124,19 +109,16 @@ export default async function DashboardPage() {
 
         {asPlayer.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <Users size={20} className="text-indigo-400" />
               <h3 className="text-lg font-semibold">
                 Я — Игрок{' '}
-                <span
-                  style={{ color: 'var(--text-subtle)' }}
-                  className="font-normal"
-                >
+                <span style={{ color: 'var(--text-subtle)' }} className="font-normal">
                   ({asPlayer.length})
                 </span>
               </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {asPlayer.map((c) => (
                 <CampaignCard key={c.id} campaign={c} />
               ))}

@@ -7,11 +7,7 @@ import { getSrdSpecies, getSrdClasses } from '@/lib/queries/srd'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import CharacterWizard from './character-wizard'
 
-export default async function NewCharacterPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function NewCharacterPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
 
   const { id: campaignId } = await params
@@ -21,10 +17,7 @@ export default async function NewCharacterPage({
   if (!isMember) redirect('/dashboard')
 
   // Загружаем SRD (или вернет [] если не заполнено)
-  const [species, classes] = await Promise.all([
-    getSrdSpecies(),
-    getSrdClasses(),
-  ])
+  const [species, classes] = await Promise.all([getSrdSpecies(), getSrdClasses()])
 
   return (
     <div className="max-w-3xl">
@@ -40,16 +33,10 @@ export default async function NewCharacterPage({
 
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Новый персонаж</h1>
-        <p className="text-slate-400 text-sm mt-1">
-          Создай героя за 4 шага
-        </p>
+        <p className="mt-1 text-sm text-slate-400">Создай героя за 4 шага</p>
       </div>
 
-      <CharacterWizard
-        campaignId={campaignId}
-        species={species}
-        classes={classes}
-      />
+      <CharacterWizard campaignId={campaignId} species={species} classes={classes} />
     </div>
   )
 }

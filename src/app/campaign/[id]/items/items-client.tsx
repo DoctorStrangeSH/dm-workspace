@@ -5,10 +5,7 @@ import ItemsSearch from './items-search'
 import SrdItemCard from './srd-item-card'
 import SrdItemDetailDialog from './srd-item-detail-dialog'
 import EmptyState from '@/components/empty-state'
-import {
-  searchSrdItemsAction,
-  type SrdItem,
-} from '@/lib/actions/items-search'
+import { searchSrdItemsAction, type SrdItem } from '@/lib/actions/items-search'
 
 interface Props {
   campaignId: string
@@ -73,7 +70,7 @@ export default function ItemsClient({
           size="md"
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
             <SrdItemCard
               key={item.key}

@@ -21,10 +21,10 @@ export default function LocationBreadcrumbs({ campaignId, path }: Props) {
   if (path.length <= 1) return null
 
   return (
-    <nav className="flex items-center flex-wrap gap-1 text-sm mb-4">
+    <nav className="mb-4 flex flex-wrap items-center gap-1 text-sm">
       <Link
         href={`/campaign/${campaignId}/entities`}
-        className="flex items-center gap-1 text-slate-500 hover:text-slate-300 transition"
+        className="flex items-center gap-1 text-slate-500 transition hover:text-slate-300"
       >
         <Home size={12} />
         <span>Сущности</span>
@@ -44,7 +44,7 @@ export default function LocationBreadcrumbs({ campaignId, path }: Props) {
             ) : (
               <Link
                 href={`/campaign/${campaignId}/entities/${item.entityId}`}
-                className="text-slate-400 hover:text-white transition"
+                className="text-slate-400 transition hover:text-white"
               >
                 {style.icon} {item.entityName}
               </Link>

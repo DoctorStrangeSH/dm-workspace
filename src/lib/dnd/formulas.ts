@@ -19,39 +19,26 @@ export function proficiencyBonus(level: number): number {
 /**
  * Модификатор характеристики по ключу.
  */
-export function getAbilityMod(
-  data: CharacterData,
-  ability: AbilityKey
-): number {
+export function getAbilityMod(data: CharacterData, ability: AbilityKey): number {
   return abilityModifier(data.abilities[ability] ?? 10)
 }
 
 /**
  * Бонус спасброска.
  */
-export function getSaveBonus(
-  data: CharacterData,
-  ability: AbilityKey
-): number {
+export function getSaveBonus(data: CharacterData, ability: AbilityKey): number {
   const mod = getAbilityMod(data, ability)
-  const prof = data.proficientSaves?.includes(ability)
-    ? proficiencyBonus(data.level)
-    : 0
+  const prof = data.proficientSaves?.includes(ability) ? proficiencyBonus(data.level) : 0
   return mod + prof
 }
 
 /**
  * Бонус навыка.
  */
-export function getSkillBonus(
-  data: CharacterData,
-  skill: SkillKey
-): number {
+export function getSkillBonus(data: CharacterData, skill: SkillKey): number {
   const ability = SKILL_ABILITY[skill]
   const mod = getAbilityMod(data, ability)
-  const prof = data.proficientSkills?.includes(skill)
-    ? proficiencyBonus(data.level)
-    : 0
+  const prof = data.proficientSkills?.includes(skill) ? proficiencyBonus(data.level) : 0
   return mod + prof
 }
 
@@ -159,16 +146,12 @@ export function rollDice(expr: DiceExpression): {
 
   // Keep highest
   if (expr.keepHighest !== undefined) {
-    selectedRolls = [...rolls]
-      .sort((a, b) => b - a)
-      .slice(0, expr.keepHighest)
+    selectedRolls = [...rolls].sort((a, b) => b - a).slice(0, expr.keepHighest)
   }
 
   // Keep lowest
   if (expr.keepLowest !== undefined) {
-    selectedRolls = [...rolls]
-      .sort((a, b) => a - b)
-      .slice(0, expr.keepLowest)
+    selectedRolls = [...rolls].sort((a, b) => a - b).slice(0, expr.keepLowest)
   }
 
   // Advantage / disadvantage (только для d20)

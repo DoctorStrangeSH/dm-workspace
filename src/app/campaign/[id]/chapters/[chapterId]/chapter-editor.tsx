@@ -206,30 +206,24 @@ export default function ChapterEditor({
     view.focus()
   }, [])
 
-  const showEditor = isMobile
-    ? mobileView === 'edit'
-    : view === 'edit' || view === 'split'
-  const showPreview = isMobile
-    ? mobileView === 'preview'
-    : view === 'preview' || view === 'split'
+  const showEditor = isMobile ? mobileView === 'edit' : view === 'edit' || view === 'split'
+  const showPreview = isMobile ? mobileView === 'preview' : view === 'preview' || view === 'split'
 
   return (
     <div className="flex flex-col">
       {isMobile && !readOnly && (
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 mb-3">
+        <div className="mb-3 flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
           <button
             onClick={() => setMobileView('edit')}
-            className={`flex-1 px-3 py-1.5 text-xs rounded transition ${
-              mobileView === 'edit'
-                ? 'bg-indigo-600 text-white'
-                : 'text-slate-400 hover:text-white'
+            className={`flex-1 rounded px-3 py-1.5 text-xs transition ${
+              mobileView === 'edit' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
             }`}
           >
             Редактор
           </button>
           <button
             onClick={() => setMobileView('preview')}
-            className={`flex-1 px-3 py-1.5 text-xs rounded transition ${
+            className={`flex-1 rounded px-3 py-1.5 text-xs transition ${
               mobileView === 'preview'
                 ? 'bg-indigo-600 text-white'
                 : 'text-slate-400 hover:text-white'
@@ -264,15 +258,14 @@ export default function ChapterEditor({
           isMobile
             ? undefined
             : {
-                gridTemplateColumns:
-                  showEditor && showPreview ? '1fr 1fr' : '1fr',
+                gridTemplateColumns: showEditor && showPreview ? '1fr 1fr' : '1fr',
               }
         }
       >
         {showEditor && (
           <div
             ref={wrapperRef}
-            className="relative bg-slate-900 border border-slate-800 rounded-lg overflow-hidden h-[calc(100vh-320px)] sm:h-[700px]"
+            className="relative h-[calc(100vh-320px)] overflow-hidden rounded-lg border border-slate-800 bg-slate-900 sm:h-[700px]"
           >
             <CMEditor
               ref={cmRef}
@@ -297,15 +290,11 @@ export default function ChapterEditor({
         )}
 
         {showPreview && (
-          <div className="bg-slate-900/50 border border-slate-800 rounded-lg overflow-auto h-[calc(100vh-320px)] sm:h-[700px] p-6">
+          <div className="h-[calc(100vh-320px)] overflow-auto rounded-lg border border-slate-800 bg-slate-900/50 p-6 sm:h-[700px]">
             {content.trim() ? (
-              <MarkdownPreview
-                content={content}
-                campaignId={campaignId}
-                entityMap={entityMap}
-              />
+              <MarkdownPreview content={content} campaignId={campaignId} entityMap={entityMap} />
             ) : (
-              <div className="h-full flex items-center justify-center text-slate-600 text-sm">
+              <div className="flex h-full items-center justify-center text-sm text-slate-600">
                 Превью появится, когда ты начнёшь писать
               </div>
             )}
@@ -314,7 +303,7 @@ export default function ChapterEditor({
       </div>
 
       {readOnly && (
-        <div className="mt-3 text-xs text-slate-500 text-center">
+        <div className="mt-3 text-center text-xs text-slate-500">
           Режим просмотра — редактирование доступно только ГМу
         </div>
       )}

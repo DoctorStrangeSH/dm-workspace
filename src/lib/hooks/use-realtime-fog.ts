@@ -10,11 +10,7 @@ interface Options {
   enabled?: boolean
 }
 
-export function useRealtimeFog({
-  sceneId,
-  initialFog,
-  enabled = true,
-}: Options) {
+export function useRealtimeFog({ sceneId, initialFog, enabled = true }: Options) {
   const [fog, setFog] = useState<FogArea[]>(initialFog)
 
   // CHANGES: убран useEffect(setFog) → паттерн «props → state».

@@ -48,11 +48,7 @@ export async function createChapter(campaignId: string, formData: FormData) {
   return { success: true, chapterId: data.id }
 }
 
-export async function updateChapterTitle(
-  chapterId: string,
-  campaignId: string,
-  title: string
-) {
+export async function updateChapterTitle(chapterId: string, campaignId: string, title: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -127,10 +123,7 @@ export async function deleteChapter(chapterId: string, campaignId: string) {
 /**
  * Переупорядочивает главы: принимает массив id в новом порядке.
  */
-export async function reorderChapters(
-  campaignId: string,
-  orderedIds: string[]
-) {
+export async function reorderChapters(campaignId: string, orderedIds: string[]) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -156,10 +149,7 @@ export async function reorderChapters(
   return { success: true }
 }
 
-export async function duplicateChapter(
-  chapterId: string,
-  campaignId: string
-) {
+export async function duplicateChapter(chapterId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -206,9 +196,7 @@ export async function duplicateChapter(
   ).length
 
   const newTitle =
-    copyCount === 0
-      ? `Копия — ${baseTitle}`
-      : `Копия — ${baseTitle} (${copyCount + 1})`
+    copyCount === 0 ? `Копия — ${baseTitle}` : `Копия — ${baseTitle} (${copyCount + 1})`
 
   // Вставляем копию
   const { data: newChapter, error: insertError } = await supabase
@@ -232,10 +220,7 @@ export async function duplicateChapter(
   return { success: true, chapterId: newChapter.id }
 }
 
-export async function bulkDeleteChapters(
-  chapterIds: string[],
-  campaignId: string
-) {
+export async function bulkDeleteChapters(chapterIds: string[], campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 

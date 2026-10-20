@@ -28,7 +28,7 @@ export default function ThemeToggle({ variant = 'compact' }: Props) {
     return (
       <button
         onClick={() => setTheme(next.value)}
-        className="p-2 hover:bg-slate-800 rounded-lg transition"
+        className="rounded-lg p-2 transition hover:bg-slate-800"
         title={`Тема: ${THEMES[currentIndex]?.label} → ${next.label}`}
       >
         <Current size={16} />
@@ -37,13 +37,13 @@ export default function ThemeToggle({ variant = 'compact' }: Props) {
   }
 
   return (
-    <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+    <div className="flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1">
       {THEMES.map(({ value, icon: Icon, label }) => (
         <button
           key={value}
           onClick={() => setTheme(value)}
           className={cn(
-            'flex items-center gap-1.5 px-2.5 py-1 text-xs rounded transition',
+            'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition',
             theme === value
               ? 'bg-indigo-600 text-white'
               : 'text-slate-400 hover:bg-slate-800 hover:text-white'

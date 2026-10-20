@@ -1,11 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import type {
-  EntityType,
-  EntityRelation,
-  RelationType,
-  EntityTag,
-  Tag,
-} from '@/lib/types'
+import type { EntityType, EntityRelation, RelationType, EntityTag, Tag } from '@/lib/types'
 
 export interface BacklinkChapter {
   chapterId: string
@@ -20,9 +14,7 @@ export interface ChapterEntity {
   entityType: EntityType
 }
 
-export async function getEntityBacklinks(
-  entityId: string
-): Promise<BacklinkChapter[]> {
+export async function getEntityBacklinks(entityId: string): Promise<BacklinkChapter[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('find_entity_backlinks', {
@@ -34,8 +26,7 @@ export async function getEntityBacklinks(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     chapterId: row.chapter_id,
     chapterTitle: row.chapter_title,
     chapterUpdatedAt: row.chapter_updated_at,
@@ -43,9 +34,7 @@ export async function getEntityBacklinks(
   }))
 }
 
-export async function getChapterEntities(
-  chapterId: string
-): Promise<ChapterEntity[]> {
+export async function getChapterEntities(chapterId: string): Promise<ChapterEntity[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('get_chapter_entities', {
@@ -57,17 +46,14 @@ export async function getChapterEntities(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     entityId: row.entity_id,
     entityName: row.entity_name,
     entityType: row.entity_type as EntityType,
   }))
 }
 
-export async function getEntityBacklinksCount(
-  entityId: string
-): Promise<number> {
+export async function getEntityBacklinksCount(entityId: string): Promise<number> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('find_entity_backlinks', {
@@ -78,9 +64,7 @@ export async function getEntityBacklinksCount(
   return (data ?? []).length
 }
 
-export async function getBacklinksCounts(
-  campaignId: string
-): Promise<Record<string, number>> {
+export async function getBacklinksCounts(campaignId: string): Promise<Record<string, number>> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('count_entity_backlinks', {
@@ -99,9 +83,7 @@ export async function getBacklinksCounts(
   return map
 }
 
-export async function getEntityRelations(
-  entityId: string
-): Promise<EntityRelation[]> {
+export async function getEntityRelations(entityId: string): Promise<EntityRelation[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('get_entity_relations', {
@@ -113,8 +95,7 @@ export async function getEntityRelations(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     relationId: row.relation_id,
     direction: row.direction as 'outgoing' | 'incoming',
     relationType: row.relation_type as RelationType,
@@ -128,9 +109,7 @@ export async function getEntityRelations(
   }))
 }
 
-export async function getEntityTags(
-  entityId: string
-): Promise<EntityTag[]> {
+export async function getEntityTags(entityId: string): Promise<EntityTag[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('get_entity_tags', {
@@ -142,17 +121,14 @@ export async function getEntityTags(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     id: row.tag_id,
     name: row.tag_name,
     color: row.tag_color,
   }))
 }
 
-export async function getCampaignTags(
-  campaignId: string
-): Promise<Tag[]> {
+export async function getCampaignTags(campaignId: string): Promise<Tag[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('get_campaign_tags', {
@@ -164,8 +140,7 @@ export async function getCampaignTags(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     id: row.tag_id,
     name: row.tag_name,
     color: row.tag_color,
@@ -173,9 +148,7 @@ export async function getCampaignTags(
   }))
 }
 
-export async function getEntitiesTagsMap(
-  campaignId: string
-): Promise<Record<string, EntityTag[]>> {
+export async function getEntitiesTagsMap(campaignId: string): Promise<Record<string, EntityTag[]>> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.rpc('get_entities_tags_map', {
@@ -208,17 +181,14 @@ export async function getLocationDescendants(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     entityId: row.entity_id,
     entityName: row.entity_name,
     depth: row.depth,
   }))
 }
 
-export async function getLocationPath(
-  entityId: string
-): Promise<
+export async function getLocationPath(entityId: string): Promise<
   Array<{
     entityId: string
     entityName: string
@@ -237,8 +207,7 @@ export async function getLocationPath(
     return []
   }
 
-  return (data ?? []).map((row: any) =>
-     ({
+  return (data ?? []).map((row: any) => ({
     entityId: row.entity_id,
     entityName: row.entity_name,
     entityType: row.entity_type as EntityType,

@@ -24,7 +24,7 @@ export default function SaveStatus({ status, lastSaved, error }: Props) {
         <Check size={14} />
         Сохранено
         {lastSaved && (
-          <span className="text-slate-500 text-xs">
+          <span className="text-xs text-slate-500">
             {lastSaved.toLocaleTimeString('ru-RU', {
               hour: '2-digit',
               minute: '2-digit',

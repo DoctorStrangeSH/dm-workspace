@@ -15,21 +15,16 @@ import { useRealtimeMessages } from '@/lib/hooks/use-realtime-messages'
 
 interface Props {
   campaignId: string
-  initialMessages: MessageWithAuthor[] 
+  initialMessages: MessageWithAuthor[]
   currentUserId: string
   isDm: boolean
 }
 
-export default function ChatPanel({
-  campaignId,
-  initialMessages,
-  currentUserId,
-  isDm,
-}: Props) {
+export default function ChatPanel({ campaignId, initialMessages, currentUserId, isDm }: Props) {
   const messages = useRealtimeMessages({
     campaignId,
     initialMessages,
-    })
+  })
   const router = useRouter()
   const toast = useToast()
   const [isOpen, setIsOpen] = useState(false)
@@ -83,10 +78,10 @@ export default function ChatPanel({
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          'fixed bottom-6 left-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full shadow-2xl transition',
-          'bg-violet-600 hover:bg-violet-500 text-white font-medium',
+          'fixed bottom-6 left-6 z-40 flex items-center gap-2 rounded-full px-4 py-3 shadow-2xl transition',
+          'bg-violet-600 font-medium text-white hover:bg-violet-500',
           'border border-violet-400/30',
-          isOpen && 'opacity-0 pointer-events-none'
+          isOpen && 'pointer-events-none opacity-0'
         )}
         title="Чат"
       >
@@ -105,19 +100,19 @@ export default function ChatPanel({
       {/* Панель */}
       <aside
         className={cn(
-          'fixed top-0 right-0 z-50 h-screen w-full sm:w-[380px] bg-slate-900 border-l border-slate-800 shadow-2xl transition-transform flex flex-col',
+          'fixed top-0 right-0 z-50 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl transition-transform sm:w-[380px]',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         {/* Заголовок */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 shrink-0">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-4 py-3">
           <div className="flex items-center gap-2">
             <MessageSquare size={18} className="text-violet-400" />
             <h2 className="font-semibold">Чат кампании</h2>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1.5 hover:bg-slate-800 rounded-lg transition"
+            className="rounded-lg p-1.5 transition hover:bg-slate-800"
             title="Закрыть (Esc)"
           >
             <X size={18} />
@@ -136,11 +131,7 @@ export default function ChatPanel({
         <DiceRoller onRoll={handleRoll} disabled={isPending} />
 
         {/* Поле ввода */}
-        <MessageInput
-          onSend={handleSendText}
-          disabled={isPending}
-          canHide={isDm}
-        />
+        <MessageInput onSend={handleSendText} disabled={isPending} canHide={isDm} />
       </aside>
     </>
   )

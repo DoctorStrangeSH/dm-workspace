@@ -18,17 +18,12 @@ interface Props {
   entityType?: 'location'
 }
 
-export default function LocationChildrenTree({
-  campaignId,
-  descendants,
-}: Props) {
+export default function LocationChildrenTree({ campaignId, descendants }: Props) {
   if (descendants.length === 0) {
     return (
-      <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-6 text-center">
-        <FolderTree size={24} className="text-slate-700 mx-auto mb-2" />
-        <p className="text-sm text-slate-500">
-          Нет вложенных локаций
-        </p>
+      <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-6 text-center">
+        <FolderTree size={24} className="mx-auto mb-2 text-slate-700" />
+        <p className="text-sm text-slate-500">Нет вложенных локаций</p>
       </div>
     )
   }
@@ -36,12 +31,10 @@ export default function LocationChildrenTree({
   const style = ENTITY_STYLES.location
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4">
-      <div className="flex items-center gap-2 text-sm text-slate-400 mb-3">
+    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
         <FolderTree size={14} />
-        <span>
-          Вложенные локации ({descendants.length})
-        </span>
+        <span>Вложенные локации ({descendants.length})</span>
       </div>
 
       <div className="space-y-1">
@@ -49,16 +42,12 @@ export default function LocationChildrenTree({
           <Link
             key={d.entityId}
             href={`/campaign/${campaignId}/entities/${d.entityId}`}
-            className="group flex items-center gap-2 py-1.5 px-2 rounded hover:bg-slate-800/60 transition"
+            className="group flex items-center gap-2 rounded px-2 py-1.5 transition hover:bg-slate-800/60"
             style={{ paddingLeft: `${(d.depth - 1) * 16 + 8}px` }}
           >
-            {d.depth > 1 && (
-              <ChevronRight size={12} className="text-slate-600 shrink-0" />
-            )}
-            <span className={cn('text-sm', style.color)}>
-              {style.icon}
-            </span>
-            <span className="text-sm text-slate-300 group-hover:text-white transition truncate">
+            {d.depth > 1 && <ChevronRight size={12} className="shrink-0 text-slate-600" />}
+            <span className={cn('text-sm', style.color)}>{style.icon}</span>
+            <span className="truncate text-sm text-slate-300 transition group-hover:text-white">
               {d.entityName}
             </span>
           </Link>

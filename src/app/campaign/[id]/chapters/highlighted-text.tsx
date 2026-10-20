@@ -16,10 +16,7 @@ export default function HighlightedText({ text, query }: Props) {
     <>
       {parts.map((part, i) =>
         part.matched ? (
-          <mark
-            key={i}
-            className="bg-amber-500/30 text-amber-200 rounded px-0.5"
-          >
+          <mark key={i} className="rounded bg-amber-500/30 px-0.5 text-amber-200">
             {part.text}
           </mark>
         ) : (

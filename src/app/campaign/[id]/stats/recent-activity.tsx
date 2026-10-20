@@ -30,8 +30,8 @@ export default function RecentActivity({ campaignId, recent }: Props) {
   if (!recent || recent.length === 0) return null
 
   return (
-    <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 mb-8">
-      <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+    <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/60 p-5">
+      <h2 className="mb-4 text-sm font-semibold tracking-wider text-slate-400 uppercase">
         Недавняя активность
       </h2>
 
@@ -47,23 +47,17 @@ export default function RecentActivity({ campaignId, recent }: Props) {
             <Link
               key={`${item.type}-${item.id}`}
               href={href}
-              className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800/60 transition"
+              className="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-800/60"
             >
               <Icon
                 size={16}
-                className={
-                  isChapter ? 'text-indigo-400 shrink-0' : 'text-emerald-400 shrink-0'
-                }
+                className={isChapter ? 'shrink-0 text-indigo-400' : 'shrink-0 text-emerald-400'}
               />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm text-slate-200 truncate">
-                  {item.name}
-                </div>
-                <div className="text-xs text-slate-500">
-                  {isChapter ? 'Глава' : 'Сущность'}
-                </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm text-slate-200">{item.name}</div>
+                <div className="text-xs text-slate-500">{isChapter ? 'Глава' : 'Сущность'}</div>
               </div>
-              <span className="text-xs text-slate-500 shrink-0">
+              <span className="shrink-0 text-xs text-slate-500">
                 {formatRelativeTime(item.updated_at)}
               </span>
             </Link>
