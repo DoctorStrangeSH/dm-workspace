@@ -37,7 +37,7 @@
   --text-primary: rgb(228 228 231); /* zinc-200 */
   --text-secondary: rgb(212 212 216); /* zinc-300 */
   --text-muted: rgb(161 161 170); /* zinc-400 */
-  --text-subtle: rgb(113 113 122); /* zinc-500 */
+  --text-subtle: rgb(130 130 145); /* CHANGES: было 113 113 122 — контраст < 4.5:1 на --bg-app */
   --text-inverse: rgb(10 10 18);
 
   /* ─── Границы (заметные) ─── */

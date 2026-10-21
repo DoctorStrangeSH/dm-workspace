@@ -16,7 +16,6 @@ export default async function NewCharacterPage({ params }: { params: Promise<{ i
   if (!campaign) notFound()
   if (!isMember) redirect('/dashboard')
 
-  // Загружаем SRD (или вернет [] если не заполнено)
   const [species, classes] = await Promise.all([getSrdSpecies(), getSrdClasses()])
 
   return (
@@ -32,8 +31,8 @@ export default async function NewCharacterPage({ params }: { params: Promise<{ i
       />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Новый персонаж</h1>
-        <p className="mt-1 text-sm text-slate-400">Создай героя за 4 шага</p>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Новый персонаж</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">Создай героя за 4 шага</p>
       </div>
 
       <CharacterWizard campaignId={campaignId} species={species} classes={classes} />

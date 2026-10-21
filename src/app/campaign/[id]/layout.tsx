@@ -12,6 +12,7 @@ import { getHandouts } from '@/lib/queries/handouts'
 import { getSessionLog } from '@/lib/queries/logs'
 import CampaignSidebar from './campaign-sidebar'
 import MobileSidebar from './mobile-sidebar'
+import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { DmScreenProvider } from './dm-screen/dm-screen-context'
 import DmScreen from './dm-screen/dm-screen'
 import CommandPaletteWrapper from './command-palette/command-palette-wrapper'
@@ -96,12 +97,10 @@ export default async function CampaignLayout({
   return (
     <DmScreenProvider>
       <div className="min-h-screen bg-[var(--bg-app)]">
-        {/* CHANGES: топбар на токенах (border-[var(--border-default)], bg-[var(--bg-app)]/95) */}
         <header className="sticky top-0 z-30 border-b border-[var(--border-default)] bg-[var(--bg-app)]/95 backdrop-blur">
           <div className="flex items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
             <MobileSidebar campaignId={id} isDm={role === 'dm'} />
 
-            {/* CHANGES: Link с классами IconButton (без вложенного <button>) */}
             <Link
               href="/dashboard"
               aria-label="Назад к кампаниям"
@@ -151,8 +150,10 @@ export default async function CampaignLayout({
 
         <div className="flex">
           <CampaignSidebar campaignId={campaign.id} isDm={role === 'dm'} />
-          <main className="min-w-0 flex-1 p-3 sm:p-6">{children}</main>
+          <main className="min-w-0 flex-1 p-3 pb-20 sm:p-6 md:pb-6">{children}</main>
         </div>
+
+        <MobileBottomNav campaignId={campaign.id} />
 
         {role === 'dm' && <DmScreen entities={entities} campaignId={campaign.id} />}
 

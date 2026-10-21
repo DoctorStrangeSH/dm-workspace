@@ -1,6 +1,7 @@
 'use client'
 
 import { Plus, BookOpen } from 'lucide-react'
+import { Card, Button } from '@/components/ui'
 import { parseSpellForDisplay } from '@/lib/srd/parse-spell'
 import type { SrdSpell } from '@/lib/actions/spells-search'
 
@@ -12,27 +13,29 @@ interface Props {
 }
 
 const SCHOOL_COLORS: Record<string, string> = {
-  evocation: 'text-red-400',
-  abjuration: 'text-sky-400',
-  conjuration: 'text-violet-400',
-  divination: 'text-emerald-400',
+  evocation: 'text-[var(--danger)]',
+  abjuration: 'text-[var(--info)]',
+  conjuration: 'text-[var(--accent-text)]',
+  divination: 'text-[var(--success)]',
   enchantment: 'text-pink-400',
   illusion: 'text-purple-400',
-  necromancy: 'text-gray-400',
-  transmutation: 'text-amber-400',
+  necromancy: 'text-[var(--text-muted)]',
+  transmutation: 'text-[var(--warning)]',
 }
 
 export default function SrdSpellCard({ spell, canAdd, onAdd, onView }: Props) {
   const parsed = parseSpellForDisplay(spell.data)
   const schoolKey = parsed.school.toLowerCase()
-  const schoolColor = SCHOOL_COLORS[schoolKey] ?? 'text-slate-400'
+  const schoolColor = SCHOOL_COLORS[schoolKey] ?? 'text-[var(--text-muted)]'
 
   return (
-    <div className="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700">
+    <Card padding="md" hoverable className="group flex flex-col">
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold">{spell.name_ru ?? spell.name ?? parsed.name}</h3>
-          <div className="mt-0.5 text-xs text-slate-500">
+          <h3 className="truncate font-semibold text-[var(--text-primary)]">
+            {spell.name_ru ?? spell.name ?? parsed.name}
+          </h3>
+          <div className="mt-0.5 text-xs text-[var(--text-muted)]">
             <span className={schoolColor + ' capitalize'}>{parsed.school}</span>
             {' · '}
             <span>{parsed.level === 0 ? 'Заговор' : `${parsed.level} ур.`}</span>
@@ -41,30 +44,33 @@ export default function SrdSpellCard({ spell, canAdd, onAdd, onView }: Props) {
         </div>
       </div>
 
-      <div className="mb-3 space-y-0.5 text-xs text-slate-500">
+      <div className="mb-3 space-y-0.5 text-xs text-[var(--text-muted)]">
         <div>Время: {parsed.castingTime || '—'}</div>
         <div>Дистанция: {parsed.range || '—'}</div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
+      <div className="mt-auto flex items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<BookOpen size={12} />}
           onClick={onView}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-slate-700"
+          className="flex-1"
         >
-          <BookOpen size={12} />
           Подробнее
-        </button>
+        </Button>
         {canAdd && (
-          <button
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Plus size={12} />}
             onClick={onAdd}
-            className="flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white transition hover:bg-indigo-500"
             title="Добавить персонажу"
           >
-            <Plus size={12} />
             <span className="hidden sm:inline">Добавить</span>
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   )
 }

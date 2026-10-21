@@ -51,6 +51,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={isDisabled}
+        aria-busy={loading || undefined}
         className={cn(
           'inline-flex items-center justify-center font-medium',
           'transition-all duration-150 ease-out',
@@ -63,7 +64,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading ? (
-          <Loader2 size={16} className="animate-spin" />
+          <Loader2 size={16} className="animate-spin" aria-hidden="true" />
         ) : (
           icon && iconPosition === 'left' && <span className="shrink-0">{icon}</span>
         )}
@@ -75,12 +76,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 )
 Button.displayName = 'Button'
 
-// ─── IconButton (квадратная кнопка только с иконкой) ───
+// ─── IconButton ───
 export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
   loading?: boolean
-  label: string // обязательный aria-label
+  label: string
 }
 
 const ICON_SIZES: Record<ButtonSize, string> = {
@@ -101,6 +102,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         ref={ref}
         disabled={isDisabled}
         aria-label={label}
+        aria-busy={loading || undefined}
         className={cn(
           'inline-flex items-center justify-center',
           'transition-all duration-150 ease-out',
@@ -112,7 +114,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         )}
         {...props}
       >
-        {loading ? <Loader2 size={16} className="animate-spin" /> : children}
+        {loading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : children}
       </button>
     )
   }

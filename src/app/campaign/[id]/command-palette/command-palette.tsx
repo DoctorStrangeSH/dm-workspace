@@ -34,6 +34,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
   const commands = useMemo<Command[]>(() => {
     const list: Command[] = []
 
+    // CHANGES: добавлены все действия кампании (навигация + DM-инструменты)
     list.push(
       {
         id: 'action:dashboard',
@@ -43,20 +44,6 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
         href: '/dashboard',
       },
       {
-        id: 'action:chapters',
-        kind: 'action',
-        label: 'Открыть главы',
-        icon: '📖',
-        href: `/campaign/${campaignId}/chapters`,
-      },
-      {
-        id: 'action:entities',
-        kind: 'action',
-        label: 'Открыть сущности',
-        icon: '👥',
-        href: `/campaign/${campaignId}/entities`,
-      },
-      {
         id: 'action:overview',
         kind: 'action',
         label: 'Обзор кампании',
@@ -64,17 +51,11 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
         href: `/campaign/${campaignId}`,
       },
       {
-        id: 'action:dm-screen',
+        id: 'action:chapters',
         kind: 'action',
-        label: 'Открыть панель ГМа',
-        icon: '🎛️',
-        shortcut: '⌘M',
-        action: () => {
-          onClose()
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('dm-screen:open'))
-          }, 100)
-        },
+        label: 'Открыть главы',
+        icon: '📖',
+        href: `/campaign/${campaignId}/chapters`,
       },
       {
         id: 'action:characters',
@@ -82,6 +63,20 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
         label: 'Открыть персонажей',
         icon: '⚔️',
         href: `/campaign/${campaignId}/characters`,
+      },
+      {
+        id: 'action:scenes',
+        kind: 'action',
+        label: 'Открыть сцены',
+        icon: '🗺️',
+        href: `/campaign/${campaignId}/scenes`,
+      },
+      {
+        id: 'action:entities',
+        kind: 'action',
+        label: 'Открыть сущности',
+        icon: '👥',
+        href: `/campaign/${campaignId}/entities`,
       },
       {
         id: 'action:bestiary',
@@ -105,11 +100,17 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
         href: `/campaign/${campaignId}/items`,
       },
       {
-        id: 'action:scenes',
+        id: 'action:dm-screen',
         kind: 'action',
-        label: 'Открыть сцены',
-        icon: '🗺️',
-        href: `/campaign/${campaignId}/scenes`,
+        label: 'Открыть панель ГМа',
+        icon: '🎛️',
+        shortcut: '⌘M',
+        action: () => {
+          onClose()
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('dm-screen:open'))
+          }, 100)
+        },
       }
     )
 
@@ -161,17 +162,12 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
       .map((r) => r.item)
   }, [commands, query])
 
-  // CHANGES:
-  // 1. Убран useEffect с setActiveIndex(0) на [query] — каскадный рендер.
-  //    Заменён на официальный паттерн: сравнение query в рендере через prevQuery.
   const [prevQuery, setPrevQuery] = useState(query)
   if (query !== prevQuery) {
     setPrevQuery(query)
     setActiveIndex(0)
   }
 
-  // 2. Убран useEffect с setQuery('') / setActiveIndex(0) на [isOpen] — каскадный рендер.
-  //    Заменён на тот же паттерн: сравнение isOpen в рендере.
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen)
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen)
@@ -187,7 +183,6 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
     return () => clearTimeout(t)
   }, [isOpen])
 
-  // Этот useEffect оставлен: он не setState, а side-effect на DOM (scrollIntoView)
   useEffect(() => {
     const el = listRef.current?.children[activeIndex] as HTMLElement
     el?.scrollIntoView({ block: 'nearest' })
@@ -225,15 +220,15 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 px-0 pt-[5vh] backdrop-blur-sm sm:px-4 sm:pt-[15vh]"
+      className="fixed inset-0 z-[100] flex items-start justify-center bg-[var(--bg-overlay)] px-0 pt-[5vh] backdrop-blur-sm sm:px-4 sm:pt-[15vh]"
       onClick={onClose}
     >
       <div
-        className="flex h-[90vh] w-full max-w-2xl flex-col overflow-hidden border-y border-slate-700 bg-slate-900 shadow-2xl sm:h-auto sm:max-h-[70vh] sm:rounded-2xl sm:border"
+        className="flex h-[90vh] w-full max-w-2xl flex-col overflow-hidden border-y border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)] sm:h-auto sm:max-h-[70vh] sm:rounded-2xl sm:border"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-center gap-3 border-b border-slate-800 px-4 py-3">
-          <Search size={18} className="shrink-0 text-slate-500" />
+        <div className="flex shrink-0 items-center gap-3 border-b border-[var(--border-default)] px-4 py-3">
+          <Search size={18} className="shrink-0 text-[var(--text-subtle)]" />
           <input
             ref={inputRef}
             type="text"
@@ -241,9 +236,9 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Поиск: главы, сущности, действия..."
-            className="flex-1 bg-transparent text-base text-white placeholder:text-slate-600 focus:outline-none"
+            className="flex-1 bg-transparent text-base text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:outline-none"
           />
-          <kbd className="hidden items-center gap-1 rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-xs text-slate-500 sm:inline-flex">
+          <kbd className="hidden items-center gap-1 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-2 py-0.5 text-xs text-[var(--text-subtle)] sm:inline-flex">
             Esc
           </kbd>
         </div>
@@ -267,7 +262,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
               return (
                 <div key={cmd.id}>
                   {showKindLabel && (
-                    <div className="px-4 pt-2 pb-1 text-[10px] tracking-wider text-slate-600 uppercase">
+                    <div className="px-4 pt-2 pb-1 text-[10px] tracking-wider text-[var(--text-subtle)] uppercase">
                       {KIND_LABELS[cmd.kind]}
                     </div>
                   )}
@@ -275,26 +270,28 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
                     onMouseEnter={() => setActiveIndex(i)}
                     onClick={() => execute(cmd)}
                     className={cn(
-                      'flex w-full items-center gap-3 px-4 py-2 text-left transition',
+                      'flex w-full items-center gap-3 px-4 py-2 text-left transition-colors',
                       isActive
-                        ? 'bg-indigo-950/60 text-white'
-                        : 'text-slate-300 hover:bg-slate-800/60'
+                        ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]/60'
                     )}
                   >
                     <span className="shrink-0 text-lg">{cmd.icon}</span>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-medium">{cmd.label}</div>
                       {cmd.description && (
-                        <div className="truncate text-xs text-slate-500">{cmd.description}</div>
+                        <div className="truncate text-xs text-[var(--text-subtle)]">
+                          {cmd.description}
+                        </div>
                       )}
                     </div>
                     {cmd.shortcut && (
-                      <kbd className="rounded border border-slate-700 bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-500">
+                      <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[10px] text-[var(--text-subtle)]">
                         {cmd.shortcut}
                       </kbd>
                     )}
                     {isActive && !cmd.shortcut && (
-                      <CornerDownLeft size={12} className="text-slate-500" />
+                      <CornerDownLeft size={12} className="text-[var(--text-subtle)]" />
                     )}
                   </button>
                 </div>
@@ -303,15 +300,21 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
           )}
         </div>
 
-        <div className="hidden shrink-0 items-center justify-between border-t border-slate-800 px-4 py-2 text-xs text-slate-500 sm:flex">
+        <div className="hidden shrink-0 items-center justify-between border-t border-[var(--border-default)] px-4 py-2 text-xs text-[var(--text-subtle)] sm:flex">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5">↑</kbd>
-              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5">↓</kbd>
+              <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1 py-0.5">
+                ↑
+              </kbd>
+              <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1 py-0.5">
+                ↓
+              </kbd>
               навигация
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="rounded border border-slate-700 bg-slate-800 px-1 py-0.5">⏎</kbd>
+              <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1 py-0.5">
+                ⏎
+              </kbd>
               выбрать
             </span>
           </div>

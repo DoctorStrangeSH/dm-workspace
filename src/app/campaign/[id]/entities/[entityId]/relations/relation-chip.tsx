@@ -35,8 +35,8 @@ export default function RelationChip({ relation, campaignId, isDm, onDelete }: P
   const style = ENTITY_STYLES[other.type]
 
   return (
-    <div className="group inline-flex items-center gap-1.5 rounded-full border border-slate-800 bg-slate-900 py-1 pr-1 pl-2.5 transition hover:border-slate-700">
-      <span className="text-xs text-slate-500">{label}</span>
+    <div className="group inline-flex items-center gap-1.5 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] py-1 pr-1 pl-2.5 transition-colors hover:border-[var(--border-hover)]">
+      <span className="text-xs text-[var(--text-subtle)]">{label}</span>
       <Link
         href={`/campaign/${campaignId}/entities/${other.id}`}
         className={cn(
@@ -50,10 +50,10 @@ export default function RelationChip({ relation, campaignId, isDm, onDelete }: P
       {isDm && onDelete && (
         <button
           onClick={() => onDelete(relation.relationId)}
-          className="rounded-full p-0.5 opacity-0 transition group-hover:opacity-100 hover:bg-red-950/50"
+          className="rounded-full p-0.5 opacity-0 transition group-hover:opacity-100 hover:bg-[var(--danger-subtle)]"
           title="Удалить связь"
         >
-          <X size={10} className="text-red-400" />
+          <X size={10} className="text-[var(--danger)]" />
         </button>
       )}
     </div>

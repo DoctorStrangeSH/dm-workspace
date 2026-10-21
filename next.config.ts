@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '25mb',
     },
+    // CHANGES: подавляем ошибку Date.now() в Supabase Auth (proxy.ts)
+    instantInsights: {
+      validationLevel: 'manual-warning',
+    },
   },
   cacheComponents: true,
   partialPrefetching: true,

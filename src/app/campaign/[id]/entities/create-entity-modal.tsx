@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { X } from 'lucide-react'
 import { createEntity } from '@/lib/actions/entities'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
+import { Button, Dialog, Input, Textarea } from '@/components/ui'
 import TemplateSelect from './create-entity-modal/template-select'
 import type { EntityTemplate, EntityType } from '@/lib/types'
 
@@ -77,119 +77,101 @@ export default function CreateEntityModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
-      <div className="my-auto w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Новая сущность</h2>
-          <button
-            onClick={onClose}
-            disabled={isPending}
-            className="rounded-lg p-1 transition hover:bg-slate-800"
+    <Dialog
+      open={true}
+      onClose={onClose}
+      title="Новая сущность"
+      size="md"
+      footer={
+        <>
+          <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
+            Отмена
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            type="submit"
+            form="create-entity-form"
+            loading={isPending}
           >
-            <X size={20} />
-          </button>
+            Создать
+          </Button>
+        </>
+      }
+    >
+      <form id="create-entity-form" onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="mb-2 block text-sm text-[var(--text-secondary)]">
+            Тип <span className="text-[var(--danger)]">*</span>
+          </label>
+          <div className="grid grid-cols-4 gap-2">
+            {TYPE_OPTIONS.map((t) => {
+              const style = ENTITY_STYLES[t]
+              const active = selectedType === t
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => handleTypeChange(t)}
+                  className={cn(
+                    'flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors',
+                    active
+                      ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                      : 'border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
+                  )}
+                >
+                  <span className="text-xl">{style.icon}</span>
+                  <span className="text-xs">{style.label}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-2 block text-sm text-slate-300">
-              Тип <span className="text-red-400">*</span>
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {TYPE_OPTIONS.map((t) => {
-                const style = ENTITY_STYLES[t]
-                const active = selectedType === t
-                return (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => handleTypeChange(t)}
-                    className={cn(
-                      'flex flex-col items-center gap-1 rounded-lg border p-3 transition',
-                      active
-                        ? 'border-indigo-600 bg-indigo-950/60 text-white'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                    )}
-                  >
-                    <span className="text-xl">{style.icon}</span>
-                    <span className="text-xs">{style.label}</span>
-                  </button>
-                )
-              })}
-            </div>
+        <TemplateSelect
+          templates={templates}
+          selectedId={selectedTemplate?.id ?? null}
+          onSelect={handleSelectTemplate}
+          type={selectedType}
+        />
+
+        <Input
+          name="name"
+          label="Имя"
+          type="text"
+          required
+          minLength={2}
+          maxLength={150}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={
+            selectedType === 'npc'
+              ? 'Гэндальф'
+              : selectedType === 'location'
+                ? 'Шир'
+                : selectedType === 'monster'
+                  ? 'Гоблин'
+                  : 'Название...'
+          }
+          autoFocus
+        />
+
+        <Textarea
+          name="description"
+          label="Описание"
+          rows={3}
+          maxLength={5000}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Краткое описание..."
+        />
+
+        {error && (
+          <div className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]">
+            {error}
           </div>
-
-          <TemplateSelect
-            templates={templates}
-            selectedId={selectedTemplate?.id ?? null}
-            onSelect={handleSelectTemplate}
-            type={selectedType}
-          />
-
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Имя <span className="text-red-400">*</span>
-            </label>
-            <input
-              name="name"
-              type="text"
-              required
-              minLength={2}
-              maxLength={150}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={
-                selectedType === 'npc'
-                  ? 'Гэндальф'
-                  : selectedType === 'location'
-                    ? 'Шир'
-                    : selectedType === 'monster'
-                      ? 'Гоблин'
-                      : 'Название...'
-              }
-              autoFocus
-              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">Описание</label>
-            <textarea
-              name="description"
-              rows={3}
-              maxLength={5000}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Краткое описание..."
-              className="w-full resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-
-          {error && (
-            <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
-              {error}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {isPending ? 'Создаём...' : 'Создать'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        )}
+      </form>
+    </Dialog>
   )
 }

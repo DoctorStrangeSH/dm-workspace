@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Plus, Loader2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { addSrdSpellToCharacter } from '@/lib/actions/add-spell-to-character'
 import { parseSpellForDisplay } from '@/lib/srd/parse-spell'
 import { useToast } from '@/components/toast/toast-provider'
+import { Button, Dialog, Select } from '@/components/ui'
 import type { SrdSpell } from '@/lib/actions/spells-search'
 
 interface Props {
@@ -42,98 +43,76 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
-      <div className="my-auto flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-800 p-4">
+    <Dialog
+      open={true}
+      onClose={onClose}
+      title={spell.name_ru ?? spell.name ?? parsed.name}
+      description={`${parsed.level === 0 ? 'Заговор' : `${parsed.level} уровень`}${parsed.school && `, ${parsed.school.toLowerCase()}`}${parsed.ritual && ' (ритуал)'}${parsed.concentration && ' (концентрация)'}`}
+      size="lg"
+      footer={
+        characters.length > 0 ? (
+          <div className="flex w-full items-center gap-2">
+            <Select
+              value={selectedChar ?? ''}
+              onChange={(e) => setSelectedChar(e.target.value)}
+              options={characters.map((c) => ({ value: c.id, label: c.name }))}
+              className="flex-1"
+            />
+            <Button
+              variant="primary"
+              size="md"
+              icon={<Plus size={14} />}
+              onClick={handleAdd}
+              loading={isPending}
+            >
+              Добавить
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="space-y-3 text-sm">
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-[var(--bg-app)] p-3">
           <div>
-            <h2 className="text-xl font-bold">{spell.name_ru ?? spell.name ?? parsed.name}</h2>
-            <p className="mt-0.5 text-sm text-slate-400 italic">
-              {parsed.level === 0 ? 'Заговор' : `${parsed.level} уровень`}
-              {parsed.school && `, ${parsed.school.toLowerCase()}`}
-              {parsed.ritual && ' (ритуал)'}
-              {parsed.concentration && ' (концентрация)'}
-            </p>
+            <span className="text-[var(--text-muted)]">Время:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{parsed.castingTime || '—'}</span>
           </div>
-          <button onClick={onClose} className="shrink-0 rounded p-1 transition hover:bg-slate-800">
-            <X size={18} />
-          </button>
+          <div>
+            <span className="text-[var(--text-muted)]">Дистанция:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{parsed.range || '—'}</span>
+          </div>
+          <div>
+            <span className="text-[var(--text-muted)]">Компоненты:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{parsed.components || '—'}</span>
+          </div>
+          <div>
+            <span className="text-[var(--text-muted)]">Длительность:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{parsed.duration || '—'}</span>
+          </div>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm">
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-950/50 p-3">
-            <div>
-              <span className="text-slate-500">Время:</span>{' '}
-              <span className="text-slate-300">{parsed.castingTime || '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Дистанция:</span>{' '}
-              <span className="text-slate-300">{parsed.range || '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Компоненты:</span>{' '}
-              <span className="text-slate-300">{parsed.components || '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Длительность:</span>{' '}
-              <span className="text-slate-300">{parsed.duration || '—'}</span>
-            </div>
-          </div>
-
-          <div className="whitespace-pre-wrap text-slate-300">
-            {parsed.description || 'Описание отсутствует'}
-          </div>
-
-          {parsed.higherLevel && (
-            <div>
-              <h3 className="mb-1 font-semibold text-violet-300">На более высоких уровнях</h3>
-              <div className="whitespace-pre-wrap text-slate-300">{parsed.higherLevel}</div>
-            </div>
-          )}
-
-          {parsed.classes.length > 0 && (
-            <div>
-              <h3 className="mb-1 font-semibold text-slate-300">Классы</h3>
-              <div className="text-slate-400">{parsed.classes.join(', ')}</div>
-            </div>
-          )}
+        <div className="whitespace-pre-wrap text-[var(--text-secondary)]">
+          {parsed.description || 'Описание отсутствует'}
         </div>
 
-        {characters.length > 0 && (
-          <div className="space-y-2 border-t border-slate-800 p-4">
-            <label className="block text-sm text-slate-300">Добавить персонажу:</label>
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedChar ?? ''}
-                onChange={(e) => setSelectedChar(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
-              >
-                {characters.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleAdd}
-                disabled={isPending}
-                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Добавляем...
-                  </>
-                ) : (
-                  <>
-                    <Plus size={14} />
-                    Добавить
-                  </>
-                )}
-              </button>
+        {parsed.higherLevel && (
+          <div>
+            <h3 className="mb-1 font-semibold text-[var(--accent-text)]">
+              На более высоких уровнях
+            </h3>
+            <div className="whitespace-pre-wrap text-[var(--text-secondary)]">
+              {parsed.higherLevel}
             </div>
           </div>
         )}
+
+        {parsed.classes.length > 0 && (
+          <div>
+            <h3 className="mb-1 font-semibold text-[var(--text-secondary)]">Классы</h3>
+            <div className="text-[var(--text-muted)]">{parsed.classes.join(', ')}</div>
+          </div>
+        )}
       </div>
-    </div>
+    </Dialog>
   )
 }

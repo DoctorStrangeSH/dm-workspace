@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronRight, FolderTree } from 'lucide-react'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui'
 
 interface Descendant {
   entityId: string
@@ -14,25 +15,27 @@ interface Descendant {
 interface Props {
   campaignId: string
   descendants: Descendant[]
-  /** Тип дочерних сущностей (обычно location) */
   entityType?: 'location'
 }
 
 export default function LocationChildrenTree({ campaignId, descendants }: Props) {
   if (descendants.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-6 text-center">
-        <FolderTree size={24} className="mx-auto mb-2 text-slate-700" />
-        <p className="text-sm text-slate-500">Нет вложенных локаций</p>
-      </div>
+      <EmptyState
+        icon="📁"
+        title="Нет вложенных локаций"
+        description="Добавь дочерние локации через связи «Родительская локация»."
+        size="sm"
+        dashed={false}
+      />
     )
   }
 
   const style = ENTITY_STYLES.location
 
   return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-      <div className="mb-3 flex items-center gap-2 text-sm text-slate-400">
+    <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]/60 p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm text-[var(--text-muted)]">
         <FolderTree size={14} />
         <span>Вложенные локации ({descendants.length})</span>
       </div>
@@ -42,12 +45,14 @@ export default function LocationChildrenTree({ campaignId, descendants }: Props)
           <Link
             key={d.entityId}
             href={`/campaign/${campaignId}/entities/${d.entityId}`}
-            className="group flex items-center gap-2 rounded px-2 py-1.5 transition hover:bg-slate-800/60"
+            className="group flex items-center gap-2 rounded px-2 py-1.5 transition-colors hover:bg-[var(--bg-hover)]/60"
             style={{ paddingLeft: `${(d.depth - 1) * 16 + 8}px` }}
           >
-            {d.depth > 1 && <ChevronRight size={12} className="shrink-0 text-slate-600" />}
+            {d.depth > 1 && (
+              <ChevronRight size={12} className="shrink-0 text-[var(--text-subtle)]" />
+            )}
             <span className={cn('text-sm', style.color)}>{style.icon}</span>
-            <span className="truncate text-sm text-slate-300 transition group-hover:text-white">
+            <span className="truncate text-sm text-[var(--text-secondary)] transition group-hover:text-[var(--text-primary)]">
               {d.entityName}
             </span>
           </Link>

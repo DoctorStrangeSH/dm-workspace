@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import { ToastProvider } from '@/components/toast/toast-provider'
@@ -17,9 +17,25 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
+// CHANGES: добавлен viewport (themeColor для light/dark) + openGraph
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a12' },
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+  ],
+}
+
 export const metadata: Metadata = {
   title: 'DM Workspace',
   description: 'Мастерская ГМа',
+  metadataBase: new URL('https://dm-workspace.vercel.app'),
+  openGraph: {
+    title: 'DM Workspace',
+    description: 'Мастерская ГМа',
+    type: 'website',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

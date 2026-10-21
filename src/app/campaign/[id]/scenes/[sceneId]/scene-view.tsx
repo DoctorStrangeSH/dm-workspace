@@ -6,7 +6,6 @@ import {
   Eye,
   EyeOff,
   Upload,
-  Loader2,
   Plus,
   Swords,
   Eraser,
@@ -14,11 +13,13 @@ import {
   Circle,
   MoveRight,
   Triangle,
+  MoreHorizontal,
 } from 'lucide-react'
 import { setActiveScene, uploadMap } from '@/lib/actions/scenes'
 import { startCombat } from '@/lib/actions/combat'
 import { clearFog } from '@/lib/actions/fog'
 import { useToast } from '@/components/toast/toast-provider'
+import { Button, Input, Dropdown, Tooltip } from '@/components/ui'
 import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
@@ -27,7 +28,6 @@ import FogLayer from './fog-layer'
 import RulerTool from './ruler-tool'
 import TemplateTool from './template-tool'
 import { useHotkey } from '@/lib/hooks/use-hotkey'
-import { cn } from '@/lib/utils'
 import type {
   Scene,
   Token,
@@ -75,7 +75,6 @@ export default function SceneView({
   const [templateSize, setTemplateSize] = useState(30)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Хоткеи
   useHotkey({
     code: 'KeyG',
     handler: () => setShowGrid((g) => !g),
@@ -167,15 +166,58 @@ export default function SceneView({
   const refresh = () => router.refresh()
   const currentTurn = initiative.find((e) => e.is_current)
 
+  const toolsDropdown = [
+    {
+      label: 'Линейка',
+      onClick: () => setActiveTool(activeTool === 'ruler' ? 'none' : 'ruler'),
+      icon: <Ruler size={14} />,
+    },
+    {
+      label: 'Конус',
+      onClick: () => setActiveTool(activeTool === 'cone' ? 'none' : 'cone'),
+      icon: <Triangle size={14} />,
+    },
+    {
+      label: 'Сфера',
+      onClick: () => setActiveTool(activeTool === 'sphere' ? 'none' : 'sphere'),
+      icon: <Circle size={14} />,
+    },
+    {
+      label: 'Линия',
+      onClick: () => setActiveTool(activeTool === 'line' ? 'none' : 'line'),
+      icon: <MoveRight size={14} />,
+    },
+  ]
+
+  const fogDropdown = [
+    {
+      label: fogEnabled ? 'Скрыть туман' : 'Показать туман',
+      onClick: () => setFogEnabled((v) => !v),
+      icon: fogEnabled ? <EyeOff size={14} /> : <Eye size={14} />,
+    },
+    {
+      label: 'Кисть',
+      onClick: () => setBrushMode((v) => !v),
+      icon: <Plus size={14} />,
+      disabled: !fogEnabled,
+    },
+    {
+      label: 'Очистить туман',
+      onClick: handleClearFog,
+      icon: <Eraser size={14} />,
+      disabled: !fogEnabled || isPending,
+    },
+  ]
+
   return (
     <div>
       {/* Панель */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-bold">{scene.name}</h1>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <h1 className="truncate text-2xl font-bold text-[var(--text-primary)]">{scene.name}</h1>
+          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
             {scene.width}×{scene.height} клеток · {scene.grid_size}px
-            {scene.is_active && <span className="ml-2 text-green-400">· Активна</span>}
+            {scene.is_active && <span className="ml-2 text-[var(--success)]">· Активна</span>}
             {' · '}
             <span>
               {tokens.length} {tokens.length === 1 ? 'токен' : 'токенов'}
@@ -183,156 +225,157 @@ export default function SceneView({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setShowGrid(!showGrid)}
-            className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm transition hover:bg-slate-700"
-            title={showGrid ? 'Скрыть сетку (G)' : 'Показать сетку (G)'}
-          >
-            {showGrid ? <Eye size={14} /> : <EyeOff size={14} />}
-            Сетка
-          </button>
-
-          {isDm && !scene.is_active && (
-            <button
-              onClick={handleActivate}
-              disabled={isPending}
-              className="flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white transition hover:bg-green-500 disabled:opacity-50"
+        {/* ─── Mobile: основное + «Ещё» ─── */}
+        <div className="flex items-center gap-2 md:hidden">
+          {isDm && (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Plus size={14} />}
+              onClick={() => setShowAddToken(true)}
             >
-              <Eye size={14} />
-              Активировать
-            </button>
+              Токен
+            </Button>
           )}
 
-          {/* Инструменты */}
-          <button
-            onClick={() => setActiveTool(activeTool === 'ruler' ? 'none' : 'ruler')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
-              activeTool === 'ruler'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
-            )}
-            title="Линейка"
-          >
-            <Ruler size={14} />
-          </button>
+          {initiative.length > 0 ? (
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Swords size={14} />}
+              onClick={() => setShowInitiative(!showInitiative)}
+            >
+              Бой ({initiative.length})
+            </Button>
+          ) : (
+            isDm && (
+              <Button
+                variant="danger"
+                size="sm"
+                icon={<Swords size={14} />}
+                onClick={handleStartCombat}
+                disabled={isPending}
+              >
+                Бой
+              </Button>
+            )
+          )}
 
-          <button
-            onClick={() => setActiveTool(activeTool === 'cone' ? 'none' : 'cone')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
-              activeTool === 'cone'
-                ? 'bg-red-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
-            )}
-            title="Конус"
-          >
-            <Triangle size={14} />
-          </button>
+          <Dropdown
+            trigger={
+              <Button variant="ghost" size="sm" icon={<MoreHorizontal size={14} />}>
+                Ещё
+              </Button>
+            }
+            items={[
+              {
+                label: showGrid ? 'Скрыть сетку' : 'Показать сетку',
+                onClick: () => setShowGrid(!showGrid),
+                icon: showGrid ? <Eye size={14} /> : <EyeOff size={14} />,
+              },
+              ...toolsDropdown,
+              ...(isDm ? fogDropdown : []),
+              ...(isDm
+                ? [
+                    {
+                      label: scene.image_url ? 'Заменить карту' : 'Загрузить карту',
+                      onClick: () => fileInputRef.current?.click(),
+                      icon: <Upload size={14} />,
+                    },
+                  ]
+                : []),
+            ]}
+            align="right"
+          />
+        </div>
 
-          <button
-            onClick={() => setActiveTool(activeTool === 'sphere' ? 'none' : 'sphere')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
-              activeTool === 'sphere'
-                ? 'bg-red-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
-            )}
-            title="Сфера"
-          >
-            <Circle size={14} />
-          </button>
+        {/* ─── Desktop: основное + разделитель + Dropdown'ы ─── */}
+        <div className="hidden items-center gap-2 md:flex">
+          <Tooltip content={showGrid ? 'Скрыть сетку (G)' : 'Показать сетку (G)'}>
+            <Button
+              variant={showGrid ? 'secondary' : 'ghost'}
+              size="sm"
+              icon={showGrid ? <Eye size={14} /> : <EyeOff size={14} />}
+              onClick={() => setShowGrid(!showGrid)}
+            >
+              Сетка
+            </Button>
+          </Tooltip>
 
-          <button
-            onClick={() => setActiveTool(activeTool === 'line' ? 'none' : 'line')}
-            className={cn(
-              'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
-              activeTool === 'line'
-                ? 'bg-red-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
-            )}
-            title="Линия"
-          >
-            <MoveRight size={14} />
-          </button>
+          {isDm && !scene.is_active && (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Eye size={14} />}
+              onClick={handleActivate}
+              disabled={isPending}
+            >
+              Активировать
+            </Button>
+          )}
 
           {isDm && (
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Plus size={14} />}
               onClick={() => setShowAddToken(true)}
-              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-sm text-white transition hover:bg-amber-500"
               title="Добавить токен (Ctrl+T)"
             >
-              <Plus size={14} />
               Токен
-            </button>
+            </Button>
           )}
 
           {isDm && initiative.length === 0 && (
-            <button
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Swords size={14} />}
               onClick={handleStartCombat}
               disabled={isPending}
-              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-500 disabled:opacity-50"
               title="Начать бой (Ctrl+B)"
             >
-              <Swords size={14} />
               Начать бой
-            </button>
+            </Button>
           )}
 
           {initiative.length > 0 && (
-            <button
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Swords size={14} />}
               onClick={() => setShowInitiative(!showInitiative)}
-              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm text-white transition hover:bg-red-500"
             >
-              <Swords size={14} />
               Бой ({initiative.length})
-            </button>
+            </Button>
           )}
 
+          <div className="mx-1 h-6 w-px bg-[var(--border-default)]" aria-hidden="true" />
+
+          <Dropdown
+            trigger={
+              <Button variant="ghost" size="sm" icon={<MoreHorizontal size={14} />}>
+                Инструменты
+              </Button>
+            }
+            items={toolsDropdown}
+            align="right"
+          />
+
           {isDm && (
-            <>
-              <button
-                onClick={() => setFogEnabled(!fogEnabled)}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
-                  fogEnabled
-                    ? 'bg-slate-700 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
-                )}
-                title="Туман войны (Ctrl+F)"
-              >
-                {fogEnabled ? <EyeOff size={14} /> : <Eye size={14} />}
-                Туман
-              </button>
-
-              {fogEnabled && (
-                <button
-                  onClick={() => setBrushMode(!brushMode)}
-                  className={cn(
-                    'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition',
-                    brushMode
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:text-white'
-                  )}
-                  title="Кисть — открыть область"
+            <Dropdown
+              trigger={
+                <Button
+                  variant={fogEnabled ? 'secondary' : 'ghost'}
+                  size="sm"
+                  icon={fogEnabled ? <EyeOff size={14} /> : <Eye size={14} />}
                 >
-                  <Plus size={14} />
-                  Кисть
-                </button>
-              )}
-
-              {fogEnabled && (
-                <button
-                  onClick={handleClearFog}
-                  disabled={isPending}
-                  className="flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
-                  title="Очистить туман"
-                >
-                  <Eraser size={14} />
-                </button>
-              )}
-            </>
+                  Туман
+                </Button>
+              }
+              items={fogDropdown}
+              align="right"
+            />
           )}
 
           {isDm && (
@@ -344,18 +387,15 @@ export default function SceneView({
                 onChange={handleFileChange}
                 className="hidden"
               />
-              <button
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Upload size={14} />}
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-500 disabled:opacity-50"
+                loading={isUploading}
               >
-                {isUploading ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Upload size={14} />
-                )}
                 {scene.image_url ? 'Заменить карту' : 'Загрузить карту'}
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -363,46 +403,43 @@ export default function SceneView({
 
       {/* Индикатор текущего хода */}
       {currentTurn && (
-        <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-red-900/40 bg-red-950/30 px-4 py-2">
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] px-4 py-2">
           <div className="flex items-center gap-2">
-            <Swords size={16} className="text-red-400" />
-            <span className="text-sm text-slate-300">
-              Ход: <strong className="text-white">{currentTurn.token.name}</strong>
+            <Swords size={16} className="text-[var(--danger)]" />
+            <span className="text-sm text-[var(--text-secondary)]">
+              Ход: <strong className="text-[var(--text-primary)]">{currentTurn.token.name}</strong>
             </span>
           </div>
-          <button
-            onClick={() => setShowInitiative(true)}
-            className="rounded bg-red-600 px-3 py-1 text-xs text-white transition hover:bg-red-500"
-          >
+          <Button variant="danger" size="sm" onClick={() => setShowInitiative(true)}>
             Панель боя
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Размер шаблона */}
       {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-[var(--text-muted)]">
             Размер {activeTool === 'cone' ? 'конуса' : activeTool === 'sphere' ? 'сферы' : 'линии'}:
           </span>
-          <input
+          <Input
             type="number"
             value={templateSize}
             onChange={(e) => setTemplateSize(Number(e.target.value) || 5)}
             min={5}
             max={120}
             step={5}
-            className="w-20 rounded border border-slate-800 bg-slate-950 px-2 py-1 text-sm text-white focus:border-indigo-500 focus:outline-none"
+            className="w-20"
           />
-          <span className="text-sm text-slate-500">футов</span>
+          <span className="text-sm text-[var(--text-subtle)]">футов</span>
         </div>
       )}
 
       {/* Пустая сцена */}
       {tokens.length === 0 && isDm && (
-        <div className="mb-4 rounded-lg border border-slate-800 bg-slate-900/50 p-3 text-center text-sm text-slate-500">
+        <div className="mb-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]/50 p-3 text-center text-sm text-[var(--text-muted)]">
           Сцена пуста. Добавь первый токен кнопкой{' '}
-          <strong className="text-slate-300">«Токен»</strong>.
+          <strong className="text-[var(--text-secondary)]">«Токен»</strong>.
         </div>
       )}
 
@@ -410,11 +447,7 @@ export default function SceneView({
       <div className="flex justify-center">
         <div
           className="relative"
-          style={{
-            maxWidth: '100%',
-            maxHeight: 'calc(100vh - 250px)',
-            overflow: 'auto',
-          }}
+          style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 250px)', overflow: 'auto' }}
         >
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <MapCanvas scene={scene} showGrid={showGrid} />
@@ -432,9 +465,17 @@ export default function SceneView({
               fogEnabled={fogEnabled}
               brushMode={brushMode}
             />
-            {activeTool === 'ruler' && <RulerTool scene={scene} isActive={true} />}
+            {activeTool === 'ruler' && (
+              <RulerTool scene={scene} isActive={true} onClose={() => setActiveTool('none')} />
+            )}
             {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
-              <TemplateTool scene={scene} isActive={true} type={activeTool} size={templateSize} />
+              <TemplateTool
+                scene={scene}
+                isActive={true}
+                type={activeTool}
+                size={templateSize}
+                onClose={() => setActiveTool('none')}
+              />
             )}
           </div>
         </div>

@@ -5,18 +5,15 @@ import type { Scene } from '@/lib/types'
 
 interface Props {
   scene: Scene
-  /** Показывать ли сетку (для ГМ) */
   showGrid?: boolean
 }
 
 export default function MapCanvas({ scene, showGrid = true }: Props) {
   const { image_url, width, height, grid_size, grid_type } = scene
 
-  // Размеры canvas в пикселях
   const canvasWidth = width * grid_size
   const canvasHeight = height * grid_size
 
-  // Генерируем линии сетки
   const gridLines = useMemo(() => {
     if (!showGrid || grid_type === 'none') return null
 
@@ -24,23 +21,18 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
       const verticals: number[] = []
       const horizontals: number[] = []
 
-      for (let x = 0; x <= width; x++) {
-        verticals.push(x * grid_size)
-      }
-      for (let y = 0; y <= height; y++) {
-        horizontals.push(y * grid_size)
-      }
+      for (let x = 0; x <= width; x++) verticals.push(x * grid_size)
+      for (let y = 0; y <= height; y++) horizontals.push(y * grid_size)
 
       return { type: 'square' as const, verticals, horizontals }
     }
 
-    // hex — пропускаем для MVP, будет позже
     return null
   }, [width, height, grid_size, grid_type, showGrid])
 
   return (
     <div
-      className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950"
+      className="relative overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)]"
       style={{
         width: canvasWidth,
         height: canvasHeight,
@@ -48,7 +40,6 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
         maxHeight: 'calc(100vh - 200px)',
       }}
     >
-      {/* Карта (если загружена) */}
       {image_url ? (
         <img
           src={image_url}
@@ -57,12 +48,11 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
           draggable={false}
         />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-slate-600">
+        <div className="absolute inset-0 flex items-center justify-center text-[var(--text-subtle)]">
           Карта не загружена
         </div>
       )}
 
-      {/* Сетка (SVG) */}
       {gridLines && (
         <svg
           className="pointer-events-none absolute inset-0"
@@ -79,7 +69,8 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
                   y1={0}
                   x2={x}
                   y2={canvasHeight}
-                  stroke="rgba(148, 163, 184, 0.3)"
+                  stroke="var(--border-strong)"
+                  strokeOpacity={0.4}
                   strokeWidth={1}
                 />
               ))}
@@ -90,7 +81,8 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
                   y1={y}
                   x2={canvasWidth}
                   y2={y}
-                  stroke="rgba(148, 163, 184, 0.3)"
+                  stroke="var(--border-strong)"
+                  strokeOpacity={0.4}
                   strokeWidth={1}
                 />
               ))}

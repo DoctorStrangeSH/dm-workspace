@@ -27,7 +27,6 @@ export default function BestiaryClient({
   const [isPending, startTransition] = useTransition()
   const [selectedMonster, setSelectedMonster] = useState<SrdMonster | null>(null)
 
-  // Поиск с фильтрами
   useEffect(() => {
     const timer = setTimeout(() => {
       startTransition(async () => {

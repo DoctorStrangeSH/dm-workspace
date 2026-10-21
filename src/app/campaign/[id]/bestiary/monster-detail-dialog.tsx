@@ -2,9 +2,10 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Plus, Loader2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { addMonsterToCampaign } from '@/lib/actions/bestiary'
 import { useToast } from '@/components/toast/toast-provider'
+import { Button, Dialog } from '@/components/ui'
 import type { SrdMonster } from '@/lib/actions/bestiary-search'
 
 interface Props {
@@ -49,98 +50,82 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
-      <div className="my-auto flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-800 p-4">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-bold">{monster.name_ru ?? monster.name}</h2>
-            <p className="mt-0.5 text-sm text-slate-400 italic">
-              {data.size} {data.type}, {data.alignment || '—'}
-            </p>
-          </div>
-          <button onClick={onClose} className="shrink-0 rounded p-1 transition hover:bg-slate-800">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 text-sm">
-          <div className="space-y-1 rounded-lg bg-slate-950/50 p-3">
-            <div>
-              <span className="text-slate-500">AC:</span>{' '}
-              <span className="text-slate-200">{data.ac ?? '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">HP:</span>{' '}
-              <span className="text-slate-200">{data.hp ?? '—'}</span>
-            </div>
-            <div>
-              <span className="text-slate-500">Скорость:</span>{' '}
-              <span className="text-slate-200">{data.speed ?? '—'} футов</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-6 gap-2">
-            {abilities.map((a) => (
-              <div
-                key={a.label}
-                className="rounded border border-slate-800 bg-slate-950 p-2 text-center"
-              >
-                <div className="text-[10px] text-slate-500 uppercase">{a.label}</div>
-                <div className="text-base font-bold">{a.score ?? 10}</div>
-                <div className="text-[10px] text-slate-500">{formatModifier(a.score)}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 p-3">
-            <div className="flex items-center justify-between text-sm">
-              <div>
-                <strong className="text-amber-300">CR:</strong>{' '}
-                <span className="text-slate-200">{data.cr ?? '—'}</span>
-              </div>
-              <div>
-                <strong className="text-amber-300">XP:</strong>{' '}
-                <span className="text-slate-200">{data.xp ?? '—'}</span>
-              </div>
-            </div>
-          </div>
-
-          {data.description && (
-            <div>
-              <h3 className="mb-2 font-semibold text-slate-300">Описание</h3>
-              <div className="text-xs whitespace-pre-wrap text-slate-400">{data.description}</div>
-            </div>
-          )}
-        </div>
-
-        {canEdit && (
-          <div className="flex justify-end gap-2 border-t border-slate-800 p-4">
-            <button
-              onClick={onClose}
-              className="rounded-lg bg-slate-800 px-4 py-2 text-sm transition hover:bg-slate-700"
-            >
+    <Dialog
+      open={true}
+      onClose={onClose}
+      title={monster.name_ru ?? monster.name}
+      description={`${data.size} ${data.type}, ${data.alignment || '—'}`}
+      size="lg"
+      footer={
+        canEdit ? (
+          <>
+            <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
               Закрыть
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              icon={<Plus size={14} />}
               onClick={handleAdd}
-              disabled={isPending}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium transition hover:bg-indigo-500 disabled:opacity-50"
+              loading={isPending}
             >
-              {isPending ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Добавляем...
-                </>
-              ) : (
-                <>
-                  <Plus size={14} />
-                  Добавить в кампанию
-                </>
-              )}
-            </button>
+              Добавить в кампанию
+            </Button>
+          </>
+        ) : undefined
+      }
+    >
+      <div className="space-y-4 text-sm">
+        <div className="space-y-1 rounded-lg bg-[var(--bg-app)] p-3">
+          <div>
+            <span className="text-[var(--text-muted)]">AC:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{data.ac ?? '—'}</span>
+          </div>
+          <div>
+            <span className="text-[var(--text-muted)]">HP:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{data.hp ?? '—'}</span>
+          </div>
+          <div>
+            <span className="text-[var(--text-muted)]">Скорость:</span>{' '}
+            <span className="text-[var(--text-secondary)]">{data.speed ?? '—'} футов</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-6 gap-2">
+          {abilities.map((a) => (
+            <div
+              key={a.label}
+              className="rounded border border-[var(--border-default)] bg-[var(--bg-app)] p-2 text-center"
+            >
+              <div className="text-[10px] text-[var(--text-subtle)] uppercase">{a.label}</div>
+              <div className="text-base font-bold text-[var(--text-primary)]">{a.score ?? 10}</div>
+              <div className="text-[10px] text-[var(--text-subtle)]">{formatModifier(a.score)}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-lg border border-[var(--warning)]/30 bg-[var(--warning-subtle)] p-3">
+          <div className="flex items-center justify-between text-sm">
+            <div>
+              <strong className="text-[var(--warning-text)]">CR:</strong>{' '}
+              <span className="text-[var(--text-secondary)]">{data.cr ?? '—'}</span>
+            </div>
+            <div>
+              <strong className="text-[var(--warning-text)]">XP:</strong>{' '}
+              <span className="text-[var(--text-secondary)]">{data.xp ?? '—'}</span>
+            </div>
+          </div>
+        </div>
+
+        {data.description && (
+          <div>
+            <h3 className="mb-2 font-semibold text-[var(--text-secondary)]">Описание</h3>
+            <div className="text-xs whitespace-pre-wrap text-[var(--text-muted)]">
+              {data.description}
+            </div>
           </div>
         )}
       </div>
-    </div>
+    </Dialog>
   )
 }

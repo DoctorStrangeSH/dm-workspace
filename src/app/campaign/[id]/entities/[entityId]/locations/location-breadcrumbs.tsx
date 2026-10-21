@@ -24,7 +24,7 @@ export default function LocationBreadcrumbs({ campaignId, path }: Props) {
     <nav className="mb-4 flex flex-wrap items-center gap-1 text-sm">
       <Link
         href={`/campaign/${campaignId}/entities`}
-        className="flex items-center gap-1 text-slate-500 transition hover:text-slate-300"
+        className="flex items-center gap-1 text-[var(--text-subtle)] transition hover:text-[var(--text-secondary)]"
       >
         <Home size={12} />
         <span>Сущности</span>
@@ -36,7 +36,7 @@ export default function LocationBreadcrumbs({ campaignId, path }: Props) {
 
         return (
           <span key={item.entityId} className="flex items-center gap-1">
-            <ChevronRight size={12} className="text-slate-600" />
+            <ChevronRight size={12} className="text-[var(--text-subtle)]" />
             {isLast ? (
               <span className={cn('font-medium', style.color)}>
                 {style.icon} {item.entityName}
@@ -44,7 +44,7 @@ export default function LocationBreadcrumbs({ campaignId, path }: Props) {
             ) : (
               <Link
                 href={`/campaign/${campaignId}/entities/${item.entityId}`}
-                className="text-slate-400 transition hover:text-white"
+                className="text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
               >
                 {style.icon} {item.entityName}
               </Link>

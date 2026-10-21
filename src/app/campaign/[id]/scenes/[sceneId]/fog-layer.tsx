@@ -28,7 +28,6 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
   const width = scene.width * gridSize
   const height = scene.height * gridSize
 
-  // Открытые области (прямоугольники)
   const revealedBoxes = fog.map((area) => ({
     x: area.x * gridSize,
     y: area.y * gridSize,
@@ -36,7 +35,6 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
     height: area.height * gridSize,
   }))
 
-  // Преобразуем координаты мыши в координаты сетки
   const getGridCoords = (e: React.MouseEvent) => {
     if (!wrapperRef.current) return null
     const rect = wrapperRef.current.getBoundingClientRect()
@@ -82,7 +80,6 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
     if ('error' in res) toast.error(res.error ?? 'Ошибка')
   }
 
-  // Превью выделения
   const preview =
     dragging && start && end
       ? {
@@ -110,7 +107,6 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
         style={{ width: '100%', height: '100%' }}
       >
         <defs>
-          {/* Маска: белое — видно, чёрное — скрыто */}
           <mask id={`fog-mask-${scene.id}`}>
             <rect width={width} height={height} fill="white" />
             {revealedBoxes.map((box, i) => (
@@ -135,7 +131,6 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
           </mask>
         </defs>
 
-        {/* Туман */}
         <rect
           width={width}
           height={height}

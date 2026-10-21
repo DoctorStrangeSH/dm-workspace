@@ -19,7 +19,6 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
   const base = `/campaign/${campaignId}`
   const items = getCampaignNavItems(base)
 
-  // CHANGES: паттерн «props → state» (уже был) — оставляем.
   const [prevPathname, setPrevPathname] = useState(pathname)
   if (pathname !== prevPathname) {
     setPrevPathname(pathname)
@@ -48,7 +47,6 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
 
   return (
     <>
-      {/* CHANGES: IconButton вместо <button> с хардкодными классами */}
       <IconButton
         variant="ghost"
         size="md"

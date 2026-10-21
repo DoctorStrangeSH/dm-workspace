@@ -2,16 +2,21 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, Check, Loader2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import { createCharacter } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
+import { Button, Card } from '@/components/ui'
 import WizardStep1 from './wizard-step-1'
-import WizardStep2 from './wizard-step-2'
+import WizardStep2, { type AbilityMode } from './wizard-step-2'
 import WizardStep3 from './wizard-step-3'
 import WizardStep4 from './wizard-step-4'
 import { BACKGROUNDS } from '@/lib/dnd/constants'
-import { buildCharacterData, isStandardArrayUsed } from '@/lib/dnd/character-builder'
+import {
+  buildCharacterData,
+  getPointsRemaining,
+  isStandardArrayUsed,
+} from '@/lib/dnd/character-builder'
 import { srdSpeciesToRaceInfo, srdClassToClassInfo } from '@/lib/dnd/srd-adapter'
 import type { AbilityKey, SkillKey } from '@/lib/types'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
@@ -29,13 +34,11 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
 
-  // Шаг 1
   const [name, setName] = useState('')
   const [raceSlug, setRaceSlug] = useState('')
   const [classSlug, setClassSlug] = useState('')
   const [level, setLevel] = useState(1)
 
-  // Шаг 2
   const [abilities, setAbilities] = useState<Record<AbilityKey, number>>({
     str: 8,
     dex: 8,
@@ -45,11 +48,12 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
     cha: 8,
   })
 
-  // Шаг 3
+  // CHANGES: mode поднят наверх — чтобы валидация шага 2 знала режим
+  const [abilityMode, setAbilityMode] = useState<AbilityMode>('pointbuy')
+
   const [backgroundSlug, setBackgroundSlug] = useState('')
   const [chosenSkills, setChosenSkills] = useState<SkillKey[]>([])
 
-  // Адаптеры: SRD → RaceInfo / ClassInfo
   const race = useMemo(() => {
     const srd = species.find((s) => s.key === raceSlug)
     return srd ? srdSpeciesToRaceInfo(srd) : undefined
@@ -62,12 +66,15 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
 
   const background = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
 
-  // Валидация шага
   const isStepValid = useMemo(() => {
     if (step === 1) {
       return name.trim().length >= 2 && !!raceSlug && !!classSlug
     }
     if (step === 2) {
+      // CHANGES: правильная валидация в зависимости от режима
+      if (abilityMode === 'pointbuy') {
+        return getPointsRemaining(abilities) === 0
+      }
       return isStandardArrayUsed(Object.values(abilities))
     }
     if (step === 3) {
@@ -75,9 +82,18 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
       return !!backgroundSlug && chosenSkills.length === maxSkills
     }
     return true
-  }, [step, name, raceSlug, classSlug, abilities, backgroundSlug, chosenSkills, classInfo])
+  }, [
+    step,
+    name,
+    raceSlug,
+    classSlug,
+    abilities,
+    abilityMode,
+    backgroundSlug,
+    chosenSkills,
+    classInfo,
+  ])
 
-  // Строим данные персонажа
   const characterData = useMemo(() => {
     if (!race || !classInfo || !background) return null
     return buildCharacterData({
@@ -130,12 +146,12 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
           <div key={s.number} className="flex flex-1 items-center gap-2">
             <div
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition',
+                'flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-colors',
                 step === s.number
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-[var(--accent)] text-white'
                   : step > s.number
-                    ? 'border border-green-800 bg-green-950/60 text-green-300'
-                    : 'border border-slate-800 bg-slate-900 text-slate-500'
+                    ? 'border border-[var(--success)]/30 bg-[var(--success-subtle)] text-[var(--success-text)]'
+                    : 'border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-subtle)]'
               )}
             >
               {step > s.number ? <Check size={14} /> : s.number}
@@ -143,18 +159,19 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
             <span
               className={cn(
                 'hidden text-sm font-medium sm:inline',
-                step === s.number ? 'text-white' : 'text-slate-500'
+                step === s.number ? 'text-[var(--text-primary)]' : 'text-[var(--text-subtle)]'
               )}
             >
               {s.label}
             </span>
-            {i < steps.length - 1 && <div className="mx-2 h-px flex-1 bg-slate-800" />}
+            {i < steps.length - 1 && (
+              <div className="mx-2 h-px flex-1 bg-[var(--border-default)]" />
+            )}
           </div>
         ))}
       </div>
 
-      {/* Контент шага */}
-      <div className="min-h-[400px]">
+      <Card padding="lg" className="min-h-[400px]">
         {step === 1 && (
           <WizardStep1
             name={name}
@@ -170,7 +187,14 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
           />
         )}
 
-        {step === 2 && <WizardStep2 abilities={abilities} setAbilities={setAbilities} />}
+        {step === 2 && (
+          <WizardStep2
+            abilities={abilities}
+            setAbilities={setAbilities}
+            mode={abilityMode}
+            setMode={setAbilityMode}
+          />
+        )}
 
         {step === 3 && (
           <WizardStep3
@@ -185,53 +209,46 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
         {step === 4 && characterData && <WizardStep4 name={name} data={characterData} />}
 
         {step === 4 && !characterData && (
-          <div className="py-12 text-center text-sm text-slate-500">
+          <div className="py-12 text-center text-sm text-[var(--text-subtle)]">
             Не хватает данных (раса / класс / предыстория). Вернись назад.
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Навигация */}
-      <div className="mt-8 flex items-center justify-between gap-3 border-t border-slate-800 pt-6">
-        <button
-          type="button"
+      <div className="mt-8 flex items-center justify-between gap-3 border-t border-[var(--border-default)] pt-6">
+        <Button
+          variant="secondary"
+          size="md"
           onClick={handleBack}
           disabled={step === 1 || isPending}
-          className="flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
+          icon={<ChevronLeft size={16} />}
         >
-          <ChevronLeft size={16} />
           Назад
-        </button>
+        </Button>
 
         {step < 4 ? (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="md"
             onClick={handleNext}
             disabled={!isStepValid || isPending}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
+            icon={<ChevronRight size={16} />}
+            iconPosition="right"
           >
             Далее
-            <ChevronRight size={16} />
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="md"
             onClick={handleCreate}
             disabled={isPending || !characterData}
-            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-medium transition hover:bg-green-500 disabled:opacity-50"
+            loading={isPending}
+            icon={<Check size={16} />}
           >
-            {isPending ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Создаём...
-              </>
-            ) : (
-              <>
-                <Check size={16} />
-                Создать персонажа
-              </>
-            )}
-          </button>
+            Создать персонажа
+          </Button>
         )}
       </div>
     </div>

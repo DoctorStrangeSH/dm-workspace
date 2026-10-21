@@ -17,6 +17,7 @@ import SaveAsTemplateButton from './save-as-template-button'
 import LocationBreadcrumbs from './locations/location-breadcrumbs'
 import LocationChildrenTree from './locations/location-children-tree'
 import { cn } from '@/lib/utils'
+import { Card, Button, Dialog, Textarea } from '@/components/ui'
 import type { Entity, EntityRelation, EntityTag, Tag, EntityType } from '@/lib/types'
 import type { BacklinkChapter } from '@/lib/queries/backlinks'
 
@@ -113,7 +114,6 @@ export default function EntityDetail({
 
   return (
     <div>
-      {/* Общие крошки (кроме локаций — у них свои) */}
       {entity.type !== 'location' && (
         <Breadcrumbs
           items={[
@@ -126,12 +126,10 @@ export default function EntityDetail({
         />
       )}
 
-      {/* Крошки локаций (иерархия) */}
       {entity.type === 'location' && locationPath && locationPath.length > 1 && (
         <LocationBreadcrumbs campaignId={campaignId} path={locationPath} />
       )}
 
-      {/* Заголовок */}
       <div className="mb-6 flex items-start gap-4">
         <div
           className={cn(
@@ -144,15 +142,15 @@ export default function EntityDetail({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-1 text-xs text-slate-500">{style.label}</div>
+          <div className="mb-1 text-xs text-[var(--text-muted)]">{style.label}</div>
           {isDm ? (
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border-b border-transparent bg-transparent pb-1 text-2xl font-bold transition hover:border-slate-700 focus:border-indigo-500 focus:outline-none"
+              className="w-full border-b border-transparent bg-transparent pb-1 text-2xl font-bold text-[var(--text-primary)] transition hover:border-[var(--border-hover)] focus:border-[var(--border-focus)] focus:outline-none"
             />
           ) : (
-            <h1 className="text-2xl font-bold">{name}</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">{name}</h1>
           )}
         </div>
 
@@ -163,22 +161,22 @@ export default function EntityDetail({
         )}
       </div>
 
-      {/* Панель управления (только ГМ) */}
       {isDm && (
-        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-slate-800 pb-4">
-          <button
+        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-[var(--border-default)] pb-4">
+          <Button
+            variant={isVisible ? 'secondary' : 'ghost'}
+            size="sm"
+            icon={isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
             onClick={handleToggleVisibility}
             disabled={isPending}
             className={cn(
-              'flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition',
               isVisible
-                ? 'border-green-900/50 bg-green-950/40 text-green-300'
-                : 'border-amber-900/50 bg-amber-950/40 text-amber-300'
+                ? 'border-[var(--success)]/30 bg-[var(--success-subtle)] text-[var(--success-text)]'
+                : 'border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-[var(--warning-text)]'
             )}
           >
-            {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
             {isVisible ? 'Видна игрокам' : 'Скрыта'}
-          </button>
+          </Button>
 
           <SaveAsTemplateButton
             entityId={entity.id}
@@ -186,35 +184,34 @@ export default function EntityDetail({
             defaultName={entity.name}
           />
 
-          <button
+          <Button
+            variant="danger"
+            size="sm"
+            icon={<Trash2 size={14} />}
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isPending}
-            className="flex items-center gap-2 rounded-lg border border-red-900/50 bg-red-950/40 px-3 py-1.5 text-sm text-red-300 transition hover:bg-red-950/60"
           >
-            <Trash2 size={14} />
             Удалить
-          </button>
+          </Button>
         </div>
       )}
 
-      {/* Описание */}
-      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+      <Card padding="md">
         {isDm ? (
-          <textarea
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={6}
             placeholder="Описание, лор, внешность..."
-            className="w-full resize-none border-none bg-transparent text-slate-200 focus:outline-none"
+            className="border-none bg-transparent focus:ring-0"
           />
         ) : (
-          <p className="whitespace-pre-wrap text-slate-300">
+          <p className="whitespace-pre-wrap text-[var(--text-secondary)]">
             {description || 'Описание отсутствует'}
           </p>
         )}
-      </div>
+      </Card>
 
-      {/* Структурированные поля (data_json) */}
       <EntityDataForm
         entityId={entity.id}
         campaignId={campaignId}
@@ -223,7 +220,6 @@ export default function EntityDetail({
         isDm={isDm}
       />
 
-      {/* Теги */}
       <EntityTags
         entityId={entity.id}
         campaignId={campaignId}
@@ -232,14 +228,12 @@ export default function EntityDetail({
         isDm={isDm}
       />
 
-      {/* Вложенные локации */}
       {entity.type === 'location' && locationDescendants && (
         <div className="mt-8">
           <LocationChildrenTree campaignId={campaignId} descendants={locationDescendants} />
         </div>
       )}
 
-      {/* Связи */}
       <EntityRelationsList
         entityId={entity.id}
         campaignId={campaignId}
@@ -249,37 +243,35 @@ export default function EntityDetail({
         isDm={isDm}
       />
 
-      {/* Беклинки */}
       <div className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold">Упоминается в</h2>
+        <h2 className="mb-3 text-lg font-semibold text-[var(--text-primary)]">Упоминается в</h2>
         <EntityBacklinks campaignId={campaignId} backlinks={backlinks} />
       </div>
 
-      {/* Подтверждение удаления */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="mb-2 text-lg font-semibold">Удалить сущность?</h3>
-            <p className="mb-6 text-sm text-slate-400">«{entity.name}» будет удалена навсегда.</p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isPending}
-                className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isPending}
-                className="rounded-lg bg-red-600 px-4 py-2 transition hover:bg-red-500 disabled:opacity-50"
-              >
-                {isPending ? 'Удаляем...' : 'Удалить'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Удалить сущность?"
+        description={`«${entity.name}» будет удалена навсегда.`}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isPending}
+            >
+              Отмена
+            </Button>
+            <Button variant="danger" size="md" onClick={handleDelete} loading={isPending}>
+              Удалить
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">Это действие нельзя отменить.</p>
+      </Dialog>
     </div>
   )
 }

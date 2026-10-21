@@ -1,13 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import type { CampaignWithRole, CampaignRole } from '@/lib/types'
 
+/**
+ * CHANGES:
+ * 1. `select('*')` → `select('id, name, genre, description, invite_code, owner_id, created_at, updated_at')`
+ *    — не тянем тяжёлые поля (которых и нет, но лучше явно).
+ * 2. `select('id, name, genre, description, invite_code, owner_id, created_at, updated_at')`
+ *    — только нужные поля.
+ * 3. Всё остальное — без изменений.
+ */
 export async function getUserCampaigns(userId: string): Promise<{
   asDm: CampaignWithRole[]
   asPlayer: CampaignWithRole[]
 }> {
   const supabase = await createClient()
 
-  // 1. Получаем членства (простой запрос, без вложенности)
+  // 1. Получаем членства
   const { data: memberships, error: mErr } = await supabase
     .from('campaign_members')
     .select('campaign_id, role')
@@ -31,10 +39,10 @@ export async function getUserCampaigns(userId: string): Promise<{
 
   const campaignIds = memberships.map((m) => m.campaign_id)
 
-  // 2. Получаем кампании отдельным запросом
+  // 2. Получаем кампании — только нужные поля
   const { data: campaigns, error: cErr } = await supabase
     .from('campaigns')
-    .select('*')
+    .select('id, name, genre, description, invite_code, owner_id, created_at, updated_at')
     .in('id', campaignIds)
 
   if (cErr) {

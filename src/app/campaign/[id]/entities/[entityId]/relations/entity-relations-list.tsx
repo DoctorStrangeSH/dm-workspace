@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo } from 'react'
 import { Plus, Link2 } from 'lucide-react'
 import { deleteRelation } from '@/lib/actions/relations'
 import { useToast } from '@/components/toast/toast-provider'
-import { EmptyState } from '@/components/ui'
+import { Button, EmptyState } from '@/components/ui'
 import { RELATION_TYPES, type EntityRelation, type RelationType } from '@/lib/types'
 import RelationChip from './relation-chip'
 import AddRelationDialog from './add-relation-dialog'
@@ -28,7 +28,6 @@ export default function EntityRelationsList({
   isDm,
 }: Props) {
   const toast = useToast()
-  // CHANGES: исправлено — было `const [Boolean] = useTransition()` (ошибка TS2349)
   const [, startTransition] = useTransition()
   const [showDialog, setShowDialog] = useState(false)
 
@@ -64,27 +63,30 @@ export default function EntityRelationsList({
   return (
     <div className="mt-8">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <Link2 size={18} className="text-slate-400" />
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
+          <Link2 size={18} className="text-[var(--text-muted)]" />
           Связи
           {relations.length > 0 && (
-            <span className="text-sm font-normal text-slate-500">({relations.length})</span>
+            <span className="text-sm font-normal text-[var(--text-subtle)]">
+              ({relations.length})
+            </span>
           )}
         </h2>
         {isDm && (
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Plus size={14} />}
             onClick={() => setShowDialog(true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
           >
-            <Plus size={14} />
             Добавить
-          </button>
+          </Button>
         )}
       </div>
 
       {entityType === 'location' && relations.length === 0 && isDm && (
-        <div className="mb-4 rounded-lg border border-emerald-900/30 bg-emerald-950/20 p-3">
-          <p className="text-sm text-emerald-300">
+        <div className="mb-4 rounded-lg border border-[var(--success)]/30 bg-[var(--success-subtle)] p-3">
+          <p className="text-sm text-[var(--success-text)]">
             💡 <strong>Подсказка:</strong> добавь связь <strong>«Родительская локация»</strong> или{' '}
             <strong>«Находится в»</strong>, чтобы создать иерархию.
           </p>
@@ -102,17 +104,6 @@ export default function EntityRelationsList({
           }
           size="sm"
           dashed={false}
-          actions={
-            isDm
-              ? [
-                  {
-                    label: 'Добавить связь',
-                    onClick: () => setShowDialog(true),
-                    icon: <Plus size={14} />,
-                  },
-                ]
-              : undefined
-          }
         />
       ) : (
         <div className="space-y-3">
@@ -126,7 +117,7 @@ export default function EntityRelationsList({
 
             return (
               <div key={key}>
-                <div className="mb-2 text-xs tracking-wider text-slate-500 uppercase">
+                <div className="mb-2 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
                   {info.icon} {label}
                 </div>
                 <div className="flex flex-wrap gap-2">

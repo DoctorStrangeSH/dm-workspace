@@ -82,11 +82,11 @@ export default async function EntitiesPage({
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Users size={22} className="text-emerald-400" />
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
+            <Users size={22} className="text-[var(--success)]" />
             Сущности
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
             {entities.length} {entities.length === 1 ? 'сущность' : 'сущностей'}
             {!isDm && ' · только видимые вам'}
           </p>
@@ -104,10 +104,10 @@ export default async function EntitiesPage({
               key={f.value}
               href={href}
               className={cn(
-                'rounded-lg border px-3 py-1.5 text-sm transition',
+                'rounded-lg border px-3 py-1.5 text-sm transition-colors',
                 isActive
-                  ? 'border-indigo-500 bg-indigo-600 text-white'
-                  : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700 hover:text-white'
+                  ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                  : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)]'
               )}
             >
               {f.label}

@@ -2,6 +2,7 @@
 
 import { Plus, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Card, Button } from '@/components/ui'
 import type { SrdMonster } from '@/lib/actions/bestiary-search'
 
 interface Props {
@@ -12,77 +13,82 @@ interface Props {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  dragon: 'text-red-400',
-  undead: 'text-violet-400',
-  fiend: 'text-red-500',
-  celestial: 'text-yellow-300',
+  dragon: 'text-[var(--danger)]',
+  undead: 'text-[var(--accent-text)]',
+  fiend: 'text-[var(--danger)]',
+  celestial: 'text-[var(--warning-text)]',
   fey: 'text-pink-400',
-  beast: 'text-emerald-400',
-  humanoid: 'text-sky-400',
-  giant: 'text-amber-400',
-  construct: 'text-slate-400',
-  elemental: 'text-cyan-400',
-  aberration: 'text-purple-400',
+  beast: 'text-[var(--success)]',
+  humanoid: 'text-[var(--info)]',
+  giant: 'text-[var(--warning)]',
+  construct: 'text-[var(--text-muted)]',
+  elemental: 'text-[var(--info-text)]',
+  aberration: 'text-[var(--accent-text)]',
   monstrosity: 'text-orange-400',
-  ooze: 'text-green-500',
+  ooze: 'text-[var(--success)]',
   plant: 'text-lime-400',
 }
 
 export default function MonsterCard({ monster, canEdit, onAdd, onView }: Props) {
   const data = monster.data
   const type = (data.type ?? '').toLowerCase()
-  const typeColor = TYPE_COLORS[type] ?? 'text-slate-400'
-  const cr = data.cr ?? '—' // ← ИСПРАВЛЕНО: cr, не challenge_rating
+  const typeColor = TYPE_COLORS[type] ?? 'text-[var(--text-muted)]'
+  const cr = data.cr ?? '—'
   const hp = data.hp ?? data.hp_max ?? '?'
   const ac = data.ac ?? '?'
 
   return (
-    <div className="group rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700">
+    <Card padding="md" hoverable className="group flex flex-col">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-semibold">{monster.name_ru ?? monster.name}</h3>
+          <h3 className="truncate font-semibold text-[var(--text-primary)]">
+            {monster.name_ru ?? monster.name}
+          </h3>
           <div className="mt-0.5 flex items-center gap-2 text-xs">
             <span className={cn('capitalize', typeColor)}>{type}</span>
             {data.size && (
               <>
-                <span className="text-slate-600">·</span>
-                <span className="text-slate-500 capitalize">{data.size}</span>
+                <span className="text-[var(--text-subtle)]">·</span>
+                <span className="text-[var(--text-muted)] capitalize">{data.size}</span>
               </>
             )}
           </div>
         </div>
 
         <div className="shrink-0 text-right">
-          <div className="text-xs tracking-wider text-slate-500 uppercase">CR</div>
-          <div className="text-lg font-bold text-amber-400">{cr}</div>
+          <div className="text-xs tracking-wider text-[var(--text-subtle)] uppercase">CR</div>
+          <div className="text-lg font-bold text-[var(--warning-text)]">{cr}</div>
         </div>
       </div>
 
-      <div className="mb-3 flex items-center gap-2 text-xs text-slate-500">
+      <div className="mb-3 flex items-center gap-2 text-xs text-[var(--text-muted)]">
         <span>HP: {hp}</span>
-        <span className="text-slate-600">·</span>
+        <span className="text-[var(--text-subtle)]">·</span>
         <span>AC: {ac}</span>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button
+      <div className="mt-auto flex items-center gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<BookOpen size={12} />}
           onClick={onView}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-slate-700"
+          className="flex-1"
         >
-          <BookOpen size={12} />
           Подробнее
-        </button>
+        </Button>
         {canEdit && (
-          <button
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Plus size={12} />}
             onClick={onAdd}
-            className="flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white transition hover:bg-indigo-500"
             title="Добавить в кампанию"
           >
-            <Plus size={12} />
             <span className="hidden sm:inline">Добавить</span>
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   )
 }

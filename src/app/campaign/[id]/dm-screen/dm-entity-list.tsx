@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import DmEntityItem from './dm-entity-item'
 import { cn } from '@/lib/utils'
@@ -20,6 +20,13 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<FilterType>('all')
 
+  // CHANGES: recentIds приходят из localStorage — рендерим их только после монтирования,
+  // чтобы избежать hydration mismatch (сервер не знает о localStorage).
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   const filtered = useMemo(() => {
     let list = entities
 
@@ -36,14 +43,14 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
   }, [entities, query, filter])
 
   const recentEntities = useMemo(() => {
-    if (recentIds.length === 0) return []
+    if (!mounted || recentIds.length === 0) return []
     return recentIds
       .map((id) => entities.find((e) => e.id === id))
       .filter((e): e is Entity => e !== undefined)
-  }, [recentIds, entities])
+  }, [recentIds, entities, mounted])
 
-  // Показываем недавние только если нет поиска и фильтра
-  const showRecent = recentEntities.length > 0 && !query.trim() && filter === 'all'
+  // Показываем недавние только если нет поиска и фильтра и уже смонтировано
+  const showRecent = mounted && recentEntities.length > 0 && !query.trim() && filter === 'all'
 
   const filters: { value: FilterType; label: string; title: string }[] = [
     { value: 'all', label: 'Все', title: 'Все типы' },
@@ -58,23 +65,26 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
   return (
     <div className="flex h-full flex-col">
       {/* Поиск */}
-      <div className="border-b border-slate-800 p-4">
+      <div className="border-b border-[var(--border-default)] p-4">
         <div className="relative">
-          <Search size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" />
+          <Search
+            size={16}
+            className="absolute top-1/2 left-3 -translate-y-1/2 text-[var(--text-subtle)]"
+          />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск сущностей..."
-            className="w-full rounded-lg border border-slate-800 bg-slate-950 py-2 pr-9 pl-9 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] py-2 pr-9 pl-9 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
           />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 hover:bg-slate-800"
+              className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-1 hover:bg-[var(--bg-hover)]"
               title="Очистить"
             >
-              <X size={14} className="text-slate-500" />
+              <X size={14} className="text-[var(--text-subtle)]" />
             </button>
           )}
         </div>
@@ -86,10 +96,10 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
               key={f.value}
               onClick={() => setFilter(f.value)}
               className={cn(
-                'rounded px-2.5 py-1 text-xs transition',
+                'rounded px-2.5 py-1 text-xs transition-colors',
                 filter === f.value
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-400 hover:bg-slate-800'
+                  ? 'bg-[var(--accent)] text-white'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)]'
               )}
               title={f.title}
             >
@@ -103,7 +113,7 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
       <div className="flex-1 overflow-y-auto p-2">
         {showRecent && (
           <>
-            <div className="px-3 pt-2 pb-1 text-xs tracking-wider text-slate-500 uppercase">
+            <div className="px-3 pt-2 pb-1 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
               Недавние
             </div>
             {recentEntities.map((e) => (
@@ -114,7 +124,7 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
                 onSelect={onSelect}
               />
             ))}
-            <div className="my-2 border-t border-slate-800" />
+            <div className="my-2 border-t border-[var(--border-default)]" />
           </>
         )}
 
@@ -135,7 +145,7 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
         ) : (
           <>
             {showRecent && (
-              <div className="px-3 pt-2 pb-1 text-xs tracking-wider text-slate-500 uppercase">
+              <div className="px-3 pt-2 pb-1 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
                 Все сущности
               </div>
             )}
@@ -147,7 +157,7 @@ export default function DmEntityList({ entities, campaignId, recentIds, onSelect
       </div>
 
       {/* Счётчик */}
-      <div className="border-t border-slate-800 px-4 py-2 text-xs text-slate-500">
+      <div className="border-t border-[var(--border-default)] px-4 py-2 text-xs text-[var(--text-muted)]">
         Найдено: {filtered.length} из {entities.length}
       </div>
     </div>

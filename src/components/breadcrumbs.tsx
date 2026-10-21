@@ -13,7 +13,6 @@ export interface BreadcrumbItem {
 
 interface Props {
   items: BreadcrumbItem[]
-  /** Сворачивать на мобиле (первый + ... + последние 2) */
   collapseOnMobile?: boolean
   className?: string
 }
@@ -21,7 +20,6 @@ interface Props {
 export function Breadcrumbs({ items, collapseOnMobile = true, className }: Props) {
   if (items.length === 0) return null
 
-  // На мобиле сворачиваем: [Home] → ... → [предпоследний] → [текущий]
   const visible = (() => {
     if (!collapseOnMobile || items.length <= 3) return items
     return [items[0], ...items.slice(-2)]
@@ -39,37 +37,24 @@ export function Breadcrumbs({ items, collapseOnMobile = true, className }: Props
 
         return (
           <Fragment key={`${item.label}-${i}`}>
-            {i > 0 && (
-              <ChevronRight
-                size={12}
-                className="shrink-0"
-                style={{ color: 'var(--text-subtle)' }}
-              />
-            )}
+            {i > 0 && <ChevronRight size={12} className="shrink-0 text-[var(--text-subtle)]" />}
 
-            {/* Многоточие после первого элемента, если есть скрытые */}
             {hasHidden && i === 0 && (
               <>
                 <BreadcrumbLink item={item} isLast={false} />
-                <ChevronRight
-                  size={12}
-                  className="shrink-0"
-                  style={{ color: 'var(--text-subtle)' }}
-                />
+                <ChevronRight size={12} className="shrink-0 text-[var(--text-subtle)]" />
                 <button
-                  className="flex items-center rounded px-1 py-0.5 transition hover:bg-[var(--bg-secondary)]"
+                  className="flex items-center rounded px-1 py-0.5 text-[var(--text-subtle)] transition-colors hover:bg-[var(--bg-secondary)]"
                   title={items
                     .slice(1, -2)
                     .map((it) => it.label)
                     .join(' → ')}
-                  style={{ color: 'var(--text-subtle)' }}
                 >
                   <MoreHorizontal size={12} />
                 </button>
               </>
             )}
 
-            {/* Сам элемент — если не многоточие */}
             {(!hasHidden || i > 0) && <BreadcrumbLink item={item} isLast={isLastVisible} />}
           </Fragment>
         )
@@ -90,11 +75,7 @@ function BreadcrumbLink({ item, isLast }: { item: BreadcrumbItem; isLast: boolea
 
   if (isLast || !item.href) {
     return (
-      <span
-        className="min-w-0 truncate font-medium"
-        style={{ color: 'var(--text-primary)' }}
-        aria-current="page"
-      >
+      <span className="min-w-0 truncate font-medium text-[var(--text-primary)]" aria-current="page">
         {content}
       </span>
     )
@@ -103,8 +84,7 @@ function BreadcrumbLink({ item, isLast }: { item: BreadcrumbItem; isLast: boolea
   return (
     <Link
       href={item.href}
-      className="min-w-0 truncate transition hover:underline"
-      style={{ color: 'var(--text-muted)' }}
+      className="min-w-0 truncate text-[var(--text-muted)] transition hover:underline"
     >
       {content}
     </Link>

@@ -90,8 +90,8 @@ export default function TagInput({ entityId, campaignId, existingTags, available
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950 px-2.5 py-1.5 transition focus-within:border-indigo-500">
-        <Hash size={14} className="shrink-0 text-slate-500" />
+      <div className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2.5 py-1.5 transition-colors focus-within:border-[var(--border-focus)]">
+        <Hash size={14} className="shrink-0 text-[var(--text-subtle)]" />
         <input
           ref={inputRef}
           type="text"
@@ -105,23 +105,23 @@ export default function TagInput({ entityId, campaignId, existingTags, available
           onKeyDown={handleKeyDown}
           placeholder="Добавить тег..."
           disabled={isPending}
-          className="min-w-[120px] flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 focus:outline-none"
+          className="min-w-[120px] flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:outline-none"
         />
         {query && (
           <button
             type="button"
             onClick={() => handleAdd(query)}
             disabled={isPending || !normalizedQuery}
-            className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
+            className="rounded p-1 transition hover:bg-[var(--bg-hover)] disabled:opacity-50"
             title="Добавить"
           >
-            <Plus size={14} className="text-indigo-400" />
+            <Plus size={14} className="text-[var(--accent-text)]" />
           </button>
         )}
       </div>
 
       {isOpen && (filtered.length > 0 || canCreate) && (
-        <div className="absolute top-full right-0 left-0 z-30 mt-1 max-h-60 overflow-hidden overflow-y-auto rounded-lg border border-slate-800 bg-slate-900 shadow-xl">
+        <div className="absolute top-full right-0 left-0 z-30 mt-1 max-h-60 overflow-hidden overflow-y-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)]">
           {filtered.map((tag, i) => (
             <button
               key={tag.id}
@@ -129,10 +129,10 @@ export default function TagInput({ entityId, campaignId, existingTags, available
               onClick={() => handleAdd(tag.name)}
               onMouseEnter={() => setActiveIndex(i)}
               className={cn(
-                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition',
+                'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors',
                 i === activeIndex
-                  ? 'bg-slate-800 text-white'
-                  : 'text-slate-300 hover:bg-slate-800/60'
+                  ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]/60'
               )}
             >
               <span
@@ -141,7 +141,9 @@ export default function TagInput({ entityId, campaignId, existingTags, available
               />
               <span className="font-medium">#{tag.name}</span>
               {tag.entitiesCount !== undefined && (
-                <span className="ml-auto text-xs text-slate-500">{tag.entitiesCount}</span>
+                <span className="ml-auto text-xs text-[var(--text-subtle)]">
+                  {tag.entitiesCount}
+                </span>
               )}
             </button>
           ))}
@@ -152,10 +154,10 @@ export default function TagInput({ entityId, campaignId, existingTags, available
               onClick={() => handleAdd(query)}
               onMouseEnter={() => setActiveIndex(filtered.length)}
               className={cn(
-                'flex w-full items-center gap-2 border-t border-slate-800 px-3 py-2 text-left text-sm transition',
+                'flex w-full items-center gap-2 border-t border-[var(--border-default)] px-3 py-2 text-left text-sm transition-colors',
                 activeIndex === filtered.length
-                  ? 'bg-indigo-950/60 text-indigo-300'
-                  : 'text-slate-400 hover:bg-slate-800/60'
+                  ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                  : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)]/60'
               )}
             >
               <Plus size={14} />

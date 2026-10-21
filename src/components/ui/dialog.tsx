@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useId } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton } from './button'
@@ -30,16 +30,68 @@ export function Dialog({
   size = 'md',
   footer,
 }: DialogProps) {
+  const titleId = useId()
+  const descriptionId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
+
+  // Escape + body scroll + focus trap
   useEffect(() => {
     if (!open) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+
+    // Запоминаем активный элемент, чтобы вернуть фокус
+    previousActiveElement.current = document.activeElement as HTMLElement
+
+    // Focus trap
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+
+      if (e.key === 'Tab') {
+        const dialog = dialogRef.current
+        if (!dialog) return
+
+        const focusable = dialog.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault()
+            last?.focus()
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault()
+            first?.focus()
+          }
+        }
+      }
     }
-    window.addEventListener('keydown', handler)
+
+    window.addEventListener('keydown', handleKeyDown)
     document.body.style.overflow = 'hidden'
+
+    // Фокусируемся на диалоге
+    setTimeout(() => {
+      const dialog = dialogRef.current
+      if (dialog) {
+        const focusable = dialog.querySelector<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+        focusable?.focus()
+      }
+    }, 50)
+
     return () => {
-      window.removeEventListener('keydown', handler)
+      window.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
+      // Возвращаем фокус
+      previousActiveElement.current?.focus()
     }
   }, [open, onClose])
 
@@ -49,11 +101,13 @@ export function Dialog({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm"
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'dialog-title' : undefined}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-describedby={description ? descriptionId : undefined}
         className={cn(
           'flex max-h-[90vh] w-full flex-col rounded-xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)]',
           SIZES[size]
@@ -64,12 +118,14 @@ export function Dialog({
           <div className="flex items-start justify-between gap-4 border-b border-[var(--border-default)] p-4">
             <div className="min-w-0 flex-1">
               {title && (
-                <h2 id="dialog-title" className="text-lg font-semibold text-[var(--text-primary)]">
+                <h2 id={titleId} className="text-lg font-semibold text-[var(--text-primary)]">
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-0.5 text-sm text-[var(--text-muted)]">{description}</p>
+                <p id={descriptionId} className="mt-0.5 text-sm text-[var(--text-muted)]">
+                  {description}
+                </p>
               )}
             </div>
             <IconButton label="Закрыть" size="sm" onClick={onClose}>
