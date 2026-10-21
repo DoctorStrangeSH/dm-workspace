@@ -5,11 +5,6 @@ import Link from 'next/link'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 
-/**
- * Глобальная Error Boundary для всех страниц (кроме root layout).
- * Срабатывает, если ошибка в page.tsx / layout.tsx / компонентах.
- * НЕ срабатывает, если ошибка в root layout.tsx (для этого — global-error.tsx).
- */
 export default function Error({
   error,
   reset,
@@ -18,7 +13,6 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    // Логируем ошибку (потом — в Sentry)
     console.error('[Error Boundary]', error)
   }, [error])
 

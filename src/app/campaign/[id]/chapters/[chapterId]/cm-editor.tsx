@@ -4,7 +4,6 @@ import { forwardRef } from 'react'
 import CodeMirror, { type ReactCodeMirrorRef } from '@uiw/react-codemirror'
 import type { ViewUpdate } from '@codemirror/view'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
-import { languages } from '@codemirror/language-data'
 import { EditorView, keymap } from '@codemirror/view'
 import { Prec } from '@codemirror/state'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
@@ -50,9 +49,11 @@ const CMEditor = forwardRef<ReactCodeMirrorRef, Props>(function CMEditor(
         theme="dark"
         extensions={[
           saveKeymap,
+          // CHANGES: убрали codeLanguages: languages (все языки, ~200-300 KB).
+          // Теперь только markdown — подсветка кода внутри ``` не работает,
+          // но это компромисс ради размера бандла.
           markdown({
             base: markdownLanguage,
-            codeLanguages: languages,
             addKeymap: true,
           }),
           history(),

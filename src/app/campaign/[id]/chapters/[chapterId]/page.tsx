@@ -5,7 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { EyeOff, Eye } from 'lucide-react'
-import ChapterEditor from './chapter-editor'
+import ChapterEditorLazy from './chapter-editor-lazy'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import type { Chapter } from '@/lib/types'
 import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
@@ -67,8 +67,8 @@ export default async function ChapterPage({
       />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{ch.title}</h1>
-        <div className="mt-2 flex items-center gap-3 text-xs text-slate-500">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{ch.title}</h1>
+        <div className="mt-2 flex items-center gap-3 text-xs text-[var(--text-muted)]">
           <span>
             Обновлено:{' '}
             {new Date(ch.updated_at).toLocaleString('ru-RU', {
@@ -82,13 +82,13 @@ export default async function ChapterPage({
             <span className="flex items-center gap-1">
               {ch.is_visible_to_players ? (
                 <>
-                  <Eye size={12} className="text-green-400" />
-                  <span className="text-green-400">Видна игрокам</span>
+                  <Eye size={12} className="text-[var(--success)]" />
+                  <span className="text-[var(--success)]">Видна игрокам</span>
                 </>
               ) : (
                 <>
-                  <EyeOff size={12} className="text-amber-400" />
-                  <span className="text-amber-400">Скрыта от игроков</span>
+                  <EyeOff size={12} className="text-[var(--warning)]" />
+                  <span className="text-[var(--warning)]">Скрыта от игроков</span>
                 </>
               )}
             </span>
@@ -96,7 +96,7 @@ export default async function ChapterPage({
         </div>
       </div>
 
-      <ChapterEditor
+      <ChapterEditorLazy
         chapterId={ch.id}
         campaignId={campaignId}
         initialContent={ch.content_md}

@@ -5,10 +5,6 @@ import Link from 'next/link'
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 
-/**
- * Error Boundary для /campaign/[id]/*.
- * Срабатывает, если ошибка в любом page.tsx внутри кампании.
- */
 export default function CampaignError({
   error,
   reset,

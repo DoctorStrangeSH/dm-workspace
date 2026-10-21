@@ -3,11 +3,6 @@
 import { useEffect } from 'react'
 import { AlertTriangle } from 'lucide-react'
 
-/**
- * Глобальная Error Boundary для критических ошибок в root layout.tsx.
- * Срабатывает, если ошибка в ThemeProvider, ToastProvider, или в самом layout.
- * Заменяет ВЕСЬ документ (включая <html> и <body>).
- */
 export default function GlobalError({
   error,
   reset,
