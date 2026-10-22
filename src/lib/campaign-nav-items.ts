@@ -1,4 +1,4 @@
-import { Home, BookOpen, Sword, Map, Users, Library, Sparkles, Package } from 'lucide-react'
+import { Home, BookOpen, Sword, Map, Users, Library, Sparkles, Package, Dices } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface CampaignNavItem {
@@ -8,11 +8,6 @@ export interface CampaignNavItem {
   exact?: boolean
 }
 
-/**
- * CHANGES: убраны несуществующие страницы `npcs`, `locations`, `monsters` —
- * это фильтры на `/entities`, а не отдельные маршруты (они давали 404 в prefetch).
- * Оставлены только реально существующие маршруты.
- */
 export function getCampaignNavItems(base: string): CampaignNavItem[] {
   return [
     { href: base, label: 'Обзор', icon: Home, exact: true },
@@ -23,13 +18,11 @@ export function getCampaignNavItems(base: string): CampaignNavItem[] {
     { href: `${base}/bestiary`, label: 'Бестиарий', icon: Library },
     { href: `${base}/spells`, label: 'Заклинания', icon: Sparkles },
     { href: `${base}/items`, label: 'Предметы', icon: Package },
+    // CHANGES: новый пункт — Генераторы
+    { href: `${base}/generators`, label: 'Генераторы', icon: Dices },
   ]
 }
 
-/**
- * Пункты для мобильного bottom-nav (5 главных).
- * CHANGES: новый экспорт — для `mobile-bottom-nav.tsx`.
- */
 export function getMobileNavItems(base: string): CampaignNavItem[] {
   return [
     { href: base, label: 'Обзор', icon: Home, exact: true },

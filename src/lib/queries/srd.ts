@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { unstable_cache } from 'next/cache'
+import { createSrdClient } from '@/lib/supabase/srd'
 
 export interface SrdSpecies {
   key: string
@@ -14,22 +15,36 @@ export interface SrdClass {
   data: any
 }
 
-export async function getSrdSpecies(): Promise<SrdSpecies[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.from('srd_species').select('*').order('name')
-  if (error) return []
-  return data ?? []
-}
+// CHANGES: кэшируем SRD-запросы на 1 час.
+// Используем createSrdClient() (без cookies) — иначе unstable_cache падает.
+export const getSrdSpecies = unstable_cache(
+  async (): Promise<SrdSpecies[]> => {
+    const supabase = createSrdClient()
+    const { data, error } = await supabase.from('srd_species').select('*').order('name')
+    if (error) return []
+    return data ?? []
+  },
+  ['srd-species'],
+  { revalidate: 3600, tags: ['srd'] }
+)
 
-export async function getSrdClasses(): Promise<SrdClass[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.from('srd_classes').select('*').order('name')
-  if (error) return []
-  return data ?? []
-}
+export const getSrdClasses = unstable_cache(
+  async (): Promise<SrdClass[]> => {
+    const supabase = createSrdClient()
+    const { data, error } = await supabase.from('srd_classes').select('*').order('name')
+    if (error) return []
+    return data ?? []
+  },
+  ['srd-classes'],
+  { revalidate: 3600, tags: ['srd'] }
+)
 
-export async function getSrdBackgrounds() {
-  const supabase = await createClient()
-  const { data } = await supabase.from('srd_backgrounds').select('*').order('name')
-  return data ?? []
-}
+export const getSrdBackgrounds = unstable_cache(
+  async () => {
+    const supabase = createSrdClient()
+    const { data } = await supabase.from('srd_backgrounds').select('*').order('name')
+    return data ?? []
+  },
+  ['srd-backgrounds'],
+  { revalidate: 3600, tags: ['srd'] }
+)

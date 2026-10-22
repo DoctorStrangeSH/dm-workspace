@@ -2,6 +2,7 @@
 
 import { X, Image as ImageIcon } from 'lucide-react'
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRealtimeHandouts } from '@/lib/hooks/use-realtime-handouts'
 import type { Handout } from '@/lib/types'
 
@@ -35,11 +36,15 @@ export function HandoutViewer({ campaignId, initialHandouts }: Props) {
           <X size={20} />
         </button>
       </div>
-      <div className="flex flex-1 items-center justify-center overflow-auto p-4">
-        <img
+      <div className="relative flex flex-1 items-center justify-center overflow-auto p-4">
+        <Image
           src={activeHandout.image_url}
           alt={activeHandout.name}
-          className="max-h-full max-w-full object-contain"
+          fill
+          sizes="100vw"
+          className="object-contain"
+          priority
+          unoptimized
         />
       </div>
     </div>

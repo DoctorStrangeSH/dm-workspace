@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import Image from 'next/image'
 import type { Scene } from '@/lib/types'
 
 interface Props {
@@ -41,10 +42,14 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
       }}
     >
       {image_url ? (
-        <img
+        <Image
           src={image_url}
           alt={scene.name}
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="(max-width: 768px) 100vw, 80vw"
+          className="object-cover"
+          priority
+          unoptimized
           draggable={false}
         />
       ) : (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
+import Image from 'next/image'
 import { moveToken } from '@/lib/actions/tokens'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
@@ -102,10 +103,13 @@ export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Pr
       onMouseDown={handleMouseDown}
     >
       {token.image_url ? (
-        <img
+        <Image
           src={token.image_url}
           alt={token.name}
-          className="pointer-events-none h-full w-full rounded-full object-cover"
+          fill
+          sizes="64px"
+          className="pointer-events-none rounded-full object-cover"
+          unoptimized
           draggable={false}
         />
       ) : (
