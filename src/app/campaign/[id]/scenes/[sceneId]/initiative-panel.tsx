@@ -2,12 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Swords, ChevronRight, X, Dices } from 'lucide-react'
+import { Swords, ChevronRight, X, Dices, Shield, Minus, Plus } from 'lucide-react'
 import { nextTurn, endCombat, rollInitiativeForToken, damageToken } from '@/lib/actions/combat'
 import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import { cn } from '@/lib/utils'
-import { Button, IconButton, Dialog } from '@/components/ui'
+import { Button, IconButton, Dialog, Badge } from '@/components/ui'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
@@ -78,12 +78,13 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
   }
 
   return (
-    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-2xl sm:w-[340px]">
+    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-2xl sm:w-[380px]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
         <div className="flex items-center gap-2">
           <Swords size={18} className="text-[var(--danger)]" />
           <h2 className="font-semibold text-[var(--text-primary)]">Бой</h2>
+          <span className="text-xs text-[var(--text-muted)]">({entries.length})</span>
         </div>
         <IconButton variant="ghost" size="sm" label="Закрыть" onClick={onClose}>
           <X size={18} />
@@ -119,70 +120,147 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
           <div className="space-y-1">
             {entries.map((entry) => {
               const isCurrent = entry.is_current
-              const hpPercent =
-                entry.token.hp_current !== null && entry.token.hp_max !== null
-                  ? (entry.token.hp_current / entry.token.hp_max) * 100
-                  : null
+              const hasHP = entry.token.hp_current !== null && entry.token.hp_max !== null
+              const hpPercent = hasHP ? (entry.token.hp_current! / entry.token.hp_max!) * 100 : null
+              const ac = entry.token.ac ?? null
+              const conditions = entry.token.conditions
 
               return (
                 <div
                   key={entry.id}
                   className={cn(
-                    'flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors',
+                    'rounded-lg p-2 transition-colors',
                     isCurrent
                       ? 'border border-[var(--danger)]/30 bg-[var(--danger-subtle)]'
                       : 'hover:bg-[var(--bg-hover)]'
                   )}
-                  onClick={() => setSelectedEntry(entry)}
                 >
-                  <div className="w-4 text-xs text-[var(--text-muted)]">{entry.initiative}</div>
+                  {/* Строка 1: инициатива + имя + AC + кнопка броска */}
                   <div
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm"
-                    style={{
-                      borderColor: entry.token.color,
-                      backgroundColor: `${entry.token.color}33`,
-                    }}
+                    className="flex cursor-pointer items-center gap-2"
+                    onClick={() => setSelectedEntry(entry)}
                   >
-                    ⚔️
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-[var(--text-primary)]">
-                      {entry.token.name}
+                    <div className="w-5 text-center text-xs font-medium text-[var(--text-muted)]">
+                      {entry.initiative}
                     </div>
-                    {entry.token.hp_current !== null && entry.token.hp_max !== null && (
-                      <div className="mt-0.5 flex items-center gap-1">
-                        <div className="h-1 flex-1 overflow-hidden rounded bg-[var(--bg-app)]">
-                          <div
-                            className={cn(
-                              'h-full transition-all duration-300',
-                              (hpPercent ?? 0) > 50
-                                ? 'bg-[var(--success)]'
-                                : (hpPercent ?? 0) > 25
-                                  ? 'bg-[var(--warning)]'
-                                  : 'bg-[var(--danger)]'
-                            )}
-                            style={{ width: `${hpPercent}%` }}
-                          />
-                        </div>
-                        <span className="text-[10px] text-[var(--text-muted)]">
-                          {entry.token.hp_current}/{entry.token.hp_max}
-                        </span>
+                    <div
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm"
+                      style={{
+                        borderColor: entry.token.color,
+                        backgroundColor: `${entry.token.color}33`,
+                      }}
+                    >
+                      ⚔️
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium text-[var(--text-primary)]">
+                        {entry.token.name}
                       </div>
+                    </div>
+                    {ac !== null && (
+                      <Badge variant="neutral" size="sm" icon={<Shield size={10} />}>
+                        {ac}
+                      </Badge>
+                    )}
+                    {entry.initiative === 0 && isDm && (
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        label="Бросок инициативы"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRoll(entry)
+                        }}
+                        disabled={isPending}
+                      >
+                        <Dices size={14} />
+                      </IconButton>
                     )}
                   </div>
-                  {entry.initiative === 0 && isDm && (
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      label="Бросок инициативы"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleRoll(entry)
-                      }}
-                      disabled={isPending}
-                    >
-                      <Dices size={14} />
-                    </IconButton>
+
+                  {/* Строка 2: HP-бар + inline-кнопки */}
+                  {hasHP && (
+                    <div className="mt-1.5 flex items-center gap-2 pl-7">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded bg-[var(--bg-app)]">
+                        <div
+                          className={cn(
+                            'h-full transition-all duration-300',
+                            (hpPercent ?? 0) > 50
+                              ? 'bg-[var(--success)]'
+                              : (hpPercent ?? 0) > 25
+                                ? 'bg-[var(--warning)]'
+                                : 'bg-[var(--danger)]'
+                          )}
+                          style={{ width: `${hpPercent}%` }}
+                        />
+                      </div>
+                      <span className="w-12 text-right text-[10px] text-[var(--text-muted)] tabular-nums">
+                        {entry.token.hp_current}/{entry.token.hp_max}
+                      </span>
+                      {isDm && (
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDamage(entry, 5, 'damage')
+                            }}
+                            disabled={isPending}
+                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
+                            title="−5 HP"
+                          >
+                            <Minus size={10} className="inline" />5
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDamage(entry, 1, 'damage')
+                            }}
+                            disabled={isPending}
+                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
+                            title="−1 HP"
+                          >
+                            <Minus size={10} className="inline" />1
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDamage(entry, 1, 'heal')
+                            }}
+                            disabled={isPending}
+                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--success-text)] transition hover:bg-[var(--success-subtle)] disabled:opacity-50"
+                            title="+1 HP"
+                          >
+                            <Plus size={10} className="inline" />1
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDamage(entry, 5, 'heal')
+                            }}
+                            disabled={isPending}
+                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--success-text)] transition hover:bg-[var(--success-subtle)] disabled:opacity-50"
+                            title="+5 HP"
+                          >
+                            <Plus size={10} className="inline" />5
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Строка 3: условия */}
+                  {conditions.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-0.5 pl-7">
+                      {conditions.map((c, i) => (
+                        <span
+                          key={i}
+                          className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[8px]"
+                          title={c.name}
+                        >
+                          {c.icon ?? '●'}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               )
@@ -204,7 +282,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
         </Button>
       </div>
 
-      {/* Меню урона */}
+      {/* Меню урона (Dialog) — оставляем для быстрого доступа */}
       {selectedEntry && (
         <Dialog
           open={true}

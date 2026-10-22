@@ -34,7 +34,7 @@ export default async function GeneratorsPage({ params }: { params: Promise<{ id:
         </p>
       </div>
 
-      <GeneratorsClient campaignId={campaignId} />
+      <GeneratorsClient />
     </div>
   )
 }

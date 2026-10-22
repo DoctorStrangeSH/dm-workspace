@@ -1,4 +1,15 @@
-import { Home, BookOpen, Sword, Map, Users, Library, Sparkles, Package, Dices } from 'lucide-react'
+import {
+  Home,
+  BookOpen,
+  Sword,
+  Map,
+  Users,
+  Library,
+  Sparkles,
+  Package,
+  Dices,
+  Calendar,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 export interface CampaignNavItem {
@@ -11,6 +22,7 @@ export interface CampaignNavItem {
 export function getCampaignNavItems(base: string): CampaignNavItem[] {
   return [
     { href: base, label: 'Обзор', icon: Home, exact: true },
+    { href: `${base}/sessions`, label: 'Сессии', icon: Calendar },
     { href: `${base}/chapters`, label: 'Главы', icon: BookOpen },
     { href: `${base}/characters`, label: 'Персонажи', icon: Sword },
     { href: `${base}/scenes`, label: 'Сцены', icon: Map },
@@ -18,7 +30,6 @@ export function getCampaignNavItems(base: string): CampaignNavItem[] {
     { href: `${base}/bestiary`, label: 'Бестиарий', icon: Library },
     { href: `${base}/spells`, label: 'Заклинания', icon: Sparkles },
     { href: `${base}/items`, label: 'Предметы', icon: Package },
-    // CHANGES: новый пункт — Генераторы
     { href: `${base}/generators`, label: 'Генераторы', icon: Dices },
   ]
 }

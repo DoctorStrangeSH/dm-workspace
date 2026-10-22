@@ -714,6 +714,7 @@ export interface Token {
   hp_current: number | null
   hp_max: number | null
   conditions: TokenCondition[]
+  ac?: number | null
   color: string
   is_hidden: boolean
   created_at: string
@@ -828,4 +829,44 @@ export interface BackgroundInfo {
   slug: string
   name: string
   skills: SkillKey[]
+}
+
+// ============================================================
+// Сессии (календарь)
+// ============================================================
+
+export type RsvpStatus = 'yes' | 'no' | 'maybe'
+
+export interface Session {
+  id: string
+  campaign_id: string
+  title: string
+  description: string | null
+  starts_at: string
+  duration_minutes: number
+  created_by: string
+  created_at: string
+}
+
+export interface SessionRsvp {
+  id: string
+  session_id: string
+  user_id: string
+  status: RsvpStatus
+  updated_at: string
+}
+
+export interface SessionWithRsvp extends Session {
+  rsvps: SessionRsvp[]
+  creator: {
+    id: string
+    username: string
+    display_name: string | null
+  }
+}
+
+export const RSVP_LABELS: Record<RsvpStatus, { label: string; icon: string }> = {
+  yes: { label: 'Иду', icon: '✅' },
+  no: { label: 'Не иду', icon: '❌' },
+  maybe: { label: 'Может быть', icon: '🤔' },
 }
