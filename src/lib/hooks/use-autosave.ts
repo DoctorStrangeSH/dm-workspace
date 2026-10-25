@@ -16,17 +16,23 @@ export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: 
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latestValueRef = useRef(value)
   const isFirstRenderRef = useRef(true)
   const savingRef = useRef(false)
+  const saveQueuedRef = useRef(false)
 
   useEffect(() => {
     latestValueRef.current = value
   }, [value])
 
   const saveNow = useCallback(async () => {
-    if (savingRef.current) return
+    if (savingRef.current) {
+      // If edits happen during an in-flight request, save the newest value once it finishes.
+      saveQueuedRef.current = true
+      return
+    }
     savingRef.current = true
     setStatus('saving')
     setError(null)
@@ -39,8 +45,10 @@ export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: 
       } else {
         setStatus('saved')
         setLastSaved(new Date())
-        setTimeout(() => {
+        if (statusTimerRef.current) clearTimeout(statusTimerRef.current)
+        statusTimerRef.current = setTimeout(() => {
           setStatus((s) => (s === 'saved' ? 'idle' : s))
+          statusTimerRef.current = null
         }, 2000)
       }
     } catch (e) {
@@ -49,6 +57,10 @@ export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: 
       setError('Ошибка сохранения')
     } finally {
       savingRef.current = false
+      if (saveQueuedRef.current) {
+        saveQueuedRef.current = false
+        void saveNow()
+      }
     }
   }, [onSave])
 
@@ -69,6 +81,13 @@ export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: 
       if (timerRef.current) clearTimeout(timerRef.current)
     }
   }, [value, delay, enabled, saveNow])
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+      if (statusTimerRef.current) clearTimeout(statusTimerRef.current)
+    }
+  }, [])
 
   useEffect(() => {
     if (!enabled) return
