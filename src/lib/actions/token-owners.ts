@@ -19,6 +19,24 @@ export async function addTokenOwner(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Только ГМ может добавлять владельцев' }
 
+  // The token and scene must both belong to the campaign supplied by the caller.
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
+
+  const { data: token } = await supabase
+    .from('tokens')
+    .select('id')
+    .eq('id', tokenId)
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!token) return { error: 'Токен не найден в этой сцене' }
+
   // Проверяем, что user — участник кампании
   const { data: member } = await supabase
     .from('campaign_members')
@@ -58,15 +76,34 @@ export async function removeTokenOwner(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Только ГМ может убирать владельцев' }
 
-  const { error } = await supabase
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
+
+  const { data: token } = await supabase
+    .from('tokens')
+    .select('id')
+    .eq('id', tokenId)
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!token) return { error: 'Токен не найден в этой сцене' }
+
+  const { data: removed, error } = await supabase
     .from('token_owners')
     .delete()
     .eq('token_id', tokenId)
     .eq('user_id', userId)
     .eq('campaign_id', campaignId)
+    .select('token_id')
+    .maybeSingle()
 
-  if (error) {
-    console.error('removeTokenOwner error:', { code: error.code, message: error.message })
+  if (error || !removed) {
+    console.error('removeTokenOwner error:', { code: error?.code, message: error?.message })
     return { error: 'Не удалось удалить' }
   }
 
