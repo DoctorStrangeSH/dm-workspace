@@ -17,14 +17,16 @@ export async function updateChapterContent(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .update({ content_md })
     .eq('id', chapterId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
-    console.error('updateChapterContent error:', error)
+  if (error || !data) {
+    if (error) console.error('updateChapterContent error:', error)
     return { error: 'Не удалось сохранить' }
   }
 
