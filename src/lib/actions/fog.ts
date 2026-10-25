@@ -68,25 +68,37 @@ export async function clearFog(sceneId: string) {
 
   if (!scene) return { error: 'Сцена не найдена' }
 
-  // Удаляем старые раскрытия
-  const { error: delError } = await supabase.from('fog_areas').delete().eq('scene_id', sceneId).eq('campaign_id', campaignId)
+  // Create the full-scene reveal first. If insertion fails, existing fog data remains intact.
+  const { data: fullReveal, error: insError } = await supabase
+    .from('fog_areas')
+    .insert({
+      scene_id: sceneId,
+      campaign_id: campaignId,
+      x: 0,
+      y: 0,
+      width: scene.width,
+      height: scene.height,
+      is_revealed: true,
+    })
+    .select('id')
+    .single()
 
-  if (delError) return { error: 'Не удалось очистить' }
-
-  // Создаём одну область — вся сцена раскрыта
-  const { error: insError } = await supabase.from('fog_areas').insert({
-    scene_id: sceneId,
-    campaign_id: campaignId,
-    x: 0,
-    y: 0,
-    width: scene.width,
-    height: scene.height,
-    is_revealed: true,
-  })
-
-  if (insError) {
+  if (insError || !fullReveal) {
     console.error('clearFog insert error:', insError)
     return { error: 'Не удалось очистить' }
+  }
+
+  // Keep the full-scene reveal while removing older partial reveals. If cleanup fails,
+  // the requested state is still achieved because the full-scene reveal remains in place.
+  const { error: delError } = await supabase
+    .from('fog_areas')
+    .delete()
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .neq('id', fullReveal.id)
+
+  if (delError) {
+    console.error('clearFog cleanup error:', delError)
   }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
