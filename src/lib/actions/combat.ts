@@ -160,7 +160,7 @@ export async function rollAllInitiatives(sceneId: string) {
   const supabase = await createClient()
   const { data: entries } = await supabase.from('initiative').select('id').eq('scene_id', sceneId)
 
-  if (!entries) return { error: 'Нет инициативы' }
+  if (!entries || entries.length === 0) return { error: 'Нет инициативы' }
 
   const results = []
   for (const entry of entries) {
