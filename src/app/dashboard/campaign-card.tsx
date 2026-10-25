@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Copy, RefreshCw, Trash2, Crown, Users, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,13 @@ export default function CampaignCard({ campaign }: Props) {
   const [copied, setCopied] = useState(false)
   const [inviteCode, setInviteCode] = useState(campaign.invite_code)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current)
+    }
+  }, [])
 
   const inviteUrl =
     typeof window !== 'undefined'
@@ -31,9 +38,11 @@ export default function CampaignCard({ campaign }: Props) {
     try {
       await navigator.clipboard.writeText(inviteUrl)
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (copiedTimer.current) clearTimeout(copiedTimer.current)
+      copiedTimer.current = setTimeout(() => setCopied(false), 2000)
     } catch (e) {
       console.error('Copy failed', e)
+      toast.error(t('common.error'))
     }
   }
 
@@ -42,6 +51,8 @@ export default function CampaignCard({ campaign }: Props) {
       const res = await regenerateInviteCode(campaign.id)
       if (res.success && res.inviteCode) {
         setInviteCode(res.inviteCode)
+      } else {
+        toast.error('error' in res ? (res.error ?? t('common.error')) : t('common.error'))
       }
     })
   }
@@ -50,8 +61,8 @@ export default function CampaignCard({ campaign }: Props) {
     startTransition(async () => {
       const res = await deleteCampaign(campaign.id)
       if ('error' in res) {
-        // CHANGES: alert() → toast
         toast.error(res.error ?? t('common.error'))
+        return
       }
       setShowDeleteConfirm(false)
     })
