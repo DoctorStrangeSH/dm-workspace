@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type { ThemeMode } from '@/lib/types'
 
@@ -162,7 +163,6 @@ export async function uploadAvatar(formData: FormData) {
     return { error: 'Не удалось сохранить аватар' }
   }
 
-  // Only remove older files after the profile points to the new uploaded image.
   const { data: existing } = await supabase.storage.from('avatars').list(user.id)
   const oldFiles = (existing ?? [])
     .filter((file) => file.name !== fileName.split('/').pop())
@@ -230,16 +230,29 @@ export async function deleteAccount(password: string) {
     return { error: 'Введите пароль' }
   }
 
-  const { error: authError } = await supabase.auth.signInWithPassword({
+  // Do not delete the profile without deleting the corresponding Auth user.
+  // That leaves an orphaned account and can destroy campaign data prematurely.
+  const admin = createAdminClient()
+  if (!admin) {
+    return { error: 'Удаление аккаунта временно недоступно: не настроен серверный ключ' }
+  }
+
+  const { data: verified, error: authError } = await supabase.auth.signInWithPassword({
     email: user.email,
     password,
   })
 
-  if (authError) return { error: 'Неверный пароль' }
+  if (authError || verified.user?.id !== user.id) {
+    return { error: 'Неверный пароль' }
+  }
 
-  const { error } = await supabase.from('profiles').delete().eq('id', user.id)
-  if (error) return { error: 'Не удалось удалить' }
+  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id)
+  if (deleteError) {
+    console.error('deleteAccount error:', deleteError)
+    return { error: 'Не удалось удалить аккаунт' }
+  }
 
   await supabase.auth.signOut()
+  revalidatePath('/')
   return { success: true }
 }
