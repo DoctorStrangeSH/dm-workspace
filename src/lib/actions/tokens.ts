@@ -174,7 +174,7 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
   const canEdit = await canEditToken(tokenId, sceneId, campaignId, user.id, isDm)
   if (!canEdit) return { error: 'Нет прав на перемещение' }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tokens')
     .update({ x, y })
     .eq('id', tokenId)
