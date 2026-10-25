@@ -6,12 +6,15 @@ import MonsterCard from './monster-card'
 import MonsterDetailDialog from './monster-detail-dialog'
 import { EmptyState } from '@/components/ui'
 import { searchSrdMonstersAction, type SrdMonster } from '@/lib/actions/bestiary-search'
+import { useT } from '@/lib/i18n'
+import type { SrdLang } from '@/lib/types'
 
 interface Props {
   campaignId: string
   initialMonsters: SrdMonster[]
   availableCRs: string[]
   canEdit: boolean
+  lang: SrdLang
 }
 
 export default function BestiaryClient({
@@ -19,13 +22,17 @@ export default function BestiaryClient({
   initialMonsters,
   availableCRs,
   canEdit,
+  lang,
 }: Props) {
+  const t = useT()
   const [monsters, setMonsters] = useState(initialMonsters)
   const [query, setQuery] = useState('')
   const [selectedCRs, setSelectedCRs] = useState<string[]>([])
   const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const [selectedMonster, setSelectedMonster] = useState<SrdMonster | null>(null)
+
+  const hasFilters = query || selectedCRs.length > 0 || selectedTypes.length > 0
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,12 +63,8 @@ export default function BestiaryClient({
       {monsters.length === 0 ? (
         <EmptyState
           icon="🐉"
-          title={
-            query || selectedCRs.length > 0 || selectedTypes.length > 0
-              ? 'Ничего не найдено'
-              : 'Монстров пока нет'
-          }
-          description="Попробуй изменить фильтры или поиск"
+          title={hasFilters ? t('bestiary.empty.titleFiltered') : t('bestiary.empty.title')}
+          description={t('bestiary.empty.description')}
           size="md"
         />
       ) : (
@@ -71,6 +74,7 @@ export default function BestiaryClient({
               key={monster.key}
               monster={monster}
               canEdit={canEdit}
+              lang={lang}
               onAdd={() => setSelectedMonster(monster)}
               onView={() => setSelectedMonster(monster)}
             />

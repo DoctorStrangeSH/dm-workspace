@@ -1,7 +1,5 @@
 'use client'
 
-'use client'
-
 import { useState, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Music, Plus, X, Play, Pause, Square, Trash2, Upload, Loader2 } from 'lucide-react'
@@ -14,9 +12,11 @@ import {
   stopMusic,
 } from '@/lib/actions/music'
 import { useToast } from '@/components/toast/toast-provider'
+import { Button, Dialog, IconButton } from '@/components/ui'
+import { useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import type { PlaylistWithTracks } from '@/lib/queries/music'
 import type { Track, MusicPlayerState } from '@/lib/types'
-import { cn } from '@/lib/utils'
 
 interface Props {
   campaignId: string
@@ -26,11 +26,13 @@ interface Props {
 }
 
 export default function MusicPanel({ campaignId, playlists, playerState, onClose }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [newPlaylistName, setNewPlaylistName] = useState('')
   const [uploadingToPlaylist, setUploadingToPlaylist] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const handleCreatePlaylist = () => {
@@ -39,20 +41,22 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
       const res = await createPlaylist(campaignId, newPlaylistName)
       if (res.error) toast.error(res.error)
       else {
-        toast.success('Плейлист создан')
+        toast.success(t('music.toast.playlistCreated'))
         setNewPlaylistName('')
         router.refresh()
       }
     })
   }
 
-  const handleDeletePlaylist = (playlistId: string, name: string) => {
-    if (!confirm(`Удалить плейлист «${name}»?`)) return
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return
     startTransition(async () => {
-      const res = await deletePlaylist(playlistId, campaignId)
-      if (res.error) toast.error(res.error)
-      else {
-        toast.success('Плейлист удалён')
+      const res = await deletePlaylist(deleteTarget.id, campaignId)
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        toast.success(t('music.toast.playlistDeleted'))
+        setDeleteTarget(null)
         router.refresh()
       }
     })
@@ -77,7 +81,7 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
     if (res.error) {
       toast.error(res.error)
     } else {
-      toast.success('Трек добавлен')
+      toast.success(t('music.toast.trackAdded'))
       router.refresh()
     }
     if (fileInputRefs.current[playlistId]) {
@@ -96,15 +100,9 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
   const handlePlay = (track: Track) => {
     const isSame = playerState?.current_track_id === track.id && playerState.is_playing
     startTransition(async () => {
-      if (isSame) {
-        const res = await playTrack(campaignId, track.id, false)
-        if (res.error) toast.error(res.error)
-        else router.refresh()
-      } else {
-        const res = await playTrack(campaignId, track.id, true)
-        if (res.error) toast.error(res.error)
-        else router.refresh()
-      }
+      const res = await playTrack(campaignId, track.id, !isSame)
+      if (res.error) toast.error(res.error)
+      else router.refresh()
     })
   }
 
@@ -117,27 +115,29 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
   }
 
   return (
-    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl sm:w-[420px]">
-      <div className="flex items-center justify-between border-b border-slate-800 p-4">
+    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-[var(--border-default)] bg-[var(--bg-surface)] shadow-2xl sm:w-[420px]">
+      <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
         <div className="flex items-center gap-2">
-          <Music size={18} className="text-violet-400" />
-          <h2 className="font-semibold">Музыка</h2>
+          <Music size={18} className="text-[var(--accent-text)]" />
+          <h2 className="font-semibold text-[var(--text-primary)]">{t('music.title')}</h2>
         </div>
-        <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
+        <IconButton variant="ghost" size="sm" label={t('common.close')} onClick={onClose}>
           <X size={18} />
-        </button>
+        </IconButton>
       </div>
 
       {playerState?.is_playing && (
-        <div className="border-b border-slate-800 p-3">
-          <button
+        <div className="border-b border-[var(--border-default)] p-3">
+          <Button
+            variant="danger"
+            size="sm"
+            icon={<Square size={14} />}
             onClick={handleStop}
             disabled={isPending}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm text-white transition hover:bg-red-500 disabled:opacity-50"
+            className="w-full"
           >
-            <Square size={14} />
-            Остановить всё
-          </button>
+            {t('music.stopAll')}
+          </Button>
         </div>
       )}
 
@@ -148,29 +148,33 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
             value={newPlaylistName}
             onChange={(e) => setNewPlaylistName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreatePlaylist()}
-            placeholder="Новый плейлист..."
-            className="flex-1 rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white"
+            placeholder={t('music.newPlaylistPlaceholder')}
+            className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
           />
-          <button
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Plus size={16} />}
             onClick={handleCreatePlaylist}
             disabled={isPending || !newPlaylistName.trim()}
-            className="rounded-lg bg-indigo-600 p-2 text-white transition hover:bg-indigo-500 disabled:opacity-50"
-          >
-            <Plus size={16} />
-          </button>
+          />
         </div>
 
         {playlists.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-500">Нет плейлистов. Создай первый!</p>
+          <p className="py-6 text-center text-sm text-[var(--text-muted)]">
+            {t('music.emptyPlaylists')}
+          </p>
         ) : (
           <div className="space-y-3">
             {playlists.map((playlist) => (
               <div
                 key={playlist.id}
-                className="rounded-lg border border-slate-800 bg-slate-950 p-3"
+                className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-3"
               >
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-sm font-medium">{playlist.name}</h3>
+                  <h3 className="text-sm font-medium text-[var(--text-primary)]">
+                    {playlist.name}
+                  </h3>
                   <div className="flex items-center gap-1">
                     <input
                       ref={(el) => {
@@ -181,30 +185,34 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
                       onChange={(e) => handleTrackFileChange(playlist.id, e)}
                       className="hidden"
                     />
-                    <button
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      label={t('music.addTrack')}
                       onClick={() => fileInputRefs.current[playlist.id]?.click()}
                       disabled={uploadingToPlaylist === playlist.id}
-                      className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
-                      title="Добавить трек"
                     >
                       {uploadingToPlaylist === playlist.id ? (
                         <Loader2 size={12} className="animate-spin" />
                       ) : (
-                        <Upload size={12} className="text-slate-400" />
+                        <Upload size={12} />
                       )}
-                    </button>
-                    <button
-                      onClick={() => handleDeletePlaylist(playlist.id, playlist.name)}
-                      className="rounded p-1 transition hover:bg-red-950/40"
-                      title="Удалить плейлист"
+                    </IconButton>
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      label={t('music.deletePlaylist')}
+                      onClick={() => setDeleteTarget({ id: playlist.id, name: playlist.name })}
                     >
-                      <Trash2 size={12} className="text-red-400" />
-                    </button>
+                      <Trash2 size={12} className="text-[var(--danger)]" />
+                    </IconButton>
                   </div>
                 </div>
 
                 {playlist.tracks.length === 0 ? (
-                  <p className="py-2 text-center text-xs text-slate-600">Нет треков</p>
+                  <p className="py-2 text-center text-xs text-[var(--text-subtle)]">
+                    {t('music.noTracks')}
+                  </p>
                 ) : (
                   <div className="space-y-1">
                     {playlist.tracks.map((track) => {
@@ -215,35 +223,42 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
                           key={track.id}
                           className={cn(
                             'flex items-center gap-2 rounded px-2 py-1.5 transition',
-                            isPlaying && 'bg-violet-950/40'
+                            isPlaying && 'bg-[var(--accent-subtle)]'
                           )}
                         >
-                          <button
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            label={isPlaying ? t('music.pause') : t('music.play')}
                             onClick={() => handlePlay(track)}
                             disabled={isPending}
-                            className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
                           >
                             {isPlaying ? (
-                              <Pause size={12} className="text-violet-400" />
+                              <Pause size={12} className="text-[var(--accent-text)]" />
                             ) : (
-                              <Play size={12} className="text-slate-400" />
+                              <Play size={12} />
                             )}
-                          </button>
+                          </IconButton>
                           <span
                             className={cn(
                               'flex-1 truncate text-xs',
-                              isPlaying ? 'text-violet-300' : 'text-slate-300'
+                              isPlaying
+                                ? 'text-[var(--accent-text)]'
+                                : 'text-[var(--text-secondary)]'
                             )}
                           >
                             {track.name}
                           </span>
-                          <button
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            label={t('music.removeTrack')}
                             onClick={() => handleRemoveTrack(track.id)}
                             disabled={isPending}
-                            className="rounded p-1 opacity-50 transition hover:bg-red-950/40 hover:opacity-100"
+                            className="opacity-50 hover:opacity-100"
                           >
-                            <X size={10} className="text-red-400" />
-                          </button>
+                            <X size={10} className="text-[var(--danger)]" />
+                          </IconButton>
                         </div>
                       )
                     })}
@@ -254,6 +269,34 @@ export default function MusicPanel({ campaignId, playlists, playerState, onClose
           </div>
         )}
       </div>
+
+      {/* CHANGES: confirm() → Dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => !isPending && setDeleteTarget(null)}
+        title={t('music.deleteConfirm.title')}
+        description={
+          deleteTarget ? t('music.deleteConfirm.description', { name: deleteTarget.name }) : ''
+        }
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setDeleteTarget(null)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" onClick={handleDeleteConfirm} loading={isPending}>
+              {t('common.delete')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">{t('music.deleteConfirm.cannotUndo')}</p>
+      </Dialog>
     </aside>
   )
 }

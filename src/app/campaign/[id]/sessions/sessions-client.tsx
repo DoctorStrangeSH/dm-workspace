@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2 } from 'lucide-react'
 import { createSession, deleteSession, setRsvp } from '@/lib/actions/sessions'
 import { useToast } from '@/components/toast/toast-provider'
-import { Button, Card, Dialog, Input, EmptyState, Badge } from '@/components/ui'
+import { Button, Card, Dialog, Input, Textarea, EmptyState, Badge } from '@/components/ui'
+import { useI18n, useT } from '@/lib/i18n'
 import { RSVP_LABELS, type SessionWithRsvp, type RsvpStatus } from '@/lib/types'
 
 interface Props {
@@ -15,20 +16,24 @@ interface Props {
 }
 
 export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
+  const { t } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const sessions = initialSessions
 
-  const handleDelete = (sessionId: string) => {
-    if (!confirm('Удалить сессию?')) return
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return
     startTransition(async () => {
-      const res = await deleteSession(sessionId, campaignId)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
-      else {
-        toast.success('Сессия удалена')
+      const res = await deleteSession(deleteTarget, campaignId)
+      if ('error' in res) {
+        toast.error(res.error ?? t('common.error'))
+      } else {
+        toast.success(t('sessions.toast.deleted'))
+        setDeleteTarget(null)
         router.refresh()
       }
     })
@@ -37,7 +42,7 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
   const handleRsvp = (sessionId: string, status: RsvpStatus) => {
     startTransition(async () => {
       const res = await setRsvp(sessionId, status)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else router.refresh()
     })
   }
@@ -47,15 +52,13 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
       <>
         <EmptyState
           icon="📅"
-          title="Пока нет ни одной сессии"
+          title={t('sessions.empty.title')}
           description={
-            isDm
-              ? 'Создай первую сессию, чтобы игроки могли запланировать время.'
-              : 'ГМ пока не запланировал сессии.'
+            isDm ? t('sessions.empty.descriptionDm') : t('sessions.empty.descriptionPlayer')
           }
           size="lg"
           actions={
-            isDm ? [{ label: 'Создать сессию', onClick: () => setShowCreate(true) }] : undefined
+            isDm ? [{ label: t('sessions.create'), onClick: () => setShowCreate(true) }] : undefined
           }
         />
         {showCreate && (
@@ -75,7 +78,7 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
             icon={<Plus size={16} />}
             onClick={() => setShowCreate(true)}
           >
-            Создать сессию
+            {t('sessions.create')}
           </Button>
         </div>
       )}
@@ -85,7 +88,7 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
           key={session.id}
           session={session}
           isDm={isDm}
-          onDelete={() => handleDelete(session.id)}
+          onDelete={() => setDeleteTarget(session.id)}
           onRsvp={(status) => handleRsvp(session.id, status)}
           isPending={isPending}
         />
@@ -94,6 +97,32 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
       {showCreate && (
         <CreateSessionDialog campaignId={campaignId} onClose={() => setShowCreate(false)} />
       )}
+
+      {/* CHANGES: confirm() → Dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => !isPending && setDeleteTarget(null)}
+        title={t('sessions.deleteConfirm.title')}
+        description={t('sessions.deleteConfirm.description')}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setDeleteTarget(null)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" onClick={handleDeleteConfirm} loading={isPending}>
+              {t('common.delete')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">{t('sessions.deleteConfirm.cannotUndo')}</p>
+      </Dialog>
     </div>
   )
 }
@@ -111,6 +140,9 @@ function SessionCard({
   onRsvp: (status: RsvpStatus) => void
   isPending: boolean
 }) {
+  const { t, lang } = useI18n()
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
+
   const date = new Date(session.starts_at)
   const isPast = date < new Date()
 
@@ -126,13 +158,13 @@ function SessionCard({
             <h3 className="truncate font-semibold text-[var(--text-primary)]">{session.title}</h3>
             {isPast && (
               <Badge variant="neutral" size="sm">
-                Прошла
+                {t('sessions.past')}
               </Badge>
             )}
           </div>
           <div className="text-sm text-[var(--text-muted)]">
             📅{' '}
-            {date.toLocaleString('ru-RU', {
+            {date.toLocaleString(locale, {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -140,7 +172,7 @@ function SessionCard({
               minute: '2-digit',
             })}
             {' · '}
-            {session.duration_minutes} мин
+            {t('sessions.duration', { n: session.duration_minutes })}
           </div>
           {session.description && (
             <p className="mt-2 text-sm text-[var(--text-secondary)]">{session.description}</p>
@@ -169,7 +201,7 @@ function SessionCard({
             disabled={isPending}
             className="text-[var(--danger)]"
           >
-            <span className="sr-only">Удалить</span>
+            <span className="sr-only">{t('common.delete')}</span>
           </Button>
         )}
       </div>
@@ -184,7 +216,7 @@ function SessionCard({
               onClick={() => onRsvp(status)}
               disabled={isPending}
             >
-              {RSVP_LABELS[status].icon} {RSVP_LABELS[status].label}
+              {RSVP_LABELS[status].icon} {t(`rsvp.${status}`)}
             </Button>
           ))}
         </div>
@@ -194,6 +226,7 @@ function SessionCard({
 }
 
 function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onClose: () => void }) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -214,9 +247,9 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
         durationMinutes: duration,
       })
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Сессия создана')
+        toast.success(t('sessions.toast.created'))
         router.refresh()
         onClose()
       }
@@ -224,48 +257,39 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
   }
 
   return (
-    <Dialog open={true} onClose={onClose} title="Новая сессия" size="md">
+    <Dialog open={true} onClose={onClose} title={t('sessions.createTitle')} size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Название"
+          label={t('sessions.form.title')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Сессия 1: Начало приключения"
+          placeholder={t('sessions.form.titlePlaceholder')}
           required
           autoFocus
         />
         <Input
-          label="Дата и время"
+          label={t('sessions.form.datetime')}
           type="datetime-local"
           value={startsAt}
           onChange={(e) => setStartsAt(e.target.value)}
           required
         />
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--text-secondary)]">
-            Длительность (мин)
-          </label>
-          <Input
-            type="number"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value) || 180)}
-            min={30}
-            max={600}
-            step={30}
-          />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-[var(--text-secondary)]">
-            Описание
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="Что планируется на сессии..."
-            className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
-          />
-        </div>
+        <Input
+          label={t('sessions.form.duration')}
+          type="number"
+          value={duration}
+          onChange={(e) => setDuration(Number(e.target.value) || 180)}
+          min={30}
+          max={600}
+          step={30}
+        />
+        <Textarea
+          label={t('common.description')}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          placeholder={t('sessions.form.descriptionPlaceholder')}
+        />
 
         <div className="flex justify-end gap-2 pt-2">
           <Button
@@ -275,10 +299,10 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
             onClick={onClose}
             disabled={isPending}
           >
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button variant="primary" size="md" type="submit" loading={isPending}>
-            Создать
+            {t('common.create')}
           </Button>
         </div>
       </form>

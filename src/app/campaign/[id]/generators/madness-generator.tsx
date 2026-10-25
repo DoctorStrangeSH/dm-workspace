@@ -3,18 +3,20 @@
 import { useState } from 'react'
 import { Dices, Copy, Check, Brain } from 'lucide-react'
 import { Button, Card, Select } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import { generateMadness, type MadnessType, type MadnessResult } from '@/lib/generators/madness'
 
-const TYPE_OPTIONS = [
-  { value: 'short', label: 'Краткосрочное (1d10 минут)' },
-  { value: 'long', label: 'Долгосрочное (1d10 × 10 часов)' },
-  { value: 'indefinite', label: 'Бессрочное (навсегда)' },
-]
-
 export function MadnessGenerator() {
+  const t = useT()
   const [type, setType] = useState<MadnessType>('short')
   const [result, setResult] = useState<MadnessResult | null>(null)
   const [copied, setCopied] = useState(false)
+
+  const TYPE_OPTIONS = [
+    { value: 'short', label: t('generators.madnessType.short') },
+    { value: 'long', label: t('generators.madnessType.long') },
+    { value: 'indefinite', label: t('generators.madnessType.indefinite') },
+  ]
 
   const handleGenerate = () => {
     setResult(generateMadness(type))
@@ -35,14 +37,14 @@ export function MadnessGenerator() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex-1">
             <Select
-              label="Тип безумия"
+              label={t('generators.form.madnessType')}
               options={TYPE_OPTIONS}
               value={type}
               onChange={(e) => setType(e.target.value as MadnessType)}
             />
           </div>
           <Button variant="primary" size="md" icon={<Dices size={16} />} onClick={handleGenerate}>
-            Сгенерировать
+            {t('generators.generate')}
           </Button>
         </div>
       </Card>
@@ -63,7 +65,7 @@ export function MadnessGenerator() {
               icon={copied ? <Check size={14} /> : <Copy size={14} />}
               onClick={handleCopy}
             >
-              {copied ? 'Скопировано' : 'Копировать'}
+              {copied ? t('generators.copied') : t('generators.copy')}
             </Button>
           </div>
 

@@ -1,8 +1,10 @@
 'use client'
 
 import { formatModifier } from '@/lib/dnd/formulas'
-import { ABILITY_SHORT, type AbilityKey } from '@/lib/types'
+import type { AbilityKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+import { abilityShort } from '@/lib/i18n/labels'
 import { Card } from '@/components/ui'
 
 interface Props {
@@ -14,10 +16,12 @@ interface Props {
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
 export default function SavesList({ proficientSaves, getBonus, onRoll }: Props) {
+  const { t, lang } = useI18n()
+
   return (
     <Card padding="md">
       <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-        Спасброски
+        {t('characters.saves')}
       </h3>
 
       <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
@@ -45,7 +49,9 @@ export default function SavesList({ proficientSaves, getBonus, onRoll }: Props) 
                     : 'border border-[var(--border-strong)] bg-[var(--bg-tertiary)]'
                 )}
               />
-              <span className="flex-1 text-[var(--text-secondary)]">{ABILITY_SHORT[ability]}</span>
+              <span className="flex-1 text-[var(--text-secondary)]">
+                {abilityShort(lang, ability)}
+              </span>
               <span
                 className={cn(
                   'font-medium',

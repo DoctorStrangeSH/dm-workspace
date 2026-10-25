@@ -6,21 +6,33 @@ import SrdSpellCard from './srd-spell-card'
 import SrdSpellDetailDialog from './srd-spell-detail-dialog'
 import { EmptyState } from '@/components/ui'
 import { searchSrdSpellsAction, type SrdSpell } from '@/lib/actions/spells-search'
+import { useT } from '@/lib/i18n'
+import type { SrdLang } from '@/lib/types'
 
 interface Props {
   campaignId: string
   initialSpells: SrdSpell[]
   characters: Array<{ id: string; name: string }>
   canEdit: boolean
+  lang: SrdLang
 }
 
-export default function SpellsClient({ campaignId, initialSpells, characters, canEdit }: Props) {
+export default function SpellsClient({
+  campaignId,
+  initialSpells,
+  characters,
+  canEdit,
+  lang,
+}: Props) {
+  const t = useT()
   const [spells, setSpells] = useState(initialSpells)
   const [query, setQuery] = useState('')
   const [levels, setLevels] = useState<number[]>([])
   const [schools, setSchools] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const [selectedSpell, setSelectedSpell] = useState<SrdSpell | null>(null)
+
+  const hasFilters = query || levels.length > 0 || schools.length > 0
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,12 +62,8 @@ export default function SpellsClient({ campaignId, initialSpells, characters, ca
       {spells.length === 0 ? (
         <EmptyState
           icon="✨"
-          title={
-            query || levels.length > 0 || schools.length > 0
-              ? 'Ничего не найдено'
-              : 'Заклинаний пока нет'
-          }
-          description="Попробуй изменить фильтры или поиск"
+          title={hasFilters ? t('spells.empty.titleFiltered') : t('spells.empty.title')}
+          description={t('spells.empty.description')}
           size="md"
         />
       ) : (
@@ -65,6 +73,7 @@ export default function SpellsClient({ campaignId, initialSpells, characters, ca
               key={spell.key}
               spell={spell}
               canAdd={canEdit}
+              lang={lang}
               onAdd={() => setSelectedSpell(spell)}
               onView={() => setSelectedSpell(spell)}
             />

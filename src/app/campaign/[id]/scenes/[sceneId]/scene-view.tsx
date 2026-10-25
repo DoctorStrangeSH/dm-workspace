@@ -14,12 +14,16 @@ import {
   MoveRight,
   Triangle,
   MoreHorizontal,
+  Square,
+  Trash2,
+  Sparkles,
 } from 'lucide-react'
 import { setActiveScene, uploadMap } from '@/lib/actions/scenes'
 import { startCombat } from '@/lib/actions/combat'
 import { clearFog } from '@/lib/actions/fog'
+import { createWall, deleteAllWalls } from '@/lib/actions/walls'
 import { useToast } from '@/components/toast/toast-provider'
-import { Button, Input, Dropdown, Tooltip } from '@/components/ui'
+import { Button, Input, Dropdown, Tooltip, Dialog } from '@/components/ui'
 import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
@@ -27,17 +31,25 @@ import InitiativePanel from './initiative-panel'
 import FogLayer from './fog-layer'
 import RulerTool from './ruler-tool'
 import TemplateTool from './template-tool'
+import WallsLayer from './walls-layer'
+import SummonDialog from './summon-dialog'
+import SummonRequestsPanel from './summon-requests-panel'
 import { useHotkey } from '@/lib/hooks/use-hotkey'
+import { useI18n } from '@/lib/i18n'
+import { pluralize } from '@/lib/i18n/plural'
 import type {
   Scene,
+  SceneWall,
+  SummonRequestWithRequester,
   Token,
   Character,
   Entity,
   InitiativeEntryWithToken,
   FogArea,
+  TokenOwnerWithProfile,
 } from '@/lib/types'
 
-type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line'
+type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall'
 
 interface Props {
   scene: Scene
@@ -45,7 +57,11 @@ interface Props {
   characters: Character[]
   monsters: Entity[]
   initiative: InitiativeEntryWithToken[]
+  initialTokenOwners?: TokenOwnerWithProfile[]
+  campaignMembers?: Array<{ user_id: string; username: string; display_name: string | null }>
   initialFog: FogArea[]
+  initialWalls: SceneWall[]
+  initialSummonRequests: SummonRequestWithRequester[]
   campaignId: string
   isDm: boolean
   currentUserId: string | null
@@ -57,11 +73,16 @@ export default function SceneView({
   characters,
   monsters,
   initiative,
+  initialTokenOwners = [],
+  campaignMembers = [],
   initialFog,
+  initialWalls,
+  initialSummonRequests,
   campaignId,
   isDm,
   currentUserId,
 }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -69,11 +90,46 @@ export default function SceneView({
   const [showGrid, setShowGrid] = useState(true)
   const [showAddToken, setShowAddToken] = useState(false)
   const [showInitiative, setShowInitiative] = useState(false)
+  const [showSummon, setShowSummon] = useState(false)
   const [fogEnabled, setFogEnabled] = useState(scene.fog_enabled ?? false)
   const [brushMode, setBrushMode] = useState(false)
   const [activeTool, setActiveTool] = useState<ActiveTool>('none')
   const [templateSize, setTemplateSize] = useState(30)
+  const [showClearFogConfirm, setShowClearFogConfirm] = useState(false)
+  const [showClearWallsConfirm, setShowClearWallsConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // CHANGES (задача 2): localWalls — оптимистичное добавление стен
+  const [localWalls, setLocalWalls] = useState<SceneWall[]>(() => initialWalls)
+  const [prevInitialWalls, setPrevInitialWalls] = useState(initialWalls)
+  if (initialWalls !== prevInitialWalls) {
+    setPrevInitialWalls(initialWalls)
+    setLocalWalls(initialWalls)
+  }
+
+  // Состояние для рисования стен
+  const [wallStart, setWallStart] = useState<{ x: number; y: number } | null>(null)
+  const [wallPreview, setWallPreview] = useState<{
+    x1: number
+    y1: number
+    x2: number
+    y2: number
+  } | null>(null)
+  const wallWrapperRef = useRef<HTMLDivElement>(null)
+
+  const tokensPlural = (n: number) =>
+    pluralize(lang, n, {
+      one: t('scenes.tokens.one'),
+      few: t('scenes.tokens.few'),
+      many: t('scenes.tokens.many'),
+    })
+
+  const cellsPlural = (n: number) =>
+    pluralize(lang, n, {
+      one: t('scenes.cells.one'),
+      few: t('scenes.cells.few'),
+      many: t('scenes.cells.many'),
+    })
 
   useHotkey({
     code: 'KeyG',
@@ -111,12 +167,24 @@ export default function SceneView({
     ignoreInInputs: true,
   })
 
+  useHotkey({
+    code: 'Escape',
+    handler: () => {
+      if (activeTool !== 'none') {
+        setActiveTool('none')
+        setWallStart(null)
+        setWallPreview(null)
+      }
+    },
+    ignoreInInputs: false,
+  })
+
   const handleActivate = () => {
     startTransition(async () => {
       const res = await setActiveScene(scene.id, campaignId)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else {
-        toast.success('Сцена активирована')
+        toast.success(t('scenes.toast.activated'))
         router.refresh()
       }
     })
@@ -131,9 +199,9 @@ export default function SceneView({
     setIsUploading(false)
 
     if ('error' in res) {
-      toast.error(res.error ?? 'Ошибка')
+      toast.error(res.error ?? t('common.error'))
     } else {
-      toast.success('Карта загружена')
+      toast.success(t('scenes.toast.mapUploaded'))
       router.refresh()
     }
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -142,48 +210,129 @@ export default function SceneView({
   const handleStartCombat = () => {
     startTransition(async () => {
       const res = await startCombat(scene.id)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else {
-        toast.success('Бой начат')
+        toast.success(t('scenes.toast.combatStarted'))
         setShowInitiative(true)
         router.refresh()
       }
     })
   }
 
-  const handleClearFog = () => {
-    if (!confirm('Очистить весь туман?')) return
+  const doClearFog = () => {
     startTransition(async () => {
       const res = await clearFog(scene.id)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
-      else {
-        toast.success('Туман очищен')
+      if ('error' in res) {
+        toast.error(res.error ?? t('common.error'))
+      } else {
+        toast.success(t('scenes.toast.fogCleared'))
         router.refresh()
       }
+      setShowClearFogConfirm(false)
+    })
+  }
+
+  const doClearWalls = () => {
+    startTransition(async () => {
+      const res = await deleteAllWalls(scene.id, campaignId)
+      if ('error' in res) {
+        toast.error(res.error ?? t('common.error'))
+      } else {
+        toast.success(t('scenes.toast.wallsCleared', { count: res.count }))
+        setLocalWalls([]) // CHANGES: очистить local
+        router.refresh()
+      }
+      setShowClearWallsConfirm(false)
     })
   }
 
   const refresh = () => router.refresh()
   const currentTurn = initiative.find((e) => e.is_current)
 
+  const getGridCoords = (e: React.MouseEvent): { x: number; y: number } | null => {
+    if (!wallWrapperRef.current) return null
+    const rect = wallWrapperRef.current.getBoundingClientRect()
+    const rawX = (e.clientX - rect.left) / scene.grid_size
+    const rawY = (e.clientY - rect.top) / scene.grid_size
+    return {
+      x: Math.round(rawX * 2) / 2,
+      y: Math.round(rawY * 2) / 2,
+    }
+  }
+
+  const handleWallMouseDown = (e: React.MouseEvent) => {
+    if (activeTool !== 'wall' || !isDm) return
+    e.preventDefault()
+    const coords = getGridCoords(e)
+    if (!coords) return
+
+    if (!wallStart) {
+      setWallStart(coords)
+      setWallPreview({ x1: coords.x, y1: coords.y, x2: coords.x, y2: coords.y })
+    } else {
+      const dx = coords.x - wallStart.x
+      const dy = coords.y - wallStart.y
+      if (Math.hypot(dx, dy) < 0.1) {
+        setWallStart(null)
+        setWallPreview(null)
+        return
+      }
+
+      startTransition(async () => {
+        const res = await createWall(scene.id, campaignId, {
+          x1: wallStart.x,
+          y1: wallStart.y,
+          x2: coords.x,
+          y2: coords.y,
+        })
+        if ('error' in res) {
+          toast.error(res.error ?? t('common.error'))
+        } else {
+          // CHANGES (задача 2): оптимистичное добавление
+          if ('wall' in res) {
+            setLocalWalls((prev) => [...prev, res.wall])
+          }
+          toast.success(t('scenes.toast.wallCreated'))
+          router.refresh()
+        }
+        setWallStart(null)
+        setWallPreview(null)
+      })
+    }
+  }
+
+  const handleWallMouseMove = (e: React.MouseEvent) => {
+    if (activeTool !== 'wall' || !wallStart) return
+    const coords = getGridCoords(e)
+    if (!coords) return
+    setWallPreview({
+      x1: wallStart.x,
+      y1: wallStart.y,
+      x2: coords.x,
+      y2: coords.y,
+    })
+  }
+
+  // CHANGES (задача 1): убран дубль стены из toolsDropdown.
+  // Стена — только в wallsDropdown.
   const toolsDropdown = [
     {
-      label: 'Линейка',
+      label: t('scenes.tool.ruler'),
       onClick: () => setActiveTool(activeTool === 'ruler' ? 'none' : 'ruler'),
       icon: <Ruler size={14} />,
     },
     {
-      label: 'Конус',
+      label: t('scenes.tool.cone'),
       onClick: () => setActiveTool(activeTool === 'cone' ? 'none' : 'cone'),
       icon: <Triangle size={14} />,
     },
     {
-      label: 'Сфера',
+      label: t('scenes.tool.sphere'),
       onClick: () => setActiveTool(activeTool === 'sphere' ? 'none' : 'sphere'),
       icon: <Circle size={14} />,
     },
     {
-      label: 'Линия',
+      label: t('scenes.tool.line'),
       onClick: () => setActiveTool(activeTool === 'line' ? 'none' : 'line'),
       icon: <MoveRight size={14} />,
     },
@@ -191,23 +340,48 @@ export default function SceneView({
 
   const fogDropdown = [
     {
-      label: fogEnabled ? 'Скрыть туман' : 'Показать туман',
+      label: fogEnabled ? t('scenes.fog.hide') : t('scenes.fog.show'),
       onClick: () => setFogEnabled((v) => !v),
       icon: fogEnabled ? <EyeOff size={14} /> : <Eye size={14} />,
     },
     {
-      label: 'Кисть',
+      label: t('scenes.fog.brush'),
       onClick: () => setBrushMode((v) => !v),
       icon: <Plus size={14} />,
       disabled: !fogEnabled,
     },
     {
-      label: 'Очистить туман',
-      onClick: handleClearFog,
+      label: t('scenes.fog.clear'),
+      onClick: () => setShowClearFogConfirm(true),
       icon: <Eraser size={14} />,
       disabled: !fogEnabled || isPending,
     },
   ]
+
+  const wallsDropdown = [
+    {
+      label: t('scenes.walls.tool'),
+      onClick: () => {
+        setActiveTool(activeTool === 'wall' ? 'none' : 'wall')
+        setWallStart(null)
+        setWallPreview(null)
+      },
+      icon: <Square size={14} />,
+    },
+    {
+      label: t('scenes.walls.clear'),
+      onClick: () => setShowClearWallsConfirm(true),
+      icon: <Trash2 size={14} />,
+      disabled: localWalls.length === 0 || isPending,
+    },
+  ]
+
+  const templateLabel =
+    activeTool === 'cone'
+      ? t('scenes.template.cone')
+      : activeTool === 'sphere'
+        ? t('scenes.template.sphere')
+        : t('scenes.template.line')
 
   return (
     <div>
@@ -216,16 +390,23 @@ export default function SceneView({
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-2xl font-bold text-[var(--text-primary)]">{scene.name}</h1>
           <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-            {scene.width}×{scene.height} клеток · {scene.grid_size}px
-            {scene.is_active && <span className="ml-2 text-[var(--success)]">· Активна</span>}
+            {t('scenes.dimensions', {
+              width: scene.width,
+              height: scene.height,
+              cells: cellsPlural(scene.width),
+              gridSize: scene.grid_size,
+            })}
+            {scene.is_active && (
+              <span className="ml-2 text-[var(--success)]">· {t('scenes.active')}</span>
+            )}
             {' · '}
             <span>
-              {tokens.length} {tokens.length === 1 ? 'токен' : 'токенов'}
+              {tokens.length} {tokensPlural(tokens.length)}
             </span>
           </p>
         </div>
 
-        {/* ─── Mobile: основное + «Ещё» ─── */}
+        {/* ─── Mobile ─── */}
         <div className="flex items-center gap-2 md:hidden">
           {isDm && (
             <Button
@@ -234,7 +415,18 @@ export default function SceneView({
               icon={<Plus size={14} />}
               onClick={() => setShowAddToken(true)}
             >
-              Токен
+              {t('scenes.token')}
+            </Button>
+          )}
+
+          {!isDm && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Sparkles size={14} />}
+              onClick={() => setShowSummon(true)}
+            >
+              {t('summon.button')}
             </Button>
           )}
 
@@ -245,7 +437,7 @@ export default function SceneView({
               icon={<Swords size={14} />}
               onClick={() => setShowInitiative(!showInitiative)}
             >
-              Бой ({initiative.length})
+              {t('scenes.combatWithCount', { count: initiative.length })}
             </Button>
           ) : (
             isDm && (
@@ -256,7 +448,7 @@ export default function SceneView({
                 onClick={handleStartCombat}
                 disabled={isPending}
               >
-                Бой
+                {t('scenes.combat')}
               </Button>
             )
           )}
@@ -264,21 +456,22 @@ export default function SceneView({
           <Dropdown
             trigger={
               <Button variant="ghost" size="sm" icon={<MoreHorizontal size={14} />}>
-                Ещё
+                {t('common.more')}
               </Button>
             }
             items={[
               {
-                label: showGrid ? 'Скрыть сетку' : 'Показать сетку',
+                label: showGrid ? t('scenes.grid.hide') : t('scenes.grid.show'),
                 onClick: () => setShowGrid(!showGrid),
                 icon: showGrid ? <Eye size={14} /> : <EyeOff size={14} />,
               },
               ...toolsDropdown,
               ...(isDm ? fogDropdown : []),
+              ...(isDm ? wallsDropdown : []),
               ...(isDm
                 ? [
                     {
-                      label: scene.image_url ? 'Заменить карту' : 'Загрузить карту',
+                      label: scene.image_url ? t('scenes.map.replace') : t('scenes.map.upload'),
                       onClick: () => fileInputRef.current?.click(),
                       icon: <Upload size={14} />,
                     },
@@ -289,16 +482,16 @@ export default function SceneView({
           />
         </div>
 
-        {/* ─── Desktop: основное + разделитель + Dropdown'ы ─── */}
+        {/* ─── Desktop ─── */}
         <div className="hidden items-center gap-2 md:flex">
-          <Tooltip content={showGrid ? 'Скрыть сетку (G)' : 'Показать сетку (G)'}>
+          <Tooltip content={showGrid ? t('scenes.grid.hideHint') : t('scenes.grid.showHint')}>
             <Button
               variant={showGrid ? 'secondary' : 'ghost'}
               size="sm"
               icon={showGrid ? <Eye size={14} /> : <EyeOff size={14} />}
               onClick={() => setShowGrid(!showGrid)}
             >
-              Сетка
+              {t('scenes.grid.label')}
             </Button>
           </Tooltip>
 
@@ -310,7 +503,7 @@ export default function SceneView({
               onClick={handleActivate}
               disabled={isPending}
             >
-              Активировать
+              {t('scenes.activate')}
             </Button>
           )}
 
@@ -320,9 +513,20 @@ export default function SceneView({
               size="sm"
               icon={<Plus size={14} />}
               onClick={() => setShowAddToken(true)}
-              title="Добавить токен (Ctrl+T)"
+              title={t('scenes.tokenAddHint')}
             >
-              Токен
+              {t('scenes.token')}
+            </Button>
+          )}
+
+          {!isDm && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Sparkles size={14} />}
+              onClick={() => setShowSummon(true)}
+            >
+              {t('summon.button')}
             </Button>
           )}
 
@@ -333,9 +537,9 @@ export default function SceneView({
               icon={<Swords size={14} />}
               onClick={handleStartCombat}
               disabled={isPending}
-              title="Начать бой (Ctrl+B)"
+              title={t('scenes.combatStartHint')}
             >
-              Начать бой
+              {t('scenes.combatStart')}
             </Button>
           )}
 
@@ -346,7 +550,7 @@ export default function SceneView({
               icon={<Swords size={14} />}
               onClick={() => setShowInitiative(!showInitiative)}
             >
-              Бой ({initiative.length})
+              {t('scenes.combatWithCount', { count: initiative.length })}
             </Button>
           )}
 
@@ -355,7 +559,7 @@ export default function SceneView({
           <Dropdown
             trigger={
               <Button variant="ghost" size="sm" icon={<MoreHorizontal size={14} />}>
-                Инструменты
+                {t('scenes.tools')}
               </Button>
             }
             items={toolsDropdown}
@@ -370,10 +574,26 @@ export default function SceneView({
                   size="sm"
                   icon={fogEnabled ? <EyeOff size={14} /> : <Eye size={14} />}
                 >
-                  Туман
+                  {t('scenes.fog.label')}
                 </Button>
               }
               items={fogDropdown}
+              align="right"
+            />
+          )}
+
+          {isDm && (
+            <Dropdown
+              trigger={
+                <Button
+                  variant={activeTool === 'wall' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  icon={<Square size={14} />}
+                >
+                  {t('scenes.walls.label')}
+                </Button>
+              }
+              items={wallsDropdown}
               align="right"
             />
           )}
@@ -394,33 +614,46 @@ export default function SceneView({
                 onClick={() => fileInputRef.current?.click()}
                 loading={isUploading}
               >
-                {scene.image_url ? 'Заменить карту' : 'Загрузить карту'}
+                {scene.image_url ? t('scenes.map.replace') : t('scenes.map.upload')}
               </Button>
             </>
           )}
         </div>
       </div>
 
-      {/* Индикатор текущего хода */}
+      {isDm && initialSummonRequests.length > 0 && (
+        <SummonRequestsPanel
+          campaignId={campaignId}
+          sceneId={scene.id}
+          initialRequests={initialSummonRequests}
+        />
+      )}
+
       {currentTurn && (
         <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] px-4 py-2">
           <div className="flex items-center gap-2">
             <Swords size={16} className="text-[var(--danger)]" />
             <span className="text-sm text-[var(--text-secondary)]">
-              Ход: <strong className="text-[var(--text-primary)]">{currentTurn.token.name}</strong>
+              {t('scenes.currentTurn')}:{' '}
+              <strong className="text-[var(--text-primary)]">{currentTurn.token.name}</strong>
             </span>
           </div>
           <Button variant="danger" size="sm" onClick={() => setShowInitiative(true)}>
-            Панель боя
+            {t('scenes.combatPanel')}
           </Button>
         </div>
       )}
 
-      {/* Размер шаблона */}
+      {activeTool === 'wall' && (
+        <div className="mb-3 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-subtle)] px-3 py-2 text-sm text-[var(--accent-text)]">
+          {wallStart ? t('scenes.walls.hintSecondClick') : t('scenes.walls.hintFirstClick')}
+        </div>
+      )}
+
       {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
         <div className="mb-3 flex items-center gap-2">
           <span className="text-sm text-[var(--text-muted)]">
-            Размер {activeTool === 'cone' ? 'конуса' : activeTool === 'sphere' ? 'сферы' : 'линии'}:
+            {t('scenes.template.size', { tool: templateLabel })}:
           </span>
           <Input
             type="number"
@@ -431,33 +664,53 @@ export default function SceneView({
             step={5}
             className="w-20"
           />
-          <span className="text-sm text-[var(--text-subtle)]">футов</span>
+          <span className="text-sm text-[var(--text-subtle)]">{t('scenes.template.feet')}</span>
         </div>
       )}
 
-      {/* Пустая сцена */}
       {tokens.length === 0 && isDm && (
         <div className="mb-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]/50 p-3 text-center text-sm text-[var(--text-muted)]">
-          Сцена пуста. Добавь первый токен кнопкой{' '}
-          <strong className="text-[var(--text-secondary)]">«Токен»</strong>.
+          {t('scenes.emptyHint')}
         </div>
       )}
 
       {/* Карта + слои */}
       <div className="flex justify-center">
         <div
-          className="relative"
-          style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 250px)', overflow: 'auto' }}
+          className="relative w-full overflow-auto"
+          style={{
+            maxWidth: '100%',
+            maxHeight: 'calc(100vh - 250px)',
+            touchAction: 'pan-x pan-y pinch-zoom',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div
+            ref={wallWrapperRef}
+            style={{ position: 'relative', display: 'inline-block' }}
+            onMouseDown={handleWallMouseDown}
+            onMouseMove={handleWallMouseMove}
+          >
             <MapCanvas scene={scene} showGrid={showGrid} />
+
+            <WallsLayer
+              scene={scene}
+              initialWalls={localWalls}
+              isDm={isDm}
+              previewWall={wallPreview}
+            />
+
             <TokenLayer
               scene={scene}
               initialTokens={tokens}
               isDm={isDm}
               currentUserId={currentUserId}
+              walls={localWalls}
+              initialTokenOwners={initialTokenOwners}
+              campaignMembers={campaignMembers}
               onRefresh={refresh}
             />
+
             <FogLayer
               scene={scene}
               initialFog={initialFog}
@@ -491,6 +744,15 @@ export default function SceneView({
         />
       )}
 
+      {showSummon && (
+        <SummonDialog
+          campaignId={campaignId}
+          sceneId={scene.id}
+          monsters={monsters}
+          onClose={() => setShowSummon(false)}
+        />
+      )}
+
       {showInitiative && initiative.length > 0 && (
         <InitiativePanel
           sceneId={scene.id}
@@ -499,6 +761,58 @@ export default function SceneView({
           onClose={() => setShowInitiative(false)}
         />
       )}
+
+      <Dialog
+        open={showClearFogConfirm}
+        onClose={() => !isPending && setShowClearFogConfirm(false)}
+        title={t('scenes.clearFogConfirm.title')}
+        description={t('scenes.clearFogConfirm.description')}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowClearFogConfirm(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" onClick={doClearFog} loading={isPending}>
+              {t('scenes.clearFogConfirm.confirm')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">{t('scenes.clearFogConfirm.cannotUndo')}</p>
+      </Dialog>
+
+      <Dialog
+        open={showClearWallsConfirm}
+        onClose={() => !isPending && setShowClearWallsConfirm(false)}
+        title={t('scenes.walls.clearConfirm.title')}
+        description={t('scenes.walls.clearConfirm.description')}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowClearWallsConfirm(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" onClick={doClearWalls} loading={isPending}>
+              {t('scenes.walls.clearConfirm.confirm')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">
+          {t('scenes.walls.clearConfirm.cannotUndo')}
+        </p>
+      </Dialog>
     </div>
   )
 }

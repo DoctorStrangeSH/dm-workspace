@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import { createCharacter } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button, Card } from '@/components/ui'
 import WizardStep1 from './wizard-step-1'
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export default function CharacterWizard({ campaignId, species, classes }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -48,7 +50,6 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
     cha: 8,
   })
 
-  // CHANGES: mode поднят наверх — чтобы валидация шага 2 знала режим
   const [abilityMode, setAbilityMode] = useState<AbilityMode>('pointbuy')
 
   const [backgroundSlug, setBackgroundSlug] = useState('')
@@ -71,7 +72,6 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
       return name.trim().length >= 2 && !!raceSlug && !!classSlug
     }
     if (step === 2) {
-      // CHANGES: правильная валидация в зависимости от режима
       if (abilityMode === 'pointbuy') {
         return getPointsRemaining(abilities) === 0
       }
@@ -122,20 +122,20 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
     startTransition(async () => {
       const res = await createCharacter(campaignId, name, characterData)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
-      toast.success('Персонаж создан')
+      toast.success(t('characters.toast.created'))
       router.push(`/campaign/${campaignId}/characters/${res.characterId}`)
       router.refresh()
     })
   }
 
   const steps = [
-    { number: 1, label: 'Основное' },
-    { number: 2, label: 'Характеристики' },
-    { number: 3, label: 'Навыки' },
-    { number: 4, label: 'Проверка' },
+    { number: 1, label: t('characters.wizard.step1') },
+    { number: 2, label: t('characters.wizard.step2') },
+    { number: 3, label: t('characters.wizard.step3') },
+    { number: 4, label: t('characters.wizard.step4') },
   ]
 
   return (
@@ -210,12 +210,11 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
 
         {step === 4 && !characterData && (
           <div className="py-12 text-center text-sm text-[var(--text-subtle)]">
-            Не хватает данных (раса / класс / предыстория). Вернись назад.
+            {t('characters.wizard.missingData')}
           </div>
         )}
       </Card>
 
-      {/* Навигация */}
       <div className="mt-8 flex items-center justify-between gap-3 border-t border-[var(--border-default)] pt-6">
         <Button
           variant="secondary"
@@ -224,7 +223,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
           disabled={step === 1 || isPending}
           icon={<ChevronLeft size={16} />}
         >
-          Назад
+          {t('common.back')}
         </Button>
 
         {step < 4 ? (
@@ -236,7 +235,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
             icon={<ChevronRight size={16} />}
             iconPosition="right"
           >
-            Далее
+            {t('common.next')}
           </Button>
         ) : (
           <Button
@@ -247,7 +246,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
             loading={isPending}
             icon={<Check size={16} />}
           >
-            Создать персонажа
+            {t('characters.create')}
           </Button>
         )}
       </div>

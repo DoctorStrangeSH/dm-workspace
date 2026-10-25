@@ -8,10 +8,16 @@ import { BookOpen } from 'lucide-react'
 import CreateChapterButton from './create-chapter-button'
 import ChaptersList from './chapters-list'
 import { Breadcrumbs } from '@/components/breadcrumbs'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
+import { pluralize } from '@/lib/i18n/plural'
 import type { Chapter } from '@/lib/types'
 
 export default async function ChaptersPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { id } = await params
   const { campaign, isDm, isMember } = await getCampaignAccess(id)
@@ -29,14 +35,19 @@ export default async function ChaptersPage({ params }: { params: Promise<{ id: s
   if (error) console.error('chapters query error:', error)
 
   const list = (chapters ?? []) as Chapter[]
+  const countLabel = pluralize(lang, list.length, {
+    one: t('chapters.count.one'),
+    few: t('chapters.count.few'),
+    many: t('chapters.count.many'),
+  })
 
   return (
     <div className="max-w-4xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaign.name, href: `/campaign/${id}` },
-          { label: 'Главы' },
+          { label: t('nav.chapters') },
         ]}
         className="mb-4"
       />
@@ -45,11 +56,11 @@ export default async function ChaptersPage({ params }: { params: Promise<{ id: s
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
             <BookOpen size={22} className="text-[var(--accent-text)]" />
-            Главы
+            {t('nav.chapters')}
           </h1>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            {list.length} {list.length === 1 ? 'глава' : 'глав'}
-            {!isDm && ' · только видимые вам'}
+            {list.length} {countLabel}
+            {!isDm && ` · ${t('chapters.visibleToYou')}`}
           </p>
         </div>
         {isDm && <CreateChapterButton campaignId={id} />}

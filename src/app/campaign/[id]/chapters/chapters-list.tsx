@@ -28,7 +28,9 @@ import { getChapterForExport } from '@/lib/actions/export'
 import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
 import { useToast } from '@/components/toast/toast-provider'
-import { EmptyState } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { pluralize } from '@/lib/i18n/plural'
+import { EmptyState, Button, Dialog } from '@/components/ui'
 import type { Chapter } from '@/lib/types'
 
 interface Props {
@@ -44,11 +46,14 @@ export default function ChaptersList({
   isDm,
   onCreateChapter,
 }: Props) {
+  const { t, lang } = useI18n()
   const toast = useToast()
   const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
   const [query, setQuery] = useState('')
   const [isSelectionMode, setIsSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   const [prevInitial, setPrevInitial] = useState(initialChapters)
@@ -59,13 +64,22 @@ export default function ChaptersList({
 
   const { filtered, totalCount, matchedCount, isSearching } = useChapterFilter(chapters, query)
 
+  // CHANGES (К8): chaptersPlural обёрнут в useCallback,
+  // чтобы не ругался react-hooks/exhaustive-deps в confirmBulkDelete,
+  // handleBulkSetVisibility, handleBulkExport.
+  const chaptersPlural = useCallback(
+    (n: number) =>
+      pluralize(lang, n, {
+        one: t('chapters.count.one'),
+        few: t('chapters.count.few'),
+        many: t('chapters.count.many'),
+      }),
+    [lang, t]
+  )
+
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -85,7 +99,7 @@ export default function ChaptersList({
 
     if ('error' in res) {
       console.error('reorder failed:', res.error)
-      toast.error('Не удалось сохранить порядок')
+      toast.error(t('chapters.toast.reorderFailed'))
       setChapters(previousChapters)
     }
   }
@@ -121,24 +135,26 @@ export default function ChaptersList({
     }
   }, [allSelected, filtered])
 
-  const handleBulkDelete = useCallback(async () => {
+  const handleBulkDelete = useCallback(() => {
+    if (selectedIds.size === 0) return
+    setShowDeleteConfirm(true)
+  }, [selectedIds])
+
+  const confirmBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) return
-
-    const confirmed = confirm(
-      `Удалить ${ids.length} ${ids.length === 1 ? 'главу' : 'глав'}? Это действие нельзя отменить.`
-    )
-    if (!confirmed) return
-
+    setIsDeleting(true)
     const res = await bulkDeleteChapters(ids, campaignId)
+    setIsDeleting(false)
     if ('error' in res) {
-      toast.error(res.error ?? 'Ошибка')
+      toast.error(res.error ?? t('common.error'))
       return
     }
-    toast.success(`Удалено ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`)
+    toast.success(t('chapters.toast.deleted', { n: ids.length, label: chaptersPlural(ids.length) }))
     setSelectedIds(new Set())
     setIsSelectionMode(false)
-  }, [selectedIds, campaignId, toast])
+    setShowDeleteConfirm(false)
+  }, [selectedIds, campaignId, toast, t, chaptersPlural])
 
   const handleBulkSetVisibility = useCallback(
     async (visible: boolean) => {
@@ -147,18 +163,19 @@ export default function ChaptersList({
 
       const res = await bulkSetVisibility(ids, campaignId, visible)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
       toast.success(
         visible
-          ? `Показано ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
-          : `Скрыто ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`
+          ? t('chapters.toast.shown', { n: ids.length, label: chaptersPlural(ids.length) })
+          : // CHANGES: hiddenBulk (не hidden — это одиночное «Глава скрыта»)
+            t('chapters.toast.hiddenBulk', { n: ids.length, label: chaptersPlural(ids.length) })
       )
       setSelectedIds(new Set())
       setIsSelectionMode(false)
     },
-    [selectedIds, campaignId, toast]
+    [selectedIds, campaignId, toast, t, chaptersPlural]
   )
 
   const handleBulkExport = useCallback(async () => {
@@ -175,31 +192,31 @@ export default function ChaptersList({
     }
 
     if (parts.length === 0) {
-      toast.error('Не удалось экспортировать')
+      toast.error(t('chapters.toast.exportFailed'))
       return
     }
 
     const content = parts.join('')
     downloadText(content, `chapters-export-${Date.now()}.md`)
-    toast.success(`Экспортировано ${ids.length} ${ids.length === 1 ? 'глава' : 'глав'}`)
+    toast.success(
+      t('chapters.toast.exported', { n: ids.length, label: chaptersPlural(ids.length) })
+    )
     setSelectedIds(new Set())
     setIsSelectionMode(false)
-  }, [selectedIds, campaignId, toast])
+  }, [selectedIds, campaignId, toast, t, chaptersPlural])
 
   if (chapters.length === 0) {
     return (
       <EmptyState
         icon="📖"
-        title="Пока нет ни одной главы"
+        title={t('chapters.empty.title')}
         description={
-          isDm
-            ? 'Создай первую главу, чтобы начать писать приключение.'
-            : 'ГМ пока не добавил главы.'
+          isDm ? t('chapters.empty.descriptionDm') : t('chapters.empty.descriptionPlayer')
         }
         size="lg"
         actions={
           isDm && onCreateChapter
-            ? [{ label: 'Создать главу', onClick: onCreateChapter }]
+            ? [{ label: t('chapters.create'), onClick: onCreateChapter }]
             : undefined
         }
       />
@@ -236,12 +253,12 @@ export default function ChaptersList({
       {isSearching && filtered.length === 0 && (
         <EmptyState
           icon="🔍"
-          title="Ничего не найдено"
-          description={`Попробуй изменить запрос «${query}»`}
+          title={t('chapters.search.noResultsTitle')}
+          description={t('chapters.search.noResultsDescription', { query })}
           size="md"
           actions={[
             {
-              label: 'Очистить поиск',
+              label: t('chapters.search.clear'),
               onClick: () => setQuery(''),
               variant: 'secondary',
             },
@@ -315,6 +332,34 @@ export default function ChaptersList({
           onExport={handleBulkExport}
         />
       )}
+
+      <Dialog
+        open={showDeleteConfirm}
+        onClose={() => !isDeleting && setShowDeleteConfirm(false)}
+        title={t('chapters.deleteConfirm.title')}
+        description={t('chapters.deleteConfirm.description', {
+          n: selectedIds.size,
+          label: chaptersPlural(selectedIds.size),
+        })}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" onClick={confirmBulkDelete} loading={isDeleting}>
+              {t('common.delete')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">{t('chapters.deleteConfirm.cannotUndo')}</p>
+      </Dialog>
     </div>
   )
 }

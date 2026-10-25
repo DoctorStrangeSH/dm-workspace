@@ -1,6 +1,7 @@
 'use client'
 
 import { Input, Select } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
@@ -29,6 +30,7 @@ export default function WizardStep1({
   species,
   classes,
 }: Props) {
+  const t = useT()
   const useDb = species.length > 0 && classes.length > 0
 
   const raceOptions = useDb
@@ -42,11 +44,11 @@ export default function WizardStep1({
   return (
     <div className="space-y-6">
       <Input
-        label="Имя персонажа"
+        label={t('characters.wizard.name')}
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Арагорн"
+        placeholder={t('characters.wizard.namePlaceholder')}
         autoFocus
         maxLength={150}
         required
@@ -54,25 +56,25 @@ export default function WizardStep1({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Select
-          label="Раса"
+          label={t('characters.wizard.race')}
           value={raceSlug}
           onChange={(e) => setRaceSlug(e.target.value)}
-          options={[{ value: '', label: '— Выбери расу —' }, ...raceOptions]}
+          options={[{ value: '', label: t('characters.wizard.racePlaceholder') }, ...raceOptions]}
           required
         />
 
         <Select
-          label="Класс"
+          label={t('characters.wizard.class')}
           value={classSlug}
           onChange={(e) => setClassSlug(e.target.value)}
-          options={[{ value: '', label: '— Выбери класс —' }, ...classOptions]}
+          options={[{ value: '', label: t('characters.wizard.classPlaceholder') }, ...classOptions]}
           required
         />
       </div>
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-[var(--text-secondary)]">
-          Уровень
+          {t('characters.wizard.level')}
         </label>
         <div className="flex items-center gap-2">
           <Input
@@ -83,7 +85,9 @@ export default function WizardStep1({
             onChange={(e) => setLevel(Math.min(20, Math.max(1, Number(e.target.value))))}
             className="w-24"
           />
-          <span className="text-sm text-[var(--text-subtle)]">от 1 до 20</span>
+          <span className="text-sm text-[var(--text-subtle)]">
+            {t('characters.wizard.levelRange')}
+          </span>
         </div>
       </div>
     </div>

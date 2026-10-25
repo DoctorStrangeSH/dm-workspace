@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Send, EyeOff } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function MessageInput({ onSend, disabled, canHide = false }: Props) {
+  const t = useT()
   const [content, setContent] = useState('')
   const [isHidden, setIsHidden] = useState(false)
 
@@ -30,18 +32,20 @@ export default function MessageInput({ onSend, disabled, canHide = false }: Prop
   }
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-slate-800 p-3">
+    <form onSubmit={handleSubmit} className="border-t border-[var(--border-default)] p-3">
       {canHide && (
         <button
           type="button"
           onClick={() => setIsHidden(!isHidden)}
           className={cn(
             'mb-2 flex items-center gap-1.5 text-xs transition',
-            isHidden ? 'text-amber-400' : 'text-slate-500 hover:text-slate-300'
+            isHidden
+              ? 'text-[var(--warning-text)]'
+              : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           )}
         >
           <EyeOff size={12} />
-          {isHidden ? 'Скрытый бросок (только для ГМ)' : 'Скрыть бросок от игроков'}
+          {isHidden ? t('chat.hiddenRollOn') : t('chat.hiddenRollOff')}
         </button>
       )}
 
@@ -50,17 +54,17 @@ export default function MessageInput({ onSend, disabled, canHide = false }: Prop
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Сообщение..."
+          placeholder={t('chat.messagePlaceholder')}
           disabled={disabled}
           rows={1}
-          className="max-h-32 flex-1 resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none"
+          className="max-h-32 flex-1 resize-none rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
           style={{ minHeight: '40px' }}
         />
         <button
           type="submit"
           disabled={disabled || !content.trim()}
-          className="rounded-lg bg-indigo-600 p-2.5 text-white transition hover:bg-indigo-500 disabled:opacity-50"
-          title="Отправить (Enter)"
+          className="rounded-lg bg-[var(--accent)] p-2.5 text-white transition hover:bg-[var(--accent-hover)] disabled:opacity-50"
+          title={t('chat.sendHint')}
         >
           <Send size={16} />
         </button>

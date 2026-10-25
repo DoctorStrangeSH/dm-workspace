@@ -6,6 +6,8 @@ import SrdItemCard from './srd-item-card'
 import SrdItemDetailDialog from './srd-item-detail-dialog'
 import { EmptyState } from '@/components/ui'
 import { searchSrdItemsAction, type SrdItem } from '@/lib/actions/items-search'
+import { useT } from '@/lib/i18n'
+import type { SrdLang } from '@/lib/types'
 
 interface Props {
   campaignId: string
@@ -14,6 +16,7 @@ interface Props {
   availableTypes: string[]
   availableRarities: string[]
   canEditCampaign: boolean
+  lang: SrdLang
 }
 
 export default function ItemsClient({
@@ -23,13 +26,17 @@ export default function ItemsClient({
   availableTypes,
   availableRarities,
   canEditCampaign,
+  lang,
 }: Props) {
+  const t = useT()
   const [items, setItems] = useState(initialItems)
   const [query, setQuery] = useState('')
   const [types, setTypes] = useState<string[]>([])
   const [rarities, setRarities] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const [selectedItem, setSelectedItem] = useState<SrdItem | null>(null)
+
+  const hasFilters = query || types.length > 0 || rarities.length > 0
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -61,12 +68,8 @@ export default function ItemsClient({
       {items.length === 0 ? (
         <EmptyState
           icon="🎒"
-          title={
-            query || types.length > 0 || rarities.length > 0
-              ? 'Ничего не найдено'
-              : 'Предметов пока нет'
-          }
-          description="Попробуй изменить фильтры или поиск"
+          title={hasFilters ? t('items.empty.titleFiltered') : t('items.empty.title')}
+          description={t('items.empty.description')}
           size="md"
         />
       ) : (
@@ -76,6 +79,7 @@ export default function ItemsClient({
               key={item.key}
               item={item}
               canEdit={characters.length > 0}
+              lang={lang}
               onAddToCharacter={() => setSelectedItem(item)}
               onView={() => setSelectedItem(item)}
             />

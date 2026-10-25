@@ -5,6 +5,8 @@ import { Eye, EyeOff, Link2 } from 'lucide-react'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { pluralize } from '@/lib/i18n/plural'
 import type { Entity } from '@/lib/types'
 
 interface Props {
@@ -15,7 +17,14 @@ interface Props {
 }
 
 export default function EntityCard({ entity, campaignId, isDm, backlinksCount = 0 }: Props) {
+  const { t, lang } = useI18n()
   const style = ENTITY_STYLES[entity.type]
+
+  const mentionsLabel = pluralize(lang, backlinksCount, {
+    one: t('entities.mentions.one'),
+    few: t('entities.mentions.few'),
+    many: t('entities.mentions.many'),
+  })
 
   return (
     <Link href={`/campaign/${campaignId}/entities/${entity.id}`} className="group block">
@@ -37,18 +46,18 @@ export default function EntityCard({ entity, campaignId, isDm, backlinksCount = 
                 {entity.name}
               </h3>
               {isDm && !entity.is_visible_to_players && (
-                <span title="Скрыта от игроков" className="mt-1 shrink-0">
+                <span title={t('entities.hidden')} className="mt-1 shrink-0">
                   <EyeOff size={14} className="text-[var(--warning)]" />
                 </span>
               )}
               {isDm && entity.is_visible_to_players && (
-                <span title="Видна игрокам" className="mt-1 shrink-0">
+                <span title={t('entities.visible')} className="mt-1 shrink-0">
                   <Eye size={14} className="text-[var(--success)]/60" />
                 </span>
               )}
             </div>
 
-            <div className="mb-2 text-xs text-[var(--text-muted)]">{style.label}</div>
+            <div className="mb-2 text-xs text-[var(--text-muted)]">{t(style.labelKey)}</div>
 
             {entity.description && (
               <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{entity.description}</p>
@@ -58,12 +67,7 @@ export default function EntityCard({ entity, campaignId, isDm, backlinksCount = 
               <div className="mt-2 flex items-center gap-1 text-xs text-[var(--text-subtle)]">
                 <Link2 size={12} />
                 <span>
-                  {backlinksCount}{' '}
-                  {backlinksCount === 1
-                    ? 'упоминание'
-                    : backlinksCount < 5
-                      ? 'упоминания'
-                      : 'упоминаний'}
+                  {backlinksCount} {mentionsLabel}
                 </span>
               </div>
             )}

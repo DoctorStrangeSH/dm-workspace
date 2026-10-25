@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { createChapter } from '@/lib/actions/chapters'
 import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
+import { Button, Input, IconButton } from '@/components/ui'
 
 interface Props {
   campaignId: string
@@ -11,6 +13,7 @@ interface Props {
 }
 
 export default function CreateChapterModal({ campaignId, onClose }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -24,68 +27,70 @@ export default function CreateChapterModal({ campaignId, onClose }: Props) {
     startTransition(async () => {
       const res = await createChapter(campaignId, formData)
       if ('error' in res) {
-        setError(res.error ?? 'Ошибка')
-        toast.error(res.error ?? 'Ошибка')
+        setError(res.error ?? t('common.error'))
+        toast.error(res.error ?? t('common.error'))
         return
       }
-      toast.success('Глава создана')
+      toast.success(t('chapters.toast.created'))
       onClose()
     })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Новая глава</h2>
-          <button
+          <h2 className="text-xl font-bold text-[var(--text-primary)]">{t('chapters.create')}</h2>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            label={t('common.close')}
             onClick={onClose}
             disabled={isPending}
-            className="rounded-lg p-1 transition hover:bg-slate-800"
           >
             <X size={20} />
-          </button>
+          </IconButton>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Название <span className="text-red-400">*</span>
+            <label
+              htmlFor="chapter-title"
+              className="mb-1 block text-sm text-[var(--text-secondary)]"
+            >
+              {t('common.name')} <span className="text-[var(--danger)]">*</span>
             </label>
-            <input
+            <Input
+              id="chapter-title"
               name="title"
               type="text"
               required
               minLength={2}
               maxLength={150}
-              placeholder="Глава 1: Начало пути"
+              placeholder={t('chapters.createPlaceholder')}
               autoFocus
-              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
+            <div className="rounded-lg border border-[var(--danger)]/40 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]">
               {error}
             </div>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={onClose}
               disabled={isPending}
-              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {isPending ? 'Создаём...' : 'Создать'}
-            </button>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={isPending}>
+              {isPending ? t('chapters.creating') : t('common.create')}
+            </Button>
           </div>
         </form>
       </div>

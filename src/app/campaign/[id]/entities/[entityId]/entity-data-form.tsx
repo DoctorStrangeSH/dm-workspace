@@ -10,6 +10,7 @@ import NumberField from './fields/number-field'
 import SelectField from './fields/select-field'
 import TextareaField from './fields/textarea-field'
 import BooleanField from './fields/boolean-field'
+import { useT } from '@/lib/i18n'
 import type { EntityType } from '@/lib/types'
 
 interface Props {
@@ -54,11 +55,9 @@ function setNestedValue(
 }
 
 export default function EntityDataForm({ entityId, campaignId, type, initialData, isDm }: Props) {
+  const t = useT()
   const [data, setData] = useState<Record<string, unknown>>(initialData)
 
-  // CHANGES: schema и sections вычисляются через useMemo с зависимостью от type.
-  // Раньше `ENTITY_SCHEMAS[type] ?? []` создавал новый [] каждый рендер,
-  // из-за чего useMemo(sections) пересчитывался всегда.
   const schema = useMemo(() => ENTITY_SCHEMAS[type] ?? [], [type])
   const sections = useMemo(() => groupFieldsBySection(schema), [schema])
 
@@ -89,16 +88,18 @@ export default function EntityDataForm({ entityId, campaignId, type, initialData
   return (
     <div className="mt-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Характеристики</h2>
+        <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+          {t('entities.dataForm.title')}
+        </h2>
         {isDm && <SaveStatus status={status} lastSaved={lastSaved} error={error} />}
       </div>
 
       <div className="space-y-6">
-        {Object.entries(sections).map(([sectionName, fields]) => (
-          <div key={sectionName}>
+        {Object.entries(sections).map(([sectionKey, fields]) => (
+          <div key={sectionKey}>
             {Object.keys(sections).length > 1 && (
-              <h3 className="mb-3 text-sm font-medium tracking-wider text-slate-400 uppercase">
-                {sectionName}
+              <h3 className="mb-3 text-sm font-medium tracking-wider text-[var(--text-muted)] uppercase">
+                {t(sectionKey)}
               </h3>
             )}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -130,15 +131,23 @@ function FieldRenderer({
   onChange: (v: unknown) => void
   disabled: boolean
 }) {
+  const t = useT()
+
+  // CHANGES (К9): все поля — через *Key.
+  // label/placeholder/hint в FieldSchema больше НЕТ (удалены в entity-schemas.ts).
+  const label = t(field.labelKey)
+  const placeholder = field.placeholderKey ? t(field.placeholderKey) : undefined
+  const hint = field.hintKey ? t(field.hintKey) : undefined
+
   if (field.type === 'textarea') {
     return (
       <div className="md:col-span-2">
         <TextareaField
-          label={field.label}
-          hint={field.hint}
+          label={label}
+          hint={hint}
           value={(value as string) ?? ''}
           onChange={onChange}
-          placeholder={field.placeholder}
+          placeholder={placeholder}
           disabled={disabled}
         />
       </div>
@@ -148,8 +157,8 @@ function FieldRenderer({
   if (field.type === 'boolean') {
     return (
       <BooleanField
-        label={field.label}
-        hint={field.hint}
+        label={label}
+        hint={hint}
         value={Boolean(value)}
         onChange={onChange}
         disabled={disabled}
@@ -158,14 +167,19 @@ function FieldRenderer({
   }
 
   if (field.type === 'select' && field.options) {
+    const options = field.options.map((opt) => ({
+      value: opt.value,
+      label: t(opt.labelKey),
+    }))
     return (
       <SelectField
-        label={field.label}
-        hint={field.hint}
+        label={label}
+        hint={hint}
         value={value as string | undefined}
         onChange={onChange}
-        options={field.options}
+        options={options}
         disabled={disabled}
+        placeholder={placeholder ?? t('common.none')}
       />
     )
   }
@@ -173,11 +187,11 @@ function FieldRenderer({
   if (field.type === 'number') {
     return (
       <NumberField
-        label={field.label}
-        hint={field.hint}
+        label={label}
+        hint={hint}
         value={value as number | undefined}
         onChange={onChange}
-        placeholder={field.placeholder}
+        placeholder={placeholder}
         disabled={disabled}
         min={field.min}
         max={field.max}
@@ -187,11 +201,11 @@ function FieldRenderer({
 
   return (
     <TextField
-      label={field.label}
-      hint={field.hint}
+      label={label}
+      hint={hint}
       value={(value as string) ?? ''}
       onChange={onChange}
-      placeholder={field.placeholder}
+      placeholder={placeholder}
       disabled={disabled}
     />
   )

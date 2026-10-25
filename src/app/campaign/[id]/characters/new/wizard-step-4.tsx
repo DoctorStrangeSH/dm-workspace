@@ -2,14 +2,9 @@
 
 import { abilityModifier, formatModifier, getSaveBonus } from '@/lib/dnd/formulas'
 import { BACKGROUNDS, CLASSES, RACES } from '@/lib/dnd/constants'
-import {
-  ABILITY_LABELS,
-  ABILITY_SHORT,
-  SKILL_LABELS,
-  type AbilityKey,
-  type CharacterData,
-  type SkillKey,
-} from '@/lib/types'
+import type { AbilityKey, CharacterData, SkillKey } from '@/lib/types'
+import { useI18n } from '@/lib/i18n'
+import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
 import { Card } from '@/components/ui'
 
 interface Props {
@@ -20,6 +15,8 @@ interface Props {
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
 export default function WizardStep4({ name, data }: Props) {
+  const { t, lang } = useI18n()
+
   const race = RACES.find((r) => r.slug === data.race)
   const cls = CLASSES.find((c) => c.slug === data.class)
   const background = BACKGROUNDS.find((b) => b.slug === data.background)
@@ -34,9 +31,11 @@ export default function WizardStep4({ name, data }: Props) {
           <div>
             <h2 className="text-2xl font-bold text-[var(--text-primary)]">{name}</h2>
             <p className="text-sm text-[var(--text-muted)]">
-              {race?.name} · {cls?.name} · Уровень {data.level}
+              {race?.name} · {cls?.name} · {t('characters.level', { level: data.level })}
             </p>
-            <p className="text-xs text-[var(--text-subtle)]">Предыстория: {background?.name}</p>
+            <p className="text-xs text-[var(--text-subtle)]">
+              {t('characters.wizard.background')}: {background?.name}
+            </p>
           </div>
         </div>
 
@@ -50,7 +49,7 @@ export default function WizardStep4({ name, data }: Props) {
                 className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] py-2 text-center"
               >
                 <div className="text-[10px] text-[var(--text-subtle)] uppercase">
-                  {ABILITY_SHORT[ab]}
+                  {abilityShort(lang, ab)}
                 </div>
                 <div className="text-lg font-bold text-[var(--text-primary)]">{score}</div>
                 <div className="text-xs text-[var(--text-subtle)]">{formatModifier(mod)}</div>
@@ -70,14 +69,14 @@ export default function WizardStep4({ name, data }: Props) {
           <div className="text-2xl font-bold text-[var(--info)]">{data.ac}</div>
         </Card>
         <Card padding="sm" className="text-center">
-          <div className="text-xs text-[var(--text-subtle)]">Скорость</div>
+          <div className="text-xs text-[var(--text-subtle)]">{t('characters.speed')}</div>
           <div className="text-2xl font-bold text-[var(--success)]">{data.speed}</div>
         </Card>
       </div>
 
       <Card padding="md">
         <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-          Навыки
+          {t('characters.skills')}
         </h3>
         <div className="flex flex-wrap gap-2">
           {(data.proficientSkills ?? []).map((skill) => (
@@ -85,18 +84,18 @@ export default function WizardStep4({ name, data }: Props) {
               key={skill}
               className="rounded border border-[var(--success)]/30 bg-[var(--success-subtle)] px-2 py-1 text-xs text-[var(--success-text)]"
             >
-              {SKILL_LABELS[skill as SkillKey]}
+              {skillLabel(lang, skill as SkillKey)}
             </span>
           ))}
           {(!data.proficientSkills || data.proficientSkills.length === 0) && (
-            <span className="text-xs text-[var(--text-subtle)]">Нет навыков</span>
+            <span className="text-xs text-[var(--text-subtle)]">{t('characters.noSkills')}</span>
           )}
         </div>
       </Card>
 
       <Card padding="md">
         <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-          Спасброски (владение)
+          {t('characters.saves')}
         </h3>
         <div className="flex flex-wrap gap-2">
           {(data.proficientSaves ?? []).map((save) => (
@@ -104,7 +103,7 @@ export default function WizardStep4({ name, data }: Props) {
               key={save}
               className="rounded border border-[var(--accent)]/30 bg-[var(--accent-subtle)] px-2 py-1 text-xs text-[var(--accent-text)]"
             >
-              {ABILITY_LABELS[save]} ({formatModifier(getSaveBonus(data, save))})
+              {abilityLabel(lang, save)} ({formatModifier(getSaveBonus(data, save))})
             </span>
           ))}
         </div>

@@ -1,7 +1,34 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { AlertTriangle } from 'lucide-react'
+
+type Lang = 'ru' | 'en'
+
+const T: Record<Lang, { title: string; description: string; retry: string }> = {
+  ru: {
+    title: 'Критическая ошибка',
+    description: 'Приложение не может загрузиться. Обнови страницу.',
+    retry: 'Обновить',
+  },
+  en: {
+    title: 'Critical error',
+    description: 'The app failed to load. Please reload the page.',
+    retry: 'Reload',
+  },
+}
+
+function readLang(): Lang {
+  if (typeof document === 'undefined') return 'en'
+  const m = document.cookie.match(/(?:^|;\s*)dm-lang=([^;]+)/)
+  return m?.[1] === 'ru' ? 'ru' : 'en'
+}
+
+// CHANGES: useSyncExternalStore вместо setState в useEffect.
+// SSR-fallback — 'en', клиент — синхронно из cookie.
+// Убирает warning react-hooks/set-state-in-effect и cascading renders.
+const subscribe = () => () => {}
+const getServerSnapshot = (): Lang => 'en'
 
 export default function GlobalError({
   error,
@@ -10,12 +37,16 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const lang = useSyncExternalStore(subscribe, readLang, getServerSnapshot)
+
   useEffect(() => {
     console.error('[Global Error Boundary]', error)
   }, [error])
 
+  const text = T[lang]
+
   return (
-    <html lang="ru">
+    <html lang={lang}>
       <body>
         <div
           style={{
@@ -56,23 +87,11 @@ export default function GlobalError({
               <AlertTriangle size={32} style={{ color: '#ef4444' }} />
             </div>
 
-            <h1
-              style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                marginBottom: '8px',
-              }}
-            >
-              Критическая ошибка
+            <h1 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
+              {text.title}
             </h1>
-            <p
-              style={{
-                fontSize: '14px',
-                color: '#a1a1aa',
-                marginBottom: '24px',
-              }}
-            >
-              Приложение не может загрузиться. Обнови страницу.
+            <p style={{ fontSize: '14px', color: '#a1a1aa', marginBottom: '24px' }}>
+              {text.description}
             </p>
 
             <button
@@ -88,7 +107,7 @@ export default function GlobalError({
                 cursor: 'pointer',
               }}
             >
-              Обновить
+              {text.retry}
             </button>
           </div>
         </div>

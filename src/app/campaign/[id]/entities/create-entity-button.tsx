@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import CreateEntityModal from './create-entity-modal'
+import { Button } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import type { EntityTemplate, EntityType } from '@/lib/types'
 
 interface Props {
@@ -12,17 +14,14 @@ interface Props {
 }
 
 export default function CreateEntityButton({ campaignId, defaultType, templates }: Props) {
+  const t = useT()
   const [open, setOpen] = useState(false)
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500"
-      >
-        <Plus size={18} />
-        Новая сущность
-      </button>
+      <Button variant="primary" size="md" icon={<Plus size={18} />} onClick={() => setOpen(true)}>
+        {t('entities.create')}
+      </Button>
       {open && (
         <CreateEntityModal
           campaignId={campaignId}

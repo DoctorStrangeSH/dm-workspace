@@ -6,6 +6,7 @@ import { Plus, User, Skull } from 'lucide-react'
 import { createToken } from '@/lib/actions/tokens'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, IconButton, Input, Tabs } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import type { Scene, Character, Entity } from '@/lib/types'
 
 interface Props {
@@ -23,7 +24,10 @@ type MonsterDataJson = {
   hp_max?: number | string
 }
 
-function parseMonsterHP(raw: unknown): [string, number | null] {
+function parseMonsterHP(
+  raw: unknown,
+  avgTemplate: (vars: { avg: number }) => string
+): [string, number | null] {
   if (typeof raw === 'number' && Number.isFinite(raw) && raw > 0) {
     return [String(raw), raw]
   }
@@ -37,24 +41,27 @@ function parseMonsterHP(raw: unknown): [string, number | null] {
     if (dice) {
       const [, n, d, mod] = dice
       const avg = Math.floor((Number(n) * (Number(d) + 1)) / 2) + Number(mod ?? 0)
-      return [`${raw} (ср. ${avg})`, avg]
+      return [`${raw} ${avgTemplate({ avg })}`, avg]
     }
   }
   return ['—', null]
 }
 
-const TAB_ITEMS = [
-  { value: 'character', label: 'Персонаж', icon: <User size={14} /> },
-  { value: 'monster', label: 'Монстр', icon: <Skull size={14} /> },
-  { value: 'custom', label: 'Свой', icon: <Plus size={14} /> },
-]
-
 export default function AddTokenModal({ scene, characters, monsters, onClose }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [tab, setTab] = useState<Tab>('character')
   const [customName, setCustomName] = useState('')
+
+  const TAB_ITEMS = [
+    { value: 'character', label: t('scenes.addToken.tab.character'), icon: <User size={14} /> },
+    { value: 'monster', label: t('scenes.addToken.tab.monster'), icon: <Skull size={14} /> },
+    { value: 'custom', label: t('scenes.addToken.tab.custom'), icon: <Plus size={14} /> },
+  ]
+
+  const avgTemplate = (vars: { avg: number }) => t('scenes.addToken.hpAverage', vars)
 
   const handleAdd = (
     name: string,
@@ -74,9 +81,9 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
         ...data,
       })
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Токен добавлен')
+        toast.success(t('scenes.toast.tokenAdded'))
         router.refresh()
         onClose()
       }
@@ -87,11 +94,11 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
       <div className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)]">
         <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
-          <h2 className="font-semibold text-[var(--text-primary)]">Добавить токен</h2>
+          <h2 className="font-semibold text-[var(--text-primary)]">{t('scenes.addToken.title')}</h2>
           <IconButton
             variant="ghost"
             size="sm"
-            label="Закрыть"
+            label={t('common.close')}
             onClick={onClose}
             disabled={isPending}
           >
@@ -107,7 +114,9 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
           {tab === 'character' && (
             <div className="space-y-1">
               {characters.length === 0 ? (
-                <p className="py-6 text-center text-sm text-[var(--text-muted)]">Нет персонажей</p>
+                <p className="py-6 text-center text-sm text-[var(--text-muted)]">
+                  {t('scenes.addToken.noCharacters')}
+                </p>
               ) : (
                 characters.map((char) => (
                   <button
@@ -131,7 +140,10 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
                         {char.name}
                       </div>
                       <div className="text-xs text-[var(--text-muted)]">
-                        HP {char.data_json.hp.current}/{char.data_json.hp.max}
+                        {t('scenes.hpValue', {
+                          current: char.data_json.hp.current,
+                          max: char.data_json.hp.max,
+                        })}
                       </div>
                     </div>
                   </button>
@@ -144,7 +156,7 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
             <div className="space-y-1">
               {monsters.length === 0 ? (
                 <p className="py-6 text-center text-sm text-[var(--text-muted)]">
-                  Нет монстров в кампании
+                  {t('scenes.addToken.noMonsters')}
                 </p>
               ) : (
                 monsters.map((m) => {
@@ -153,7 +165,7 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
                       ? (JSON.parse(m.data_json) as MonsterDataJson)
                       : (m.data_json as MonsterDataJson)
                   const rawHp = dj.hp ?? dj.hit_points ?? dj.hp_max
-                  const [hpDisplay, hpNum] = parseMonsterHP(rawHp)
+                  const [hpDisplay, hpNum] = parseMonsterHP(rawHp, avgTemplate)
                   return (
                     <button
                       key={m.id}
@@ -174,7 +186,9 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
                         <div className="truncate text-sm font-medium text-[var(--text-primary)]">
                           {m.name}
                         </div>
-                        <div className="text-xs text-[var(--text-muted)]">HP {hpDisplay}</div>
+                        <div className="text-xs text-[var(--text-muted)]">
+                          {t('scenes.addToken.hpDisplay', { hp: hpDisplay })}
+                        </div>
                       </div>
                     </button>
                   )
@@ -186,20 +200,20 @@ export default function AddTokenModal({ scene, characters, monsters, onClose }: 
           {tab === 'custom' && (
             <div className="space-y-3">
               <Input
-                label="Имя токена"
+                label={t('scenes.addToken.customName')}
                 type="text"
                 value={customName}
                 onChange={(e) => setCustomName(e.target.value)}
-                placeholder="Неизвестный"
+                placeholder={t('scenes.addToken.customNamePlaceholder')}
               />
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => handleAdd(customName || 'Неизвестный', {})}
+                onClick={() => handleAdd(customName || t('scenes.addToken.defaultName'), {})}
                 loading={isPending}
                 className="w-full"
               >
-                {isPending ? 'Создаём...' : 'Создать токен'}
+                {isPending ? t('scenes.addToken.creating') : t('scenes.addToken.create')}
               </Button>
             </div>
           )}

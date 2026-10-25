@@ -3,35 +3,41 @@
 import { Plus, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card, Button } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { srdName, type SrdLang } from '@/lib/types'
 import type { SrdMonster } from '@/lib/actions/bestiary-search'
 
 interface Props {
   monster: SrdMonster
   canEdit: boolean
+  lang: SrdLang
   onAdd: () => void
   onView: () => void
 }
 
+// CHANGES: цвета переведены на семантические токены.
 const TYPE_COLORS: Record<string, string> = {
-  dragon: 'text-[var(--danger)]',
+  dragon: 'text-[var(--danger-text)]',
   undead: 'text-[var(--accent-text)]',
-  fiend: 'text-[var(--danger)]',
+  fiend: 'text-[var(--danger-text)]',
   celestial: 'text-[var(--warning-text)]',
-  fey: 'text-pink-400',
-  beast: 'text-[var(--success)]',
-  humanoid: 'text-[var(--info)]',
-  giant: 'text-[var(--warning)]',
+  fey: 'text-[var(--accent-text)]',
+  beast: 'text-[var(--success-text)]',
+  humanoid: 'text-[var(--info-text)]',
+  giant: 'text-[var(--warning-text)]',
   construct: 'text-[var(--text-muted)]',
   elemental: 'text-[var(--info-text)]',
   aberration: 'text-[var(--accent-text)]',
-  monstrosity: 'text-orange-400',
-  ooze: 'text-[var(--success)]',
-  plant: 'text-lime-400',
+  monstrosity: 'text-[var(--danger-text)]',
+  ooze: 'text-[var(--success-text)]',
+  plant: 'text-[var(--success-text)]',
 }
 
-export default function MonsterCard({ monster, canEdit, onAdd, onView }: Props) {
+export default function MonsterCard({ monster, canEdit, lang, onAdd, onView }: Props) {
+  const { t } = useI18n()
   const data = monster.data
   const type = (data.type ?? '').toLowerCase()
+  const size = (data.size ?? '').toLowerCase()
   const typeColor = TYPE_COLORS[type] ?? 'text-[var(--text-muted)]'
   const cr = data.cr ?? '—'
   const hp = data.hp ?? data.hp_max ?? '?'
@@ -42,14 +48,14 @@ export default function MonsterCard({ monster, canEdit, onAdd, onView }: Props) 
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold text-[var(--text-primary)]">
-            {monster.name_ru ?? monster.name}
+            {srdName(monster, lang)}
           </h3>
           <div className="mt-0.5 flex items-center gap-2 text-xs">
-            <span className={cn('capitalize', typeColor)}>{type}</span>
-            {data.size && (
+            {type && <span className={cn(typeColor)}>{t(`monsterType.${type}`)}</span>}
+            {size && (
               <>
                 <span className="text-[var(--text-subtle)]">·</span>
-                <span className="text-[var(--text-muted)] capitalize">{data.size}</span>
+                <span className="text-[var(--text-muted)]">{t(`monsterSize.${size}`)}</span>
               </>
             )}
           </div>
@@ -75,7 +81,7 @@ export default function MonsterCard({ monster, canEdit, onAdd, onView }: Props) 
           onClick={onView}
           className="flex-1"
         >
-          Подробнее
+          {t('bestiary.viewDetails')}
         </Button>
         {canEdit && (
           <Button
@@ -83,9 +89,9 @@ export default function MonsterCard({ monster, canEdit, onAdd, onView }: Props) 
             size="sm"
             icon={<Plus size={12} />}
             onClick={onAdd}
-            title="Добавить в кампанию"
+            title={t('bestiary.addToCampaign')}
           >
-            <span className="hidden sm:inline">Добавить</span>
+            <span className="hidden sm:inline">{t('bestiary.add')}</span>
           </Button>
         )}
       </div>

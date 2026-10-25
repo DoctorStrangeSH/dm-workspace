@@ -5,6 +5,7 @@ import { Heart, Minus, Plus, Skull } from 'lucide-react'
 import { updateCharacterHP } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { Card, Button } from '@/components/ui'
 import type { CharacterHP } from '@/lib/types'
 
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function HPTracker({ characterId, campaignId, hp, canEdit }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [customValue, setCustomValue] = useState('')
@@ -28,7 +30,7 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
     startTransition(async () => {
       const res = await updateCharacterHP(characterId, campaignId, newHP)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       }
     })
   }
@@ -82,7 +84,7 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
       {isDead && (
         <div className="mb-3 flex items-center gap-2 rounded border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-xs text-[var(--danger-text)]">
           <Skull size={12} />
-          <span>Спасброски от смерти: 3 успеха / 3 провала</span>
+          <span>{t('characters.deathSavesHint')}</span>
         </div>
       )}
 

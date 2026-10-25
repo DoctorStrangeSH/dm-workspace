@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Settings, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { getCampaignNavItems } from '@/lib/campaign-nav-items'
 
 interface Props {
@@ -11,12 +12,11 @@ interface Props {
   isDm: boolean
 }
 
-// CHANGES: все цвета на семантических токенах (--border-default, --bg-app, --text-*)
-// Активный пункт: --accent-subtle + --accent-text (вместо hardcoded indigo-*)
 export default function CampaignSidebar({ campaignId, isDm }: Props) {
+  const t = useT() // CHANGES
   const pathname = usePathname()
   const base = `/campaign/${campaignId}`
-  const items = getCampaignNavItems(base)
+  const items = getCampaignNavItems(base).filter((item) => !item.dmOnly || isDm)
 
   return (
     <aside className="hidden min-h-[calc(100vh-57px)] w-56 border-r border-[var(--border-default)] bg-[var(--bg-app)] p-4 md:block">
@@ -38,7 +38,7 @@ export default function CampaignSidebar({ campaignId, isDm }: Props) {
               )}
             >
               <Icon size={16} />
-              {item.label}
+              {t(item.labelKey)} {/* CHANGES: было {item.label} */}
             </Link>
           )
         })}
@@ -57,12 +57,12 @@ export default function CampaignSidebar({ campaignId, isDm }: Props) {
             )}
           >
             <Settings size={16} />
-            Настройки
+            {t('nav.settings')} {/* CHANGES: было «Настройки» */}
           </Link>
 
           <div className="mt-3 flex items-center gap-2 px-3 text-xs text-[var(--warning-text)]">
             <Crown size={12} />
-            <span>Режим ГМа</span>
+            <span>{t('role.dm')}</span> {/* CHANGES: было «Режим ГМа» */}
           </div>
         </div>
       )}

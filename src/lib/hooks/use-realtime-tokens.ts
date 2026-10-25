@@ -12,13 +12,8 @@ interface Options {
 
 export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Options) {
   const [tokens, setTokens] = useState<Token[]>(initialTokens)
+  const [isReady, setIsReady] = useState(false)
 
-  // CHANGES:
-  // 1. Убран useEffect с setTokens(initialTokens) — это вызывало каскадный рендер.
-  // 2. Используется официальный паттерн React «adjusting state when props change»:
-  //    сравнение в рендере через prevInitial + setState в рендере (React поддерживает это).
-  //    https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  // 3. setState в рендере срабатывает только когда initialTokens реально изменился (по ссылке).
   const [prevInitial, setPrevInitial] = useState(initialTokens)
   if (initialTokens !== prevInitial) {
     setPrevInitial(initialTokens)
@@ -29,40 +24,57 @@ export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Op
     if (!enabled) return
 
     const supabase = createClient()
+    let cancelled = false
 
-    console.log('[tokens realtime] creating channel for scene:', sceneId)
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
 
-    const channel = supabase
-      .channel(`tokens:${sceneId}`, {
+      // CHANGES: канал `tokens:<sceneId>` — совпадает с триггером broadcast_token_changes.
+      const channel = supabase.channel(`tokens:${sceneId}`, {
         config: { private: true },
       })
-      .on('broadcast', { event: 'INSERT' }, (payload) => {
-        console.log('[tokens broadcast] INSERT:', payload)
-        const newToken = payload.payload.record as Token
-        if (!newToken) return
-        setTokens((prev) => {
-          if (prev.some((t) => t.id === newToken.id)) return prev
-          return [...prev, newToken]
+
+      channel
+        .on('broadcast', { event: 'INSERT' }, (payload) => {
+          const newToken = payload.payload.record as Token
+          if (!newToken || newToken.scene_id !== sceneId) return
+          setTokens((prev) => {
+            if (prev.some((t) => t.id === newToken.id)) return prev
+            return [...prev, newToken]
+          })
         })
-      })
-      .on('broadcast', { event: 'UPDATE' }, (payload) => {
-        console.log('[tokens broadcast] UPDATE:', payload)
-        const updated = payload.payload.record as Token
-        if (!updated) return
-        setTokens((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
-      })
-      .on('broadcast', { event: 'DELETE' }, (payload) => {
-        console.log('[tokens broadcast] DELETE:', payload)
-        const old = payload.payload.old_record as { id: string }
-        if (!old) return
-        setTokens((prev) => prev.filter((t) => t.id !== old.id))
-      })
-      .subscribe((status, err) => {
-        console.log('[tokens realtime] status:', status, 'err:', err)
-      })
+        .on('broadcast', { event: 'UPDATE' }, (payload) => {
+          const updated = payload.payload.record as Token
+          if (!updated || updated.scene_id !== sceneId) return
+          setTokens((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+        })
+        .on('broadcast', { event: 'DELETE' }, (payload) => {
+          const old = payload.payload.old_record as { id: string; scene_id?: string }
+          if (!old || old.scene_id !== sceneId) return
+          setTokens((prev) => prev.filter((t) => t.id !== old.id))
+        })
+        .subscribe((status, err) => {
+          console.log('[tokens realtime] status:', status, 'err:', err)
+          if (!cancelled) setIsReady(status === 'SUBSCRIBED')
+        })
+
+      return channel
+    }
+
+    let channel: Awaited<ReturnType<typeof setup>> | null = null
+    setup().then((c) => {
+      if (cancelled) {
+        if (c) supabase.removeChannel(c)
+      } else {
+        channel = c
+      }
+    })
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      setIsReady(false)
+      if (channel) supabase.removeChannel(channel)
     }
   }, [sceneId, enabled])
 
@@ -70,5 +82,5 @@ export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Op
     setTokens((prev) => prev.map((t) => (t.id === tokenId ? { ...t, ...updates } : t)))
   }, [])
 
-  return { tokens, updateLocal }
+  return { tokens, updateLocal, isReady }
 }

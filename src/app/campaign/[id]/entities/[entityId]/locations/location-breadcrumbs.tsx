@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronRight, Home } from 'lucide-react'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import type { EntityType } from '@/lib/types'
 
 interface PathItem {
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export default function LocationBreadcrumbs({ campaignId, path }: Props) {
+  const t = useT()
+
   if (path.length <= 1) return null
 
   return (
@@ -27,7 +30,7 @@ export default function LocationBreadcrumbs({ campaignId, path }: Props) {
         className="flex items-center gap-1 text-[var(--text-subtle)] transition hover:text-[var(--text-secondary)]"
       >
         <Home size={12} />
-        <span>Сущности</span>
+        <span>{t('nav.entities')}</span>
       </Link>
 
       {path.map((item, i) => {

@@ -82,41 +82,40 @@ export interface Entity {
 // ============================================================
 
 export const GENRES = [
-  'Фэнтези',
-  'Хоррор',
-  'Научная фантастика',
-  'Киберпанк',
-  'Стимпанк',
-  'Постапокалипсис',
-  'Детектив',
-  'Мистика',
-  'Пиратское',
-  'Вестерн',
-  'Современность',
-  'Другое',
+  'fantasy',
+  'horror',
+  'sci-fi',
+  'cyberpunk',
+  'steampunk',
+  'post-apocalyptic',
+  'detective',
+  'mystic',
+  'pirate',
+  'western',
+  'modern',
+  'other',
 ] as const
 
 export type Genre = (typeof GENRES)[number]
 
-export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
-  npc: 'NPC',
-  location: 'Локация',
-  item: 'Предмет',
-  monster: 'Монстр',
-  faction: 'Фракция',
-  quest: 'Квест',
-  note: 'Заметка',
+/** Старые русские значения → slug (для миграции БД). */
+export const GENRE_RU_TO_SLUG: Record<string, Genre> = {
+  Фэнтези: 'fantasy',
+  Хоррор: 'horror',
+  'Научная фантастика': 'sci-fi',
+  Киберпанк: 'cyberpunk',
+  Стимпанк: 'steampunk',
+  Постапокалипсис: 'post-apocalyptic',
+  Детектив: 'detective',
+  Мистика: 'mystic',
+  Пиратское: 'pirate',
+  Вестерн: 'western',
+  Современность: 'modern',
+  Другое: 'other',
 }
 
-export const ENTITY_TYPE_ICONS: Record<EntityType, string> = {
-  npc: '👤',
-  location: '🗺️',
-  item: '⚔️',
-  monster: '👹',
-  faction: '🏛️',
-  quest: '📜',
-  note: '📝',
-}
+// CHANGES (К9): Удалены ENTITY_TYPE_LABELS, ENTITY_TYPE_ICONS.
+// В UI — t(`entityType.${type}`) и ENTITY_STYLES[type].icon (в entity-ui.ts).
 
 // ============================================================
 // data_json
@@ -239,49 +238,26 @@ export interface EntityRelation {
   metadata: Record<string, unknown>
 }
 
+/**
+ * CHANGES (К9): Упрощено — оставлен только `icon`.
+ * label/reverseLabel — через t(`relationType.${type}.label|reverse`).
+ * color — не использовался.
+ */
 export interface RelationTypeInfo {
-  label: string
-  reverseLabel: string
   icon: string
-  color: string
 }
 
 export const RELATION_TYPES: Record<RelationType, RelationTypeInfo> = {
-  member_of: { label: 'Член', reverseLabel: 'Члены', icon: '⚔️', color: 'text-indigo-300' },
-  leader_of: { label: 'Лидер', reverseLabel: 'Лидер', icon: '👑', color: 'text-amber-300' },
-  located_in: {
-    label: 'Находится в',
-    reverseLabel: 'Содержит',
-    icon: '📍',
-    color: 'text-emerald-300',
-  },
-  owns: { label: 'Владеет', reverseLabel: 'Принадлежит', icon: '🎁', color: 'text-yellow-300' },
-  quest_giver: {
-    label: 'Выдал квест',
-    reverseLabel: 'Выдан',
-    icon: '📜',
-    color: 'text-violet-300',
-  },
-  quest_target: {
-    label: 'Цель квеста',
-    reverseLabel: 'Цель квеста для',
-    icon: '🎯',
-    color: 'text-red-300',
-  },
-  ally_of: { label: 'Союзник', reverseLabel: 'Союзник', icon: '🤝', color: 'text-green-300' },
-  enemy_of: { label: 'Враг', reverseLabel: 'Враг', icon: '⚔️', color: 'text-red-300' },
-  parent_of: {
-    label: 'Родительская локация',
-    reverseLabel: 'Дочерние локации',
-    icon: '🗺️',
-    color: 'text-emerald-300',
-  },
-  related_to: {
-    label: 'Связано с',
-    reverseLabel: 'Связано с',
-    icon: '🔗',
-    color: 'text-slate-300',
-  },
+  member_of: { icon: '⚔️' },
+  leader_of: { icon: '👑' },
+  located_in: { icon: '📍' },
+  owns: { icon: '🎁' },
+  quest_giver: { icon: '📜' },
+  quest_target: { icon: '🎯' },
+  ally_of: { icon: '🤝' },
+  enemy_of: { icon: '⚔️' },
+  parent_of: { icon: '🗺️' },
+  related_to: { icon: '🔗' },
 }
 
 export const ALLOWED_RELATIONS: Record<string, RelationType[]> = {
@@ -436,16 +412,7 @@ export type SpellSchool =
   | 'necromancy'
   | 'transmutation'
 
-export const SPELL_SCHOOLS: Record<SpellSchool, string> = {
-  abjuration: 'Ограждение',
-  conjuration: 'Вызов',
-  divination: 'Прорицание',
-  enchantment: 'Очарование',
-  evocation: 'Воплощение',
-  illusion: 'Иллюзия',
-  necromancy: 'Некромантия',
-  transmutation: 'Преобразование',
-}
+// CHANGES (К9): Удалён SPELL_SCHOOLS — в UI t(`school.${school}`).
 
 export interface CharacterSpell {
   id: string
@@ -487,19 +454,8 @@ export interface Currency {
   cp?: number
 }
 
-export const CURRENCY_LABELS: Record<keyof Currency, string> = {
-  pp: 'Платина (pp)',
-  gp: 'Золото (gp)',
-  sp: 'Серебро (sp)',
-  cp: 'Медь (cp)',
-}
-
-export const CURRENCY_SHORT: Record<keyof Currency, string> = {
-  pp: 'pp',
-  gp: 'gp',
-  sp: 'sp',
-  cp: 'cp',
-}
+// CHANGES (К9): Удалены CURRENCY_LABELS, CURRENCY_SHORT.
+// В UI — t(`currency.${key}`) и t(`currencyShort.${key}`).
 
 export const MAX_ATTUNEMENTS = 3
 
@@ -570,44 +526,8 @@ export function createEmptyCharacterData(): CharacterData {
   }
 }
 
-export const ABILITY_LABELS: Record<AbilityKey, string> = {
-  str: 'Сила',
-  dex: 'Ловкость',
-  con: 'Телосложение',
-  int: 'Интеллект',
-  wis: 'Мудрость',
-  cha: 'Харизма',
-}
-
-export const ABILITY_SHORT: Record<AbilityKey, string> = {
-  str: 'СИЛ',
-  dex: 'ЛОВ',
-  con: 'ТЕЛ',
-  int: 'ИНТ',
-  wis: 'МДР',
-  cha: 'ХАР',
-}
-
-export const SKILL_LABELS: Record<SkillKey, string> = {
-  acrobatics: 'Акробатика',
-  'animal-handling': 'Обращение с животными',
-  arcana: 'Магия',
-  athletics: 'Атлетика',
-  deception: 'Обман',
-  history: 'История',
-  insight: 'Проницательность',
-  intimidation: 'Запугивание',
-  investigation: 'Расследование',
-  medicine: 'Медицина',
-  nature: 'Природа',
-  perception: 'Внимательность',
-  performance: 'Выступление',
-  persuasion: 'Убеждение',
-  religion: 'Религия',
-  'sleight-of-hand': 'Ловкость рук',
-  stealth: 'Скрытность',
-  survival: 'Выживание',
-}
+// CHANGES (К9): Удалены ABILITY_LABELS, ABILITY_SHORT, SKILL_LABELS.
+// В UI — t(`ability.${key}`), t(`abilityShort.${key}`), t(`skill.${key}`).
 
 export const SKILL_ABILITY: Record<SkillKey, AbilityKey> = {
   acrobatics: 'dex',
@@ -695,6 +615,45 @@ export interface Scene {
   updated_at: string
 }
 
+// CHANGES (5.1): Стены на карте
+export interface SceneWall {
+  id: string
+  scene_id: string
+  campaign_id: string
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  color: string
+  created_by: string
+  created_at: string
+}
+
+// CHANGES (5.2): Запросы на призыв существ
+export type SummonStatus = 'pending' | 'approved' | 'rejected'
+
+export interface SummonRequest {
+  id: string
+  campaign_id: string
+  scene_id: string
+  requester_id: string
+  monster_name: string
+  monster_entity_id: string | null
+  monster_count: number
+  status: SummonStatus
+  resolved_by: string | null
+  resolved_at: string | null
+  created_at: string
+}
+
+export interface SummonRequestWithRequester extends SummonRequest {
+  requester: {
+    id: string
+    username: string
+    display_name: string | null
+  }
+}
+
 export interface TokenCondition {
   name: string
   icon?: string
@@ -721,22 +680,26 @@ export interface Token {
   updated_at: string
 }
 
+/**
+ * CHANGES (К9): Убран `label` — в UI t(`condition.${name}`).
+ * Оставлены name + icon (используются в token-menu.tsx).
+ */
 export const CONDITION_LIST = [
-  { name: 'blinded', label: 'Ослеплён', icon: '👁️' },
-  { name: 'charmed', label: 'Очарован', icon: '💗' },
-  { name: 'deafened', label: 'Оглох', icon: '🔇' },
-  { name: 'frightened', label: 'Испуган', icon: '😨' },
-  { name: 'grappled', label: 'Схвачен', icon: '✊' },
-  { name: 'incapacitated', label: 'Недееспособен', icon: '💤' },
-  { name: 'invisible', label: 'Невидим', icon: '👻' },
-  { name: 'paralyzed', label: 'Парализован', icon: '🧊' },
-  { name: 'petrified', label: 'Окаменел', icon: '🗿' },
-  { name: 'poisoned', label: 'Отравлен', icon: '🤢' },
-  { name: 'prone', label: 'Лежит', icon: '🛌' },
-  { name: 'restrained', label: 'Опутан', icon: '🪢' },
-  { name: 'stunned', label: 'Оглушён', icon: '💫' },
-  { name: 'unconscious', label: 'Без сознания', icon: '💀' },
-]
+  { name: 'blinded', icon: '👁️' },
+  { name: 'charmed', icon: '💗' },
+  { name: 'deafened', icon: '🔇' },
+  { name: 'frightened', icon: '😨' },
+  { name: 'grappled', icon: '✊' },
+  { name: 'incapacitated', icon: '💤' },
+  { name: 'invisible', icon: '👻' },
+  { name: 'paralyzed', icon: '🧊' },
+  { name: 'petrified', icon: '🗿' },
+  { name: 'poisoned', icon: '🤢' },
+  { name: 'prone', icon: '🛌' },
+  { name: 'restrained', icon: '🪢' },
+  { name: 'stunned', icon: '💫' },
+  { name: 'unconscious', icon: '💀' },
+] as const
 
 export interface InitiativeEntry {
   id: string
@@ -812,6 +775,10 @@ export interface SessionLog {
   created_at: string
 }
 
+/**
+ * CHANGES (К9): Оставлен как fallback для неизвестных event_type.
+ * Для известных — t(`logEvent.${type}`).
+ */
 export const LOG_EVENT_LABELS: Record<string, string> = {
   combat_start: '⚔️ Бой начат',
   combat_end: '🏳️ Бой завершён',
@@ -865,8 +832,40 @@ export interface SessionWithRsvp extends Session {
   }
 }
 
-export const RSVP_LABELS: Record<RsvpStatus, { label: string; icon: string }> = {
-  yes: { label: 'Иду', icon: '✅' },
-  no: { label: 'Не иду', icon: '❌' },
-  maybe: { label: 'Может быть', icon: '🤔' },
+/**
+ * CHANGES (К9): Убран `label` — в UI t(`rsvp.${status}`).
+ * Оставлен `icon` (используется в sessions-client.tsx).
+ */
+export const RSVP_LABELS: Record<RsvpStatus, { icon: string }> = {
+  yes: { icon: '✅' },
+  no: { icon: '❌' },
+  maybe: { icon: '🤔' },
+}
+
+// ============================================================
+// SRD — язык
+// ============================================================
+
+export type SrdLang = 'ru' | 'en'
+
+export function srdName(item: { name: string; name_ru: string | null }, lang: SrdLang): string {
+  if (lang === 'en') return item.name
+  return item.name_ru ?? item.name
+}
+
+// CHANGES (5.3): Совместные токены
+export interface TokenOwner {
+  token_id: string
+  user_id: string
+  campaign_id: string
+  added_by: string
+  created_at: string
+}
+
+export interface TokenOwnerWithProfile extends TokenOwner {
+  profile: {
+    id: string
+    username: string
+    display_name: string | null
+  }
 }

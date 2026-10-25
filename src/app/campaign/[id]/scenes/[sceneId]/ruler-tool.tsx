@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/lib/i18n'
+import { pluralize } from '@/lib/i18n/plural'
 import type { Scene } from '@/lib/types'
 
 interface Props {
@@ -14,15 +16,8 @@ interface Point {
   y: number
 }
 
-/**
- * CHANGES: полностью переписана логика.
- * 1. Координаты в клетках с округлением (snap to grid).
- * 2. Drag: mousedown → mousemove → mouseup. Escape — сброс.
- * 3. Distance в футах: 5 футов на клетку, округление до целого.
- * 4. Distance в клетках — показываем и то, и то.
- * 5. Добавлен onClose (для сброса активного инструмента).
- */
 export default function RulerTool({ scene, isActive, onClose }: Props) {
+  const { t, lang } = useI18n()
   const [start, setStart] = useState<Point | null>(null)
   const [end, setEnd] = useState<Point | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -32,7 +27,6 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
   const width = scene.width * gridSize
   const height = scene.height * gridSize
 
-  // Сброс по Escape
   useEffect(() => {
     if (!isActive) return
     const handler = (e: KeyboardEvent) => {
@@ -54,7 +48,6 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
     const rect = wrapperRef.current.getBoundingClientRect()
     const rawX = (e.clientX - rect.left) / gridSize
     const rawY = (e.clientY - rect.top) / gridSize
-    // Snap to nearest intersection
     return {
       x: Math.round(rawX),
       y: Math.round(rawY),
@@ -84,8 +77,14 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
   const distance =
     start && end ? Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)) : 0
 
-  // 5 футов на клетку, округляем вверх (стандарт D&D: диагональ = 5 футов)
   const feet = Math.max(0, Math.round(distance * 5))
+  const cellsValue = Math.round(distance * 10) / 10
+
+  const cellsLabel = pluralize(lang, Math.round(cellsValue), {
+    one: t('scenes.cells.one'),
+    few: t('scenes.cells.few'),
+    many: t('scenes.cells.many'),
+  })
 
   const startPx = start ? { x: start.x * gridSize, y: start.y * gridSize } : null
   const endPx = end ? { x: end.x * gridSize, y: end.y * gridSize } : null
@@ -108,7 +107,6 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
       >
         {startPx && endPx && (
           <>
-            {/* Линия */}
             <line
               x1={startPx.x}
               y1={startPx.y}
@@ -118,10 +116,8 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
               strokeWidth={2}
               strokeDasharray="8 4"
             />
-            {/* Точки */}
             <circle cx={startPx.x} cy={startPx.y} r={5} fill="var(--accent)" />
             <circle cx={endPx.x} cy={endPx.y} r={5} fill="var(--accent)" />
-            {/* Текст с расстоянием */}
             <text
               x={(startPx.x + endPx.x) / 2}
               y={(startPx.y + endPx.y) / 2 - 12}
@@ -135,7 +131,7 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
                 strokeWidth: 4,
               }}
             >
-              {feet} ft
+              {t('common.feetShort', { feet })}
             </text>
             <text
               x={(startPx.x + endPx.x) / 2}
@@ -149,7 +145,7 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
                 strokeWidth: 3,
               }}
             >
-              {Math.round(distance * 10) / 10} клеток
+              {t('common.cellsValue', { value: cellsValue, label: cellsLabel })}
             </text>
           </>
         )}

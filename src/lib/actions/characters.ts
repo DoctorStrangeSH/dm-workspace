@@ -237,18 +237,23 @@ export async function updateCharacterHP(
 // Death Saves
 // ============================================================
 
-export async function rollDeathSave(
-  characterId: string,
-  campaignId: string
-): Promise<
+export type DeathSaveStatus = 'dead' | 'stabilized' | 'success' | 'fail'
+
+export type RollDeathSaveResult =
   | { error: string }
   | {
       success: true
       roll: number
-      message: string
+      status: DeathSaveStatus
+      isNatural20: boolean
+      isNatural1: boolean
       deathSaves: { successes: number; failures: number; stabilized: boolean }
     }
-> {
+
+export async function rollDeathSave(
+  characterId: string,
+  campaignId: string
+): Promise<RollDeathSaveResult> {
   const access = await checkCharacterAccess(characterId, campaignId)
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
@@ -256,37 +261,49 @@ export async function rollDeathSave(
   const data = access.data
   const deathSaves = data.deathSaves ?? { successes: 0, failures: 0, stabilized: false }
   const roll = Math.floor(Math.random() * 20) + 1
-  let message = ''
+
+  let status: DeathSaveStatus
+  let isNatural20 = false
+  let isNatural1 = false
 
   if (roll === 20) {
+    isNatural20 = true
     deathSaves.successes = 0
     deathSaves.failures = 0
     deathSaves.stabilized = false
     data.hp.current = 1
-    message = `🎉 Натуральная 20! Возврат к 1 HP`
+    status = 'success'
   } else if (roll === 1) {
+    isNatural1 = true
     deathSaves.failures = Math.min(3, deathSaves.failures + 2)
-    message = `💀 Натуральная 1! 2 провала`
+    status = 'fail'
   } else if (roll >= 10) {
     deathSaves.successes = Math.min(3, deathSaves.successes + 1)
-    message = `✅ Успех (${deathSaves.successes}/3)`
+    status = 'success'
   } else {
     deathSaves.failures = Math.min(3, deathSaves.failures + 1)
-    message = `❌ Провал (${deathSaves.failures}/3)`
+    status = 'fail'
   }
 
   if (deathSaves.successes >= 3) {
     deathSaves.stabilized = true
-    message += ' — стабилизирован'
+    status = 'stabilized'
   } else if (deathSaves.failures >= 3) {
-    message += ' — мёртв'
+    status = 'dead'
   }
 
   const save = await saveCharacterData(characterId, campaignId, { ...data, deathSaves })
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
-  return { success: true, roll, message, deathSaves }
+  return {
+    success: true,
+    roll,
+    status,
+    isNatural20,
+    isNatural1,
+    deathSaves,
+  }
 }
 
 export async function resetDeathSaves(

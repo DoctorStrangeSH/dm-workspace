@@ -3,22 +3,26 @@
 import { useState } from 'react'
 import { Dices, Copy, Check } from 'lucide-react'
 import { Button, Card, Select } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
 import { generateTreasure, type TreasureTier, type TreasureResult } from '@/lib/generators/treasure'
 
-const TIER_OPTIONS = [
-  { value: '1-4', label: 'Уровни 1–4 (CR 0–4)' },
-  { value: '5-10', label: 'Уровни 5–10 (CR 5–10)' },
-  { value: '11-16', label: 'Уровни 11–16 (CR 11–16)' },
-  { value: '17-20', label: 'Уровни 17–20 (CR 17–20)' },
-]
-
 export function TreasureGenerator() {
+  const { t, lang } = useI18n()
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
   const [tier, setTier] = useState<TreasureTier>('1-4')
   const [result, setResult] = useState<TreasureResult | null>(null)
   const [copied, setCopied] = useState(false)
 
+  const TIER_OPTIONS = [
+    { value: '1-4', label: t('generators.tier.1_4') },
+    { value: '5-10', label: t('generators.tier.5_10') },
+    { value: '11-16', label: t('generators.tier.11_16') },
+    { value: '17-20', label: t('generators.tier.17_20') },
+  ]
+
   const handleGenerate = () => {
-    setResult(generateTreasure(tier))
+    // CHANGES (К8): передаём lang — контент на нужном языке
+    setResult(generateTreasure(tier, lang))
   }
 
   const handleCopy = async () => {
@@ -35,14 +39,14 @@ export function TreasureGenerator() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex-1">
             <Select
-              label="Уровень"
+              label={t('generators.form.tier')}
               options={TIER_OPTIONS}
               value={tier}
               onChange={(e) => setTier(e.target.value as TreasureTier)}
             />
           </div>
           <Button variant="primary" size="md" icon={<Dices size={16} />} onClick={handleGenerate}>
-            Сгенерировать
+            {t('generators.generate')}
           </Button>
         </div>
       </Card>
@@ -50,14 +54,16 @@ export function TreasureGenerator() {
       {result && (
         <Card padding="md">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Результат</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+              {t('generators.treasure.result')}
+            </h3>
             <Button
               variant="ghost"
               size="sm"
               icon={copied ? <Check size={14} /> : <Copy size={14} />}
               onClick={handleCopy}
             >
-              {copied ? 'Скопировано' : 'Копировать'}
+              {copied ? t('generators.copied') : t('generators.copy')}
             </Button>
           </div>
 
@@ -65,7 +71,7 @@ export function TreasureGenerator() {
             {/* Монеты */}
             <div>
               <h4 className="mb-2 text-sm font-semibold text-[var(--text-muted)] uppercase">
-                Монеты
+                {t('generators.treasure.coins')}
               </h4>
               <div className="flex flex-wrap gap-2">
                 {result.coins.pp > 0 && (
@@ -73,6 +79,7 @@ export function TreasureGenerator() {
                     value={result.coins.pp}
                     label="pp"
                     color="text-[var(--text-secondary)]"
+                    locale={locale}
                   />
                 )}
                 {result.coins.gp > 0 && (
@@ -80,13 +87,24 @@ export function TreasureGenerator() {
                     value={result.coins.gp}
                     label="gp"
                     color="text-[var(--warning-text)]"
+                    locale={locale}
                   />
                 )}
                 {result.coins.sp > 0 && (
-                  <CoinBadge value={result.coins.sp} label="sp" color="text-[var(--text-muted)]" />
+                  <CoinBadge
+                    value={result.coins.sp}
+                    label="sp"
+                    color="text-[var(--text-muted)]"
+                    locale={locale}
+                  />
                 )}
                 {result.coins.cp > 0 && (
-                  <CoinBadge value={result.coins.cp} label="cp" color="text-[var(--text-subtle)]" />
+                  <CoinBadge
+                    value={result.coins.cp}
+                    label="cp"
+                    color="text-[var(--text-subtle)]"
+                    locale={locale}
+                  />
                 )}
               </div>
             </div>
@@ -95,7 +113,7 @@ export function TreasureGenerator() {
             {result.gems.length > 0 && (
               <div>
                 <h4 className="mb-2 text-sm font-semibold text-[var(--text-muted)] uppercase">
-                  Драгоценности
+                  {t('generators.treasure.gems')}
                 </h4>
                 <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
                   {result.gems.map((gem, i) => (
@@ -109,7 +127,7 @@ export function TreasureGenerator() {
             {result.art.length > 0 && (
               <div>
                 <h4 className="mb-2 text-sm font-semibold text-[var(--text-muted)] uppercase">
-                  Предметы искусства
+                  {t('generators.treasure.art')}
                 </h4>
                 <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
                   {result.art.map((item, i) => (
@@ -123,7 +141,7 @@ export function TreasureGenerator() {
             {result.magicItems.length > 0 && (
               <div>
                 <h4 className="mb-2 text-sm font-semibold text-[var(--text-muted)] uppercase">
-                  Магические предметы
+                  {t('generators.treasure.magicItems')}
                 </h4>
                 <ul className="space-y-1 text-sm text-[var(--text-secondary)]">
                   {result.magicItems.map((item, i) => (
@@ -136,9 +154,11 @@ export function TreasureGenerator() {
             {/* Итого */}
             <div className="border-t border-[var(--border-default)] pt-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--text-muted)]">Примерная стоимость:</span>
+                <span className="text-[var(--text-muted)]">
+                  {t('generators.treasure.totalValue')}
+                </span>
                 <span className="font-bold text-[var(--warning-text)]">
-                  {result.totalValueGp.toLocaleString('ru-RU')} gp
+                  {result.totalValueGp.toLocaleString(locale)} gp
                 </span>
               </div>
             </div>
@@ -149,18 +169,28 @@ export function TreasureGenerator() {
   )
 }
 
-function CoinBadge({ value, label, color }: { value: number; label: string; color: string }) {
+function CoinBadge({
+  value,
+  label,
+  color,
+  locale,
+}: {
+  value: number
+  label: string
+  color: string
+  locale: string
+}) {
   return (
     <span
       className={`rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm font-medium ${color}`}
     >
-      {value.toLocaleString('ru-RU')} {label}
+      {value.toLocaleString(locale)} {label}
     </span>
   )
 }
 
 function formatResult(result: TreasureResult): string {
-  const lines: string[] = ['🎁 Сокровище', '']
+  const lines: string[] = ['🎁 Treasure', '']
 
   if (result.coins.pp > 0) lines.push(`• ${result.coins.pp} pp`)
   if (result.coins.gp > 0) lines.push(`• ${result.coins.gp} gp`)
@@ -168,21 +198,21 @@ function formatResult(result: TreasureResult): string {
   if (result.coins.cp > 0) lines.push(`• ${result.coins.cp} cp`)
 
   if (result.gems.length > 0) {
-    lines.push('', 'Драгоценности:')
+    lines.push('', 'Gems:')
     result.gems.forEach((g) => lines.push(`• ${g}`))
   }
 
   if (result.art.length > 0) {
-    lines.push('', 'Предметы искусства:')
+    lines.push('', 'Art objects:')
     result.art.forEach((a) => lines.push(`• ${a}`))
   }
 
   if (result.magicItems.length > 0) {
-    lines.push('', 'Магические предметы:')
+    lines.push('', 'Magic items:')
     result.magicItems.forEach((m) => lines.push(`• ${m}`))
   }
 
-  lines.push('', `Итого: ~${result.totalValueGp} gp`)
+  lines.push('', `Total: ~${result.totalValueGp} gp`)
 
   return lines.join('\n')
 }

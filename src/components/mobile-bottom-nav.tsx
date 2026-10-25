@@ -3,25 +3,22 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { getMobileNavItems } from '@/lib/campaign-nav-items'
 
 interface Props {
   campaignId: string
 }
 
-/**
- * Мобильный bottom-nav — 5 главных пунктов навигации.
- * CHANGES: новый компонент. Показывается только на мобиле (md:hidden).
- * Учитывает `pb-safe` (safe-area-inset-bottom) для iPhone.
- */
 export function MobileBottomNav({ campaignId }: Props) {
+  const t = useT()
   const pathname = usePathname()
   const base = `/campaign/${campaignId}`
   const items = getMobileNavItems(base)
 
   return (
     <nav
-      aria-label="Основная навигация"
+      aria-label={t('nav.mainNavigation')}
       className="fixed right-0 bottom-0 left-0 z-30 border-t border-[var(--border-default)] bg-[var(--bg-app)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
       <div className="grid grid-cols-5">
@@ -42,7 +39,7 @@ export function MobileBottomNav({ campaignId }: Props) {
               )}
             >
               <Icon size={18} />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{t(item.labelKey)}</span>
             </Link>
           )
         })}

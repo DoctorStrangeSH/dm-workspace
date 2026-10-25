@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google'
 import Script from 'next/script'
 import { ToastProvider } from '@/components/toast/toast-provider'
 import { ThemeProvider } from '@/lib/hooks/use-theme'
+import { I18nProvider } from '@/lib/i18n'
 import './globals.css'
 
 const inter = Inter({
@@ -17,7 +18,6 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 })
 
-// CHANGES: добавлен viewport (themeColor для light/dark) + openGraph
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -39,6 +39,9 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // CHANGES: RootLayout СТАТИЧЕСКИЙ — без cookies()/getLang().
+  // Язык применяется inline-скриптом до hydration (см. ниже).
+  // Иначе Next.js 16 + cacheComponents падает на /_not-found.
   return (
     <html
       lang="ru"
@@ -48,18 +51,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <head>
         <Script
-          id="theme-init"
+          id="theme-lang-init"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var stored = localStorage.getItem('dm-workspace-theme') || 'dark';
-                  var resolved = stored;
-                  if (stored === 'system') {
+                  // ─── Тема ───
+                  var storedTheme = localStorage.getItem('dm-workspace-theme') || 'dark';
+                  var resolved = storedTheme;
+                  if (storedTheme === 'system') {
                     resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                   }
                   document.documentElement.setAttribute('data-theme', resolved);
+
+                  // ─── Язык ───
+                  var m = document.cookie.match(/(?:^|;\\s*)dm-lang=([^;]+)/);
+                  var lang = m && m[1] === 'en' ? 'en' : 'ru';
+                  document.documentElement.setAttribute('lang', lang);
                 } catch (e) {}
               })();
             `,
@@ -67,9 +76,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="antialiased">
-        <ThemeProvider initialTheme="dark">
-          <ToastProvider>{children}</ToastProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider initialTheme="dark">
+            <ToastProvider>{children}</ToastProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   )

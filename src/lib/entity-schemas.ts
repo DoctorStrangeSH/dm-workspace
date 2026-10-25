@@ -4,448 +4,426 @@ export type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'boolean'
 
 export interface FieldOption {
   value: string
-  label: string
+  labelKey: string
 }
 
 export interface FieldSchema {
-  /** Ключ в data_json */
   key: string
-  /** Название в UI */
-  label: string
-  /** Тип поля */
+  labelKey: string
   type: FieldType
-  /** Placeholder */
-  placeholder?: string
-  /** Опции для select */
+  placeholderKey?: string
   options?: FieldOption[]
-  /** Минимум для number */
   min?: number
-  /** Максимум для number */
   max?: number
-  /** Секция (группировка) */
-  section?: string
-  /** Помощь (tooltip) */
-  hint?: string
+  sectionKey?: string
+  hintKey?: string
 }
 
 /**
- * Схемы полей для каждого типа сущности.
- * Порядок полей = порядок в UI.
+ * CHANGES (К9):
+ * - Убраны дублирующие русские `label`/`placeholder`/`section`/`options[].label`/`hint`.
+ * - Оставлены только `*Key` — в UI используется `t(field.labelKey)` и т.д.
+ * - `entity-data-form.tsx` уже работает через `*Key` (К7.4.3).
  */
 export const ENTITY_SCHEMAS: Record<EntityType, FieldSchema[]> = {
   monster: [
-    // Основное
     {
       key: 'size',
-      label: 'Размер',
+      labelKey: 'entityField.monster.size',
       type: 'select',
-      section: 'Основное',
+      sectionKey: 'entitySection.monster.basic',
       options: [
-        { value: 'tiny', label: 'Крошечный (Tiny)' },
-        { value: 'small', label: 'Маленький (Small)' },
-        { value: 'medium', label: 'Средний (Medium)' },
-        { value: 'large', label: 'Большой (Large)' },
-        { value: 'huge', label: 'Огромный (Huge)' },
-        { value: 'gargantuan', label: 'Громадный (Gargantuan)' },
+        { value: 'tiny', labelKey: 'monsterSize.tiny' },
+        { value: 'small', labelKey: 'monsterSize.small' },
+        { value: 'medium', labelKey: 'monsterSize.medium' },
+        { value: 'large', labelKey: 'monsterSize.large' },
+        { value: 'huge', labelKey: 'monsterSize.huge' },
+        { value: 'gargantuan', labelKey: 'monsterSize.gargantuan' },
       ],
     },
     {
       key: 'type',
-      label: 'Тип',
+      labelKey: 'entityField.monster.type',
       type: 'text',
-      placeholder: 'fiend, beast, humanoid, undead...',
-      section: 'Основное',
+      placeholderKey: 'entityField.monster.typePlaceholder',
+      sectionKey: 'entitySection.monster.basic',
     },
     {
       key: 'alignment',
-      label: 'Мировоззрение',
+      labelKey: 'entityField.monster.alignment',
       type: 'text',
-      placeholder: 'Chaotic Evil, Neutral, ...',
-      section: 'Основное',
+      placeholderKey: 'entityField.monster.alignmentPlaceholder',
+      sectionKey: 'entitySection.monster.basic',
     },
     {
       key: 'cr',
-      label: 'CR (Challenge Rating)',
+      labelKey: 'entityField.monster.cr',
       type: 'text',
-      placeholder: '1/2, 1, 5, ...',
-      section: 'Основное',
+      placeholderKey: 'entityField.monster.crPlaceholder',
+      sectionKey: 'entitySection.monster.basic',
     },
     {
       key: 'xp',
-      label: 'XP',
+      labelKey: 'entityField.monster.xp',
       type: 'number',
       min: 0,
-      section: 'Основное',
+      sectionKey: 'entitySection.monster.basic',
     },
-
-    // Боевые
     {
       key: 'ac',
-      label: 'AC (Класс брони)',
+      labelKey: 'entityField.monster.ac',
       type: 'number',
       min: 0,
       max: 30,
-      section: 'Боевые',
+      sectionKey: 'entitySection.monster.combat',
     },
     {
       key: 'hp_max',
-      label: 'HP (Максимум)',
+      labelKey: 'entityField.monster.hpMax',
       type: 'number',
       min: 1,
-      section: 'Боевые',
+      sectionKey: 'entitySection.monster.combat',
     },
     {
       key: 'speed',
-      label: 'Скорость (футов)',
+      labelKey: 'entityField.monster.speed',
       type: 'number',
       min: 0,
-      placeholder: '30',
-      section: 'Боевые',
+      placeholderKey: 'entityField.monster.speedPlaceholder',
+      sectionKey: 'entitySection.monster.combat',
     },
-
-    // Характеристики
     {
       key: 'abilities.str',
-      label: 'Сила (STR)',
+      labelKey: 'entityField.monster.str',
       type: 'number',
       min: 1,
       max: 30,
-      section: 'Характеристики',
+      sectionKey: 'entitySection.monster.abilities',
     },
     {
       key: 'abilities.dex',
-      label: 'Ловкость (DEX)',
+      labelKey: 'entityField.monster.dex',
       type: 'number',
       min: 1,
       max: 30,
-      section: 'Характеристики',
+      sectionKey: 'entitySection.monster.abilities',
     },
     {
       key: 'abilities.con',
-      label: 'Телосложение (CON)',
+      labelKey: 'entityField.monster.con',
       type: 'number',
       min: 1,
       max: 30,
-      section: 'Характеристики',
+      sectionKey: 'entitySection.monster.abilities',
     },
     {
       key: 'abilities.int',
-      label: 'Интеллект (INT)',
+      labelKey: 'entityField.monster.int',
       type: 'number',
       min: 1,
       max: 30,
-      section: 'Характеристики',
+      sectionKey: 'entitySection.monster.abilities',
     },
     {
       key: 'abilities.wis',
-      label: 'Мудрость (WIS)',
+      labelKey: 'entityField.monster.wis',
       type: 'number',
       min: 1,
       max: 30,
-      section: 'Характеристики',
+      sectionKey: 'entitySection.monster.abilities',
     },
     {
       key: 'abilities.cha',
-      label: 'Харизма (CHA)',
+      labelKey: 'entityField.monster.cha',
       type: 'number',
       min: 1,
       max: 30,
-      section: 'Характеристики',
+      sectionKey: 'entitySection.monster.abilities',
     },
-
-    // Защиты
     {
       key: 'resistances',
-      label: 'Сопротивления',
+      labelKey: 'entityField.monster.resistances',
       type: 'text',
-      placeholder: 'fire, cold, ...',
-      section: 'Защиты',
+      placeholderKey: 'entityField.monster.resistancesPlaceholder',
+      sectionKey: 'entitySection.monster.defenses',
     },
     {
       key: 'immunities',
-      label: 'Иммунитеты',
+      labelKey: 'entityField.monster.immunities',
       type: 'text',
-      placeholder: 'poison, ...',
-      section: 'Защиты',
+      placeholderKey: 'entityField.monster.immunitiesPlaceholder',
+      sectionKey: 'entitySection.monster.defenses',
     },
     {
       key: 'senses',
-      label: 'Чувства',
+      labelKey: 'entityField.monster.senses',
       type: 'text',
-      placeholder: 'darkvision 60 ft., passive Perception 10',
-      section: 'Защиты',
+      placeholderKey: 'entityField.monster.sensesPlaceholder',
+      sectionKey: 'entitySection.monster.defenses',
     },
     {
       key: 'languages',
-      label: 'Языки',
+      labelKey: 'entityField.monster.languages',
       type: 'text',
-      placeholder: 'Common, Abyssal',
-      section: 'Защиты',
+      placeholderKey: 'entityField.monster.languagesPlaceholder',
+      sectionKey: 'entitySection.monster.defenses',
     },
-
-    // Способности
     {
       key: 'traits',
-      label: 'Особенности',
+      labelKey: 'entityField.monster.traits',
       type: 'textarea',
-      placeholder: 'Особые способности, пассивные эффекты...',
-      section: 'Способности',
+      placeholderKey: 'entityField.monster.traitsPlaceholder',
+      sectionKey: 'entitySection.monster.abilitiesSection',
     },
     {
       key: 'actions',
-      label: 'Действия',
+      labelKey: 'entityField.monster.actions',
       type: 'textarea',
-      placeholder: 'Атаки, заклинания, способности...',
-      section: 'Способности',
+      placeholderKey: 'entityField.monster.actionsPlaceholder',
+      sectionKey: 'entitySection.monster.abilitiesSection',
     },
     {
       key: 'legendary_actions',
-      label: 'Легендарные действия',
+      labelKey: 'entityField.monster.legendaryActions',
       type: 'textarea',
-      placeholder: 'Легендарные действия...',
-      section: 'Способности',
+      placeholderKey: 'entityField.monster.legendaryActionsPlaceholder',
+      sectionKey: 'entitySection.monster.abilitiesSection',
     },
   ],
 
   npc: [
     {
       key: 'role',
-      label: 'Роль',
+      labelKey: 'entityField.npc.role',
       type: 'text',
-      placeholder: 'Трактирщик, Король, Купец...',
+      placeholderKey: 'entityField.npc.rolePlaceholder',
     },
     {
       key: 'race',
-      label: 'Раса',
+      labelKey: 'entityField.npc.race',
       type: 'text',
-      placeholder: 'Человек, Эльф, Гном...',
+      placeholderKey: 'entityField.npc.racePlaceholder',
     },
     {
       key: 'occupation',
-      label: 'Занятие',
+      labelKey: 'entityField.npc.occupation',
       type: 'text',
-      placeholder: 'Кузнец, Бард, Стражник...',
+      placeholderKey: 'entityField.npc.occupationPlaceholder',
     },
     {
       key: 'attitude',
-      label: 'Отношение к партии',
+      labelKey: 'entityField.npc.attitude',
       type: 'select',
       options: [
-        { value: 'friendly', label: '😊 Дружелюбное' },
-        { value: 'neutral', label: '😐 Нейтральное' },
-        { value: 'hostile', label: '😠 Враждебное' },
+        { value: 'friendly', labelKey: 'npcAttitude.friendly' },
+        { value: 'neutral', labelKey: 'npcAttitude.neutral' },
+        { value: 'hostile', labelKey: 'npcAttitude.hostile' },
       ],
     },
     {
       key: 'faction',
-      label: 'Фракция',
+      labelKey: 'entityField.npc.faction',
       type: 'text',
-      placeholder: 'Гильдия воров, Орден...',
+      placeholderKey: 'entityField.npc.factionPlaceholder',
     },
     {
       key: 'location',
-      label: 'Локация',
+      labelKey: 'entityField.npc.location',
       type: 'text',
-      placeholder: 'Где обычно находится',
+      placeholderKey: 'entityField.npc.locationPlaceholder',
     },
     {
       key: 'motivation',
-      label: 'Мотивация',
+      labelKey: 'entityField.npc.motivation',
       type: 'textarea',
-      placeholder: 'Цели, желания, страхи...',
+      placeholderKey: 'entityField.npc.motivationPlaceholder',
     },
     {
       key: 'notes',
-      label: 'Заметки',
+      labelKey: 'entityField.npc.notes',
       type: 'textarea',
-      placeholder: 'Секреты, связи, слухи...',
+      placeholderKey: 'entityField.npc.notesPlaceholder',
     },
   ],
 
   item: [
     {
       key: 'rarity',
-      label: 'Редкость',
+      labelKey: 'entityField.item.rarity',
       type: 'select',
       options: [
-        { value: 'common', label: 'Обычный (Common)' },
-        { value: 'uncommon', label: 'Необычный (Uncommon)' },
-        { value: 'rare', label: 'Редкий (Rare)' },
-        { value: 'very_rare', label: 'Очень редкий (Very Rare)' },
-        { value: 'legendary', label: 'Легендарный (Legendary)' },
-        { value: 'artifact', label: 'Артефакт (Artifact)' },
+        { value: 'common', labelKey: 'itemRarity.common' },
+        { value: 'uncommon', labelKey: 'itemRarity.uncommon' },
+        { value: 'rare', labelKey: 'itemRarity.rare' },
+        { value: 'very_rare', labelKey: 'itemRarity.veryRare' },
+        { value: 'legendary', labelKey: 'itemRarity.legendary' },
+        { value: 'artifact', labelKey: 'itemRarity.artifact' },
       ],
     },
     {
       key: 'item_type',
-      label: 'Тип предмета',
+      labelKey: 'entityField.item.itemType',
       type: 'text',
-      placeholder: 'Оружие, Броня, Зелье, Кольцо...',
+      placeholderKey: 'entityField.item.itemTypePlaceholder',
     },
     {
       key: 'attunement',
-      label: 'Требует настройки',
+      labelKey: 'entityField.item.attunement',
       type: 'boolean',
     },
     {
       key: 'cost',
-      label: 'Стоимость',
+      labelKey: 'entityField.item.cost',
       type: 'text',
-      placeholder: '100 gp, 50 sp, ...',
+      placeholderKey: 'entityField.item.costPlaceholder',
     },
     {
       key: 'weight',
-      label: 'Вес',
+      labelKey: 'entityField.item.weight',
       type: 'text',
-      placeholder: '2 lb., 5 kg, ...',
+      placeholderKey: 'entityField.item.weightPlaceholder',
     },
     {
       key: 'properties',
-      label: 'Свойства',
+      labelKey: 'entityField.item.properties',
       type: 'textarea',
-      placeholder: 'Магические свойства, эффекты...',
+      placeholderKey: 'entityField.item.propertiesPlaceholder',
     },
     {
       key: 'requirements',
-      label: 'Требования',
+      labelKey: 'entityField.item.requirements',
       type: 'text',
-      placeholder: 'Требуется настройка существом...',
+      placeholderKey: 'entityField.item.requirementsPlaceholder',
     },
     {
       key: 'notes',
-      label: 'Заметки',
+      labelKey: 'entityField.item.notes',
       type: 'textarea',
-      placeholder: 'История, слухи...',
+      placeholderKey: 'entityField.item.notesPlaceholder',
     },
   ],
 
   location: [
     {
       key: 'location_type',
-      label: 'Тип',
+      labelKey: 'entityField.location.locationType',
       type: 'text',
-      placeholder: 'Город, Деревня, Подземелье, Лес...',
+      placeholderKey: 'entityField.location.locationTypePlaceholder',
     },
     {
       key: 'region',
-      label: 'Регион',
+      labelKey: 'entityField.location.region',
       type: 'text',
-      placeholder: 'Королевство, область...',
+      placeholderKey: 'entityField.location.regionPlaceholder',
     },
     {
       key: 'population',
-      label: 'Население',
+      labelKey: 'entityField.location.population',
       type: 'text',
-      placeholder: '1000, 50000, ...',
+      placeholderKey: 'entityField.location.populationPlaceholder',
     },
     {
       key: 'government',
-      label: 'Правление',
+      labelKey: 'entityField.location.government',
       type: 'text',
-      placeholder: 'Монархия, республика, ...',
+      placeholderKey: 'entityField.location.governmentPlaceholder',
     },
     {
       key: 'notable_features',
-      label: 'Известные особенности',
+      labelKey: 'entityField.location.notableFeatures',
       type: 'textarea',
-      placeholder: 'Достопримечательности, опасности...',
+      placeholderKey: 'entityField.location.notableFeaturesPlaceholder',
     },
     {
       key: 'notes',
-      label: 'Заметки',
+      labelKey: 'entityField.location.notes',
       type: 'textarea',
-      placeholder: 'Секреты, слухи, ...',
+      placeholderKey: 'entityField.location.notesPlaceholder',
     },
   ],
 
   faction: [
     {
       key: 'leader',
-      label: 'Лидер',
+      labelKey: 'entityField.faction.leader',
       type: 'text',
-      placeholder: 'Имя лидера',
+      placeholderKey: 'entityField.faction.leaderPlaceholder',
     },
     {
       key: 'base',
-      label: 'Штаб-квартира',
+      labelKey: 'entityField.faction.base',
       type: 'text',
-      placeholder: 'Где базируется',
+      placeholderKey: 'entityField.faction.basePlaceholder',
     },
     {
       key: 'alignment',
-      label: 'Мировоззрение',
+      labelKey: 'entityField.faction.alignment',
       type: 'text',
-      placeholder: 'Lawful Good, Neutral, ...',
+      placeholderKey: 'entityField.faction.alignmentPlaceholder',
     },
     {
       key: 'influence',
-      label: 'Влияние',
+      labelKey: 'entityField.faction.influence',
       type: 'text',
-      placeholder: 'Локальное, региональное, ...',
+      placeholderKey: 'entityField.faction.influencePlaceholder',
     },
     {
       key: 'notes',
-      label: 'Заметки',
+      labelKey: 'entityField.faction.notes',
       type: 'textarea',
-      placeholder: 'История, цели, ...',
+      placeholderKey: 'entityField.faction.notesPlaceholder',
     },
   ],
 
   quest: [
     {
       key: 'status',
-      label: 'Статус',
+      labelKey: 'entityField.quest.status',
       type: 'select',
       options: [
-        { value: 'active', label: '🟢 Активный' },
-        { value: 'completed', label: '✅ Завершён' },
-        { value: 'failed', label: '❌ Провален' },
-        { value: 'paused', label: '⏸️ Приостановлен' },
+        { value: 'active', labelKey: 'questStatus.active' },
+        { value: 'completed', labelKey: 'questStatus.completed' },
+        { value: 'failed', labelKey: 'questStatus.failed' },
+        { value: 'paused', labelKey: 'questStatus.paused' },
       ],
     },
     {
       key: 'giver',
-      label: 'Кто выдал',
+      labelKey: 'entityField.quest.giver',
       type: 'text',
-      placeholder: 'NPC, фракция...',
+      placeholderKey: 'entityField.quest.giverPlaceholder',
     },
     {
       key: 'reward',
-      label: 'Награда',
+      labelKey: 'entityField.quest.reward',
       type: 'text',
-      placeholder: 'Золото, предмет, услуга...',
+      placeholderKey: 'entityField.quest.rewardPlaceholder',
     },
     {
       key: 'location',
-      label: 'Локация',
+      labelKey: 'entityField.quest.location',
       type: 'text',
-      placeholder: 'Где происходит',
+      placeholderKey: 'entityField.quest.locationPlaceholder',
     },
     {
       key: 'notes',
-      label: 'Заметки',
+      labelKey: 'entityField.quest.notes',
       type: 'textarea',
-      placeholder: 'Условия, детали...',
+      placeholderKey: 'entityField.quest.notesPlaceholder',
     },
   ],
 
   note: [],
 }
 
-/**
- * Проверяет, есть ли схема для типа.
- */
 export function hasSchema(type: EntityType): boolean {
   return ENTITY_SCHEMAS[type]?.length > 0
 }
 
-/**
- * Группирует поля по секциям.
- */
 export function groupFieldsBySection(fields: FieldSchema[]): Record<string, FieldSchema[]> {
   const sections: Record<string, FieldSchema[]> = {}
   for (const f of fields) {
-    const section = f.section ?? 'Без секции'
+    const section = f.sectionKey ?? 'entitySection.default'
     if (!sections[section]) sections[section] = []
     sections[section].push(f)
   }

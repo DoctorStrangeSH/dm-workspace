@@ -8,8 +8,10 @@ import { useToast } from '@/components/toast/toast-provider'
 import { getAverageHP, rollHP, canLevelUp } from '@/lib/dnd/level-up'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { hasASI } from '@/lib/dnd/constants'
-import { ABILITY_LABELS, type AbilityKey, type Character } from '@/lib/types'
+import { useI18n } from '@/lib/i18n'
+import { abilityLabel } from '@/lib/i18n/labels'
 import { cn } from '@/lib/utils'
+import type { AbilityKey, Character } from '@/lib/types'
 
 interface Props {
   character: Character
@@ -23,6 +25,7 @@ type HPChoice = 'average' | 'roll'
 type ASIMode = 'plus2' | 'plus1plus1'
 
 export default function LevelUpDialog({ character, campaignId, onClose }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -42,14 +45,14 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
 
   if (!canLevelUp(data)) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-        <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-center">
-          <p className="mb-4 text-slate-300">Максимальный уровень достигнут</p>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
+        <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 text-center">
+          <p className="mb-4 text-[var(--text-secondary)]">{t('levelUp.maxLevelReached')}</p>
           <button
             onClick={onClose}
-            className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
+            className="rounded-lg bg-[var(--bg-secondary)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
           >
-            Закрыть
+            {t('common.close')}
           </button>
         </div>
       </div>
@@ -64,7 +67,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
 
   const handleSubmit = () => {
     if (!canSubmit()) {
-      toast.error('Заполните ASI')
+      toast.error(t('levelUp.asiRequired'))
       return
     }
 
@@ -85,39 +88,43 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
       })
 
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
 
-      toast.success(`Уровень ${res.newLevel}! +${res.hpGain} HP`, { duration: 5000 })
+      toast.success(t('levelUp.toast.success', { level: res.newLevel, hp: res.hpGain }), {
+        duration: 5000,
+      })
       router.refresh()
       onClose()
     })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 p-4 backdrop-blur-sm">
-      <div className="my-auto w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-800 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
+      <div className="my-auto w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
           <div className="flex items-center gap-2">
-            <TrendingUp size={18} className="text-green-400" />
-            <h2 className="font-semibold">
-              Уровень {data.level} → {newLevel}
+            <TrendingUp size={18} className="text-[var(--success)]" />
+            <h2 className="font-semibold text-[var(--text-primary)]">
+              {t('levelUp.title', { from: data.level, to: newLevel })}
             </h2>
           </div>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="rounded p-1 transition hover:bg-slate-800"
+            className="rounded p-1 text-[var(--text-muted)] transition hover:bg-[var(--bg-hover)]"
           >
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-4 p-4">
-          {/* HP */}
+          {/* HP choice */}
           <div>
-            <label className="mb-2 block text-sm text-slate-300">HP (выбери способ)</label>
+            <label className="mb-2 block text-sm text-[var(--text-secondary)]">
+              {t('levelUp.hpChoice')}
+            </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -125,16 +132,24 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 className={cn(
                   'flex flex-col items-center rounded-lg border p-3 transition',
                   hpChoice === 'average'
-                    ? 'border-indigo-600 bg-indigo-950/60'
-                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                    ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
+                    : 'border-[var(--border-default)] bg-[var(--bg-app)] hover:border-[var(--border-hover)]'
                 )}
               >
                 <Sparkles
                   size={16}
-                  className={hpChoice === 'average' ? 'text-indigo-400' : 'text-slate-500'}
+                  className={
+                    hpChoice === 'average'
+                      ? 'text-[var(--accent-text)]'
+                      : 'text-[var(--text-subtle)]'
+                  }
                 />
-                <span className="mt-1 text-xs text-slate-400">Среднее</span>
-                <span className="mt-1 text-lg font-bold text-green-400">+{averageHP}</span>
+                <span className="mt-1 text-xs text-[var(--text-muted)]">
+                  {t('levelUp.hpAverage')}
+                </span>
+                <span className="mt-1 text-lg font-bold text-[var(--success-text)]">
+                  +{averageHP}
+                </span>
               </button>
               <button
                 type="button"
@@ -142,26 +157,32 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 className={cn(
                   'flex flex-col items-center rounded-lg border p-3 transition',
                   hpChoice === 'roll'
-                    ? 'border-indigo-600 bg-indigo-950/60'
-                    : 'border-slate-800 bg-slate-950 hover:border-slate-700'
+                    ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
+                    : 'border-[var(--border-default)] bg-[var(--bg-app)] hover:border-[var(--border-hover)]'
                 )}
               >
                 <Dices
                   size={16}
-                  className={hpChoice === 'roll' ? 'text-indigo-400' : 'text-slate-500'}
+                  className={
+                    hpChoice === 'roll' ? 'text-[var(--accent-text)]' : 'text-[var(--text-subtle)]'
+                  }
                 />
-                <span className="mt-1 text-xs text-slate-400">Ролл</span>
-                <span className="mt-1 text-lg font-bold text-amber-400">~{rolledHP}</span>
+                <span className="mt-1 text-xs text-[var(--text-muted)]">{t('levelUp.hpRoll')}</span>
+                <span className="mt-1 text-lg font-bold text-[var(--warning-text)]">
+                  ~{rolledHP}
+                </span>
               </button>
             </div>
           </div>
 
           {/* ASI */}
           {showASI && (
-            <div className="rounded-lg border border-violet-900/50 bg-violet-950/30 p-3">
+            <div className="rounded-lg border border-[var(--accent)]/40 bg-[var(--accent-subtle)]/30 p-3">
               <div className="mb-3 flex items-center gap-2">
-                <Sparkles size={14} className="text-violet-400" />
-                <span className="text-sm font-medium text-violet-300">Улучшение характеристик</span>
+                <Sparkles size={14} className="text-[var(--accent-text)]" />
+                <span className="text-sm font-medium text-[var(--accent-text)]">
+                  {t('levelUp.asiTitle')}
+                </span>
               </div>
 
               <div className="mb-3 flex gap-2">
@@ -174,11 +195,11 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   className={cn(
                     'flex-1 rounded border px-2 py-1 text-xs transition',
                     asiMode === 'plus2'
-                      ? 'border-violet-500 bg-violet-600 text-white'
-                      : 'border-slate-800 bg-slate-950 text-slate-400'
+                      ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                      : 'border-[var(--border-default)] bg-[var(--bg-app)] text-[var(--text-muted)]'
                   )}
                 >
-                  +2 к одной
+                  {t('levelUp.asiPlus2')}
                 </button>
                 <button
                   type="button"
@@ -186,11 +207,11 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   className={cn(
                     'flex-1 rounded border px-2 py-1 text-xs transition',
                     asiMode === 'plus1plus1'
-                      ? 'border-violet-500 bg-violet-600 text-white'
-                      : 'border-slate-800 bg-slate-950 text-slate-400'
+                      ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                      : 'border-[var(--border-default)] bg-[var(--bg-app)] text-[var(--text-muted)]'
                   )}
                 >
-                  +1 к двум
+                  {t('levelUp.asiPlus1Plus1')}
                 </button>
               </div>
 
@@ -219,16 +240,16 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                       className={cn(
                         'flex w-full items-center justify-between rounded px-2 py-1.5 text-sm transition',
                         isSelected1 || isSelected2
-                          ? 'bg-violet-950/60 text-violet-200'
-                          : 'text-slate-400 hover:bg-slate-800',
+                          ? 'bg-[var(--accent)]/20 text-[var(--accent-text)]'
+                          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]',
                         !canSelect && 'cursor-not-allowed opacity-30'
                       )}
                     >
-                      <span>{ABILITY_LABELS[ability]}</span>
+                      <span>{abilityLabel(lang, ability)}</span>
                       <span className="flex items-center gap-2">
-                        <span className="text-slate-500">{score}</span>
+                        <span className="text-[var(--text-subtle)]">{score}</span>
                         {(isSelected1 || isSelected2) && (
-                          <span className="text-xs text-green-400">
+                          <span className="text-xs text-[var(--success-text)]">
                             +{asiMode === 'plus2' ? 2 : 1}
                           </span>
                         )}
@@ -240,39 +261,41 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
             </div>
           )}
 
-          {/* Сводка */}
-          <div className="rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm">
+          {/* Summary */}
+          <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-3 text-sm">
             <div className="mb-1 flex justify-between">
-              <span className="text-slate-500">HP</span>
-              <span className="text-slate-300">
+              <span className="text-[var(--text-subtle)]">HP</span>
+              <span className="text-[var(--text-secondary)]">
                 {data.hp.max} → {data.hp.max + (hpChoice === 'average' ? averageHP : 0)}+
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500">Уровень</span>
-              <span className="text-slate-300">
+              <span className="text-[var(--text-subtle)]">
+                {t('characters.level', { level: '' }).trim()}
+              </span>
+              <span className="text-[var(--text-secondary)]">
                 {data.level} → {newLevel}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-slate-800 p-4">
+        <div className="flex justify-end gap-3 border-t border-[var(--border-default)] p-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-lg bg-[var(--bg-secondary)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)] disabled:opacity-50"
           >
-            Отмена
+            {t('common.cancel')}
           </button>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={isPending || !canSubmit()}
-            className="rounded-lg bg-green-600 px-4 py-2 font-medium transition hover:bg-green-500 disabled:opacity-50"
+            className="rounded-lg bg-[var(--success)] px-4 py-2 font-medium text-white transition hover:bg-[var(--success)]/90 disabled:opacity-50"
           >
-            {isPending ? 'Повышаем...' : `Повысить до ${newLevel}`}
+            {isPending ? t('levelUp.submitting') : t('levelUp.submit', { level: newLevel })}
           </button>
         </div>
       </div>

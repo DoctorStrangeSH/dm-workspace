@@ -2,8 +2,10 @@
 
 import { Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
-import { ABILITY_LABELS, SKILL_LABELS, SKILL_ABILITY, type SkillKey } from '@/lib/types'
+import { SKILL_ABILITY, type SkillKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+import { abilityShort, skillLabel } from '@/lib/i18n/labels'
 import { Card } from '@/components/ui'
 
 interface Props {
@@ -35,10 +37,12 @@ const ALL_SKILLS: SkillKey[] = [
 ]
 
 export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props) {
+  const { t, lang } = useI18n()
+
   return (
     <Card padding="md">
       <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-        Навыки
+        {t('characters.skills')}
       </h3>
 
       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
@@ -66,13 +70,13 @@ export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props
                     ? 'bg-[var(--warning)]'
                     : 'border border-[var(--border-strong)] bg-[var(--bg-tertiary)]'
                 )}
-                title={isProficient ? 'Владение' : 'Без владения'}
+                title={isProficient ? t('characters.proficient') : t('characters.notProficient')}
               />
               <span className="flex-1 truncate text-[var(--text-secondary)]">
-                {SKILL_LABELS[skill]}
+                {skillLabel(lang, skill)}
               </span>
               <span className="shrink-0 text-xs text-[var(--text-subtle)] uppercase">
-                {ABILITY_LABELS[ability].slice(0, 3)}
+                {abilityShort(lang, ability)}
               </span>
               <span
                 className={cn(

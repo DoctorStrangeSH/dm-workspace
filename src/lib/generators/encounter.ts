@@ -1,6 +1,6 @@
 /**
- * Генератор энкаунтеров по правилам DMG (D&D 5e).
- * Биом + уровень партии → список монстров + описание.
+ * Encounter generator (DMG, D&D 5e).
+ * Biome + party tier → monster list + description.
  */
 
 export type EncounterBiome =
@@ -9,6 +9,8 @@ export type EncounterBiome =
 export type EncounterTier = '1-4' | '5-10' | '11-16' | '17-20'
 
 export type EncounterDifficulty = 'easy' | 'medium' | 'hard' | 'deadly'
+
+export type Lang = 'ru' | 'en'
 
 export interface EncounterMonster {
   name: string
@@ -24,7 +26,7 @@ export interface EncounterResult {
   description: string
 }
 
-// ─── Утилиты ───
+// ─── Utils ───
 function roll(dice: number, sides: number): number {
   let total = 0
   for (let i = 0; i < dice; i++) total += Math.floor(Math.random() * sides) + 1
@@ -45,221 +47,281 @@ function pickMany<T>(arr: T[], count: number): T[] {
   return result
 }
 
-// ─── Монстры по биомам и уровням ───
-// (краткий список для генератора, полный — в SRD)
+function L(lang: Lang, ru: string, en: string): string {
+  return lang === 'ru' ? ru : en
+}
+
+// ─── Monsters by biome + tier (name + CR only) ───
+// CHANGES (К8): monster names are bilingual.
 const MONSTERS_BY_BIOME: Record<
   EncounterBiome,
-  Record<EncounterTier, Array<{ name: string; cr: string }>>
+  Record<EncounterTier, Array<{ nameRu: string; nameEn: string; cr: string }>>
 > = {
   forest: {
     '1-4': [
-      { name: 'Волк', cr: '1/4' },
-      { name: 'Гоблин', cr: '1/4' },
-      { name: 'Гигантская крыса', cr: '1/8' },
-      { name: 'Медведь', cr: '1' },
+      { nameRu: 'Волк', nameEn: 'Wolf', cr: '1/4' },
+      { nameRu: 'Гоблин', nameEn: 'Goblin', cr: '1/4' },
+      { nameRu: 'Гигантская крыса', nameEn: 'Giant Rat', cr: '1/8' },
+      { nameRu: 'Медведь', nameEn: 'Bear', cr: '1' },
     ],
     '5-10': [
-      { name: 'Эттин', cr: '4' },
-      { name: 'Тролль', cr: '5' },
-      { name: 'Гигантский паук', cr: '1' },
+      { nameRu: 'Эттин', nameEn: 'Ettin', cr: '4' },
+      { nameRu: 'Тролль', nameEn: 'Troll', cr: '5' },
+      { nameRu: 'Гигантский паук', nameEn: 'Giant Spider', cr: '1' },
     ],
     '11-16': [
-      { name: 'Треант', cr: '9' },
-      { name: 'Молодой зелёный дракон', cr: '8' },
+      { nameRu: 'Треант', nameEn: 'Treant', cr: '9' },
+      { nameRu: 'Молодой зелёный дракон', nameEn: 'Young Green Dragon', cr: '8' },
     ],
     '17-20': [
-      { name: 'Взрослый зелёный дракон', cr: '15' },
-      { name: 'Древний треант', cr: '16' },
+      { nameRu: 'Взрослый зелёный дракон', nameEn: 'Adult Green Dragon', cr: '15' },
+      { nameRu: 'Древний треант', nameEn: 'Ancient Treant', cr: '16' },
     ],
   },
   mountains: {
     '1-4': [
-      { name: 'Орк', cr: '1/2' },
-      { name: 'Кобольд', cr: '1/8' },
-      { name: 'Горный лев', cr: '1' },
+      { nameRu: 'Орк', nameEn: 'Orc', cr: '1/2' },
+      { nameRu: 'Кобольд', nameEn: 'Kobold', cr: '1/8' },
+      { nameRu: 'Горный лев', nameEn: 'Mountain Lion', cr: '1' },
     ],
     '5-10': [
-      { name: 'Огр', cr: '2' },
-      { name: 'Грифон', cr: '2' },
-      { name: 'Эттин', cr: '4' },
+      { nameRu: 'Огр', nameEn: 'Ogre', cr: '2' },
+      { nameRu: 'Грифон', nameEn: 'Griffon', cr: '2' },
+      { nameRu: 'Эттин', nameEn: 'Ettin', cr: '4' },
     ],
     '11-16': [
-      { name: 'Каменный гигант', cr: '7' },
-      { name: 'Взрослый синий дракон', cr: '14' },
+      { nameRu: 'Каменный гигант', nameEn: 'Stone Giant', cr: '7' },
+      { nameRu: 'Взрослый синий дракон', nameEn: 'Adult Blue Dragon', cr: '14' },
     ],
     '17-20': [
-      { name: 'Древний синий дракон', cr: '23' },
-      { name: 'Штормовой гигант', cr: '13' },
+      { nameRu: 'Древний синий дракон', nameEn: 'Ancient Blue Dragon', cr: '23' },
+      { nameRu: 'Штормовой гигант', nameEn: 'Storm Giant', cr: '13' },
     ],
   },
   swamp: {
     '1-4': [
-      { name: 'Ядовитая змея', cr: '1/8' },
-      { name: 'Гоблин', cr: '1/4' },
-      { name: 'Крокодил', cr: '1/2' },
+      { nameRu: 'Ядовитая змея', nameEn: 'Poisonous Snake', cr: '1/8' },
+      { nameRu: 'Гоблин', nameEn: 'Goblin', cr: '1/4' },
+      { nameRu: 'Крокодил', nameEn: 'Crocodile', cr: '1/2' },
     ],
     '5-10': [
-      { name: 'Тролль', cr: '5' },
-      { name: 'Гидра', cr: '8' },
+      { nameRu: 'Тролль', nameEn: 'Troll', cr: '5' },
+      { nameRu: 'Гидра', nameEn: 'Hydra', cr: '8' },
     ],
     '11-16': [
-      { name: 'Чёрный дракон (молодой)', cr: '7' },
-      { name: 'Болотный тролль', cr: '5' },
+      { nameRu: 'Чёрный дракон (молодой)', nameEn: 'Young Black Dragon', cr: '7' },
+      { nameRu: 'Болотный тролль', nameEn: 'Swamp Troll', cr: '5' },
     ],
     '17-20': [
-      { name: 'Взрослый чёрный дракон', cr: '14' },
-      { name: 'Древний чёрный дракон', cr: '21' },
+      { nameRu: 'Взрослый чёрный дракон', nameEn: 'Adult Black Dragon', cr: '14' },
+      { nameRu: 'Древний чёрный дракон', nameEn: 'Ancient Black Dragon', cr: '21' },
     ],
   },
   desert: {
     '1-4': [
-      { name: 'Скорпион', cr: '0' },
-      { name: 'Гоблин', cr: '1/4' },
-      { name: 'Гиена', cr: '0' },
+      { nameRu: 'Скорпион', nameEn: 'Scorpion', cr: '0' },
+      { nameRu: 'Гоблин', nameEn: 'Goblin', cr: '1/4' },
+      { nameRu: 'Гиена', nameEn: 'Hyena', cr: '0' },
     ],
     '5-10': [
-      { name: 'Мумия', cr: '3' },
-      { name: 'Гигантский скорпион', cr: '3' },
+      { nameRu: 'Мумия', nameEn: 'Mummy', cr: '3' },
+      { nameRu: 'Гигантский скорпион', nameEn: 'Giant Scorpion', cr: '3' },
     ],
     '11-16': [
-      { name: 'Синий дракон (молодой)', cr: '9' },
-      { name: 'Сфинкс', cr: '11' },
+      { nameRu: 'Синий дракон (молодой)', nameEn: 'Young Blue Dragon', cr: '9' },
+      { nameRu: 'Сфинкс', nameEn: 'Sphinx', cr: '11' },
     ],
     '17-20': [
-      { name: 'Древний синий дракон', cr: '23' },
-      { name: 'Сфинкс (андросфинкс)', cr: '17' },
+      { nameRu: 'Древний синий дракон', nameEn: 'Ancient Blue Dragon', cr: '23' },
+      { nameRu: 'Сфинкс (андросфинкс)', nameEn: 'Androsphinx', cr: '17' },
     ],
   },
   dungeon: {
     '1-4': [
-      { name: 'Крыса', cr: '0' },
-      { name: 'Гоблин', cr: '1/4' },
-      { name: 'Кобольд', cr: '1/8' },
-      { name: 'Скелет', cr: '1/4' },
+      { nameRu: 'Крыса', nameEn: 'Rat', cr: '0' },
+      { nameRu: 'Гоблин', nameEn: 'Goblin', cr: '1/4' },
+      { nameRu: 'Кобольд', nameEn: 'Kobold', cr: '1/8' },
+      { nameRu: 'Скелет', nameEn: 'Skeleton', cr: '1/4' },
     ],
     '5-10': [
-      { name: 'Мимик', cr: '2' },
-      { name: 'Огр', cr: '2' },
-      { name: 'Тролль', cr: '5' },
-      { name: 'Мумия', cr: '3' },
+      { nameRu: 'Мимик', nameEn: 'Mimic', cr: '2' },
+      { nameRu: 'Огр', nameEn: 'Ogre', cr: '2' },
+      { nameRu: 'Тролль', nameEn: 'Troll', cr: '5' },
+      { nameRu: 'Мумия', nameEn: 'Mummy', cr: '3' },
     ],
     '11-16': [
-      { name: 'Бихолдер', cr: '13' },
-      { name: 'Тролль (полый)', cr: '5' },
-      { name: 'Вампир', cr: '13' },
+      { nameRu: 'Бихолдер', nameEn: 'Beholder', cr: '13' },
+      { nameRu: 'Тролль (полый)', nameEn: 'Hollow Troll', cr: '5' },
+      { nameRu: 'Вампир', nameEn: 'Vampire', cr: '13' },
     ],
     '17-20': [
-      { name: 'Демилич', cr: '18' },
-      { name: 'Древний красный дракон', cr: '24' },
+      { nameRu: 'Демилич', nameEn: 'Demilich', cr: '18' },
+      { nameRu: 'Древний красный дракон', nameEn: 'Ancient Red Dragon', cr: '24' },
     ],
   },
   city: {
     '1-4': [
-      { name: 'Бандит', cr: '1/8' },
-      { name: 'Гоблин', cr: '1/4' },
-      { name: 'Крыса', cr: '0' },
+      { nameRu: 'Бандит', nameEn: 'Bandit', cr: '1/8' },
+      { nameRu: 'Гоблин', nameEn: 'Goblin', cr: '1/4' },
+      { nameRu: 'Крыса', nameEn: 'Rat', cr: '0' },
     ],
     '5-10': [
-      { name: 'Бандит-капитан', cr: '2' },
-      { name: 'Огр', cr: '2' },
-      { name: 'Доппельгангер', cr: '3' },
+      { nameRu: 'Бандит-капитан', nameEn: 'Bandit Captain', cr: '2' },
+      { nameRu: 'Огр', nameEn: 'Ogre', cr: '2' },
+      { nameRu: 'Доппельгангер', nameEn: 'Doppelganger', cr: '3' },
     ],
     '11-16': [
-      { name: 'Ассасин', cr: '8' },
-      { name: 'Маг', cr: '6' },
+      { nameRu: 'Ассасин', nameEn: 'Assassin', cr: '8' },
+      { nameRu: 'Маг', nameEn: 'Mage', cr: '6' },
     ],
     '17-20': [
-      { name: 'Архимаг', cr: '12' },
-      { name: 'Вампир', cr: '13' },
+      { nameRu: 'Архимаг', nameEn: 'Archmage', cr: '12' },
+      { nameRu: 'Вампир', nameEn: 'Vampire', cr: '13' },
     ],
   },
   sea: {
     '1-4': [
-      { name: 'Краб', cr: '0' },
-      { name: 'Морская змея', cr: '1/8' },
-      { name: 'Пират', cr: '1/8' },
+      { nameRu: 'Краб', nameEn: 'Crab', cr: '0' },
+      { nameRu: 'Морская змея', nameEn: 'Sea Snake', cr: '1/8' },
+      { nameRu: 'Пират', nameEn: 'Pirate', cr: '1/8' },
     ],
     '5-10': [
-      { name: 'Сахуагин', cr: '1/2' },
-      { name: 'Гигантский краб', cr: '1/2' },
-      { name: 'Морской тролль', cr: '5' },
+      { nameRu: 'Сахуагин', nameEn: 'Sahuagin', cr: '1/2' },
+      { nameRu: 'Гигантский краб', nameEn: 'Giant Crab', cr: '1/2' },
+      { nameRu: 'Морской тролль', nameEn: 'Sea Troll', cr: '5' },
     ],
     '11-16': [
-      { name: 'Аболет', cr: '10' },
-      { name: 'Морской змей', cr: '5' },
+      { nameRu: 'Аболет', nameEn: 'Aboleth', cr: '10' },
+      { nameRu: 'Морской змей', nameEn: 'Sea Serpent', cr: '5' },
     ],
     '17-20': [
-      { name: 'Кракен', cr: '23' },
-      { name: 'Древний бронзовый дракон', cr: '22' },
+      { nameRu: 'Кракен', nameEn: 'Kraken', cr: '23' },
+      { nameRu: 'Древний бронзовый дракон', nameEn: 'Ancient Bronze Dragon', cr: '22' },
     ],
   },
   plains: {
     '1-4': [
-      { name: 'Гоблин', cr: '1/4' },
-      { name: 'Волк', cr: '1/4' },
-      { name: 'Лошадь', cr: '1/8' },
+      { nameRu: 'Гоблин', nameEn: 'Goblin', cr: '1/4' },
+      { nameRu: 'Волк', nameEn: 'Wolf', cr: '1/4' },
+      { nameRu: 'Лошадь', nameEn: 'Horse', cr: '1/8' },
     ],
     '5-10': [
-      { name: 'Бурый медведь', cr: '1' },
-      { name: 'Лев', cr: '1' },
-      { name: 'Огр', cr: '2' },
+      { nameRu: 'Бурый медведь', nameEn: 'Brown Bear', cr: '1' },
+      { nameRu: 'Лев', nameEn: 'Lion', cr: '1' },
+      { nameRu: 'Огр', nameEn: 'Ogre', cr: '2' },
     ],
     '11-16': [
-      { name: 'Мамонт', cr: '6' },
-      { name: 'Великан', cr: '6' },
+      { nameRu: 'Мамонт', nameEn: 'Mammoth', cr: '6' },
+      { nameRu: 'Великан', nameEn: 'Giant', cr: '6' },
     ],
     '17-20': [
-      { name: 'Древний медный дракон', cr: '21' },
-      { name: 'Титан', cr: '23' },
+      { nameRu: 'Древний медный дракон', nameEn: 'Ancient Copper Dragon', cr: '21' },
+      { nameRu: 'Титан', nameEn: 'Titan', cr: '23' },
     ],
   },
 }
 
-// ─── Описания сцен ───
-const SCENE_DESCRIPTIONS: Record<EncounterBiome, string[]> = {
-  forest: [
-    'Тенистые деревья смыкаются над головой, слышен хруст веток.',
-    'Лесная поляна, залитая лунным светом, но что-то шевелится в кустах.',
-    'Густой подлесок, где каждый шаг отдаётся эхом.',
-  ],
-  mountains: [
-    'Узкая тропа над пропастью, ветер сбивает с ног.',
-    'Камнепад только что прошёл — пыль ещё висит в воздухе.',
-    'Снежный перевал, где видимость почти нулевая.',
-  ],
-  swamp: [
-    'Мутная вода по колено, пузыри поднимаются на поверхность.',
-    'Кривые деревья, увитые лианами, и запах гнили.',
-    'Туман над болотом, и странные огни вдалеке.',
-  ],
-  desert: [
-    'Палящее солнце, песок скрипит на зубах.',
-    'Барханы, и вдруг — тень на горизонте.',
-    'Оазис впереди, но что-то не так с водой.',
-  ],
-  dungeon: [
-    'Сырые каменные стены, факелы почти догорели.',
-    'Коридор разветвляется, и из темноты слышно дыхание.',
-    'Заброшенный зал, где эхо шагов звучит слишком громко.',
-  ],
-  city: [
-    'Тёмный переулок, где фонари не достают до земли.',
-    'Шумный рынок, но кто-то следит из толпы.',
-    'Крыши, по которым можно уйти от погони.',
-  ],
-  sea: [
-    'Шторм набирает силу, палуба уходит из-под ног.',
-    'Туман над водой, и силуэты в нём.',
-    'Остров впереди — но он не на карте.',
-  ],
-  plains: [
-    'Бескрайняя степь, и только ветер в траве.',
-    'Заброшенная ферма, где давно не ступала нога человека.',
-    'Стадо вдалеке, но оно движется слишком быстро.',
-  ],
+// ─── Scene descriptions ───
+const SCENE_DESCRIPTIONS: Record<EncounterBiome, { ru: string[]; en: string[] }> = {
+  forest: {
+    ru: [
+      'Тенистые деревья смыкаются над головой, слышен хруст веток.',
+      'Лесная поляна, залитая лунным светом, но что-то шевелится в кустах.',
+      'Густой подлесок, где каждый шаг отдаётся эхом.',
+    ],
+    en: [
+      'Shady trees close overhead, the crack of branches echoes.',
+      'A moonlit forest clearing — but something stirs in the bushes.',
+      'Dense undergrowth, where every step echoes.',
+    ],
+  },
+  mountains: {
+    ru: [
+      'Узкая тропа над пропастью, ветер сбивает с ног.',
+      'Камнепад только что прошёл — пыль ещё висит в воздухе.',
+      'Снежный перевал, где видимость почти нулевая.',
+    ],
+    en: [
+      'A narrow path above a chasm, the wind knocks you off your feet.',
+      'A rockslide just passed — dust still hangs in the air.',
+      'A snowy pass where visibility is nearly zero.',
+    ],
+  },
+  swamp: {
+    ru: [
+      'Мутная вода по колено, пузыри поднимаются на поверхность.',
+      'Кривые деревья, увитые лианами, и запах гнили.',
+      'Туман над болотом, и странные огни вдалеке.',
+    ],
+    en: [
+      'Murky knee-deep water, bubbles rise to the surface.',
+      'Crooked trees wrapped in vines and the smell of rot.',
+      'Fog over the swamp and strange lights in the distance.',
+    ],
+  },
+  desert: {
+    ru: [
+      'Палящее солнце, песок скрипит на зубах.',
+      'Барханы, и вдруг — тень на горизонте.',
+      'Оазис впереди, но что-то не так с водой.',
+    ],
+    en: [
+      'Blazing sun, sand grits on your teeth.',
+      'Dunes — and suddenly a shadow on the horizon.',
+      'An oasis ahead, but something is wrong with the water.',
+    ],
+  },
+  dungeon: {
+    ru: [
+      'Сырые каменные стены, факелы почти догорели.',
+      'Коридор разветвляется, и из темноты слышно дыхание.',
+      'Заброшенный зал, где эхо шагов звучит слишком громко.',
+    ],
+    en: [
+      'Damp stone walls, the torches have almost burned out.',
+      'The corridor forks, and you hear breathing from the dark.',
+      'An abandoned hall where your echoing footsteps are too loud.',
+    ],
+  },
+  city: {
+    ru: [
+      'Тёмный переулок, где фонари не достают до земли.',
+      'Шумный рынок, но кто-то следит из толпы.',
+      'Крыши, по которым можно уйти от погони.',
+    ],
+    en: [
+      'A dark alley where streetlights do not reach the ground.',
+      'A noisy market — but someone is watching from the crowd.',
+      'Rooftops you can use to escape pursuit.',
+    ],
+  },
+  sea: {
+    ru: [
+      'Шторм набирает силу, палуба уходит из-под ног.',
+      'Туман над водой, и силуэты в нём.',
+      'Остров впереди — но он не на карте.',
+    ],
+    en: [
+      'The storm grows stronger, the deck drops from under your feet.',
+      'Fog over the water, and silhouettes within it.',
+      'An island ahead — but it is not on the map.',
+    ],
+  },
+  plains: {
+    ru: [
+      'Бескрайняя степь, и только ветер в траве.',
+      'Заброшенная ферма, где давно не ступала нога человека.',
+      'Стадо вдалеке, но оно движется слишком быстро.',
+    ],
+    en: [
+      'Endless steppe, only the wind in the grass.',
+      'An abandoned farm where no human foot has trod for years.',
+      'A herd in the distance, but it moves too fast.',
+    ],
+  },
 }
 
-// ─── Сложность ───
+// ─── Difficulty ───
 function calculateDifficulty(tier: EncounterTier, monsterCount: number): EncounterDifficulty {
   const roll = Math.random()
   if (tier === '1-4') {
@@ -273,27 +335,25 @@ function calculateDifficulty(tier: EncounterTier, monsterCount: number): Encount
   return roll < 0.3 ? 'medium' : roll < 0.7 ? 'hard' : 'deadly'
 }
 
-// ─── Публичная функция ───
-export function generateEncounter(biome: EncounterBiome, tier: EncounterTier): EncounterResult {
-  const monstersPool = MONSTERS_BY_BIOME[biome][tier]
-  const count = roll(1, 3) // 1–3 типа монстров
-  const selected = pickMany(monstersPool, Math.min(count, monstersPool.length))
+// ─── Public API ───
+export function generateEncounter(
+  biome: EncounterBiome,
+  tier: EncounterTier,
+  lang: Lang = 'ru'
+): EncounterResult {
+  const pool = MONSTERS_BY_BIOME[biome][tier]
+  const count = roll(1, 3)
+  const selected = pickMany(pool, Math.min(count, pool.length))
 
   const monsters: EncounterMonster[] = selected.map((m) => ({
-    name: m.name,
+    name: L(lang, m.nameRu, m.nameEn),
     cr: m.cr,
     count: roll(1, 4),
   }))
 
   const totalCount = monsters.reduce((sum, m) => sum + m.count, 0)
   const difficulty = calculateDifficulty(tier, totalCount)
-  const description = pick(SCENE_DESCRIPTIONS[biome])
+  const description = pick(SCENE_DESCRIPTIONS[biome][lang])
 
-  return {
-    biome,
-    tier,
-    difficulty,
-    monsters,
-    description,
-  }
+  return { biome, tier, difficulty, monsters, description }
 }

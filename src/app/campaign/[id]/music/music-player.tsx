@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 import { useRealtimeMusic } from '@/lib/hooks/use-realtime-music'
+import { useT } from '@/lib/i18n'
 import type { MusicPlayerState, Track } from '@/lib/types'
 
 interface Props {
@@ -12,12 +13,12 @@ interface Props {
 }
 
 export function MusicPlayer({ campaignId, initialState, currentTrack }: Props) {
+  const t = useT()
   const state = useRealtimeMusic({ campaignId, initialState })
   const audioRef = useRef<HTMLAudioElement>(null)
   const [localVolume, setLocalVolume] = useState(50)
   const [muted, setMuted] = useState(false)
 
-  // Применяем состояние к <audio>
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !state) return
@@ -36,21 +37,23 @@ export function MusicPlayer({ campaignId, initialState, currentTrack }: Props) {
   if (!currentTrack || !state || !state.is_playing) return null
 
   return (
-    <div className="fixed bottom-4 left-4 z-30 flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 shadow-2xl">
+    <div className="fixed bottom-4 left-4 z-30 flex items-center gap-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 shadow-2xl">
       <div className="flex items-center gap-2">
-        <div className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-        <span className="max-w-[180px] truncate text-sm text-slate-200">♪ {currentTrack.name}</span>
+        <div className="h-2 w-2 animate-pulse rounded-full bg-[var(--success)]" />
+        <span className="max-w-[180px] truncate text-sm text-[var(--text-secondary)]">
+          ♪ {currentTrack.name}
+        </span>
       </div>
 
       <button
         onClick={() => setMuted(!muted)}
-        className="rounded p-1 transition hover:bg-slate-800"
-        title={muted ? 'Включить звук' : 'Выключить звук'}
+        className="rounded p-1 transition hover:bg-[var(--bg-hover)]"
+        title={muted ? t('music.unmute') : t('music.mute')}
       >
         {muted ? (
-          <VolumeX size={14} className="text-slate-400" />
+          <VolumeX size={14} className="text-[var(--text-muted)]" />
         ) : (
-          <Volume2 size={14} className="text-slate-400" />
+          <Volume2 size={14} className="text-[var(--text-muted)]" />
         )}
       </button>
 
@@ -60,7 +63,7 @@ export function MusicPlayer({ campaignId, initialState, currentTrack }: Props) {
         max={100}
         value={localVolume}
         onChange={(e) => setLocalVolume(Number(e.target.value))}
-        className="w-20 accent-indigo-500"
+        className="w-20 accent-[var(--accent)]"
       />
 
       <audio ref={audioRef} src={currentTrack.audio_url} loop preload="auto" />

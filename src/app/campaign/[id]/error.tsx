@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, RefreshCw, ArrowLeft } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 export default function CampaignError({
   error,
@@ -12,6 +13,8 @@ export default function CampaignError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const t = useT()
+
   useEffect(() => {
     console.error('[Campaign Error Boundary]', error)
   }, [error])
@@ -23,15 +26,15 @@ export default function CampaignError({
           <AlertTriangle size={28} className="text-[var(--danger)]" />
         </div>
 
-        <h1 className="mb-2 text-lg font-bold text-[var(--text-primary)]">Ошибка в кампании</h1>
-        <p className="mb-6 text-sm text-[var(--text-muted)]">
-          Не удалось загрузить эту страницу кампании. Попробуй ещё раз.
-        </p>
+        <h1 className="mb-2 text-lg font-bold text-[var(--text-primary)]">
+          {t('error.campaignTitle')}
+        </h1>
+        <p className="mb-6 text-sm text-[var(--text-muted)]">{t('error.campaignDescription')}</p>
 
         {process.env.NODE_ENV === 'development' && (
           <details className="mb-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-3 text-left">
             <summary className="cursor-pointer text-xs font-medium text-[var(--text-muted)]">
-              Детали (dev)
+              {t('error.devDetails')}
             </summary>
             <pre className="mt-2 overflow-x-auto text-[10px] whitespace-pre-wrap text-[var(--danger-text)]">
               {error.message}
@@ -41,11 +44,11 @@ export default function CampaignError({
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button variant="primary" size="md" icon={<RefreshCw size={16} />} onClick={reset}>
-            Попробовать снова
+            {t('error.retry')}
           </Button>
           <Link href="/dashboard">
             <Button variant="secondary" size="md" icon={<ArrowLeft size={16} />} className="w-full">
-              К кампаниям
+              {t('error.backToCampaigns')}
             </Button>
           </Link>
         </div>

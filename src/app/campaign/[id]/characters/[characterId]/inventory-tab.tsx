@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from 'react'
 import { Plus, Package, Sparkles, Shield } from 'lucide-react'
-import { EmptyState } from '@/components/ui'
+import { EmptyState, Button } from '@/components/ui'
 import CurrencyTracker from './inventory/currency-tracker'
 import EncumbranceBar from './inventory/encumbrance-bar'
 import InventoryItem from './inventory/inventory-item'
 import AddItemDialog from './inventory/add-item-dialog'
 import { getCarryingCapacity, MAX_ATTUNEMENTS } from '@/lib/types'
+import { useI18n } from '@/lib/i18n'
 import type { Character } from '@/lib/types'
 
 interface Props {
@@ -17,13 +18,11 @@ interface Props {
 }
 
 export default function InventoryTab({ character, campaignId, canEdit }: Props) {
+  const { t } = useI18n()
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   const data = character.data_json
 
-  // CHANGES: обёрнуто в useMemo, чтобы ссылка на inventory была стабильной.
-  // Раньше `data.inventory ?? []` создавал новый [] каждый рендер,
-  // из-за чего useMemo(totalWeight) пересчитывался всегда.
   const inventory = useMemo(
     () => character.data_json.inventory ?? [],
     [character.data_json.inventory]
@@ -45,22 +44,22 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
 
   const groups = [
     {
-      title: 'Настроено',
+      title: t('inventory.group.attuned'),
       icon: Sparkles,
-      color: 'text-violet-400',
+      color: 'text-[var(--accent-text)]',
       items: attuned,
       badge: `${attunedCount}/${MAX_ATTUNEMENTS}`,
     },
     {
-      title: 'Экипировано',
+      title: t('inventory.group.equipped'),
       icon: Shield,
-      color: 'text-sky-400',
+      color: 'text-[var(--info-text)]',
       items: equipped,
     },
     {
-      title: 'Прочее',
+      title: t('inventory.group.other'),
       icon: Package,
-      color: 'text-slate-400',
+      color: 'text-[var(--text-muted)]',
       items: other,
     },
   ].filter((g) => g.items.length > 0)
@@ -69,15 +68,18 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
     <div>
       <div className="mb-4 flex items-center gap-2">
         {canEdit && (
-          <button
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<Plus size={14} />}
             onClick={() => setShowAddDialog(true)}
-            className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-500"
           >
-            <Plus size={14} />
-            Добавить предмет
-          </button>
+            {t('inventory.add')}
+          </Button>
         )}
-        <div className="ml-auto text-sm text-slate-500">Предметов: {inventory.length}</div>
+        <div className="ml-auto text-sm text-[var(--text-muted)]">
+          {t('inventory.itemsCount')}: {inventory.length}
+        </div>
       </div>
 
       <CurrencyTracker
@@ -92,11 +94,9 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
       {inventory.length === 0 ? (
         <EmptyState
           icon="🎒"
-          title="Инвентарь пуст"
+          title={t('inventory.empty.title')}
           description={
-            canEdit
-              ? 'Добавь первый предмет — оружие, броню или зелье.'
-              : 'У персонажа нет предметов.'
+            canEdit ? t('inventory.empty.descriptionEdit') : t('inventory.empty.descriptionPlayer')
           }
           size="md"
           dashed={false}
@@ -107,11 +107,11 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
             const Icon = group.icon
             return (
               <div key={group.title}>
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wider text-slate-400 uppercase">
+                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
                   <Icon size={14} className={group.color} />
                   {group.title}
                   {group.badge && (
-                    <span className="font-normal text-slate-600">({group.badge})</span>
+                    <span className="font-normal text-[var(--text-subtle)]">({group.badge})</span>
                   )}
                 </h3>
                 <div className="space-y-1.5">

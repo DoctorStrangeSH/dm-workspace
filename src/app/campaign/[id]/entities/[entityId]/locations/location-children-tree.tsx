@@ -5,6 +5,7 @@ import { ChevronRight, FolderTree } from 'lucide-react'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Descendant {
   entityId: string
@@ -19,12 +20,14 @@ interface Props {
 }
 
 export default function LocationChildrenTree({ campaignId, descendants }: Props) {
+  const t = useT()
+
   if (descendants.length === 0) {
     return (
       <EmptyState
         icon="📁"
-        title="Нет вложенных локаций"
-        description="Добавь дочерние локации через связи «Родительская локация»."
+        title={t('entities.locations.empty.title')}
+        description={t('entities.locations.empty.description')}
         size="sm"
         dashed={false}
       />
@@ -37,7 +40,7 @@ export default function LocationChildrenTree({ campaignId, descendants }: Props)
     <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]/60 p-4">
       <div className="mb-3 flex items-center gap-2 text-sm text-[var(--text-muted)]">
         <FolderTree size={14} />
-        <span>Вложенные локации ({descendants.length})</span>
+        <span>{t('entities.locations.nested', { n: descendants.length })}</span>
       </div>
 
       <div className="space-y-1">

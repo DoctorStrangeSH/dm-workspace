@@ -2,7 +2,9 @@
 
 import { cn } from '@/lib/utils'
 import { BACKGROUNDS, type ClassInfo } from '@/lib/dnd/constants'
-import { ABILITY_LABELS, SKILL_LABELS, SKILL_ABILITY, type SkillKey } from '@/lib/types'
+import { SKILL_ABILITY, type SkillKey } from '@/lib/types'
+import { useI18n } from '@/lib/i18n'
+import { abilityShort, skillLabel } from '@/lib/i18n/labels'
 
 interface Props {
   classInfo: ClassInfo | undefined
@@ -19,6 +21,8 @@ export default function WizardStep3({
   chosenSkills,
   setChosenSkills,
 }: Props) {
+  const { t, lang } = useI18n()
+
   const background = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
 
   const classSkillChoices = classInfo?.skillChoices
@@ -41,7 +45,7 @@ export default function WizardStep3({
     <div className="space-y-6">
       <div>
         <label className="mb-2 block text-sm font-medium text-[var(--text-secondary)]">
-          Предыстория <span className="text-[var(--danger)]">*</span>
+          {t('characters.wizard.background')} <span className="text-[var(--danger)]">*</span>
         </label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {BACKGROUNDS.map((bg) => (
@@ -68,7 +72,8 @@ export default function WizardStep3({
         </div>
         {background && (
           <p className="mt-2 text-xs text-[var(--text-subtle)]">
-            Даёт владение: {background.skills.map((s) => SKILL_LABELS[s]).join(', ')}
+            {t('characters.wizard.grantsProficiency')}:{' '}
+            {background.skills.map((s) => skillLabel(lang, s)).join(', ')}
           </p>
         )}
       </div>
@@ -76,7 +81,10 @@ export default function WizardStep3({
       {classInfo && (
         <div>
           <label className="mb-2 block text-sm font-medium text-[var(--text-secondary)]">
-            Навыки класса (выбрано {chosenSkills.length} из {maxSkills})
+            {t('characters.wizard.classSkills', {
+              chosen: chosenSkills.length,
+              max: maxSkills,
+            })}
           </label>
           <div className="grid max-h-80 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
             {availableSkills.map((skill) => {
@@ -99,9 +107,9 @@ export default function WizardStep3({
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span>{SKILL_LABELS[skill]}</span>
+                    <span>{skillLabel(lang, skill)}</span>
                     <span className="text-[10px] text-[var(--text-subtle)] uppercase">
-                      {ABILITY_LABELS[SKILL_ABILITY[skill]].slice(0, 3)}
+                      {abilityShort(lang, SKILL_ABILITY[skill])}
                     </span>
                   </div>
                 </button>
@@ -110,7 +118,7 @@ export default function WizardStep3({
           </div>
           {chosenSkills.length < maxSkills && (
             <p className="mt-2 text-xs text-[var(--warning-text)]">
-              ⚠️ Выбери ещё {maxSkills - chosenSkills.length} навык(а)
+              {t('characters.wizard.chooseMore', { n: maxSkills - chosenSkills.length })}
             </p>
           )}
         </div>

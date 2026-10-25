@@ -9,9 +9,11 @@ import {
   getPointsRemaining,
   isStandardArrayUsed,
 } from '@/lib/dnd/character-builder'
-import { ABILITY_LABELS, type AbilityKey } from '@/lib/types'
+import type { AbilityKey } from '@/lib/types'
 import { STANDARD_ARRAY } from '@/lib/dnd/constants'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+import { abilityShort } from '@/lib/i18n/labels'
 import { Card, IconButton, Tooltip } from '@/components/ui'
 
 export type AbilityMode = 'pointbuy' | 'standard'
@@ -25,31 +27,18 @@ interface Props {
 
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
-const ABILITY_NAMES: Record<AbilityKey, string> = {
-  str: 'Сила',
-  dex: 'Ловкость',
-  con: 'Телосложение',
-  int: 'Интеллект',
-  wis: 'Мудрость',
-  cha: 'Харизма',
-}
-
-/**
- * CHANGES:
- * 1. mode / setMode — props (поднято в character-wizard.tsx).
- * 2. Стандартный массив: drag-and-drop + click-to-select.
- * 3. selectedValue — выбранное значение (click-to-select), сбрасывается после drop.
- * 4. Правильный подсчёт использованных значений: учитываем 8 как валидное.
- * 5. Tooltip модификатора.
- */
 export default function WizardStep2({ abilities, setAbilities, mode, setMode }: Props) {
-  // Выбранное значение (для click-to-select)
+  // CHANGES (К9): нужен и t, и lang (для abilityShort).
+  const { t, lang } = useI18n()
+
   const [selectedValue, setSelectedValue] = useState<number | null>(null)
-  // Перетаскиваемое значение (для drag-and-drop)
   const [draggedValue, setDraggedValue] = useState<number | null>(null)
   const [draggedFrom, setDraggedFrom] = useState<AbilityKey | null>(null)
 
   const remaining = getPointsRemaining(abilities)
+
+  // CHANGES (К9): локальный ABILITY_NAMES убран — используем t('ability.*')
+  const abilityName = (ab: AbilityKey) => t(`ability.${ab}`)
 
   const increment = (ab: AbilityKey) => {
     if (!canIncrement(abilities, ab)) return
@@ -81,9 +70,6 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
     setDraggedFrom(null)
   }
 
-  // ─── Подсчёт использованных значений в стандартном массиве ───
-  // ВАЖНО: 8 — дефолт, но 8 может быть валидным значением (из STANDARD_ARRAY).
-  // Поэтому считаем все 6 характеристик, и каждое значение сравниваем с STANDARD_ARRAY.
   const usedValues = ABILITIES.map((ab) => abilities[ab])
   const usedCounts = usedValues.reduce<Record<number, number>>((acc, v) => {
     acc[v] = (acc[v] ?? 0) + 1
@@ -96,12 +82,10 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
     return usedCount < maxCount
   })
 
-  // ─── Drop ───
   const handleDrop = (targetAbility: AbilityKey) => {
     const value = draggedValue ?? selectedValue
     if (value === null) return
 
-    // Если перетащили с другой характеристики — меняем местами
     if (draggedFrom && draggedFrom !== targetAbility) {
       const fromValue = abilities[draggedFrom]
       const toValue = abilities[targetAbility]
@@ -111,7 +95,6 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
         [targetAbility]: fromValue,
       })
     } else {
-      // Иначе — ставим значение
       setAbilities({ ...abilities, [targetAbility]: value })
     }
 
@@ -131,10 +114,9 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
     setDraggedFrom(null)
   }
 
-  // ─── Click-to-select ───
   const handleValueClick = (value: number) => {
     if (selectedValue === value) {
-      setSelectedValue(null) // повторный клик — снять выбор
+      setSelectedValue(null)
     } else {
       setSelectedValue(value)
     }
@@ -154,7 +136,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
               : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           )}
         >
-          Point Buy (27 очков)
+          {t('characters.wizard.pointBuy')}
         </button>
         <button
           type="button"
@@ -166,7 +148,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
               : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           )}
         >
-          Стандартный массив
+          {t('characters.wizard.standardArray')}
         </button>
       </div>
 
@@ -175,7 +157,9 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
         <>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[var(--text-muted)]">Осталось очков</p>
+              <p className="text-sm text-[var(--text-muted)]">
+                {t('characters.wizard.pointsLeft')}
+              </p>
               <p className="text-2xl font-bold">
                 <span
                   className={
@@ -191,7 +175,12 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                 <span className="text-base text-[var(--text-subtle)]"> / 27</span>
               </p>
             </div>
-            <IconButton variant="ghost" size="sm" label="Сбросить" onClick={resetPointBuy}>
+            <IconButton
+              variant="ghost"
+              size="sm"
+              label={t('characters.wizard.reset')}
+              onClick={resetPointBuy}
+            >
               <RotateCcw size={14} />
             </IconButton>
           </div>
@@ -204,12 +193,14 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
               const canDec = canDecrement(abilities, ab)
               return (
                 <Card key={ab} padding="sm">
-                  <div className="mb-2 text-xs text-[var(--text-subtle)]">{ABILITY_LABELS[ab]}</div>
+                  <div className="mb-2 text-xs text-[var(--text-subtle)]">
+                    {abilityShort(lang, ab)}
+                  </div>
                   <div className="flex items-center justify-between gap-2">
                     <IconButton
                       variant="ghost"
                       size="sm"
-                      label={`Уменьшить ${ABILITY_NAMES[ab]}`}
+                      label={t('characters.wizard.decrease', { ability: abilityName(ab) })}
                       onClick={() => decrement(ab)}
                       disabled={!canDec}
                     >
@@ -218,7 +209,9 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                     <div className="text-center">
                       <div className="text-2xl font-bold text-[var(--text-primary)]">{score}</div>
                       <Tooltip
-                        content={`Модификатор: ${formatModifier(mod)}. Влияет на броски, урон, спасброски`}
+                        content={t('characters.wizard.modifierHint', {
+                          modifier: formatModifier(mod),
+                        })}
                       >
                         <span
                           className={cn(
@@ -236,7 +229,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                     <IconButton
                       variant="ghost"
                       size="sm"
-                      label={`Увеличить ${ABILITY_NAMES[ab]}`}
+                      label={t('characters.wizard.increase', { ability: abilityName(ab) })}
                       onClick={() => increment(ab)}
                       disabled={!canInc}
                     >
@@ -249,13 +242,11 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
           </div>
 
           <p className="text-xs text-[var(--text-subtle)]">
-            Правила: 8–13 = 1 очко за шаг, 14–15 = 2 очка за шаг. Максимум 15 до расовых бонусов.
+            {t('characters.wizard.pointBuyRules')}
           </p>
 
           {remaining === 0 && (
-            <p className="text-xs text-[var(--success)]">
-              ✓ Все очки потрачены. Можно идти дальше.
-            </p>
+            <p className="text-xs text-[var(--success)]">{t('characters.wizard.allPointsSpent')}</p>
           )}
         </>
       )}
@@ -265,10 +256,9 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
         <>
           <div>
             <p className="mb-3 text-sm text-[var(--text-muted)]">
-              Перетащи значения на характеристики, или нажми на значение → потом на характеристику:
+              {t('characters.wizard.standardArrayHint')}
             </p>
 
-            {/* Доступные значения */}
             <div className="mb-4 flex flex-wrap gap-2">
               {STANDARD_ARRAY.map((v) => {
                 const isUsed = !availableValues.includes(v)
@@ -298,7 +288,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
               <IconButton
                 variant="ghost"
                 size="sm"
-                label="Сбросить"
+                label={t('characters.wizard.reset')}
                 onClick={() => {
                   setAbilities({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })
                   setSelectedValue(null)
@@ -310,13 +300,11 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
 
             {selectedValue !== null && (
               <p className="mb-3 text-xs text-[var(--accent-text)]">
-                Выбрано значение <strong>{selectedValue}</strong>. Кликни на характеристику, чтобы
-                присвоить.
+                {t('characters.wizard.selectedValue', { value: selectedValue })}
               </p>
             )}
           </div>
 
-          {/* Характеристики */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {ABILITIES.map((ab) => {
               const value = abilities[ab]
@@ -349,7 +337,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                   }}
                 >
                   <div className="mb-2 flex items-center justify-between text-xs text-[var(--text-subtle)]">
-                    <span>{ABILITY_LABELS[ab]}</span>
+                    <span>{abilityShort(lang, ab)}</span>
                     {!isDefault && value !== 8 && (
                       <span
                         draggable
@@ -359,7 +347,9 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                         }}
                         onDragEnd={handleDragEnd}
                         className="cursor-grab text-[var(--text-subtle)] active:cursor-grabbing"
-                        aria-label={`Перетащи ${ABILITY_NAMES[ab]}`}
+                        aria-label={t('characters.wizard.dragAbility', {
+                          ability: abilityName(ab),
+                        })}
                       >
                         <GripVertical size={12} />
                       </span>
@@ -374,7 +364,11 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                     >
                       {value}
                     </div>
-                    <Tooltip content={`Модификатор: ${formatModifier(mod)}`}>
+                    <Tooltip
+                      content={t('characters.wizard.modifierHint', {
+                        modifier: formatModifier(mod),
+                      })}
+                    >
                       <span
                         className={cn(
                           'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium',
@@ -395,12 +389,13 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
 
           {isStandardArrayUsed(Object.values(abilities)) ? (
             <p className="text-xs text-[var(--success)]">
-              ✓ Стандартный массив использован. Можно идти дальше.
+              {t('characters.wizard.standardArrayUsed')}
             </p>
           ) : (
             <p className="text-xs text-[var(--warning-text)]">
-              ⚠️ Используй все 6 значений (15, 14, 13, 12, 10, 8). Осталось:{' '}
-              {availableValues.join(', ') || '—'}
+              {t('characters.wizard.standardArrayRemaining', {
+                values: availableValues.join(', ') || '—',
+              })}
             </p>
           )}
         </>

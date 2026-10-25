@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 export default function LogoutButton() {
+  const t = useT()
   const router = useRouter()
   const supabase = createClient()
 
@@ -17,7 +19,7 @@ export default function LogoutButton() {
 
   return (
     <Button variant="secondary" size="md" icon={<LogOut size={16} />} onClick={handleLogout}>
-      Выйти
+      {t('nav.logout')}
     </Button>
   )
 }

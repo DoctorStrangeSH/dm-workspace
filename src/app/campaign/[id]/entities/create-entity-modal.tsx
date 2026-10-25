@@ -6,6 +6,7 @@ import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
 import { Button, Dialog, Input, Textarea } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import TemplateSelect from './create-entity-modal/template-select'
 import type { EntityTemplate, EntityType } from '@/lib/types'
 
@@ -32,6 +33,7 @@ export default function CreateEntityModal({
   templates,
   onClose,
 }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -48,8 +50,8 @@ export default function CreateEntityModal({
     }
   }
 
-  const handleTypeChange = (t: EntityType) => {
-    setSelectedType(t)
+  const handleTypeChange = (type: EntityType) => {
+    setSelectedType(type)
     setSelectedTemplate(null)
   }
 
@@ -67,25 +69,34 @@ export default function CreateEntityModal({
     startTransition(async () => {
       const res = await createEntity(campaignId, formData)
       if ('error' in res) {
-        setError(res.error ?? 'Ошибка')
-        toast.error(res.error ?? 'Ошибка')
+        setError(res.error ?? t('common.error'))
+        toast.error(res.error ?? t('common.error'))
         return
       }
-      toast.success('Сущность создана')
+      toast.success(t('entities.toast.created'))
       onClose()
     })
   }
+
+  const placeholderKey =
+    selectedType === 'npc'
+      ? 'entities.form.namePlaceholder.npc'
+      : selectedType === 'location'
+        ? 'entities.form.namePlaceholder.location'
+        : selectedType === 'monster'
+          ? 'entities.form.namePlaceholder.monster'
+          : 'entities.form.namePlaceholder.other'
 
   return (
     <Dialog
       open={true}
       onClose={onClose}
-      title="Новая сущность"
+      title={t('entities.create')}
       size="md"
       footer={
         <>
           <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -94,7 +105,7 @@ export default function CreateEntityModal({
             form="create-entity-form"
             loading={isPending}
           >
-            Создать
+            {t('common.create')}
           </Button>
         </>
       }
@@ -102,17 +113,17 @@ export default function CreateEntityModal({
       <form id="create-entity-form" onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-2 block text-sm text-[var(--text-secondary)]">
-            Тип <span className="text-[var(--danger)]">*</span>
+            {t('entities.form.type')} <span className="text-[var(--danger)]">*</span>
           </label>
           <div className="grid grid-cols-4 gap-2">
-            {TYPE_OPTIONS.map((t) => {
-              const style = ENTITY_STYLES[t]
-              const active = selectedType === t
+            {TYPE_OPTIONS.map((type) => {
+              const style = ENTITY_STYLES[type]
+              const active = selectedType === type
               return (
                 <button
-                  key={t}
+                  key={type}
                   type="button"
-                  onClick={() => handleTypeChange(t)}
+                  onClick={() => handleTypeChange(type)}
                   className={cn(
                     'flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors',
                     active
@@ -121,7 +132,7 @@ export default function CreateEntityModal({
                   )}
                 >
                   <span className="text-xl">{style.icon}</span>
-                  <span className="text-xs">{style.label}</span>
+                  <span className="text-xs">{t(style.labelKey)}</span>
                 </button>
               )
             })}
@@ -137,33 +148,25 @@ export default function CreateEntityModal({
 
         <Input
           name="name"
-          label="Имя"
+          label={t('entities.form.name')}
           type="text"
           required
           minLength={2}
           maxLength={150}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={
-            selectedType === 'npc'
-              ? 'Гэндальф'
-              : selectedType === 'location'
-                ? 'Шир'
-                : selectedType === 'monster'
-                  ? 'Гоблин'
-                  : 'Название...'
-          }
+          placeholder={t(placeholderKey)}
           autoFocus
         />
 
         <Textarea
           name="description"
-          label="Описание"
+          label={t('common.description')}
           rows={3}
           maxLength={5000}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Краткое описание..."
+          placeholder={t('entities.form.descriptionPlaceholder')}
         />
 
         {error && (

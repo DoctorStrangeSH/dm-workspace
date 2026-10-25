@@ -2,22 +2,26 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, AlertTriangle, Loader2 } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { deleteAccount } from '@/lib/actions/settings'
 import { useToast } from '@/components/toast/toast-provider'
+import { Button, Dialog, Input } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   onClose: () => void
 }
 
 export default function DeleteAccountDialog({ onClose }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [password, setPassword] = useState('')
   const [confirmText, setConfirmText] = useState('')
   const [isPending, startTransition] = useTransition()
 
-  const canDelete = password.length > 0 && confirmText.toLowerCase() === 'удалить'
+  const confirmWord = t('settings.deleteAccount.confirmWord')
+  const canDelete = password.length > 0 && confirmText.toLowerCase() === confirmWord.toLowerCase()
 
   const handleDelete = () => {
     if (!canDelete) return
@@ -25,86 +29,63 @@ export default function DeleteAccountDialog({ onClose }: Props) {
     startTransition(async () => {
       const res = await deleteAccount(password)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
-      toast.success('Аккаунт удалён')
+      toast.success(t('settings.deleteAccount.toast.deleted'))
       router.push('/login')
       router.refresh()
     })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-red-900/50 bg-slate-900 p-6">
-        <div className="mb-4 flex items-start gap-3">
-          <div className="rounded-lg border border-red-900/50 bg-red-950/40 p-2">
-            <AlertTriangle size={20} className="text-red-400" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-red-300">Удалить аккаунт?</h3>
-            <p className="mt-1 text-sm text-slate-400">
-              Все кампании, персонажи, данные — будут удалены{' '}
-              <strong className="text-red-300">навсегда</strong>. Восстановить нельзя.
-            </p>
-          </div>
-          <button onClick={onClose} className="rounded p-1 hover:bg-slate-800">
-            <X size={18} />
-          </button>
+    <Dialog
+      open={true}
+      onClose={onClose}
+      title={t('settings.deleteAccount.dialogTitle')}
+      description={t('settings.deleteAccount.dialogDescription')}
+      size="md"
+      footer={
+        <>
+          <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="danger"
+            size="md"
+            onClick={handleDelete}
+            disabled={!canDelete || isPending}
+            loading={isPending}
+          >
+            {isPending
+              ? t('settings.deleteAccount.deleting')
+              : t('settings.deleteAccount.deleteForever')}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <div className="flex items-start gap-3 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-3">
+          <AlertTriangle size={20} className="shrink-0 text-[var(--danger-text)]" />
+          <p className="text-sm text-[var(--danger-text)]">{t('settings.deleteAccount.warning')}</p>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Твой пароль (для подтверждения)
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-red-500 focus:outline-none"
-            />
-          </div>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          label={t('settings.deleteAccount.passwordLabel')}
+        />
 
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Напиши <strong className="text-red-400">удалить</strong> для подтверждения
-            </label>
-            <input
-              type="text"
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="удалить"
-              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-red-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={onClose}
-              disabled={isPending}
-              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={!canDelete || isPending}
-              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition hover:bg-red-500 disabled:opacity-50"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 size={14} className="animate-spin" />
-                  Удаляем...
-                </>
-              ) : (
-                'Удалить навсегда'
-              )}
-            </button>
-          </div>
-        </div>
+        <Input
+          type="text"
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder={confirmWord}
+          label={t('settings.deleteAccount.confirmLabel', { word: confirmWord })}
+        />
       </div>
-    </div>
+    </Dialog>
   )
 }

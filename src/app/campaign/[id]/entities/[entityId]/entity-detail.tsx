@@ -18,6 +18,7 @@ import LocationBreadcrumbs from './locations/location-breadcrumbs'
 import LocationChildrenTree from './locations/location-children-tree'
 import { cn } from '@/lib/utils'
 import { Card, Button, Dialog, Textarea } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import type { Entity, EntityRelation, EntityTag, Tag, EntityType } from '@/lib/types'
 import type { BacklinkChapter } from '@/lib/queries/backlinks'
 
@@ -56,6 +57,7 @@ export default function EntityDetail({
   locationPath,
   locationDescendants,
 }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -91,10 +93,10 @@ export default function EntityDetail({
         is_visible_to_players: newVal,
       })
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         setIsVisible(!newVal)
       } else {
-        toast.success(newVal ? 'Сущность видна игрокам' : 'Сущность скрыта от игроков')
+        toast.success(newVal ? t('entities.toast.visible') : t('entities.toast.hidden'))
       }
     })
   }
@@ -103,9 +105,9 @@ export default function EntityDetail({
     startTransition(async () => {
       const res = await deleteEntity(entity.id, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Сущность удалена')
+        toast.success(t('entities.toast.deleted'))
         router.push(`/campaign/${campaignId}/entities`)
         router.refresh()
       }
@@ -117,9 +119,9 @@ export default function EntityDetail({
       {entity.type !== 'location' && (
         <Breadcrumbs
           items={[
-            { label: 'Дашборд', href: '/dashboard' },
+            { label: t('nav.dashboard'), href: '/dashboard' },
             { label: campaign.name, href: `/campaign/${campaignId}` },
-            { label: 'Сущности', href: `/campaign/${campaignId}/entities` },
+            { label: t('nav.entities'), href: `/campaign/${campaignId}/entities` },
             { label: entity.name },
           ]}
           className="mb-4"
@@ -142,7 +144,7 @@ export default function EntityDetail({
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="mb-1 text-xs text-[var(--text-muted)]">{style.label}</div>
+          <div className="mb-1 text-xs text-[var(--text-muted)]">{t(style.labelKey)}</div>
           {isDm ? (
             <input
               value={name}
@@ -175,7 +177,7 @@ export default function EntityDetail({
                 : 'border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-[var(--warning-text)]'
             )}
           >
-            {isVisible ? 'Видна игрокам' : 'Скрыта'}
+            {isVisible ? t('entities.visible') : t('entities.hidden')}
           </Button>
 
           <SaveAsTemplateButton
@@ -191,7 +193,7 @@ export default function EntityDetail({
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isPending}
           >
-            Удалить
+            {t('common.delete')}
           </Button>
         </div>
       )}
@@ -202,12 +204,12 @@ export default function EntityDetail({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={6}
-            placeholder="Описание, лор, внешность..."
+            placeholder={t('entities.descriptionPlaceholder')}
             className="border-none bg-transparent focus:ring-0"
           />
         ) : (
           <p className="whitespace-pre-wrap text-[var(--text-secondary)]">
-            {description || 'Описание отсутствует'}
+            {description || t('entities.noDescription')}
           </p>
         )}
       </Card>
@@ -244,15 +246,17 @@ export default function EntityDetail({
       />
 
       <div className="mt-8">
-        <h2 className="mb-3 text-lg font-semibold text-[var(--text-primary)]">Упоминается в</h2>
+        <h2 className="mb-3 text-lg font-semibold text-[var(--text-primary)]">
+          {t('entities.backlinksTitle')}
+        </h2>
         <EntityBacklinks campaignId={campaignId} backlinks={backlinks} />
       </div>
 
       <Dialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Удалить сущность?"
-        description={`«${entity.name}» будет удалена навсегда.`}
+        title={t('entities.deleteConfirm.title')}
+        description={t('entities.deleteConfirm.description', { name: entity.name })}
         size="sm"
         footer={
           <>
@@ -262,15 +266,15 @@ export default function EntityDetail({
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isPending}
             >
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button variant="danger" size="md" onClick={handleDelete} loading={isPending}>
-              Удалить
+              {t('common.delete')}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-[var(--text-muted)]">Это действие нельзя отменить.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('entities.deleteConfirm.cannotUndo')}</p>
       </Dialog>
     </div>
   )

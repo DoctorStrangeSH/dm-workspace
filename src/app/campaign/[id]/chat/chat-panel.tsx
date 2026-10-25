@@ -9,6 +9,7 @@ import MessageList from './message-list'
 import MessageInput from './message-input'
 import DiceRoller from './dice-roller'
 import { rollDice, parseDice } from '@/lib/dnd/formulas'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { MessageWithAuthor } from '@/lib/types'
 import { useRealtimeMessages } from '@/lib/hooks/use-realtime-messages'
@@ -21,10 +22,8 @@ interface Props {
 }
 
 export default function ChatPanel({ campaignId, initialMessages, currentUserId, isDm }: Props) {
-  const messages = useRealtimeMessages({
-    campaignId,
-    initialMessages,
-  })
+  const t = useT()
+  const messages = useRealtimeMessages({ campaignId, initialMessages })
   const router = useRouter()
   const toast = useToast()
   const [isOpen, setIsOpen] = useState(false)
@@ -33,7 +32,7 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
   const handleSendText = (content: string) => {
     startTransition(async () => {
       const res = await sendMessage(campaignId, content, 'text')
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else router.refresh()
     })
   }
@@ -42,7 +41,6 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
     const expr = `${count}d${sides}${modifier >= 0 ? '+' : ''}${modifier}`
     const parsed = parseDice(expr)
     if (!parsed) return
-
     const result = rollDice(parsed)
 
     startTransition(async () => {
@@ -59,7 +57,7 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
           },
         }
       )
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else router.refresh()
     })
   }
@@ -67,29 +65,30 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
   const handleDelete = (messageId: string) => {
     startTransition(async () => {
       const res = await deleteMessage(messageId, campaignId)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else router.refresh()
     })
   }
 
   return (
     <>
-      {/* Кнопка открытия */}
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          'fixed bottom-6 left-6 z-40 flex items-center gap-2 rounded-full px-4 py-3 shadow-2xl transition',
-          'bg-violet-600 font-medium text-white hover:bg-violet-500',
-          'border border-violet-400/30',
+          // CHANGES (задача 5): bottom-20 (не перекрывает мобильную навигацию),
+          // right-4 (не left-6 — не перекрывает мобильную навигацию),
+          // z-40 (не перекрывает Dialog / Dropdown — у них z-50).
+          'fixed right-4 bottom-20 z-40 flex items-center gap-2 rounded-full px-3 py-2.5 shadow-2xl transition sm:bottom-6 sm:px-4 sm:py-3',
+          'bg-[var(--accent)] font-medium text-white hover:bg-[var(--accent-hover)]',
+          'border border-[var(--accent)]/30',
           isOpen && 'pointer-events-none opacity-0'
         )}
-        title="Чат"
+        title={t('chat.open')}
       >
         <MessageSquare size={18} />
-        <span className="hidden sm:inline">Чат</span>
+        <span className="hidden sm:inline">{t('chat.button')}</span>
       </button>
 
-      {/* Оверлей */}
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
@@ -97,29 +96,27 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
         />
       )}
 
-      {/* Панель */}
       <aside
         className={cn(
-          'fixed top-0 right-0 z-50 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl transition-transform sm:w-[380px]',
+          // CHANGES: z-40 (не 50), w-[320px] на мобилке (не w-full).
+          'fixed top-0 right-0 z-40 flex h-screen w-[320px] flex-col border-l border-[var(--border-default)] bg-[var(--bg-surface)] shadow-2xl transition-transform sm:w-[380px]',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        {/* Заголовок */}
-        <div className="flex shrink-0 items-center justify-between border-b border-slate-800 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
           <div className="flex items-center gap-2">
-            <MessageSquare size={18} className="text-violet-400" />
-            <h2 className="font-semibold">Чат кампании</h2>
+            <MessageSquare size={18} className="text-[var(--accent-text)]" />
+            <h2 className="font-semibold text-[var(--text-primary)]">{t('chat.title')}</h2>
           </div>
           <button
             onClick={() => setIsOpen(false)}
-            className="rounded-lg p-1.5 transition hover:bg-slate-800"
-            title="Закрыть (Esc)"
+            className="rounded-lg p-1.5 transition hover:bg-[var(--bg-hover)]"
+            title={t('chat.closeHint')}
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Список сообщений */}
         <MessageList
           messages={messages}
           currentUserId={currentUserId}
@@ -127,10 +124,8 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
           onDelete={handleDelete}
         />
 
-        {/* Кубики */}
         <DiceRoller onRoll={handleRoll} disabled={isPending} />
 
-        {/* Поле ввода */}
         <MessageInput onSend={handleSendText} disabled={isPending} canHide={isDm} />
       </aside>
     </>

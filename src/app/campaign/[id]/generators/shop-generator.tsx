@@ -3,32 +3,36 @@
 import { useState } from 'react'
 import { Dices, Copy, Check, Store } from 'lucide-react'
 import { Button, Card, Select, Badge } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
 import { generateShop, type ShopSize, type ShopType, type ShopResult } from '@/lib/generators/shop'
 
-const SIZE_OPTIONS = [
-  { value: 'village', label: 'Деревня (до 500)' },
-  { value: 'town', label: 'Городок (500–5000)' },
-  { value: 'city', label: 'Город (5000–25000)' },
-  { value: 'capital', label: 'Столица (25000+)' },
-]
-
-const TYPE_OPTIONS = [
-  { value: 'blacksmith', label: 'Кузнец (оружие, броня)' },
-  { value: 'general', label: 'Общая лавка (снаряжение)' },
-  { value: 'alchemist', label: 'Алхимик (зелья)' },
-  { value: 'magic', label: 'Магическая лавка' },
-  { value: 'temple', label: 'Храм (зелья, свитки)' },
-  { value: 'tavern', label: 'Таверна (еда)' },
-]
-
 export function ShopGenerator() {
+  const { t, lang } = useI18n()
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
   const [size, setSize] = useState<ShopSize>('town')
   const [type, setType] = useState<ShopType>('general')
   const [result, setResult] = useState<ShopResult | null>(null)
   const [copied, setCopied] = useState(false)
 
+  const SIZE_OPTIONS = [
+    { value: 'village', label: t('generators.shopSize.village') },
+    { value: 'town', label: t('generators.shopSize.town') },
+    { value: 'city', label: t('generators.shopSize.city') },
+    { value: 'capital', label: t('generators.shopSize.capital') },
+  ]
+
+  const TYPE_OPTIONS = [
+    { value: 'blacksmith', label: t('generators.shopType.blacksmith') },
+    { value: 'general', label: t('generators.shopType.general') },
+    { value: 'alchemist', label: t('generators.shopType.alchemist') },
+    { value: 'magic', label: t('generators.shopType.magic') },
+    { value: 'temple', label: t('generators.shopType.temple') },
+    { value: 'tavern', label: t('generators.shopType.tavern') },
+  ]
+
   const handleGenerate = () => {
-    setResult(generateShop(size, type))
+    // CHANGES (К8): передаём lang — контент на нужном языке
+    setResult(generateShop(size, type, lang))
   }
 
   const handleCopy = async () => {
@@ -44,13 +48,13 @@ export function ShopGenerator() {
       <Card padding="md">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Select
-            label="Размер города"
+            label={t('generators.form.shopSize')}
             options={SIZE_OPTIONS}
             value={size}
             onChange={(e) => setSize(e.target.value as ShopSize)}
           />
           <Select
-            label="Тип магазина"
+            label={t('generators.form.shopType')}
             options={TYPE_OPTIONS}
             value={type}
             onChange={(e) => setType(e.target.value as ShopType)}
@@ -63,7 +67,7 @@ export function ShopGenerator() {
               onClick={handleGenerate}
               className="w-full"
             >
-              Сгенерировать
+              {t('generators.generate')}
             </Button>
           </div>
         </div>
@@ -84,7 +88,7 @@ export function ShopGenerator() {
               icon={copied ? <Check size={14} /> : <Copy size={14} />}
               onClick={handleCopy}
             >
-              {copied ? 'Скопировано' : 'Копировать'}
+              {copied ? t('generators.copied') : t('generators.copy')}
             </Button>
           </div>
 
@@ -111,9 +115,9 @@ export function ShopGenerator() {
           </div>
 
           <div className="mt-4 flex items-center justify-between border-t border-[var(--border-default)] pt-3 text-sm">
-            <span className="text-[var(--text-muted)]">Общая стоимость ассортимента:</span>
+            <span className="text-[var(--text-muted)]">{t('generators.shop.totalValue')}</span>
             <span className="font-bold text-[var(--warning-text)]">
-              {result.totalValueGp.toLocaleString('ru-RU')} gp
+              {result.totalValueGp.toLocaleString(locale)} gp
             </span>
           </div>
         </Card>
@@ -129,7 +133,7 @@ function formatResult(result: ShopResult): string {
     lines.push(`• ${item.name} ×${item.quantity} — ${item.price.toFixed(2)} gp (${item.category})`)
   })
 
-  lines.push('', `Общая стоимость: ${result.totalValueGp} gp`)
+  lines.push('', `Total: ${result.totalValueGp} gp`)
 
   return lines.join('\n')
 }

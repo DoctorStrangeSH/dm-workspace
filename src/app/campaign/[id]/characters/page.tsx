@@ -9,9 +9,15 @@ import { Breadcrumbs } from '@/components/breadcrumbs'
 import { EmptyState, Card } from '@/components/ui'
 import CreateCharacterButton from './create-character-button'
 import { Sword } from 'lucide-react'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
+import { pluralize } from '@/lib/i18n/plural'
 
 export default async function CharactersPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { id: campaignId } = await params
   const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
@@ -21,13 +27,19 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
 
   const characters = await getCampaignCharacters(campaignId)
 
+  const countLabel = pluralize(lang, characters.length, {
+    one: t('characters.count.one'),
+    few: t('characters.count.few'),
+    many: t('characters.count.many'),
+  })
+
   return (
     <div className="max-w-5xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaign.name, href: `/campaign/${campaignId}` },
-          { label: 'Персонажи' },
+          { label: t('nav.characters') },
         ]}
         className="mb-4"
       />
@@ -36,10 +48,10 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
             <Sword size={22} className="text-[var(--warning)]" />
-            Персонажи
+            {t('nav.characters')}
           </h1>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            {characters.length} {characters.length === 1 ? 'персонаж' : 'персонажей'}
+            {characters.length} {countLabel}
           </p>
         </div>
         <CreateCharacterButton campaignId={campaignId} />
@@ -48,11 +60,9 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
       {characters.length === 0 ? (
         <EmptyState
           icon="⚔️"
-          title="Пока нет персонажей"
+          title={t('characters.empty.title')}
           description={
-            isDm
-              ? 'Игроки ещё не создали персонажей. Или создай персонажа для себя.'
-              : 'Создай своего первого персонажа, чтобы начать играть.'
+            isDm ? t('characters.empty.descriptionDm') : t('characters.empty.descriptionPlayer')
           }
           size="lg"
         />
@@ -82,10 +92,10 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
                         <span className="capitalize">{char.data_json.class}</span>
                       )}
                       {' · '}
-                      <span>Уровень {char.data_json.level ?? 1}</span>
+                      <span>{t('characters.level', { level: char.data_json.level ?? 1 })}</span>
                     </div>
                     <div className="mt-1 text-xs text-[var(--text-subtle)]">
-                      Владелец: {char.owner.display_name ?? char.owner.username}
+                      {t('characters.owner')}: {char.owner.display_name ?? char.owner.username}
                     </div>
                   </div>
                 </div>

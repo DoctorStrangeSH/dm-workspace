@@ -2,8 +2,10 @@
 
 import { Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
-import { ABILITY_LABELS, ABILITY_SHORT, type AbilityKey } from '@/lib/types'
+import type { AbilityKey } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import { useI18n } from '@/lib/i18n'
+import { abilityLabel, abilityShort } from '@/lib/i18n/labels'
 import { Card, IconButton } from '@/components/ui'
 
 interface Props {
@@ -15,6 +17,8 @@ interface Props {
 }
 
 export default function AbilityBox({ ability, score, modifier, onRoll, onClick }: Props) {
+  const { t, lang } = useI18n()
+
   return (
     <Card
       padding="sm"
@@ -25,7 +29,7 @@ export default function AbilityBox({ ability, score, modifier, onRoll, onClick }
     >
       <div onClick={onClick}>
         <div className="mb-1 text-[10px] tracking-wider text-[var(--text-subtle)] uppercase">
-          {ABILITY_SHORT[ability]}
+          {abilityShort(lang, ability)}
         </div>
 
         <div className="text-2xl font-bold text-[var(--text-primary)]">{score}</div>
@@ -46,7 +50,7 @@ export default function AbilityBox({ ability, score, modifier, onRoll, onClick }
         <IconButton
           variant="ghost"
           size="sm"
-          label={`Бросок ${ABILITY_LABELS[ability]}`}
+          label={t('characters.rollAbility', { ability: abilityLabel(lang, ability) })}
           onClick={(e) => {
             e.stopPropagation()
             onRoll()

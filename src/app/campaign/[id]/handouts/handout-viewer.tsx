@@ -4,6 +4,7 @@ import { X, Image as ImageIcon } from 'lucide-react'
 import { useState } from 'react'
 import Image from 'next/image'
 import { useRealtimeHandouts } from '@/lib/hooks/use-realtime-handouts'
+import { useT } from '@/lib/i18n'
 import type { Handout } from '@/lib/types'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function HandoutViewer({ campaignId, initialHandouts }: Props) {
+  const t = useT()
   const { activeHandout } = useRealtimeHandouts({
     campaignId,
     initialHandouts,
@@ -23,15 +25,15 @@ export function HandoutViewer({ campaignId, initialHandouts }: Props) {
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-black/95">
-      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
         <div className="flex items-center gap-2 text-white">
           <ImageIcon size={16} />
           <span className="font-semibold">{activeHandout.name}</span>
         </div>
         <button
           onClick={() => setDismissedId(activeHandout.id)}
-          className="rounded p-2 text-white transition hover:bg-slate-800"
-          title="Закрыть"
+          className="rounded p-2 text-white transition hover:bg-white/10"
+          title={t('common.close')}
         >
           <X size={20} />
         </button>

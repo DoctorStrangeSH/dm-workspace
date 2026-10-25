@@ -3,6 +3,7 @@
 import { forwardRef } from 'react'
 import { Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   value: string
@@ -17,6 +18,8 @@ const ChaptersSearch = forwardRef<HTMLInputElement, Props>(function ChaptersSear
   { value, onChange, totalCount, matchedCount, isSearching, className },
   ref
 ) {
+  const t = useT()
+
   return (
     <div className={cn('relative', className)}>
       <div className="relative">
@@ -29,14 +32,14 @@ const ChaptersSearch = forwardRef<HTMLInputElement, Props>(function ChaptersSear
           type="search"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Поиск по главам и содержимому..."
+          placeholder={t('chapters.search.placeholder')}
           className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] py-2.5 pr-24 pl-9 text-sm text-[var(--text-primary)] transition placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
-          aria-label="Поиск глав"
+          aria-label={t('chapters.search.ariaLabel')}
         />
 
         {isSearching && (
           <div className="pointer-events-none absolute top-1/2 right-10 -translate-y-1/2 text-xs text-[var(--text-subtle)]">
-            {matchedCount} из {totalCount}
+            {t('chapters.search.matchedOf', { matched: matchedCount, total: totalCount })}
           </div>
         )}
 
@@ -44,7 +47,7 @@ const ChaptersSearch = forwardRef<HTMLInputElement, Props>(function ChaptersSear
           <button
             onClick={() => onChange('')}
             className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 transition hover:bg-[var(--bg-hover)]"
-            aria-label="Очистить поиск"
+            aria-label={t('chapters.search.clear')}
             type="button"
           >
             <X size={14} className="text-[var(--text-subtle)]" />

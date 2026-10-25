@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Dices, Copy, Check, Swords } from 'lucide-react'
 import { Button, Card, Select, Badge } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
 import {
   generateEncounter,
   type EncounterBiome,
@@ -11,42 +12,45 @@ import {
   type EncounterDifficulty,
 } from '@/lib/generators/encounter'
 
-const BIOME_OPTIONS = [
-  { value: 'forest', label: 'Лес' },
-  { value: 'mountains', label: 'Горы' },
-  { value: 'swamp', label: 'Болото' },
-  { value: 'desert', label: 'Пустыня' },
-  { value: 'dungeon', label: 'Подземелье' },
-  { value: 'city', label: 'Город' },
-  { value: 'sea', label: 'Море' },
-  { value: 'plains', label: 'Равнины' },
-]
-
-const TIER_OPTIONS = [
-  { value: '1-4', label: 'Уровни 1–4' },
-  { value: '5-10', label: 'Уровни 5–10' },
-  { value: '11-16', label: 'Уровни 11–16' },
-  { value: '17-20', label: 'Уровни 17–20' },
-]
-
-const DIFFICULTY_LABELS: Record<
-  EncounterDifficulty,
-  { label: string; variant: 'success' | 'warning' | 'danger' | 'accent' }
-> = {
-  easy: { label: 'Лёгкий', variant: 'success' },
-  medium: { label: 'Средний', variant: 'accent' },
-  hard: { label: 'Сложный', variant: 'warning' },
-  deadly: { label: 'Смертельный', variant: 'danger' },
-}
-
 export function EncounterGenerator() {
+  const { t, lang } = useI18n()
   const [biome, setBiome] = useState<EncounterBiome>('forest')
   const [tier, setTier] = useState<EncounterTier>('1-4')
   const [result, setResult] = useState<EncounterResult | null>(null)
   const [copied, setCopied] = useState(false)
 
+  const BIOME_OPTIONS = [
+    { value: 'forest', label: t('generators.biome.forest') },
+    { value: 'mountains', label: t('generators.biome.mountains') },
+    { value: 'swamp', label: t('generators.biome.swamp') },
+    { value: 'desert', label: t('generators.biome.desert') },
+    { value: 'dungeon', label: t('generators.biome.dungeon') },
+    { value: 'city', label: t('generators.biome.city') },
+    { value: 'sea', label: t('generators.biome.sea') },
+    { value: 'plains', label: t('generators.biome.plains') },
+  ]
+
+  const TIER_OPTIONS = [
+    { value: '1-4', label: t('generators.tier.1_4') },
+    { value: '5-10', label: t('generators.tier.5_10') },
+    { value: '11-16', label: t('generators.tier.11_16') },
+    { value: '17-20', label: t('generators.tier.17_20') },
+  ]
+
+  const DIFFICULTY_LABELS: Record<
+    EncounterDifficulty,
+    { label: string; variant: 'success' | 'warning' | 'danger' | 'accent' }
+  > = {
+    easy: { label: t('generators.difficulty.easy'), variant: 'success' },
+    medium: { label: t('generators.difficulty.medium'), variant: 'accent' },
+    hard: { label: t('generators.difficulty.hard'), variant: 'warning' },
+    deadly: { label: t('generators.difficulty.deadly'), variant: 'danger' },
+  }
+
   const handleGenerate = () => {
-    setResult(generateEncounter(biome, tier))
+    // CHANGES: убран ошибочный `const { t, lang } = useI18n()` внутри функции —
+    // t и lang уже доступны из замыкания компонента.
+    setResult(generateEncounter(biome, tier, lang))
   }
 
   const handleCopy = async () => {
@@ -61,13 +65,13 @@ export function EncounterGenerator() {
       <Card padding="md">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Select
-            label="Биом"
+            label={t('generators.form.biome')}
             options={BIOME_OPTIONS}
             value={biome}
             onChange={(e) => setBiome(e.target.value as EncounterBiome)}
           />
           <Select
-            label="Уровень"
+            label={t('generators.form.tier')}
             options={TIER_OPTIONS}
             value={tier}
             onChange={(e) => setTier(e.target.value as EncounterTier)}
@@ -80,7 +84,7 @@ export function EncounterGenerator() {
               onClick={handleGenerate}
               className="w-full"
             >
-              Сгенерировать
+              {t('generators.generate')}
             </Button>
           </div>
         </div>
@@ -91,7 +95,9 @@ export function EncounterGenerator() {
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Swords size={18} className="text-[var(--danger)]" />
-              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Энкаунтер</h3>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                {t('generators.encounter.title')}
+              </h3>
               <Badge variant={DIFFICULTY_LABELS[result.difficulty].variant} size="md">
                 {DIFFICULTY_LABELS[result.difficulty].label}
               </Badge>
@@ -102,7 +108,7 @@ export function EncounterGenerator() {
               icon={copied ? <Check size={14} /> : <Copy size={14} />}
               onClick={handleCopy}
             >
-              {copied ? 'Скопировано' : 'Копировать'}
+              {copied ? t('generators.copied') : t('generators.copy')}
             </Button>
           </div>
 
@@ -134,12 +140,12 @@ export function EncounterGenerator() {
 
 function formatResult(result: EncounterResult): string {
   const lines: string[] = [
-    `⚔️ Энкаунтер (${result.biome}, ${result.tier})`,
-    `Сложность: ${result.difficulty}`,
+    `⚔️ Encounter (${result.biome}, ${result.tier})`,
+    `Difficulty: ${result.difficulty}`,
     '',
     result.description,
     '',
-    'Монстры:',
+    'Monsters:',
   ]
 
   result.monsters.forEach((m) => {

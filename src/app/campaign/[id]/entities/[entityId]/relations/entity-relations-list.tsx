@@ -5,10 +5,10 @@ import { Plus, Link2 } from 'lucide-react'
 import { deleteRelation } from '@/lib/actions/relations'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, EmptyState } from '@/components/ui'
-import { RELATION_TYPES, type EntityRelation, type RelationType } from '@/lib/types'
+import { RELATION_TYPES, type EntityRelation, type RelationType, type Entity } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 import RelationChip from './relation-chip'
 import AddRelationDialog from './add-relation-dialog'
-import type { Entity } from '@/lib/types'
 
 interface Props {
   entityId: string
@@ -27,6 +27,7 @@ export default function EntityRelationsList({
   allEntities,
   isDm,
 }: Props) {
+  const t = useT()
   const toast = useToast()
   const [, startTransition] = useTransition()
   const [showDialog, setShowDialog] = useState(false)
@@ -45,9 +46,9 @@ export default function EntityRelationsList({
     startTransition(async () => {
       const res = await deleteRelation(relationId, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Связь удалена')
+        toast.success(t('entities.relations.toast.deleted'))
       }
     })
   }
@@ -65,7 +66,7 @@ export default function EntityRelationsList({
       <div className="mb-4 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-[var(--text-primary)]">
           <Link2 size={18} className="text-[var(--text-muted)]" />
-          Связи
+          {t('entities.relations.title')}
           {relations.length > 0 && (
             <span className="text-sm font-normal text-[var(--text-subtle)]">
               ({relations.length})
@@ -79,7 +80,7 @@ export default function EntityRelationsList({
             icon={<Plus size={14} />}
             onClick={() => setShowDialog(true)}
           >
-            Добавить
+            {t('common.add')}
           </Button>
         )}
       </div>
@@ -87,8 +88,11 @@ export default function EntityRelationsList({
       {entityType === 'location' && relations.length === 0 && isDm && (
         <div className="mb-4 rounded-lg border border-[var(--success)]/30 bg-[var(--success-subtle)] p-3">
           <p className="text-sm text-[var(--success-text)]">
-            💡 <strong>Подсказка:</strong> добавь связь <strong>«Родительская локация»</strong> или{' '}
-            <strong>«Находится в»</strong>, чтобы создать иерархию.
+            💡 <strong>{t('common.hint')}:</strong> {t('entities.relations.locationHintBefore')}{' '}
+            <strong>«{t('relationType.parent_of.label')}»</strong>{' '}
+            {t('entities.relations.locationHintOr')}{' '}
+            <strong>«{t('relationType.located_in.label')}»</strong>,{' '}
+            {t('entities.relations.locationHintAfter')}
           </p>
         </div>
       )}
@@ -96,11 +100,11 @@ export default function EntityRelationsList({
       {relations.length === 0 ? (
         <EmptyState
           icon="🔗"
-          title="Связей пока нет"
+          title={t('entities.relations.empty.title')}
           description={
             isDm
-              ? 'Добавь связь с другой сущностью — например, NPC входит во фракцию или локация находится в регионе.'
-              : 'Связей пока нет.'
+              ? t('entities.relations.empty.descriptionDm')
+              : t('entities.relations.empty.descriptionPlayer')
           }
           size="sm"
           dashed={false}
@@ -113,12 +117,15 @@ export default function EntityRelationsList({
               RelationType,
             ]
             const info = RELATION_TYPES[relationType]
-            const label = direction === 'outgoing' ? info.label : info.reverseLabel
+            const labelKey =
+              direction === 'outgoing'
+                ? `relationType.${relationType}.label`
+                : `relationType.${relationType}.reverse`
 
             return (
               <div key={key}>
                 <div className="mb-2 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
-                  {info.icon} {label}
+                  {info.icon} {t(labelKey)}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {items.map((r) => (

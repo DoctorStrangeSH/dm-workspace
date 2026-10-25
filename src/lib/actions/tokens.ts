@@ -11,11 +11,9 @@ async function getSceneCampaign(sceneId: string): Promise<string | null> {
   return data?.campaign_id ?? null
 }
 
-/** Приводит значение HP из data_json монстра к числу (или null). */
 function normalizeMonsterHP(value: unknown): number | null {
   if (typeof value === 'number' && Number.isFinite(value)) return value
   if (typeof value === 'string') {
-    // "8d8+3" → берём среднее (4.5 * 8 + 3 = 39), либо первое число
     const avg = value.match(/^(\d+)d(\d+)([+-]\d+)?$/i)
     if (avg) {
       const [, n, d, mod] = avg
@@ -25,6 +23,28 @@ function normalizeMonsterHP(value: unknown): number | null {
     if (Number.isFinite(num)) return num
   }
   return null
+}
+
+/** CHANGES: проверка owner_id ИЛИ token_owners */
+async function canEditToken(tokenId: string, userId: string, isDm: boolean): Promise<boolean> {
+  if (isDm) return true
+  const supabase = await createClient()
+  const { data: token } = await supabase
+    .from('tokens')
+    .select('owner_id')
+    .eq('id', tokenId)
+    .single()
+  if (!token) return false
+  if (token.owner_id === userId) return true
+
+  const { data: owner } = await supabase
+    .from('token_owners')
+    .select('user_id')
+    .eq('token_id', tokenId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  return !!owner
 }
 
 export async function createToken(
@@ -42,7 +62,7 @@ export async function createToken(
     color?: string
     owner_id?: string
   }
-) {
+): Promise<{ error: string } | { success: true; tokenId: string }> {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -55,19 +75,13 @@ export async function createToken(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  // ─── Проверка прав ─────────────────────────────────────────
-  // DM может создавать любые токены.
-  // Игрок — только токен СВОЕГО персонажа (character_id принадлежит ему).
   if (!isDm) {
-    if (!data.characterId) {
-      return { error: 'Игрок может добавить только своего персонажа' }
-    }
+    if (!data.characterId) return { error: 'Игрок может добавить только своего персонажа' }
     const { data: char } = await supabase
       .from('characters')
       .select('user_id, campaign_id')
       .eq('id', data.characterId)
       .single()
-
     if (!char || char.user_id !== user.id || char.campaign_id !== campaignId) {
       return { error: 'Нельзя добавить чужого персонажа' }
     }
@@ -76,11 +90,8 @@ export async function createToken(
   const name = data.name.trim()
   if (!name) return { error: 'Введите имя' }
 
-  // ─── Нормализация HP ───────────────────────────────────────
   let hpCurrent = data.hp_current ?? null
   let hpMax = data.hp_max ?? null
-
-  // Для монстров hp может прийти строкой-формулой ("8d8+3")
   if (typeof hpCurrent === 'string') hpCurrent = normalizeMonsterHP(hpCurrent)
   if (typeof hpMax === 'string') hpMax = normalizeMonsterHP(hpMax)
   if (hpCurrent !== null && typeof hpCurrent !== 'number') hpCurrent = null
@@ -111,6 +122,12 @@ export async function createToken(
     return { error: `Не удалось создать: ${error.message}` }
   }
 
+  // CHANGES: проверка, что token не null (Supabase .single() → data: T | null).
+  // Иначе TS выводит tokenId: string | undefined.
+  if (!token) {
+    return { error: 'Не удалось создать токен' }
+  }
+
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true, tokenId: token.id }
 }
@@ -125,18 +142,9 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  // Проверяем, что пользователь — DM или владелец токена
   const { isDm } = await getCampaignAccess(campaignId)
-  if (!isDm) {
-    const { data: token } = await supabase
-      .from('tokens')
-      .select('owner_id')
-      .eq('id', tokenId)
-      .single()
-    if (!token || token.owner_id !== user.id) {
-      return { error: 'Нет прав на перемещение' }
-    }
-  }
+  const canEdit = await canEditToken(tokenId, user.id, isDm)
+  if (!canEdit) return { error: 'Нет прав на перемещение' }
 
   const { error } = await supabase
     .from('tokens')
@@ -159,16 +167,8 @@ export async function updateTokenHP(tokenId: string, sceneId: string, hp_current
   if (!user) return { error: 'Не авторизован' }
 
   const { isDm } = await getCampaignAccess(campaignId)
-  if (!isDm) {
-    const { data: token } = await supabase
-      .from('tokens')
-      .select('owner_id')
-      .eq('id', tokenId)
-      .single()
-    if (!token || token.owner_id !== user.id) {
-      return { error: 'Нет прав на изменение HP' }
-    }
-  }
+  const canEdit = await canEditToken(tokenId, user.id, isDm)
+  if (!canEdit) return { error: 'Нет прав на изменение HP' }
 
   const { error } = await supabase
     .from('tokens')
@@ -177,7 +177,6 @@ export async function updateTokenHP(tokenId: string, sceneId: string, hp_current
     .eq('scene_id', sceneId)
 
   if (error) return { error: `Не удалось обновить HP: ${error.message}` }
-
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
 }
@@ -197,16 +196,8 @@ export async function updateTokenConditions(
   if (!user) return { error: 'Не авторизован' }
 
   const { isDm } = await getCampaignAccess(campaignId)
-  if (!isDm) {
-    const { data: token } = await supabase
-      .from('tokens')
-      .select('owner_id')
-      .eq('id', tokenId)
-      .single()
-    if (!token || token.owner_id !== user.id) {
-      return { error: 'Нет прав' }
-    }
-  }
+  const canEdit = await canEditToken(tokenId, user.id, isDm)
+  if (!canEdit) return { error: 'Нет прав' }
 
   const { error } = await supabase
     .from('tokens')
@@ -222,7 +213,6 @@ export async function updateTokenConditions(
 export async function toggleTokenVisibility(tokenId: string, sceneId: string) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
-
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -232,7 +222,6 @@ export async function toggleTokenVisibility(tokenId: string, sceneId: string) {
     .select('is_hidden')
     .eq('id', tokenId)
     .single()
-
   if (!token) return { error: 'Токен не найден' }
 
   const { error } = await supabase
@@ -248,13 +237,11 @@ export async function toggleTokenVisibility(tokenId: string, sceneId: string) {
 export async function deleteToken(tokenId: string, sceneId: string) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
-
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
   const { error } = await supabase.from('tokens').delete().eq('id', tokenId).eq('scene_id', sceneId)
-
   if (error) return { error: 'Не удалось удалить' }
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }

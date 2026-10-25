@@ -1,15 +1,15 @@
 /**
- * Генератор магазинов по правилам DMG (D&D 5e).
- * Размер города определяет ассортимент и доступность магических предметов.
+ * Shop generator (DMG, D&D 5e).
+ * Settlement size → assortment and magic item availability.
  */
 
 export type ShopSize = 'village' | 'town' | 'city' | 'capital'
-
 export type ShopType = 'blacksmith' | 'general' | 'alchemist' | 'magic' | 'temple' | 'tavern'
+export type Lang = 'ru' | 'en'
 
 export interface ShopItem {
   name: string
-  price: number // в gp
+  price: number
   quantity: number
   category: string
 }
@@ -22,7 +22,6 @@ export interface ShopResult {
   description: string
 }
 
-// ─── Утилиты ───
 function roll(dice: number, sides: number): number {
   let total = 0
   for (let i = 0; i < dice; i++) total += Math.floor(Math.random() * sides) + 1
@@ -39,149 +38,331 @@ function pickMany<T>(arr: T[], count: number): T[] {
   return result
 }
 
-// ─── Базовые товары (общие) ───
-const GENERAL_ITEMS = [
-  { name: 'Факел', price: 0.01, category: 'Снаряжение' },
-  { name: 'Свеча', price: 0.01, category: 'Снаряжение' },
-  { name: 'Верёвка (50 футов)', price: 1, category: 'Снаряжение' },
-  { name: 'Кремень и огниво', price: 0.5, category: 'Снаряжение' },
-  { name: 'Мешок', price: 0.5, category: 'Снаряжение' },
-  { name: 'Фляга', price: 0.05, category: 'Снаряжение' },
-  { name: 'Походная еда (1 день)', price: 0.5, category: 'Снаряжение' },
-  { name: 'Одеяло', price: 0.5, category: 'Снаряжение' },
-  { name: 'Бумага (1 лист)', price: 0.2, category: 'Снаряжение' },
-  { name: 'Чернила (1 унция)', price: 10, category: 'Снаряжение' },
+function L(lang: Lang, ru: string, en: string): string {
+  return lang === 'ru' ? ru : en
+}
+
+type ItemDef = { nameRu: string; nameEn: string; price: number; catRu: string; catEn: string }
+
+const GENERAL_ITEMS: ItemDef[] = [
+  { nameRu: 'Факел', nameEn: 'Torch', price: 0.01, catRu: 'Снаряжение', catEn: 'Equipment' },
+  { nameRu: 'Свеча', nameEn: 'Candle', price: 0.01, catRu: 'Снаряжение', catEn: 'Equipment' },
+  {
+    nameRu: 'Верёвка (50 футов)',
+    nameEn: 'Rope (50 ft)',
+    price: 1,
+    catRu: 'Снаряжение',
+    catEn: 'Equipment',
+  },
+  {
+    nameRu: 'Кремень и огниво',
+    nameEn: 'Flint and steel',
+    price: 0.5,
+    catRu: 'Снаряжение',
+    catEn: 'Equipment',
+  },
+  { nameRu: 'Мешок', nameEn: 'Sack', price: 0.5, catRu: 'Снаряжение', catEn: 'Equipment' },
+  { nameRu: 'Фляга', nameEn: 'Waterskin', price: 0.05, catRu: 'Снаряжение', catEn: 'Equipment' },
+  {
+    nameRu: 'Походная еда (1 день)',
+    nameEn: 'Rations (1 day)',
+    price: 0.5,
+    catRu: 'Снаряжение',
+    catEn: 'Equipment',
+  },
+  { nameRu: 'Одеяло', nameEn: 'Blanket', price: 0.5, catRu: 'Снаряжение', catEn: 'Equipment' },
+  {
+    nameRu: 'Бумага (1 лист)',
+    nameEn: 'Paper (sheet)',
+    price: 0.2,
+    catRu: 'Снаряжение',
+    catEn: 'Equipment',
+  },
+  {
+    nameRu: 'Чернила (1 унция)',
+    nameEn: 'Ink (1 oz)',
+    price: 10,
+    catRu: 'Снаряжение',
+    catEn: 'Equipment',
+  },
 ]
 
-const WEAPONS = [
-  { name: 'Кинжал', price: 2, category: 'Оружие' },
-  { name: 'Короткий меч', price: 10, category: 'Оружие' },
-  { name: 'Длинный меч', price: 15, category: 'Оружие' },
-  { name: 'Боевой топор', price: 10, category: 'Оружие' },
-  { name: 'Копьё', price: 1, category: 'Оружие' },
-  { name: 'Лук короткий', price: 25, category: 'Оружие' },
-  { name: 'Лук длинный', price: 50, category: 'Оружие' },
-  { name: 'Арбалет лёгкий', price: 25, category: 'Оружие' },
-  { name: 'Дубина', price: 0.1, category: 'Оружие' },
-  { name: 'Посох', price: 0.2, category: 'Оружие' },
+const WEAPONS: ItemDef[] = [
+  { nameRu: 'Кинжал', nameEn: 'Dagger', price: 2, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Короткий меч', nameEn: 'Shortsword', price: 10, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Длинный меч', nameEn: 'Longsword', price: 15, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Боевой топор', nameEn: 'Battleaxe', price: 10, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Копьё', nameEn: 'Spear', price: 1, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Лук короткий', nameEn: 'Shortbow', price: 25, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Лук длинный', nameEn: 'Longbow', price: 50, catRu: 'Оружие', catEn: 'Weapon' },
+  {
+    nameRu: 'Арбалет лёгкий',
+    nameEn: 'Light crossbow',
+    price: 25,
+    catRu: 'Оружие',
+    catEn: 'Weapon',
+  },
+  { nameRu: 'Дубина', nameEn: 'Club', price: 0.1, catRu: 'Оружие', catEn: 'Weapon' },
+  { nameRu: 'Посох', nameEn: 'Quarterstaff', price: 0.2, catRu: 'Оружие', catEn: 'Weapon' },
 ]
 
-const ARMOR = [
-  { name: 'Кожаный доспех', price: 10, category: 'Броня' },
-  { name: 'Кольчужная рубаха', price: 50, category: 'Броня' },
-  { name: 'Чешуйчатый доспех', price: 50, category: 'Броня' },
-  { name: 'Кираса', price: 400, category: 'Броня' },
-  { name: 'Полупластинчатый доспех', price: 750, category: 'Броня' },
-  { name: 'Щит', price: 10, category: 'Броня' },
+const ARMOR: ItemDef[] = [
+  { nameRu: 'Кожаный доспех', nameEn: 'Leather armor', price: 10, catRu: 'Броня', catEn: 'Armor' },
+  { nameRu: 'Кольчужная рубаха', nameEn: 'Chain shirt', price: 50, catRu: 'Броня', catEn: 'Armor' },
+  { nameRu: 'Чешуйчатый доспех', nameEn: 'Scale mail', price: 50, catRu: 'Броня', catEn: 'Armor' },
+  { nameRu: 'Кираса', nameEn: 'Breastplate', price: 400, catRu: 'Броня', catEn: 'Armor' },
+  {
+    nameRu: 'Полупластинчатый доспех',
+    nameEn: 'Half plate',
+    price: 750,
+    catRu: 'Броня',
+    catEn: 'Armor',
+  },
+  { nameRu: 'Щит', nameEn: 'Shield', price: 10, catRu: 'Броня', catEn: 'Armor' },
 ]
 
-const POTIONS = [
-  { name: 'Зелье лечения', price: 50, category: 'Зелья' },
-  { name: 'Зелье большого лечения', price: 150, category: 'Зелья' },
-  { name: 'Зелье превосходного лечения', price: 500, category: 'Зелья' },
-  { name: 'Противоядие', price: 50, category: 'Зелья' },
-  { name: 'Зелье альпинизма', price: 50, category: 'Зелья' },
-  { name: 'Зелье дружбы с животными', price: 50, category: 'Зелья' },
+const POTIONS: ItemDef[] = [
+  {
+    nameRu: 'Зелье лечения',
+    nameEn: 'Potion of Healing',
+    price: 50,
+    catRu: 'Зелья',
+    catEn: 'Potions',
+  },
+  {
+    nameRu: 'Зелье большого лечения',
+    nameEn: 'Potion of Greater Healing',
+    price: 150,
+    catRu: 'Зелья',
+    catEn: 'Potions',
+  },
+  {
+    nameRu: 'Зелье превосходного лечения',
+    nameEn: 'Potion of Superior Healing',
+    price: 500,
+    catRu: 'Зелья',
+    catEn: 'Potions',
+  },
+  { nameRu: 'Противоядие', nameEn: 'Antitoxin', price: 50, catRu: 'Зелья', catEn: 'Potions' },
+  {
+    nameRu: 'Зелье альпинизма',
+    nameEn: 'Potion of Climbing',
+    price: 50,
+    catRu: 'Зелья',
+    catEn: 'Potions',
+  },
+  {
+    nameRu: 'Зелье дружбы с животными',
+    nameEn: 'Potion of Animal Friendship',
+    price: 50,
+    catRu: 'Зелья',
+    catEn: 'Potions',
+  },
 ]
 
-const MAGIC_COMMON = [
-  { name: 'Зелье лечения', price: 50, category: 'Магия' },
-  { name: 'Свиток (заговор)', price: 25, category: 'Магия' },
-  { name: 'Кольцо защиты', price: 100, category: 'Магия' },
-  { name: 'Плащ защиты', price: 100, category: 'Магия' },
+const MAGIC_COMMON: ItemDef[] = [
+  {
+    nameRu: 'Зелье лечения',
+    nameEn: 'Potion of Healing',
+    price: 50,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Свиток (заговор)',
+    nameEn: 'Scroll (cantrip)',
+    price: 25,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Кольцо защиты',
+    nameEn: 'Ring of Protection',
+    price: 100,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Плащ защиты',
+    nameEn: 'Cloak of Protection',
+    price: 100,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
 ]
 
-const MAGIC_UNCOMMON = [
-  { name: 'Меч +1', price: 500, category: 'Магия' },
-  { name: 'Щит +1', price: 500, category: 'Магия' },
-  { name: 'Плащ эльфов', price: 500, category: 'Магия' },
-  { name: 'Сапоги эльфов', price: 500, category: 'Магия' },
-  { name: 'Кольцо невидимости', price: 500, category: 'Магия' },
-  { name: 'Свиток (1–3 уровень)', price: 100, category: 'Магия' },
+const MAGIC_UNCOMMON: ItemDef[] = [
+  { nameRu: 'Меч +1', nameEn: 'Sword +1', price: 500, catRu: 'Магия', catEn: 'Magic' },
+  { nameRu: 'Щит +1', nameEn: 'Shield +1', price: 500, catRu: 'Магия', catEn: 'Magic' },
+  {
+    nameRu: 'Плащ эльфов',
+    nameEn: 'Cloak of Elvenkind',
+    price: 500,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Сапоги эльфов',
+    nameEn: 'Boots of Elvenkind',
+    price: 500,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Кольцо невидимости',
+    nameEn: 'Ring of Invisibility',
+    price: 500,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Свиток (1–3 уровень)',
+    nameEn: 'Scroll (levels 1–3)',
+    price: 100,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
 ]
 
-const MAGIC_RARE = [
-  { name: 'Меч +2', price: 5000, category: 'Магия' },
-  { name: 'Кираса +1', price: 5000, category: 'Магия' },
-  { name: 'Плащ смещения', price: 5000, category: 'Магия' },
-  { name: 'Кольцо свободного действия', price: 5000, category: 'Магия' },
-  { name: 'Свиток (4–6 уровень)', price: 1000, category: 'Магия' },
+const MAGIC_RARE: ItemDef[] = [
+  { nameRu: 'Меч +2', nameEn: 'Sword +2', price: 5000, catRu: 'Магия', catEn: 'Magic' },
+  { nameRu: 'Кираса +1', nameEn: 'Breastplate +1', price: 5000, catRu: 'Магия', catEn: 'Magic' },
+  {
+    nameRu: 'Плащ смещения',
+    nameEn: 'Cloak of Displacement',
+    price: 5000,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Кольцо свободного действия',
+    nameEn: 'Ring of Free Action',
+    price: 5000,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
+  {
+    nameRu: 'Свиток (4–6 уровень)',
+    nameEn: 'Scroll (levels 4–6)',
+    price: 1000,
+    catRu: 'Магия',
+    catEn: 'Magic',
+  },
 ]
 
-// ─── Размеры городов ───
 const SIZE_CONFIG: Record<
   ShopSize,
-  { label: string; general: number; weapons: number; armor: number; potions: number; magic: number }
+  {
+    ru: string
+    en: string
+    general: number
+    weapons: number
+    armor: number
+    potions: number
+    magic: number
+  }
 > = {
-  village: { label: 'Деревня', general: 3, weapons: 1, armor: 1, potions: 1, magic: 0 },
-  town: { label: 'Городок', general: 5, weapons: 2, armor: 2, potions: 2, magic: 1 },
-  city: { label: 'Город', general: 8, weapons: 4, armor: 3, potions: 3, magic: 2 },
-  capital: { label: 'Столица', general: 12, weapons: 6, armor: 5, potions: 5, magic: 4 },
+  village: { ru: 'Деревня', en: 'Village', general: 3, weapons: 1, armor: 1, potions: 1, magic: 0 },
+  town: { ru: 'Городок', en: 'Town', general: 5, weapons: 2, armor: 2, potions: 2, magic: 1 },
+  city: { ru: 'Город', en: 'City', general: 8, weapons: 4, armor: 3, potions: 3, magic: 2 },
+  capital: {
+    ru: 'Столица',
+    en: 'Capital',
+    general: 12,
+    weapons: 6,
+    armor: 5,
+    potions: 5,
+    magic: 4,
+  },
 }
 
-// ─── Типы магазинов ───
-const SHOP_TYPES: Record<ShopType, { label: string; description: string }> = {
-  blacksmith: { label: 'Кузнец', description: 'Оружие, броня, щиты' },
-  general: { label: 'Общая лавка', description: 'Снаряжение, припасы' },
-  alchemist: { label: 'Алхимик', description: 'Зелья, противоядия' },
-  magic: { label: 'Магическая лавка', description: 'Магические предметы' },
-  temple: { label: 'Храм', description: 'Зелья лечения, свитки' },
-  tavern: { label: 'Таверна', description: 'Еда, напитки' },
+const SHOP_TYPES: Record<
+  ShopType,
+  { labelRu: string; labelEn: string; descRu: string; descEn: string }
+> = {
+  blacksmith: {
+    labelRu: 'Кузнец',
+    labelEn: 'Blacksmith',
+    descRu: 'Оружие, броня, щиты',
+    descEn: 'Weapons, armor, shields',
+  },
+  general: {
+    labelRu: 'Общая лавка',
+    labelEn: 'General store',
+    descRu: 'Снаряжение, припасы',
+    descEn: 'Equipment, supplies',
+  },
+  alchemist: {
+    labelRu: 'Алхимик',
+    labelEn: 'Alchemist',
+    descRu: 'Зелья, противоядия',
+    descEn: 'Potions, antitoxins',
+  },
+  magic: {
+    labelRu: 'Магическая лавка',
+    labelEn: 'Magic shop',
+    descRu: 'Магические предметы',
+    descEn: 'Magic items',
+  },
+  temple: {
+    labelRu: 'Храм',
+    labelEn: 'Temple',
+    descRu: 'Зелья лечения, свитки',
+    descEn: 'Healing potions, scrolls',
+  },
+  tavern: { labelRu: 'Таверна', labelEn: 'Tavern', descRu: 'Еда, напитки', descEn: 'Food, drinks' },
 }
 
-// ─── Публичная функция ───
-export function generateShop(size: ShopSize, type: ShopType): ShopResult {
+function toItem(lang: Lang, def: ItemDef, quantity: number): ShopItem {
+  return {
+    name: L(lang, def.nameRu, def.nameEn),
+    price: def.price,
+    quantity,
+    category: L(lang, def.catRu, def.catEn),
+  }
+}
+
+export function generateShop(size: ShopSize, type: ShopType, lang: Lang = 'ru'): ShopResult {
   const config = SIZE_CONFIG[size]
   const items: ShopItem[] = []
 
-  // 1. Общие товары
-  const generalItems = pickMany(GENERAL_ITEMS, config.general)
-  generalItems.forEach((item) => {
-    items.push({ ...item, quantity: roll(1, 10) })
+  pickMany(GENERAL_ITEMS, config.general).forEach((item) => {
+    items.push(toItem(lang, item, roll(1, 10)))
   })
 
-  // 2. Оружие
   if (type === 'blacksmith' || type === 'general') {
-    const weaponItems = pickMany(WEAPONS, config.weapons)
-    weaponItems.forEach((item) => {
-      items.push({ ...item, quantity: roll(1, 5) })
+    pickMany(WEAPONS, config.weapons).forEach((item) => {
+      items.push(toItem(lang, item, roll(1, 5)))
     })
   }
 
-  // 3. Броня
   if (type === 'blacksmith') {
-    const armorItems = pickMany(ARMOR, config.armor)
-    armorItems.forEach((item) => {
-      items.push({ ...item, quantity: roll(1, 3) })
+    pickMany(ARMOR, config.armor).forEach((item) => {
+      items.push(toItem(lang, item, roll(1, 3)))
     })
   }
 
-  // 4. Зелья
   if (type === 'alchemist' || type === 'temple' || type === 'general') {
-    const potionItems = pickMany(POTIONS, config.potions)
-    potionItems.forEach((item) => {
-      items.push({ ...item, quantity: roll(1, 5) })
+    pickMany(POTIONS, config.potions).forEach((item) => {
+      items.push(toItem(lang, item, roll(1, 5)))
     })
   }
 
-  // 5. Магические предметы
   if (type === 'magic' || size === 'city' || size === 'capital') {
     const magicCount = config.magic
     if (magicCount > 0) {
-      // Common
-      const common = pickMany(MAGIC_COMMON, Math.ceil(magicCount / 3))
-      common.forEach((item) => items.push({ ...item, quantity: 1 }))
-
-      // Uncommon (только для city+)
+      pickMany(MAGIC_COMMON, Math.ceil(magicCount / 3)).forEach((item) => {
+        items.push(toItem(lang, item, 1))
+      })
       if (size === 'city' || size === 'capital') {
-        const uncommon = pickMany(MAGIC_UNCOMMON, Math.floor(magicCount / 2))
-        uncommon.forEach((item) => items.push({ ...item, quantity: 1 }))
+        pickMany(MAGIC_UNCOMMON, Math.floor(magicCount / 2)).forEach((item) => {
+          items.push(toItem(lang, item, 1))
+        })
       }
-
-      // Rare (только для capital)
       if (size === 'capital') {
-        const rare = pickMany(MAGIC_RARE, Math.floor(magicCount / 3))
-        rare.forEach((item) => items.push({ ...item, quantity: 1 }))
+        pickMany(MAGIC_RARE, Math.floor(magicCount / 3)).forEach((item) => {
+          items.push(toItem(lang, item, 1))
+        })
       }
     }
   }
@@ -194,6 +375,6 @@ export function generateShop(size: ShopSize, type: ShopType): ShopResult {
     type,
     items,
     totalValueGp: Math.round(totalValueGp),
-    description: `${shopInfo.label} (${config.label}): ${shopInfo.description}`,
+    description: `${L(lang, shopInfo.labelRu, shopInfo.labelEn)} (${L(lang, config.ru, config.en)}): ${L(lang, shopInfo.descRu, shopInfo.descEn)}`,
   }
 }

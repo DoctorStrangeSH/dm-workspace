@@ -1,34 +1,44 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { FieldOption } from '@/lib/entity-schemas'
+
+interface SelectOption {
+  value: string
+  label: string
+}
 
 interface Props {
   value: string | undefined
   onChange: (v: string | undefined) => void
-  options: FieldOption[]
+  options: SelectOption[]
   disabled?: boolean
   label?: string
   placeholder?: string
   hint?: string
 }
 
+/**
+ * CHANGES (К9):
+ * - Убран импорт FieldOption из entity-schemas (тип изменился: {value, labelKey}).
+ * - Свой локальный SelectOption {value, label} — SelectField получает УЖЕ переведённые label.
+ * - slate/indigo → семантические токены.
+ */
 export default function SelectField({
   value,
   onChange,
   options,
   disabled,
   label,
-  placeholder = '— Не выбрано —',
+  placeholder,
   hint,
 }: Props) {
   return (
     <div>
       {label && (
-        <label className="mb-1 block text-xs text-slate-400">
+        <label className="mb-1 block text-xs text-[var(--text-muted)]">
           {label}
           {hint && (
-            <span className="ml-1 text-slate-600" title={hint}>
+            <span className="ml-1 text-[var(--text-subtle)]" title={hint}>
               ⓘ
             </span>
           )}
@@ -39,11 +49,11 @@ export default function SelectField({
         onChange={(e) => onChange(e.target.value || undefined)}
         disabled={disabled}
         className={cn(
-          'w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white transition focus:border-indigo-500 focus:outline-none',
+          'w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] px-3 py-2 text-sm text-[var(--text-primary)] transition focus:border-[var(--border-focus)] focus:outline-none',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       >
-        <option value="">{placeholder}</option>
+        <option value="">{placeholder ?? '—'}</option>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}

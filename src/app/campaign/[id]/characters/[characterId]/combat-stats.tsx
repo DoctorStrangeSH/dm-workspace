@@ -3,6 +3,7 @@
 import { Shield, Zap, Footprints, Eye, Dices } from 'lucide-react'
 import { formatModifier } from '@/lib/dnd/formulas'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import { Card, IconButton } from '@/components/ui'
 
 interface Props {
@@ -20,6 +21,8 @@ export default function CombatStats({
   passivePerception,
   onRollInitiative,
 }: Props) {
+  const t = useT()
+
   const stats = [
     {
       icon: Shield,
@@ -29,20 +32,20 @@ export default function CombatStats({
     },
     {
       icon: Zap,
-      label: 'Инициатива',
+      label: t('characters.initiative'),
       value: formatModifier(initiative),
       color: 'text-[var(--warning-text)]',
       onRoll: onRollInitiative,
     },
     {
       icon: Footprints,
-      label: 'Скорость',
-      value: `${speed} ft`,
+      label: t('characters.speed'),
+      value: t('characters.speedFt', { speed }),
       color: 'text-[var(--success-text)]',
     },
     {
       icon: Eye,
-      label: 'Пасс. внимат.',
+      label: t('characters.passivePerception'),
       value: passivePerception,
       color: 'text-[var(--accent-text)]',
     },
@@ -61,7 +64,7 @@ export default function CombatStats({
               <IconButton
                 variant="ghost"
                 size="sm"
-                label="Бросок инициативы"
+                label={t('characters.rollInitiative')}
                 onClick={stat.onRoll}
                 className="absolute top-1.5 right-1.5 opacity-0 transition group-hover:opacity-100"
               >

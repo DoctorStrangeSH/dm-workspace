@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Coins } from 'lucide-react'
 import { updateCurrency } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import { CURRENCY_SHORT, type Currency } from '@/lib/types'
+import { useI18n } from '@/lib/i18n'
+import { currencyShort } from '@/lib/i18n/labels'
 import { cn } from '@/lib/utils'
+import type { Currency } from '@/lib/types'
 
 interface Props {
   characterId: string
@@ -16,18 +18,18 @@ interface Props {
 }
 
 const COLORS: Record<keyof Currency, string> = {
-  pp: 'text-slate-300',
-  gp: 'text-amber-300',
-  sp: 'text-slate-400',
-  cp: 'text-orange-400',
+  pp: 'text-[var(--text-secondary)]',
+  gp: 'text-[var(--warning-text)]',
+  sp: 'text-[var(--text-muted)]',
+  cp: 'text-[var(--danger-text)]',
 }
 
 const COIN_KEYS: (keyof Currency)[] = ['pp', 'gp', 'sp', 'cp']
 
 export default function CurrencyTracker({ characterId, campaignId, currency, canEdit }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
-  // CHANGES: исправлено — было `const [Boolean] = useTransition()` (ошибка TS2349)
   const [, startTransition] = useTransition()
   const [editing, setEditing] = useState<keyof Currency | null>(null)
   const [tempValue, setTempValue] = useState('')
@@ -35,7 +37,7 @@ export default function CurrencyTracker({ characterId, campaignId, currency, can
   const handleSave = (key: keyof Currency) => {
     const value = parseInt(tempValue, 10)
     if (isNaN(value) || value < 0) {
-      toast.error('Введите положительное число')
+      toast.error(t('inventory.currency.invalidValue'))
       return
     }
 
@@ -45,9 +47,9 @@ export default function CurrencyTracker({ characterId, campaignId, currency, can
         [key]: value,
       })
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Деньги обновлены')
+        toast.success(t('inventory.currency.updated'))
         setEditing(null)
         setTempValue('')
         router.refresh()
@@ -56,10 +58,12 @@ export default function CurrencyTracker({ characterId, campaignId, currency, can
   }
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900 p-4">
+    <div className="mb-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
       <div className="mb-3 flex items-center gap-2">
-        <Coins size={16} className="text-amber-400" />
-        <h3 className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Деньги</h3>
+        <Coins size={16} className="text-[var(--warning)]" />
+        <h3 className="text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
+          {t('inventory.currency.title')}
+        </h3>
       </div>
 
       <div className="grid grid-cols-4 gap-2">
@@ -70,9 +74,11 @@ export default function CurrencyTracker({ characterId, campaignId, currency, can
           return (
             <div
               key={key}
-              className="rounded-lg border border-slate-800 bg-slate-950 p-2 text-center"
+              className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-2 text-center"
             >
-              <div className="mb-1 text-[10px] text-slate-500 uppercase">{CURRENCY_SHORT[key]}</div>
+              <div className="mb-1 text-[10px] text-[var(--text-subtle)] uppercase">
+                {currencyShort(lang, key)}
+              </div>
 
               {isEditing ? (
                 <input
@@ -88,7 +94,7 @@ export default function CurrencyTracker({ characterId, campaignId, currency, can
                   }}
                   autoFocus
                   min={0}
-                  className="w-full rounded border border-indigo-700 bg-slate-900 py-0.5 text-center text-sm focus:outline-none"
+                  className="w-full rounded border border-[var(--border-focus)] bg-[var(--bg-surface)] py-0.5 text-center text-sm focus:outline-none"
                 />
               ) : (
                 <button
@@ -101,7 +107,7 @@ export default function CurrencyTracker({ characterId, campaignId, currency, can
                   className={cn(
                     'text-lg font-bold',
                     COLORS[key],
-                    canEdit && 'transition hover:text-white'
+                    canEdit && 'transition hover:text-[var(--text-primary)]'
                   )}
                 >
                   {value}

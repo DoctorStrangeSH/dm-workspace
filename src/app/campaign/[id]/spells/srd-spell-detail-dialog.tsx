@@ -7,6 +7,8 @@ import { addSrdSpellToCharacter } from '@/lib/actions/add-spell-to-character'
 import { parseSpellForDisplay } from '@/lib/srd/parse-spell'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog, Select } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { srdName } from '@/lib/types'
 import type { SrdSpell } from '@/lib/actions/spells-search'
 
 interface Props {
@@ -17,25 +19,34 @@ interface Props {
 }
 
 export default function SrdSpellDetailDialog({ spell, campaignId, characters, onClose }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [selectedChar, setSelectedChar] = useState<string | null>(characters[0]?.id ?? null)
 
   const parsed = parseSpellForDisplay(spell.data)
+  const schoolKey = parsed.school.toLowerCase()
+
+  const levelLabel =
+    parsed.level === 0 ? t('spells.cantrip') : t('spells.levelFull', { level: parsed.level })
+
+  const descriptionParts = [levelLabel, t(`school.${schoolKey}`)]
+  if (parsed.ritual) descriptionParts.push(t('spells.ritual'))
+  if (parsed.concentration) descriptionParts.push(t('spells.concentration'))
 
   const handleAdd = () => {
     if (!selectedChar) {
-      toast.error('Выбери персонажа')
+      toast.error(t('spells.selectCharacter'))
       return
     }
 
     startTransition(async () => {
       const res = await addSrdSpellToCharacter(spell.key, selectedChar, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Заклинание добавлено')
+        toast.success(t('spells.toast.addedToCharacter'))
         router.refresh()
         onClose()
       }
@@ -46,8 +57,8 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
     <Dialog
       open={true}
       onClose={onClose}
-      title={spell.name_ru ?? spell.name ?? parsed.name}
-      description={`${parsed.level === 0 ? 'Заговор' : `${parsed.level} уровень`}${parsed.school && `, ${parsed.school.toLowerCase()}`}${parsed.ritual && ' (ритуал)'}${parsed.concentration && ' (концентрация)'}`}
+      title={srdName(spell, lang)}
+      description={descriptionParts.join(', ')}
       size="lg"
       footer={
         characters.length > 0 ? (
@@ -65,7 +76,7 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
               onClick={handleAdd}
               loading={isPending}
             >
-              Добавить
+              {t('common.add')}
             </Button>
           </div>
         ) : undefined
@@ -74,31 +85,31 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
       <div className="space-y-3 text-sm">
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-[var(--bg-app)] p-3">
           <div>
-            <span className="text-[var(--text-muted)]">Время:</span>{' '}
+            <span className="text-[var(--text-muted)]">{t('spells.castingTime')}:</span>{' '}
             <span className="text-[var(--text-secondary)]">{parsed.castingTime || '—'}</span>
           </div>
           <div>
-            <span className="text-[var(--text-muted)]">Дистанция:</span>{' '}
+            <span className="text-[var(--text-muted)]">{t('spells.range')}:</span>{' '}
             <span className="text-[var(--text-secondary)]">{parsed.range || '—'}</span>
           </div>
           <div>
-            <span className="text-[var(--text-muted)]">Компоненты:</span>{' '}
+            <span className="text-[var(--text-muted)]">{t('spells.components')}:</span>{' '}
             <span className="text-[var(--text-secondary)]">{parsed.components || '—'}</span>
           </div>
           <div>
-            <span className="text-[var(--text-muted)]">Длительность:</span>{' '}
+            <span className="text-[var(--text-muted)]">{t('spells.duration')}:</span>{' '}
             <span className="text-[var(--text-secondary)]">{parsed.duration || '—'}</span>
           </div>
         </div>
 
         <div className="whitespace-pre-wrap text-[var(--text-secondary)]">
-          {parsed.description || 'Описание отсутствует'}
+          {parsed.description || t('spells.noDescription')}
         </div>
 
         {parsed.higherLevel && (
           <div>
             <h3 className="mb-1 font-semibold text-[var(--accent-text)]">
-              На более высоких уровнях
+              {t('spells.higherLevel')}
             </h3>
             <div className="whitespace-pre-wrap text-[var(--text-secondary)]">
               {parsed.higherLevel}
@@ -108,7 +119,9 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
 
         {parsed.classes.length > 0 && (
           <div>
-            <h3 className="mb-1 font-semibold text-[var(--text-secondary)]">Классы</h3>
+            <h3 className="mb-1 font-semibold text-[var(--text-secondary)]">
+              {t('spells.classes')}
+            </h3>
             <div className="text-[var(--text-muted)]">{parsed.classes.join(', ')}</div>
           </div>
         )}

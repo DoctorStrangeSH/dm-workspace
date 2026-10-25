@@ -6,9 +6,14 @@ import { getCampaignAccess } from '@/lib/queries/access'
 import { getScenes } from '@/lib/queries/scenes'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import ScenesClient from './scenes-client'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
 export default async function ScenesPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { id: campaignId } = await params
   const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
@@ -22,9 +27,9 @@ export default async function ScenesPage({ params }: { params: Promise<{ id: str
     <div className="max-w-6xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaign.name, href: `/campaign/${campaignId}` },
-          { label: 'Сцены' },
+          { label: t('nav.scenes') },
         ]}
         className="mb-4"
       />

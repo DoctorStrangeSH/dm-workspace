@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 export default function Error({
   error,
@@ -12,6 +13,8 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const t = useT()
+
   useEffect(() => {
     console.error('[Error Boundary]', error)
   }, [error])
@@ -23,15 +26,13 @@ export default function Error({
           <AlertTriangle size={32} className="text-[var(--danger)]" />
         </div>
 
-        <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">Что-то пошло не так</h1>
-        <p className="mb-6 text-sm text-[var(--text-muted)]">
-          Произошла непредвиденная ошибка. Попробуй обновить страницу или вернуться на главную.
-        </p>
+        <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">{t('error.title')}</h1>
+        <p className="mb-6 text-sm text-[var(--text-muted)]">{t('error.description')}</p>
 
         {process.env.NODE_ENV === 'development' && (
           <details className="mb-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-3 text-left">
             <summary className="cursor-pointer text-xs font-medium text-[var(--text-muted)]">
-              Детали ошибки (только в dev)
+              {t('error.devDetails')}
             </summary>
             <pre className="mt-2 overflow-x-auto text-[10px] whitespace-pre-wrap text-[var(--danger-text)]">
               {error.message}
@@ -42,11 +43,11 @@ export default function Error({
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button variant="primary" size="md" icon={<RefreshCw size={16} />} onClick={reset}>
-            Попробовать снова
+            {t('error.retry')}
           </Button>
           <Link href="/dashboard">
             <Button variant="secondary" size="md" icon={<Home size={16} />} className="w-full">
-              На главную
+              {t('error.goHome')}
             </Button>
           </Link>
         </div>

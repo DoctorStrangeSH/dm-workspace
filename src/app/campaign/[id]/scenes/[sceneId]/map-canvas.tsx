@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import Image from 'next/image'
+import { useT } from '@/lib/i18n'
 import type { Scene } from '@/lib/types'
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function MapCanvas({ scene, showGrid = true }: Props) {
+  const t = useT()
   const { image_url, width, height, grid_size, grid_type } = scene
 
   const canvasWidth = width * grid_size
@@ -38,7 +40,10 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
         width: canvasWidth,
         height: canvasHeight,
         maxWidth: '100%',
-        maxHeight: 'calc(100vh - 200px)',
+        // CHANGES (задача 6): на мобилке — 60vh (не calc(100vh-200px)),
+        // touch-action — разрешаем pinch-zoom и pan.
+        maxHeight: 'min(calc(100vh - 200px), 80vh)',
+        touchAction: 'pan-x pan-y pinch-zoom',
       }}
     >
       {image_url ? (
@@ -54,7 +59,7 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center text-[var(--text-subtle)]">
-          Карта не загружена
+          {t('scenes.map.notLoaded')}
         </div>
       )}
 

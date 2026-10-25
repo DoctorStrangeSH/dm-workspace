@@ -51,9 +51,40 @@ export async function clearFog(sceneId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase.from('fog_areas').delete().eq('scene_id', sceneId)
 
-  if (error) return { error: 'Не удалось очистить' }
+  // CHANGES: «Очистить туман» = раскрыть ВСЁ, а не удалить раскрытия.
+  // Раньше: delete fog_areas → всё скрыто → туман «возвращался».
+  // Теперь: удаляем старые + создаём одну на всю сцену (всё раскрыто).
+
+  // Получаем размеры сцены
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('width, height')
+    .eq('id', sceneId)
+    .single()
+
+  if (!scene) return { error: 'Сцена не найдена' }
+
+  // Удаляем старые раскрытия
+  const { error: delError } = await supabase.from('fog_areas').delete().eq('scene_id', sceneId)
+
+  if (delError) return { error: 'Не удалось очистить' }
+
+  // Создаём одну область — вся сцена раскрыта
+  const { error: insError } = await supabase.from('fog_areas').insert({
+    scene_id: sceneId,
+    campaign_id: campaignId,
+    x: 0,
+    y: 0,
+    width: scene.width,
+    height: scene.height,
+    is_revealed: true,
+  })
+
+  if (insError) {
+    console.error('clearFog insert error:', insError)
+    return { error: 'Не удалось очистить' }
+  }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }

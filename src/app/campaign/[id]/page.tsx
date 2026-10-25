@@ -11,6 +11,8 @@ import NeedsAttention from './stats/needs-attention'
 import RecentActivity from './stats/recent-activity'
 import { Crown } from 'lucide-react'
 import { Badge, EmptyState } from '@/components/ui'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
 export default async function CampaignOverviewPage({
   params,
@@ -18,6 +20,9 @@ export default async function CampaignOverviewPage({
   params: Promise<{ id: string }>
 }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { id } = await params
   const { campaign, isDm } = await getCampaignAccess(id)
@@ -29,7 +34,7 @@ export default async function CampaignOverviewPage({
   return (
     <div className="max-w-5xl">
       <Breadcrumbs
-        items={[{ label: 'Дашборд', href: '/dashboard' }, { label: campaign.name }]}
+        items={[{ label: t('nav.dashboard'), href: '/dashboard' }, { label: campaign.name }]}
         className="mb-4"
       />
 
@@ -48,7 +53,7 @@ export default async function CampaignOverviewPage({
       {isDm && (
         <div className="mb-6 flex items-center gap-2 rounded-lg border border-[var(--warning)]/30 bg-[var(--warning-subtle)] px-3 py-2 text-sm text-[var(--warning-text)]">
           <Crown size={14} />
-          <span>Ты — ГМ этой кампании</span>
+          <span>{t('campaign.dmBanner')}</span>
         </div>
       )}
 
@@ -65,9 +70,9 @@ export default async function CampaignOverviewPage({
         (stats.chapters.total === 0 && stats.entities.total === 0 && (
           <EmptyState
             icon="🏰"
-            title="Кампания пока пустая"
+            title={t('campaign.empty.title')}
             description={
-              isDm ? 'Начни с создания первой главы или сущности.' : 'ГМ пока не добавил материалы.'
+              isDm ? t('campaign.empty.descriptionDm') : t('campaign.empty.descriptionPlayer')
             }
             size="lg"
           />

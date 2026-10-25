@@ -4,8 +4,11 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { Input, Button } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 function SignupForm() {
+  const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') || '/dashboard'
@@ -44,86 +47,66 @@ function SignupForm() {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur">
-      <h1 className="mb-1 text-2xl font-bold text-white">Регистрация</h1>
-      <p className="mb-6 text-sm text-slate-400">Создай аккаунт и начни вести кампании</p>
+    <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]/80 p-8 shadow-2xl backdrop-blur">
+      <h1 className="mb-1 text-2xl font-bold text-[var(--text-primary)]">
+        {t('auth.signup.title')}
+      </h1>
+      <p className="mb-6 text-sm text-[var(--text-muted)]">{t('auth.signup.subtitle')}</p>
 
       <form onSubmit={handleSignup} className="space-y-4">
-        <div>
-          {/* CHANGES: htmlFor="username" — связка label↔input */}
-          <label htmlFor="username" className="mb-1 block text-sm text-slate-300">
-            Имя (для отображения)
-          </label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            required
-            autoComplete="nickname"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Гэндальф"
-            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-          />
-        </div>
+        <Input
+          id="username"
+          name="username"
+          type="text"
+          required
+          autoComplete="nickname"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          label={t('auth.signup.username')}
+          placeholder={t('auth.signup.usernamePlaceholder')}
+        />
 
-        <div>
-          {/* CHANGES: htmlFor="email" — связка label↔input */}
-          <label htmlFor="email" className="mb-1 block text-sm text-slate-300">
-            Email
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-          />
-        </div>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          label="Email"
+        />
 
-        <div>
-          {/* CHANGES: htmlFor="password" — связка label↔input */}
-          <label htmlFor="password" className="mb-1 block text-sm text-slate-300">
-            Пароль
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-          />
-        </div>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          required
+          minLength={6}
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          label={t('auth.password')}
+        />
 
         {error && (
-          <div className="rounded-lg border border-red-900/50 bg-red-950/30 p-2 text-sm text-red-400">
+          <div className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]">
             {error}
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-lg bg-indigo-600 py-2 font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
-        >
-          {loading ? 'Создаём...' : 'Создать аккаунт'}
-        </button>
+        <Button type="submit" variant="primary" size="md" loading={loading} className="w-full">
+          {loading ? t('auth.signup.submitting') : t('auth.signup.submit')}
+        </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-400">
-        Уже есть аккаунт?{' '}
+      <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
+        {t('auth.signup.hasAccount')}{' '}
         <Link
           href={`/login${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`}
-          className="text-indigo-400 hover:underline"
+          className="text-[var(--accent-text)] hover:underline"
         >
-          Войти
+          {t('auth.signup.loginLink')}
         </Link>
       </p>
     </div>
@@ -131,11 +114,13 @@ function SignupForm() {
 }
 
 export default function SignupPage() {
+  const t = useT()
+
   return (
     <Suspense
       fallback={
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-8 text-center shadow-2xl backdrop-blur">
-          <p className="text-slate-400">Загрузка...</p>
+        <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]/80 p-8 text-center shadow-2xl backdrop-blur">
+          <p className="text-[var(--text-muted)]">{t('common.loading')}</p>
         </div>
       }
     >

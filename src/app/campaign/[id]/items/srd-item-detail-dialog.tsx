@@ -7,6 +7,8 @@ import { addSrdItemToCharacter } from '@/lib/actions/add-item-to-character'
 import { addSrdItemToCampaign } from '@/lib/actions/add-item-to-campaign'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog, Select } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { srdName } from '@/lib/types'
 import type { SrdItem } from '@/lib/actions/items-search'
 
 interface Props {
@@ -17,6 +19,10 @@ interface Props {
   onClose: () => void
 }
 
+function rarityI18nKey(raw: string): string {
+  return raw.replace(/\s+([a-z])/g, (_, c: string) => c.toUpperCase())
+}
+
 export default function SrdItemDetailDialog({
   item,
   campaignId,
@@ -24,6 +30,7 @@ export default function SrdItemDetailDialog({
   canEditCampaign,
   onClose,
 }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -32,18 +39,22 @@ export default function SrdItemDetailDialog({
   const data = item.data
   const rarity = (data.rarity ?? 'common').toLowerCase()
 
+  const descriptionParts = [t(`itemRarity.${rarityI18nKey(rarity)}`)]
+  if (data.item_type) descriptionParts.push(data.item_type)
+  if (data.attunement) descriptionParts.push(t('items.attunement.requires'))
+
   const handleAddToCharacter = () => {
     if (!selectedChar) {
-      toast.error('Выбери персонажа')
+      toast.error(t('items.selectCharacter'))
       return
     }
 
     startTransition(async () => {
       const res = await addSrdItemToCharacter(item.key, selectedChar, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Предмет добавлен в инвентарь')
+        toast.success(t('items.toast.addedToCharacter'))
         router.refresh()
         onClose()
       }
@@ -54,9 +65,9 @@ export default function SrdItemDetailDialog({
     startTransition(async () => {
       const res = await addSrdItemToCampaign(item.key, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Предмет добавлен в кампанию')
+        toast.success(t('items.toast.addedToCampaign'))
         router.refresh()
         onClose()
       }
@@ -67,8 +78,8 @@ export default function SrdItemDetailDialog({
     <Dialog
       open={true}
       onClose={onClose}
-      title={item.name_ru ?? item.name}
-      description={`${rarity}${data.item_type ? ` · ${data.item_type}` : ''}${data.attunement ? ' · требует настройки' : ''}`}
+      title={srdName(item, lang)}
+      description={descriptionParts.join(' · ')}
       size="lg"
       footer={
         <div className="flex w-full flex-col gap-2">
@@ -87,7 +98,7 @@ export default function SrdItemDetailDialog({
                 onClick={handleAddToCharacter}
                 loading={isPending}
               >
-                Персонажу
+                {t('items.toCharacter')}
               </Button>
             </div>
           )}
@@ -100,7 +111,7 @@ export default function SrdItemDetailDialog({
               loading={isPending}
               className="w-full"
             >
-              Добавить в кампанию (как сущность)
+              {t('items.addToCampaignAsEntity')}
             </Button>
           )}
         </div>
@@ -110,20 +121,20 @@ export default function SrdItemDetailDialog({
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-[var(--bg-app)] p-3">
           {data.cost && (
             <div>
-              <span className="text-[var(--text-muted)]">Стоимость:</span>{' '}
+              <span className="text-[var(--text-muted)]">{t('items.cost')}:</span>{' '}
               <span className="text-[var(--warning-text)]">{data.cost}</span>
             </div>
           )}
           {data.weight && (
             <div>
-              <span className="text-[var(--text-muted)]">Вес:</span>{' '}
+              <span className="text-[var(--text-muted)]">{t('items.weight')}:</span>{' '}
               <span className="text-[var(--text-secondary)]">{data.weight}</span>
             </div>
           )}
           {data.attunement && (
             <div>
-              <span className="text-[var(--text-muted)]">Настройка:</span>{' '}
-              <span className="text-[var(--accent-text)]">требуется</span>
+              <span className="text-[var(--text-muted)]">{t('items.attunement.label')}:</span>{' '}
+              <span className="text-[var(--accent-text)]">{t('items.attunement.required')}</span>
             </div>
           )}
         </div>

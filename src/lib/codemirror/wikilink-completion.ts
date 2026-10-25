@@ -9,24 +9,24 @@ export interface EntitySuggestion {
   type: EntityType
 }
 
+/**
+ * CHANGES (К8):
+ * - `style.label` → `style.labelKey` — т.к. в entity-ui.ts больше нет `label`.
+ * - Этот файл НЕ React-компонент, поэтому useT() недоступен.
+ * - `wikilinkCompletionSource` сейчас не подключён в cm-editor.tsx
+ *   (autocompletion: false). Если понадобится — нужно будет передавать `t`
+ *   параметром (см. план 4.4-bilingual), а пока — передаём сырой ключ
+ *   (клиент увидит `entityType.npc` вместо «NPC»), либо удаляем detail/info.
+ * - Для безопасности передаём `style.labelKey` как fallback, чтобы не рендерить
+ *   undefined.
+ */
 export function wikilinkCompletionSource(
   entities: EntitySuggestion[],
   onCreateEntity?: (name: string) => void
 ) {
   return (context: CompletionContext): CompletionResult | null => {
-    console.log('🔥 SOURCE CALLED, pos:', context.pos, 'explicit:', context.explicit)
-
     const before = context.matchBefore(/\[\[[^\]]*$/)
-    console.log('🔥 matchBefore:', {
-      text: before?.text,
-      from: before?.from,
-      to: before?.to,
-    })
-
     if (!before) return null
-
-    console.log('🔥 entities count:', entities.length)
-
     if (before.from === before.to && !context.explicit) return null
 
     const query = before.text.slice(2).toLowerCase()
@@ -35,16 +35,16 @@ export function wikilinkCompletionSource(
       .filter((e) => e.name.toLowerCase().includes(query))
       .map((e) => {
         const style = ENTITY_STYLES[e.type]
+        // CHANGES: labelKey вместо label (label удалён из TypeStyle в К7.4.1)
+        const typeLabel = style.labelKey
         return {
           label: e.name,
-          detail: style.label,
+          detail: typeLabel,
           apply: `[[${e.name}]]`,
           boost: e.name.toLowerCase().startsWith(query) ? 1 : 0,
-          info: `${style.icon} ${e.name} — ${style.label}`,
+          info: `${style.icon} ${e.name} — ${typeLabel}`,
         }
       })
-
-    console.log('🔥 options count:', options.length)
 
     if (options.length === 0 && query.length >= 2 && onCreateEntity) {
       options.push({
@@ -70,11 +70,8 @@ export const wikilinkTriggerKeymap = keymap.of([
       const pos = view.state.selection.main.from
       const before = view.state.sliceDoc(Math.max(0, pos - 1), pos)
 
-      console.log('🔥 KEY [ HIT, char before:', JSON.stringify(before))
-
       if (before === '[') {
         setTimeout(() => {
-          console.log('🔥 STARTING COMPLETION')
           startCompletion(view)
         }, 0)
       }

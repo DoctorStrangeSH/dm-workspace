@@ -1,6 +1,7 @@
 'use client'
 
 import { Check, Loader2, AlertCircle, Cloud } from 'lucide-react'
+import { useI18n } from '@/lib/i18n'
 
 interface Props {
   status: 'idle' | 'saving' | 'saved' | 'error'
@@ -9,23 +10,26 @@ interface Props {
 }
 
 export default function SaveStatus({ status, lastSaved, error }: Props) {
+  const { t, lang } = useI18n()
+  const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
+
   if (status === 'saving') {
     return (
-      <div className="flex items-center gap-2 text-sm text-slate-400">
+      <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
         <Loader2 size={14} className="animate-spin" />
-        Сохранение...
+        {t('chapters.save.saving')}
       </div>
     )
   }
 
   if (status === 'saved') {
     return (
-      <div className="flex items-center gap-2 text-sm text-green-400">
+      <div className="flex items-center gap-2 text-sm text-[var(--success-text)]">
         <Check size={14} />
-        Сохранено
+        {t('chapters.save.saved')}
         {lastSaved && (
-          <span className="text-xs text-slate-500">
-            {lastSaved.toLocaleTimeString('ru-RU', {
+          <span className="text-xs text-[var(--text-subtle)]">
+            {lastSaved.toLocaleTimeString(locale, {
               hour: '2-digit',
               minute: '2-digit',
             })}
@@ -37,17 +41,17 @@ export default function SaveStatus({ status, lastSaved, error }: Props) {
 
   if (status === 'error') {
     return (
-      <div className="flex items-center gap-2 text-sm text-red-400">
+      <div className="flex items-center gap-2 text-sm text-[var(--danger-text)]">
         <AlertCircle size={14} />
-        {error ?? 'Ошибка'}
+        {error ?? t('common.error')}
       </div>
     )
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm text-slate-500">
+    <div className="flex items-center gap-2 text-sm text-[var(--text-subtle)]">
       <Cloud size={14} />
-      Автосохранение
+      {t('chapters.save.autosave')}
     </div>
   )
 }

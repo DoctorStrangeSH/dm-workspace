@@ -2,6 +2,7 @@
 
 import { CheckSquare, Square, X, CheckCheck } from 'lucide-react'
 import { Button } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   totalCount: number
@@ -20,6 +21,8 @@ export default function SelectionBar({
   onToggleAll,
   isSelectionMode,
 }: Props) {
+  const t = useT()
+
   if (!isSelectionMode) {
     return (
       <Button
@@ -27,9 +30,9 @@ export default function SelectionBar({
         size="md"
         icon={<CheckSquare size={14} />}
         onClick={onToggleMode}
-        title="Режим выделения"
+        title={t('chapters.selection.mode')}
       >
-        Выбрать
+        {t('chapters.selection.select')}
       </Button>
     )
   }
@@ -39,20 +42,22 @@ export default function SelectionBar({
       <button
         onClick={onToggleAll}
         className="flex items-center gap-2 text-sm text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]"
-        title={allSelected ? 'Снять выделение' : 'Выделить все'}
+        title={
+          allSelected ? t('chapters.selection.unselectAll') : t('chapters.selection.selectAll')
+        }
       >
         {allSelected ? (
           <CheckCheck size={16} className="text-[var(--accent-text)]" />
         ) : (
           <Square size={16} />
         )}
-        {allSelected ? 'Снять все' : 'Выделить все'}
+        {allSelected ? t('chapters.selection.unselectAll') : t('chapters.selection.selectAll')}
       </button>
 
       <div className="text-sm text-[var(--text-muted)]">
-        Выбрано:{' '}
+        {t('chapters.selection.selected')}:{' '}
         <span className="font-medium text-[var(--text-primary)]">
-          {selectedCount} из {totalCount}
+          {t('chapters.selection.ofCount', { selected: selectedCount, total: totalCount })}
         </span>
       </div>
 
@@ -63,7 +68,7 @@ export default function SelectionBar({
         onClick={onToggleMode}
         className="ml-auto"
       >
-        Отмена
+        {t('common.cancel')}
       </Button>
     </div>
   )

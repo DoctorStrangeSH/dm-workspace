@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import { Dices, Copy, Check, Sparkles } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import { generateWildMagic, type WildMagicResult } from '@/lib/generators/wild-magic'
 
 export function WildMagicGenerator() {
+  const t = useT()
   const [result, setResult] = useState<WildMagicResult | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -32,7 +34,7 @@ export function WildMagicGenerator() {
           onClick={handleGenerate}
           className="w-full"
         >
-          Бросить d100
+          {t('generators.wildMagic.roll')}
         </Button>
       </Card>
 
@@ -51,7 +53,7 @@ export function WildMagicGenerator() {
               icon={copied ? <Check size={14} /> : <Copy size={14} />}
               onClick={handleCopy}
             >
-              {copied ? 'Скопировано' : 'Копировать'}
+              {copied ? t('generators.copied') : t('generators.copy')}
             </Button>
           </div>
 

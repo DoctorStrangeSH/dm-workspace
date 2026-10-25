@@ -12,8 +12,11 @@ import CreateEntityButton from './create-entity-button'
 import EntityCard from './entity-card'
 import { EmptyState } from '@/components/ui'
 import { Breadcrumbs } from '@/components/breadcrumbs'
-import { ENTITY_FILTERS } from '@/lib/entity-ui'
+import { ENTITY_FILTERS, ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
+import { pluralize } from '@/lib/i18n/plural'
 import type { Entity, EntityType } from '@/lib/types'
 
 export default async function EntitiesPage({
@@ -24,6 +27,9 @@ export default async function EntitiesPage({
   searchParams: Promise<{ type?: string }>
 }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { id: campaignId } = await params
   const { type: typeFilter } = await searchParams
@@ -69,13 +75,19 @@ export default async function EntitiesPage({
   const activeType = typeFilter ?? 'all'
   const base = `/campaign/${campaignId}/entities`
 
+  const countLabel = pluralize(lang, entities.length, {
+    one: t('entities.count.one'),
+    few: t('entities.count.few'),
+    many: t('entities.count.many'),
+  })
+
   return (
     <div className="max-w-6xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaign.name, href: `/campaign/${campaignId}` },
-          { label: 'Сущности' },
+          { label: t('nav.entities') },
         ]}
         className="mb-4"
       />
@@ -84,11 +96,11 @@ export default async function EntitiesPage({
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--text-primary)]">
             <Users size={22} className="text-[var(--success)]" />
-            Сущности
+            {t('nav.entities')}
           </h1>
           <p className="mt-1 text-sm text-[var(--text-muted)]">
-            {entities.length} {entities.length === 1 ? 'сущность' : 'сущностей'}
-            {!isDm && ' · только видимые вам'}
+            {entities.length} {countLabel}
+            {!isDm && ` · ${t('entities.onlyVisible')}`}
           </p>
         </div>
         {isDm && <CreateEntityButton campaignId={campaignId} templates={templates} />}
@@ -99,6 +111,9 @@ export default async function EntitiesPage({
         {ENTITY_FILTERS.map((f) => {
           const isActive = activeType === f.value
           const href = f.value === 'all' ? base : `${base}?type=${f.value}`
+          const label = f.value === 'all' ? t('common.all') : t(ENTITY_STYLES[f.value].labelKey)
+          const icon = f.value === 'all' ? null : ENTITY_STYLES[f.value].icon
+
           return (
             <Link
               key={f.value}
@@ -110,7 +125,8 @@ export default async function EntitiesPage({
                   : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[var(--border-hover)] hover:text-[var(--text-primary)]'
               )}
             >
-              {f.label}
+              {icon && <span className="mr-1">{icon}</span>}
+              {label}
             </Link>
           )
         })}
@@ -119,11 +135,11 @@ export default async function EntitiesPage({
       {entities.length === 0 ? (
         <EmptyState
           icon="👥"
-          title={activeType === 'all' ? 'Пока нет ни одной сущности' : 'Нет сущностей этого типа'}
+          title={
+            activeType === 'all' ? t('entities.empty.titleAll') : t('entities.empty.titleType')
+          }
           description={
-            isDm
-              ? 'Создай NPC, локацию, монстра или предмет. Используй шаблон для быстрого старта.'
-              : 'ГМ пока не добавил материалы.'
+            isDm ? t('entities.empty.descriptionDm') : t('entities.empty.descriptionPlayer')
           }
           size="lg"
         />

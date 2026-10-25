@@ -6,6 +6,7 @@ import { Dices, RotateCcw, Skull, Shield } from 'lucide-react'
 import { rollDeathSave, resetDeathSaves } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import type { DeathSaves } from '@/lib/types'
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function DeathSavesTracker({ characterId, campaignId, deathSaves, canEdit }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -27,20 +29,39 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
     startTransition(async () => {
       const res = await rollDeathSave(characterId, campaignId)
 
-      // Type guard
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
 
-      if (res.message.includes('мёртв')) {
-        toast.error(res.message, { description: `Бросок: ${res.roll}` })
-      } else if (res.message.includes('стабилизирован')) {
-        toast.success(res.message, { description: `Бросок: ${res.roll}` })
-      } else if (res.message.includes('🎉')) {
-        toast.success(res.message, { description: `Бросок: ${res.roll}` })
+      const rollDesc = t('characters.deathSave.roll', { roll: res.roll })
+
+      // CHANGES (К8): используем status, а не парсим message
+      let message: string
+      if (res.isNatural20) {
+        message = t('characters.deathSave.result.natural20')
+      } else if (res.isNatural1) {
+        message = t('characters.deathSave.result.natural1')
+      } else if (res.status === 'dead') {
+        message = t('characters.deathSave.result.dead')
+      } else if (res.status === 'stabilized') {
+        message = t('characters.deathSave.result.stabilized')
+      } else if (res.status === 'success') {
+        message = t('characters.deathSave.result.success', {
+          current: res.deathSaves.successes,
+        })
       } else {
-        toast.info(res.message, { description: `Бросок: ${res.roll}` })
+        message = t('characters.deathSave.result.fail', {
+          current: res.deathSaves.failures,
+        })
+      }
+
+      if (res.status === 'dead') {
+        toast.error(message, { description: rollDesc })
+      } else if (res.status === 'stabilized' || res.isNatural20) {
+        toast.success(message, { description: rollDesc })
+      } else {
+        toast.info(message, { description: rollDesc })
       }
 
       router.refresh()
@@ -51,13 +72,12 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
     startTransition(async () => {
       const res = await resetDeathSaves(characterId, campaignId)
 
-      // Type guard
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
 
-      toast.success('Спасброски сброшены')
+      toast.success(t('characters.deathSave.reset'))
       router.refresh()
     })
   }
@@ -65,30 +85,36 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
   return (
     <div
       className={cn(
-        'rounded-xl border bg-red-950/20 p-4',
+        'rounded-xl border p-4',
         isDead
-          ? 'border-red-800/60'
+          ? 'border-[var(--danger)]/40 bg-[var(--danger-subtle)]'
           : isStabilized
-            ? 'border-green-800/60 bg-green-950/20'
-            : 'border-red-900/40'
+            ? 'border-[var(--success)]/40 bg-[var(--success-subtle)]'
+            : 'border-[var(--danger)]/30 bg-[var(--danger-subtle)]/50'
       )}
     >
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {isDead ? (
-            <Skull size={16} className="text-red-500" />
-          ) : isStabilized ? (
-            <Shield size={16} className="text-green-400" />
+          {isStabilized ? (
+            <Shield size={16} className="text-[var(--success-text)]" />
           ) : (
-            <Skull size={16} className="text-red-400" />
+            <Skull size={16} className="text-[var(--danger-text)]" />
           )}
           <span
             className={cn(
               'text-sm font-semibold',
-              isDead ? 'text-red-400' : isStabilized ? 'text-green-400' : 'text-red-300'
+              isDead
+                ? 'text-[var(--danger-text)]'
+                : isStabilized
+                  ? 'text-[var(--success-text)]'
+                  : 'text-[var(--danger-text)]'
             )}
           >
-            {isDead ? 'Мёртв' : isStabilized ? 'Стабилизирован' : 'Спасброски от смерти'}
+            {isDead
+              ? t('characters.deathSave.dead')
+              : isStabilized
+                ? t('characters.deathSave.stabilized')
+                : t('characters.deathSave.title')}
           </span>
         </div>
 
@@ -97,19 +123,19 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
             <button
               onClick={handleRoll}
               disabled={isPending}
-              className="flex items-center gap-1 rounded border border-red-800/60 bg-red-900/40 px-2.5 py-1 text-xs text-red-200 transition hover:bg-red-900/60 disabled:opacity-50"
-              title="Бросок 1d20"
+              className="flex items-center gap-1 rounded border border-[var(--danger)]/40 bg-[var(--danger-subtle)] px-2.5 py-1 text-xs text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)]/80 disabled:opacity-50"
+              title={t('characters.deathSave.rollHint')}
             >
               <Dices size={12} />
-              Бросок
+              {t('characters.deathSave.rollButton')}
             </button>
             <button
               onClick={handleReset}
               disabled={isPending}
-              className="rounded p-1 transition hover:bg-slate-800 disabled:opacity-50"
-              title="Сбросить"
+              className="rounded p-1 transition hover:bg-[var(--bg-hover)] disabled:opacity-50"
+              title={t('characters.deathSave.resetButton')}
             >
-              <RotateCcw size={12} className="text-slate-400" />
+              <RotateCcw size={12} className="text-[var(--text-muted)]" />
             </button>
           </div>
         )}
@@ -117,7 +143,9 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="mb-2 text-[10px] tracking-wider text-slate-500 uppercase">Успехи</div>
+          <div className="mb-2 text-[10px] tracking-wider text-[var(--text-subtle)] uppercase">
+            {t('characters.deathSave.successes')}
+          </div>
           <div className="flex gap-1.5">
             {[1, 2, 3].map((i) => (
               <div
@@ -125,8 +153,8 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
                 className={cn(
                   'flex h-6 w-6 items-center justify-center rounded-full border-2 transition',
                   deathSaves.successes >= i
-                    ? 'border-green-500 bg-green-600 text-white'
-                    : 'border-slate-700'
+                    ? 'border-[var(--success)] bg-[var(--success)] text-white'
+                    : 'border-[var(--border-default)]'
                 )}
               >
                 {deathSaves.successes >= i && <span className="text-xs">✓</span>}
@@ -136,7 +164,9 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
         </div>
 
         <div>
-          <div className="mb-2 text-[10px] tracking-wider text-slate-500 uppercase">Провалы</div>
+          <div className="mb-2 text-[10px] tracking-wider text-[var(--text-subtle)] uppercase">
+            {t('characters.deathSave.failures')}
+          </div>
           <div className="flex gap-1.5">
             {[1, 2, 3].map((i) => (
               <div
@@ -144,8 +174,8 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
                 className={cn(
                   'flex h-6 w-6 items-center justify-center rounded-full border-2 transition',
                   deathSaves.failures >= i
-                    ? 'border-red-500 bg-red-600 text-white'
-                    : 'border-slate-700'
+                    ? 'border-[var(--danger)] bg-[var(--danger)] text-white'
+                    : 'border-[var(--border-default)]'
                 )}
               >
                 {deathSaves.failures >= i && <span className="text-xs">✗</span>}
@@ -156,11 +186,15 @@ export default function DeathSavesTracker({ characterId, campaignId, deathSaves,
       </div>
 
       {isDead && (
-        <p className="mt-3 text-xs text-red-400">Персонаж мёртв. Обратись к ГМу для воскрешения.</p>
+        <p className="mt-3 text-xs text-[var(--danger-text)]">
+          {t('characters.deathSave.deadHint')}
+        </p>
       )}
 
       {isStabilized && (
-        <p className="mt-3 text-xs text-green-400">Стабилизирован — без сознания, но не умирает.</p>
+        <p className="mt-3 text-xs text-[var(--success-text)]">
+          {t('characters.deathSave.stabilizedHint')}
+        </p>
       )}
     </div>
   )

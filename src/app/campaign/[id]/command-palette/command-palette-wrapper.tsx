@@ -4,6 +4,7 @@ import { useCommandPalette } from '@/lib/hooks/use-command-palette'
 import CommandPalette from './command-palette'
 import { Search } from 'lucide-react'
 import { Tooltip } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import type { Entity, Chapter } from '@/lib/types'
 
 interface Props {
@@ -19,18 +20,19 @@ export default function CommandPaletteWrapper({
   chapters,
   entities,
 }: Props) {
+  const t = useT()
   const { isOpen, open, close } = useCommandPalette()
 
   return (
     <>
-      <Tooltip content="Палитра команд (Ctrl+K)">
+      <Tooltip content={t('commands.hint')}>
         <button
           onClick={open}
           className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
-          aria-label="Открыть палитру команд"
+          aria-label={t('commands.open')}
         >
           <Search size={14} />
-          <span className="hidden sm:inline">Поиск...</span>
+          <span className="hidden sm:inline">{t('commands.searchPlaceholder')}</span>
           <kbd className="hidden items-center gap-0.5 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[10px] md:inline-flex">
             <span>⌘</span>
             <span>K</span>

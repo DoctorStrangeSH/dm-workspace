@@ -30,14 +30,9 @@ import {
   rollDice,
 } from '@/lib/dnd/formulas'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
-import {
-  ABILITY_LABELS,
-  SKILL_LABELS,
-  ABILITY_SHORT,
-  type AbilityKey,
-  type SkillKey,
-} from '@/lib/types'
-import type { Character } from '@/lib/types'
+import type { AbilityKey, SkillKey, Character } from '@/lib/types'
+import { useI18n } from '@/lib/i18n'
+import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
 
 interface Props {
   character: Character
@@ -57,6 +52,7 @@ export default function CharacterSheet({
   owner,
   canEdit,
 }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -80,10 +76,10 @@ export default function CharacterSheet({
         name: editName,
       })
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         setEditName(character.name)
       } else {
-        toast.success('Имя обновлено')
+        toast.success(t('characters.toast.nameUpdated'))
         setIsEditingName(false)
         router.refresh()
       }
@@ -95,7 +91,7 @@ export default function CharacterSheet({
     const expr = parseDice(`1d20${mod >= 0 ? '+' : ''}${mod}`)
     if (!expr) return
     const result = rollDice(expr)
-    toast.info(`${ABILITY_LABELS[ability]}: ${formatModifier(mod)} = ${result.total}`, {
+    toast.info(`${abilityLabel(lang, ability)}: ${formatModifier(mod)} = ${result.total}`, {
       description: `[${result.rolls.join(', ')}] ${formatModifier(mod)}`,
     })
   }
@@ -105,9 +101,12 @@ export default function CharacterSheet({
     const expr = parseDice(`1d20${bonus >= 0 ? '+' : ''}${bonus}`)
     if (!expr) return
     const result = rollDice(expr)
-    toast.info(`Спасбросок ${ABILITY_SHORT[ability]}: ${formatModifier(bonus)} = ${result.total}`, {
-      description: `[${result.rolls.join(', ')}] ${formatModifier(bonus)}`,
-    })
+    toast.info(
+      `${t('characters.save')} ${abilityShort(lang, ability)}: ${formatModifier(bonus)} = ${result.total}`,
+      {
+        description: `[${result.rolls.join(', ')}] ${formatModifier(bonus)}`,
+      }
+    )
   }
 
   const rollSkill = (skill: SkillKey) => {
@@ -115,7 +114,7 @@ export default function CharacterSheet({
     const expr = parseDice(`1d20${bonus >= 0 ? '+' : ''}${bonus}`)
     if (!expr) return
     const result = rollDice(expr)
-    toast.info(`${SKILL_LABELS[skill]}: ${formatModifier(bonus)} = ${result.total}`, {
+    toast.info(`${skillLabel(lang, skill)}: ${formatModifier(bonus)} = ${result.total}`, {
       description: `[${result.rolls.join(', ')}] ${formatModifier(bonus)}`,
     })
   }
@@ -125,7 +124,7 @@ export default function CharacterSheet({
     const expr = parseDice(`1d20${bonus >= 0 ? '+' : ''}${bonus}`)
     if (!expr) return
     const result = rollDice(expr)
-    toast.info(`Инициатива: ${formatModifier(bonus)} = ${result.total}`, {
+    toast.info(`${t('characters.initiative')}: ${formatModifier(bonus)} = ${result.total}`, {
       description: `[${result.rolls.join(', ')}] ${formatModifier(bonus)}`,
     })
   }
@@ -134,15 +133,14 @@ export default function CharacterSheet({
     <div className="max-w-4xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaignName, href: `/campaign/${campaignId}` },
-          { label: 'Персонажи', href: `/campaign/${campaignId}/characters` },
+          { label: t('nav.characters'), href: `/campaign/${campaignId}/characters` },
           { label: character.name },
         ]}
         className="mb-4"
       />
 
-      {/* Заголовок */}
       <Card padding="lg" className="mb-4">
         <div className="flex items-start gap-4">
           <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-3xl">
@@ -169,7 +167,7 @@ export default function CharacterSheet({
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Сохранить"
+                  label={t('common.save')}
                   onClick={handleSaveName}
                   disabled={isPending}
                   className="text-[var(--success)]"
@@ -179,7 +177,7 @@ export default function CharacterSheet({
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Отмена"
+                  label={t('common.cancel')}
                   onClick={() => {
                     setEditName(character.name)
                     setIsEditingName(false)
@@ -195,7 +193,7 @@ export default function CharacterSheet({
                   <IconButton
                     variant="ghost"
                     size="sm"
-                    label="Редактировать имя"
+                    label={t('characters.editName')}
                     onClick={() => setIsEditingName(true)}
                   >
                     <Pencil size={14} />
@@ -205,10 +203,10 @@ export default function CharacterSheet({
             )}
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {race?.name} · {cls?.name} · Уровень {data.level}
+              {race?.name} · {cls?.name} · {t('characters.level', { level: data.level })}
             </p>
             <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
-              Владелец: {owner.display_name ?? owner.username}
+              {t('characters.owner')}: {owner.display_name ?? owner.username}
             </p>
 
             {canEdit && data.level < 20 && (
@@ -219,14 +217,13 @@ export default function CharacterSheet({
                 onClick={() => setShowLevelUp(true)}
                 className="mt-3 border-[var(--success)]/30 bg-[var(--success-subtle)] text-[var(--success-text)]"
               >
-                Level {data.level} → {data.level + 1}
+                {t('characters.levelUpFrom', { from: data.level, to: data.level + 1 })}
               </Button>
             )}
           </div>
         </div>
       </Card>
 
-      {/* Вкладки */}
       <CharacterTabs
         overviewContent={
           <>

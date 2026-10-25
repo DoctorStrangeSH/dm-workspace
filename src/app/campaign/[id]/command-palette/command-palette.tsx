@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Search, CornerDownLeft } from 'lucide-react'
 import { fuzzyFilter } from '@/lib/fuzzy'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { pluralize } from '@/lib/i18n/plural'
 import type { Command } from '@/lib/commands'
 import type { Entity, Chapter } from '@/lib/types'
-import { EmptyState } from '@/components/ui'
 
 interface Props {
   isOpen: boolean
@@ -18,91 +20,91 @@ interface Props {
   entities: Entity[]
 }
 
-const KIND_LABELS: Record<string, string> = {
-  action: 'Действия',
-  chapter: 'Главы',
-  entity: 'Сущности',
-}
-
 export default function CommandPalette({ isOpen, onClose, campaignId, chapters, entities }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
+  const KIND_LABELS: Record<string, string> = {
+    action: t('commands.kind.action'),
+    chapter: t('commands.kind.chapter'),
+    entity: t('commands.kind.entity'),
+  }
+
   const commands = useMemo<Command[]>(() => {
     const list: Command[] = []
 
-    // CHANGES: добавлены все действия кампании (навигация + DM-инструменты)
     list.push(
       {
         id: 'action:dashboard',
         kind: 'action',
-        label: 'К дашборду',
+        label: t('commands.action.dashboard'),
         icon: '🏠',
         href: '/dashboard',
       },
       {
         id: 'action:overview',
         kind: 'action',
-        label: 'Обзор кампании',
+        label: t('commands.action.overview'),
         icon: '📊',
         href: `/campaign/${campaignId}`,
       },
       {
         id: 'action:chapters',
         kind: 'action',
-        label: 'Открыть главы',
+        label: t('commands.action.chapters'),
         icon: '📖',
         href: `/campaign/${campaignId}/chapters`,
       },
       {
         id: 'action:characters',
         kind: 'action',
-        label: 'Открыть персонажей',
+        label: t('commands.action.characters'),
         icon: '⚔️',
         href: `/campaign/${campaignId}/characters`,
       },
       {
         id: 'action:scenes',
         kind: 'action',
-        label: 'Открыть сцены',
+        label: t('commands.action.scenes'),
         icon: '🗺️',
         href: `/campaign/${campaignId}/scenes`,
       },
       {
         id: 'action:entities',
         kind: 'action',
-        label: 'Открыть сущности',
+        label: t('commands.action.entities'),
         icon: '👥',
         href: `/campaign/${campaignId}/entities`,
       },
       {
         id: 'action:bestiary',
         kind: 'action',
-        label: 'Открыть бестиарий',
+        label: t('commands.action.bestiary'),
         icon: '🐉',
         href: `/campaign/${campaignId}/bestiary`,
       },
       {
         id: 'action:spells',
         kind: 'action',
-        label: 'Открыть справочник заклинаний',
+        label: t('commands.action.spells'),
         icon: '✨',
         href: `/campaign/${campaignId}/spells`,
       },
       {
         id: 'action:items',
         kind: 'action',
-        label: 'Открыть справочник предметов',
+        label: t('commands.action.items'),
         icon: '🎒',
         href: `/campaign/${campaignId}/items`,
       },
       {
         id: 'action:dm-screen',
         kind: 'action',
-        label: 'Открыть панель ГМа',
+        label: t('commands.action.dmScreen'),
         icon: '🎛️',
         shortcut: '⌘M',
         action: () => {
@@ -119,7 +121,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
         id: `chapter:${ch.id}`,
         kind: 'chapter',
         label: ch.title,
-        description: 'Глава',
+        description: t('commands.kind.chapter'),
         icon: '📄',
         href: `/campaign/${campaignId}/chapters/${ch.id}`,
       })
@@ -152,7 +154,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
     }
 
     return list
-  }, [campaignId, chapters, entities, onClose])
+  }, [campaignId, chapters, entities, onClose, t])
 
   const filtered = useMemo(() => {
     return fuzzyFilter(commands, query, (cmd) =>
@@ -179,8 +181,8 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
 
   useEffect(() => {
     if (!isOpen) return
-    const t = setTimeout(() => inputRef.current?.focus(), 50)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => inputRef.current?.focus(), 50)
+    return () => clearTimeout(timer)
   }, [isOpen])
 
   useEffect(() => {
@@ -218,6 +220,12 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
 
   if (!isOpen) return null
 
+  const resultsLabel = pluralize(lang, filtered.length, {
+    one: t('commands.results.one'),
+    few: t('commands.results.few'),
+    many: t('commands.results.many'),
+  })
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center bg-[var(--bg-overlay)] px-0 pt-[5vh] backdrop-blur-sm sm:px-4 sm:pt-[15vh]"
@@ -235,7 +243,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Поиск: главы, сущности, действия..."
+            placeholder={t('commands.searchInputPlaceholder')}
             className="flex-1 bg-transparent text-base text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:outline-none"
           />
           <kbd className="hidden items-center gap-1 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-2 py-0.5 text-xs text-[var(--text-subtle)] sm:inline-flex">
@@ -248,8 +256,8 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
             <div className="px-4 py-10">
               <EmptyState
                 icon="🔍"
-                title="Ничего не найдено"
-                description={`По запросу «${query}» ничего не найдено.`}
+                title={t('commands.empty.title')}
+                description={t('commands.empty.description', { query })}
                 size="sm"
                 dashed={false}
               />
@@ -309,16 +317,18 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
               <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1 py-0.5">
                 ↓
               </kbd>
-              навигация
+              {t('commands.navigation')}
             </span>
             <span className="flex items-center gap-1">
               <kbd className="rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1 py-0.5">
                 ⏎
               </kbd>
-              выбрать
+              {t('commands.select')}
             </span>
           </div>
-          <span>{filtered.length} результатов</span>
+          <span>
+            {filtered.length} {resultsLabel}
+          </span>
         </div>
       </div>
     </div>

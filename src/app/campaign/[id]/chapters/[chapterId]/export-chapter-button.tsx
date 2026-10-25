@@ -7,6 +7,8 @@ import { formatChapterAsMarkdown } from '@/lib/export-markdown'
 import { downloadText } from '@/lib/download'
 import { toFilename } from '@/lib/slugify'
 import { Button } from '@/components/ui'
+import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   chapterId: string
@@ -15,6 +17,8 @@ interface Props {
 }
 
 export default function ExportChapterButton({ chapterId, campaignId, chapterTitle }: Props) {
+  const t = useT()
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [done, setDone] = useState(false)
 
@@ -22,7 +26,8 @@ export default function ExportChapterButton({ chapterId, campaignId, chapterTitl
     startTransition(async () => {
       const res = await getChapterForExport(chapterId, campaignId)
       if (res.error || !res.data) {
-        alert(res.error ?? 'Не удалось экспортировать')
+        // CHANGES: alert() → toast (правило проекта)
+        toast.error(res.error ?? t('chapters.toast.exportFailed'))
         return
       }
 
@@ -43,9 +48,9 @@ export default function ExportChapterButton({ chapterId, campaignId, chapterTitl
       onClick={handleExport}
       loading={isPending}
       icon={done ? <Check size={14} /> : <Download size={14} />}
-      title="Скачать .md (Ctrl+E)"
+      title={t('chapters.exportHint')}
     >
-      {done ? 'Готово' : 'Скачать .md'}
+      {done ? t('chapters.exportDone') : t('chapters.export')}
     </Button>
   )
 }

@@ -6,6 +6,7 @@ import { createRelation } from '@/lib/actions/relations'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog, Input } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import {
   RELATION_TYPES,
   getAllowedRelations,
@@ -34,6 +35,7 @@ export default function AddRelationDialog({
   existingRelations,
   onClose,
 }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -80,7 +82,7 @@ export default function AddRelationDialog({
 
   const handleSubmit = () => {
     if (!selectedTarget || !selectedRelationType) {
-      setError('Выбери сущность и тип связи')
+      setError(t('entities.relations.form.error'))
       return
     }
 
@@ -92,37 +94,41 @@ export default function AddRelationDialog({
         selectedRelationType
       )
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
-        setError(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
+        setError(res.error ?? t('common.error'))
         return
       }
-      toast.success('Связь создана')
+      toast.success(t('entities.relations.toast.created'))
       onClose()
     })
   }
 
   return (
-    <Dialog open={true} onClose={onClose} title="Добавить связь" size="md">
+    <Dialog open={true} onClose={onClose} title={t('entities.relations.form.title')} size="md">
       {!selectedType && !selectedTarget && (
         <div>
-          <p className="mb-3 text-sm text-[var(--text-muted)]">С каким типом сущности связываем?</p>
+          <p className="mb-3 text-sm text-[var(--text-muted)]">
+            {t('entities.relations.form.chooseType')}
+          </p>
           {availableTypes.length === 0 ? (
-            <p className="text-sm text-[var(--text-subtle)]">Нет других сущностей в кампании</p>
+            <p className="text-sm text-[var(--text-subtle)]">
+              {t('entities.relations.form.noEntities')}
+            </p>
           ) : (
             <div className="grid grid-cols-3 gap-2">
-              {availableTypes.map((t) => {
-                const style = ENTITY_STYLES[t]
+              {availableTypes.map((type) => {
+                const style = ENTITY_STYLES[type]
                 return (
                   <button
-                    key={t}
-                    onClick={() => setSelectedType(t)}
+                    key={type}
+                    onClick={() => setSelectedType(type)}
                     className={cn(
                       'flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors',
                       'border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:border-[var(--accent)]'
                     )}
                   >
                     <span className="text-xl">{style.icon}</span>
-                    <span className="text-xs">{style.label}</span>
+                    <span className="text-xs">{t(style.labelKey)}</span>
                   </button>
                 )
               })}
@@ -137,14 +143,14 @@ export default function AddRelationDialog({
             onClick={() => setSelectedType(null)}
             className="mb-2 text-xs text-[var(--text-subtle)] hover:text-[var(--text-primary)]"
           >
-            ← Изменить тип
+            {t('entities.relations.form.back')}
           </button>
           <Input
             autoFocus
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск..."
+            placeholder={t('entities.relations.form.searchPlaceholder')}
             icon={<Search size={14} />}
             className="mb-3"
           />
@@ -152,7 +158,7 @@ export default function AddRelationDialog({
           <div className="max-h-60 overflow-y-auto">
             {filtered.length === 0 ? (
               <p className="py-8 text-center text-sm text-[var(--text-subtle)]">
-                Ничего не найдено
+                {t('entities.relations.form.nothingFound')}
               </p>
             ) : (
               filtered.map((e) => {
@@ -166,7 +172,7 @@ export default function AddRelationDialog({
                     <span className="text-lg">{style.icon}</span>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm text-[var(--text-primary)]">{e.name}</div>
-                      <div className="text-xs text-[var(--text-muted)]">{style.label}</div>
+                      <div className="text-xs text-[var(--text-muted)]">{t(style.labelKey)}</div>
                     </div>
                   </button>
                 )
@@ -185,7 +191,7 @@ export default function AddRelationDialog({
             }}
             className="mb-3 text-xs text-[var(--text-subtle)] hover:text-[var(--text-primary)]"
           >
-            ← Изменить сущность
+            {t('entities.relations.form.backEntity')}
           </button>
           <div className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] p-2">
             <span>{ENTITY_STYLES[selectedTarget.type].icon}</span>
@@ -194,10 +200,12 @@ export default function AddRelationDialog({
             </span>
           </div>
 
-          <p className="mb-3 text-sm text-[var(--text-muted)]">Тип связи:</p>
+          <p className="mb-3 text-sm text-[var(--text-muted)]">
+            {t('entities.relations.form.relationType')}
+          </p>
           {allowedRelationTypes.length === 0 ? (
             <p className="text-sm text-[var(--text-subtle)]">
-              Нет доступных типов связей (все уже добавлены)
+              {t('entities.relations.form.noTypes')}
             </p>
           ) : (
             <div className="space-y-1">
@@ -215,7 +223,7 @@ export default function AddRelationDialog({
                     )}
                   >
                     <span>{info.icon}</span>
-                    <span className="text-sm">{info.label}</span>
+                    <span className="text-sm">{t(`relationType.${rt}.label`)}</span>
                   </button>
                 )
               })}
@@ -236,7 +244,7 @@ export default function AddRelationDialog({
               loading={isPending}
               className="mt-4 w-full"
             >
-              Создать связь
+              {t('entities.relations.form.create')}
             </Button>
           )}
         </div>

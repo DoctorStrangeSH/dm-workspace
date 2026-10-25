@@ -7,6 +7,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Eye, EyeOff, Trash2, Pencil, Check, X, FileText, GripVertical, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
 import { IconButton, Dialog, Button, Checkbox } from '@/components/ui'
 import type { Chapter } from '@/lib/types'
 import {
@@ -36,6 +37,7 @@ export default function ChapterItem({
   isSelected = false,
   onToggleSelect,
 }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [isEditing, setIsEditing] = useState(false)
@@ -67,10 +69,10 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await updateChapterTitle(chapter.id, campaignId, title)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         setTitle(chapter.title)
       } else {
-        toast.success('Глава переименована')
+        toast.success(t('chapters.toast.renamed'))
         setIsEditing(false)
       }
     })
@@ -86,9 +88,9 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await toggleChapterVisibility(chapter.id, campaignId, willBeVisible)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success(willBeVisible ? 'Глава видна игрокам' : 'Глава скрыта от игроков')
+        toast.success(willBeVisible ? t('chapters.toast.visible') : t('chapters.toast.hidden'))
       }
     })
   }
@@ -97,9 +99,9 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await duplicateChapter(chapter.id, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Копия главы создана')
+        toast.success(t('chapters.toast.duplicated'))
       }
     })
   }
@@ -108,9 +110,9 @@ export default function ChapterItem({
     startTransition(async () => {
       const res = await deleteChapter(chapter.id, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Глава удалена')
+        toast.success(t('chapters.toast.deletedOne'))
         setShowDeleteConfirm(false)
       }
     })
@@ -143,7 +145,7 @@ export default function ChapterItem({
               {...attributes}
               {...listeners}
               className="shrink-0 cursor-grab touch-none text-[var(--text-subtle)] hover:text-[var(--text-muted)] active:cursor-grabbing"
-              title="Перетащи, чтобы изменить порядок"
+              title={t('chapters.dragHint')}
             >
               <GripVertical size={18} />
             </div>
@@ -168,7 +170,7 @@ export default function ChapterItem({
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Сохранить"
+                  label={t('common.save')}
                   onClick={handleSaveTitle}
                   disabled={isPending}
                   className="text-[var(--success)]"
@@ -178,7 +180,7 @@ export default function ChapterItem({
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Отмена"
+                  label={t('common.cancel')}
                   onClick={handleCancelEdit}
                   disabled={isPending}
                 >
@@ -194,7 +196,9 @@ export default function ChapterItem({
                   <HighlightedText text={chapter.title} query={searchQuery} />
                 </h3>
                 {!chapter.is_visible_to_players && isDm && (
-                  <span className="text-xs text-[var(--warning-text)]/80">Скрыта от игроков</span>
+                  <span className="text-xs text-[var(--warning-text)]/80">
+                    {t('chapters.hiddenFromPlayers')}
+                  </span>
                 )}
               </button>
             ) : (
@@ -203,7 +207,9 @@ export default function ChapterItem({
                   <HighlightedText text={chapter.title} query={searchQuery} />
                 </h3>
                 {!chapter.is_visible_to_players && isDm && (
-                  <span className="text-xs text-[var(--warning-text)]/80">Скрыта от игроков</span>
+                  <span className="text-xs text-[var(--warning-text)]/80">
+                    {t('chapters.hiddenFromPlayers')}
+                  </span>
                 )}
               </Link>
             )}
@@ -214,7 +220,7 @@ export default function ChapterItem({
               <IconButton
                 variant="ghost"
                 size="sm"
-                label={chapter.is_visible_to_players ? 'Скрыть от игроков' : 'Показать игрокам'}
+                label={chapter.is_visible_to_players ? t('chapters.hide') : t('chapters.show')}
                 onClick={handleToggleVisibility}
                 disabled={isPending}
               >
@@ -228,7 +234,7 @@ export default function ChapterItem({
               <IconButton
                 variant="ghost"
                 size="sm"
-                label="Переименовать"
+                label={t('chapters.rename')}
                 onClick={() => setIsEditing(true)}
                 disabled={isPending}
               >
@@ -238,7 +244,7 @@ export default function ChapterItem({
               <IconButton
                 variant="ghost"
                 size="sm"
-                label="Дублировать главу"
+                label={t('chapters.duplicate')}
                 onClick={handleDuplicate}
                 disabled={isPending}
               >
@@ -248,7 +254,7 @@ export default function ChapterItem({
               <IconButton
                 variant="ghost"
                 size="sm"
-                label="Удалить"
+                label={t('common.delete')}
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isPending}
                 className="text-[var(--danger)]"
@@ -263,8 +269,8 @@ export default function ChapterItem({
       <Dialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Удалить главу?"
-        description={`«${chapter.title}» будет удалена со всем содержимым. Восстановить нельзя.`}
+        title={t('chapters.deleteOne.title')}
+        description={t('chapters.deleteOne.description', { title: chapter.title })}
         size="sm"
         footer={
           <>
@@ -274,15 +280,15 @@ export default function ChapterItem({
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isPending}
             >
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button variant="danger" size="md" onClick={handleDelete} loading={isPending}>
-              Удалить
+              {t('common.delete')}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-[var(--text-muted)]">Это действие нельзя отменить.</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('chapters.deleteConfirm.cannotUndo')}</p>
       </Dialog>
     </>
   )

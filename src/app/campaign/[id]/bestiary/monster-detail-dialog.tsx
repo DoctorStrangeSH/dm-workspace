@@ -6,6 +6,9 @@ import { Plus } from 'lucide-react'
 import { addMonsterToCampaign } from '@/lib/actions/bestiary'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog } from '@/components/ui'
+import { useI18n } from '@/lib/i18n'
+import { abilityShort } from '@/lib/i18n/labels'
+import { srdName } from '@/lib/types'
 import type { SrdMonster } from '@/lib/actions/bestiary-search'
 
 interface Props {
@@ -21,19 +24,23 @@ function formatModifier(score: number | undefined): string {
 }
 
 export default function MonsterDetailDialog({ monster, campaignId, canEdit, onClose }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
 
   const data = monster.data
 
+  const sizeLabel = data.size ? t(`monsterSize.${data.size.toLowerCase()}`) : ''
+  const typeLabel = data.type ? t(`monsterType.${data.type.toLowerCase()}`) : ''
+
   const handleAdd = () => {
     startTransition(async () => {
       const res = await addMonsterToCampaign(monster.key, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Монстр добавлен в кампанию')
+        toast.success(t('bestiary.toast.addedToCampaign'))
         router.refresh()
         onClose()
       }
@@ -41,26 +48,28 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
   }
 
   const abilities = [
-    { label: 'СИЛ', score: data.abilities?.str },
-    { label: 'ЛОВ', score: data.abilities?.dex },
-    { label: 'ТЕЛ', score: data.abilities?.con },
-    { label: 'ИНТ', score: data.abilities?.int },
-    { label: 'МДР', score: data.abilities?.wis },
-    { label: 'ХАР', score: data.abilities?.cha },
+    { key: 'str' as const, score: data.abilities?.str },
+    { key: 'dex' as const, score: data.abilities?.dex },
+    { key: 'con' as const, score: data.abilities?.con },
+    { key: 'int' as const, score: data.abilities?.int },
+    { key: 'wis' as const, score: data.abilities?.wis },
+    { key: 'cha' as const, score: data.abilities?.cha },
   ]
+
+  const description = [sizeLabel, typeLabel, data.alignment].filter(Boolean).join(', ')
 
   return (
     <Dialog
       open={true}
       onClose={onClose}
-      title={monster.name_ru ?? monster.name}
-      description={`${data.size} ${data.type}, ${data.alignment || '—'}`}
+      title={srdName(monster, lang)}
+      description={description}
       size="lg"
       footer={
         canEdit ? (
           <>
             <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
-              Закрыть
+              {t('common.close')}
             </Button>
             <Button
               variant="primary"
@@ -69,7 +78,7 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
               onClick={handleAdd}
               loading={isPending}
             >
-              Добавить в кампанию
+              {t('bestiary.addToCampaign')}
             </Button>
           </>
         ) : undefined
@@ -86,18 +95,22 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
             <span className="text-[var(--text-secondary)]">{data.hp ?? '—'}</span>
           </div>
           <div>
-            <span className="text-[var(--text-muted)]">Скорость:</span>{' '}
-            <span className="text-[var(--text-secondary)]">{data.speed ?? '—'} футов</span>
+            <span className="text-[var(--text-muted)]">{t('characters.speed')}:</span>{' '}
+            <span className="text-[var(--text-secondary)]">
+              {data.speed ? t('common.feetShort', { feet: data.speed }) : '—'}
+            </span>
           </div>
         </div>
 
         <div className="grid grid-cols-6 gap-2">
           {abilities.map((a) => (
             <div
-              key={a.label}
+              key={a.key}
               className="rounded border border-[var(--border-default)] bg-[var(--bg-app)] p-2 text-center"
             >
-              <div className="text-[10px] text-[var(--text-subtle)] uppercase">{a.label}</div>
+              <div className="text-[10px] text-[var(--text-subtle)] uppercase">
+                {abilityShort(lang, a.key)}
+              </div>
               <div className="text-base font-bold text-[var(--text-primary)]">{a.score ?? 10}</div>
               <div className="text-[10px] text-[var(--text-subtle)]">{formatModifier(a.score)}</div>
             </div>
@@ -119,7 +132,9 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
 
         {data.description && (
           <div>
-            <h3 className="mb-2 font-semibold text-[var(--text-secondary)]">Описание</h3>
+            <h3 className="mb-2 font-semibold text-[var(--text-secondary)]">
+              {t('common.description')}
+            </h3>
             <div className="text-xs whitespace-pre-wrap text-[var(--text-muted)]">
               {data.description}
             </div>

@@ -7,7 +7,7 @@ import {
   type RaceInfo,
 } from '@/lib/dnd/constants'
 import { abilityModifier } from '@/lib/dnd/formulas'
-import { SKILL_ABILITY, SKILL_LABELS } from '@/lib/types'
+import { SKILL_ABILITY } from '@/lib/types'
 
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
@@ -109,9 +109,8 @@ export function getAbilityList(): AbilityKey[] {
   return ABILITIES
 }
 
-export function getSkillName(skill: SkillKey): string {
-  return SKILL_LABELS[skill]
-}
+// CHANGES (К9): удалена getSkillName() — использовала удалённый SKILL_LABELS.
+// Если понадобится, используй skillLabel(lang, skill) из @/lib/i18n/labels.
 
 export function getSkillAbility(skill: SkillKey): AbilityKey {
   return SKILL_ABILITY[skill]

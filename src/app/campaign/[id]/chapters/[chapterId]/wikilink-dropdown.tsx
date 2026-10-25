@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export default function WikilinkDropdown({ query, entities, position, onSelect, onClose }: Props) {
+  const t = useT()
   const [activeIndex, setActiveIndex] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -61,7 +63,7 @@ export default function WikilinkDropdown({ query, entities, position, onSelect, 
         className="absolute z-50 rounded-lg border border-[var(--border-default)] bg-[var(--bg-elevated)] p-3 text-sm text-[var(--text-muted)] shadow-[var(--shadow-xl)]"
         style={{ top: position.top, left: position.left }}
       >
-        Ничего не найдено
+        {t('chapters.search.noResultsTitle')}
       </div>
     )
   }
@@ -93,7 +95,8 @@ export default function WikilinkDropdown({ query, entities, position, onSelect, 
             <span className="text-lg">{style.icon}</span>
             <div className="min-w-0 flex-1">
               <div className="truncate font-medium">{entity.name}</div>
-              <div className="text-xs text-[var(--text-subtle)]">{style.label}</div>
+              {/* ⚠️ style.label пока русский — переведём в К7.4 (entity-ui.ts) */}
+              <div className="text-xs text-[var(--text-subtle)]">{t(style.labelKey)}</div>
             </div>
           </div>
         )

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { Hash, Plus } from 'lucide-react'
 import { addTagToEntity } from '@/lib/actions/tags'
 import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
 import { normalizeTagName } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import type { Tag, EntityTag } from '@/lib/types'
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function TagInput({ entityId, campaignId, existingTags, availableTags }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -24,20 +26,20 @@ export default function TagInput({ entityId, campaignId, existingTags, available
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const existingIds = useMemo(() => new Set(existingTags.map((t) => t.id)), [existingTags])
+  const existingIds = useMemo(() => new Set(existingTags.map((tg) => tg.id)), [existingTags])
 
   const filtered = useMemo(() => {
     const q = normalizeTagName(query)
     return availableTags
-      .filter((t) => !existingIds.has(t.id))
-      .filter((t) => !q || t.name.includes(q))
+      .filter((tg) => !existingIds.has(tg.id))
+      .filter((tg) => !q || tg.name.includes(q))
       .slice(0, 10)
   }, [availableTags, existingIds, query])
 
   const normalizedQuery = normalizeTagName(query)
   const canCreate =
     normalizedQuery.length > 0 &&
-    !availableTags.some((t) => t.name === normalizedQuery) &&
+    !availableTags.some((tg) => tg.name === normalizedQuery) &&
     !existingIds.has(normalizedQuery)
 
   const handleAdd = async (tagName: string) => {
@@ -46,11 +48,11 @@ export default function TagInput({ entityId, campaignId, existingTags, available
     setIsPending(false)
 
     if ('error' in res) {
-      toast.error(res.error ?? 'Ошибка')
+      toast.error(res.error ?? t('common.error'))
       return
     }
 
-    toast.success(`Тег #${normalizeTagName(tagName)} добавлен`)
+    toast.success(t('entities.tags.toast.added', { name: normalizeTagName(tagName) }))
     setQuery('')
     setIsOpen(false)
     inputRef.current?.focus()
@@ -103,7 +105,7 @@ export default function TagInput({ entityId, campaignId, existingTags, available
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
-          placeholder="Добавить тег..."
+          placeholder={t('entities.tags.inputPlaceholder')}
           disabled={isPending}
           className="min-w-[120px] flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:outline-none"
         />
@@ -113,7 +115,7 @@ export default function TagInput({ entityId, campaignId, existingTags, available
             onClick={() => handleAdd(query)}
             disabled={isPending || !normalizedQuery}
             className="rounded p-1 transition hover:bg-[var(--bg-hover)] disabled:opacity-50"
-            title="Добавить"
+            title={t('common.add')}
           >
             <Plus size={14} className="text-[var(--accent-text)]" />
           </button>
@@ -162,7 +164,7 @@ export default function TagInput({ entityId, campaignId, existingTags, available
             >
               <Plus size={14} />
               <span>
-                Создать <span className="font-medium">#{normalizedQuery}</span>
+                {t('entities.tags.create')} <span className="font-medium">#{normalizedQuery}</span>
               </span>
             </button>
           )}

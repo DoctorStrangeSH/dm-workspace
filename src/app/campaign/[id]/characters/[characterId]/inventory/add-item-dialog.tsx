@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { addInventoryItem } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
+import { Input, Textarea, Button, IconButton } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   characterId: string
@@ -13,6 +15,7 @@ interface Props {
 }
 
 export default function AddItemDialog({ characterId, campaignId, onClose }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -24,7 +27,7 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      toast.error('Введите название')
+      toast.error(t('inventory.form.nameRequired'))
       return
     }
 
@@ -39,93 +42,79 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
         toast.error(res.error)
         return
       }
-      toast.success('Предмет добавлен')
+      toast.success(t('inventory.toast.itemAdded'))
       router.refresh()
       onClose()
     })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-800 p-4">
-          <h2 className="font-semibold">Новый предмет</h2>
-          <button
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
+          <h2 className="font-semibold text-[var(--text-primary)]">{t('inventory.form.title')}</h2>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            label={t('common.close')}
             onClick={onClose}
             disabled={isPending}
-            className="rounded p-1 transition hover:bg-slate-800"
           >
             <X size={18} />
-          </button>
+          </IconButton>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 p-4">
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Название <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Меч длинный"
-              autoFocus
-              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
+          <Input
+            label={t('common.name')}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('inventory.form.namePlaceholder')}
+            autoFocus
+            required
+          />
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Количество</label>
-              <input
-                type="number"
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-                min={1}
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Вес 1 шт (lb)</label>
-              <input
-                type="number"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                min={0}
-                step="0.1"
-                placeholder="3"
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">Заметки</label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              placeholder="Описание..."
-              className="w-full resize-none rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+            <Input
+              label={t('inventory.form.quantity')}
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              min={1}
+            />
+            <Input
+              label={t('inventory.form.weight')}
+              type="number"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              min={0}
+              step="0.1"
+              placeholder="3"
             />
           </div>
 
+          <Textarea
+            label={t('inventory.form.notes')}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={2}
+            placeholder={t('inventory.form.notesPlaceholder')}
+          />
+
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={onClose}
               disabled={isPending}
-              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {isPending ? 'Добавляем...' : 'Добавить'}
-            </button>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={isPending}>
+              {isPending ? t('inventory.form.adding') : t('common.add')}
+            </Button>
           </div>
         </form>
       </div>

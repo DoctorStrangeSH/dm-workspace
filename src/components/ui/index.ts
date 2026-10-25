@@ -46,3 +46,5 @@ export type { TabsProps, TabItem } from './tabs'
 
 export { Dropdown } from './dropdown'
 export type { DropdownProps, DropdownItem } from './dropdown'
+
+export { LangToggle } from './lang-toggle'

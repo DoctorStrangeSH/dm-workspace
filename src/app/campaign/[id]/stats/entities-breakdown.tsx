@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { ENTITY_STYLES } from '@/lib/entity-ui'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import type { CampaignStats, EntityType } from '@/lib/types'
 
 interface Props {
@@ -12,6 +15,8 @@ interface Props {
 const ORDER: EntityType[] = ['npc', 'location', 'monster', 'item', 'faction', 'quest']
 
 export default function EntitiesBreakdown({ campaignId, stats }: Props) {
+  const t = useT()
+
   const items = ORDER.map((type) => ({
     type,
     count: stats[type] as number,
@@ -22,7 +27,7 @@ export default function EntitiesBreakdown({ campaignId, stats }: Props) {
   return (
     <Card padding="md" className="mb-8">
       <h2 className="mb-4 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-        Разбивка сущностей
+        {t('entities.breakdownTitle')}
       </h2>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -43,7 +48,7 @@ export default function EntitiesBreakdown({ campaignId, stats }: Props) {
                 <div className="text-base leading-tight font-bold text-[var(--text-primary)]">
                   {item.count}
                 </div>
-                <div className={cn('truncate text-[10px]', style.color)}>{style.label}</div>
+                <div className={cn('truncate text-[10px]', style.color)}>{t(style.labelKey)}</div>
               </div>
             </Link>
           )

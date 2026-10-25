@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { X, BookMarked } from 'lucide-react'
 import { useDmScreenContext } from './dm-screen-context'
 import DmEntityList from './dm-entity-list'
+import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { Entity } from '@/lib/types'
 
@@ -13,12 +14,12 @@ interface Props {
 }
 
 export default function DmScreenPanel({ entities, campaignId }: Props) {
+  const t = useT()
   const { isOpen, close, recentIds, addToRecent } = useDmScreenContext()
 
   // Esc — закрыть
   useEffect(() => {
     if (!isOpen) return
-
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close()
     }
@@ -26,13 +27,13 @@ export default function DmScreenPanel({ entities, campaignId }: Props) {
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, close])
 
-  // Блокируем скролл body, когда панель открыта
+  // Блокируем скролл body только на мобилке (sm:hidden), на desktop — карта видна
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    if (!isOpen) return
+    const isMobile = window.matchMedia('(max-width: 639px)').matches
+    if (!isMobile) return
+
+    document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = ''
     }
@@ -40,32 +41,33 @@ export default function DmScreenPanel({ entities, campaignId }: Props) {
 
   return (
     <>
-      {/* Оверлей */}
+      {/* Оверлей — только на мобилке (на desktop карта должна быть видна) */}
       <div
         onClick={close}
         className={cn(
-          'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity',
+          'fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity sm:hidden',
           isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         )}
       />
 
-      {/* Панель */}
+      {/* Панель — w-[320px] на мобилке (не w-full), w-[400px] на desktop.
+          z-40 (не 50 — Dialog/Dropdown выше). Токены. */}
       <aside
         className={cn(
-          'fixed top-0 right-0 z-50 flex h-screen w-full flex-col border-l border-slate-800 bg-slate-900 shadow-2xl transition-transform sm:w-[400px]',
+          'fixed top-0 right-0 z-40 flex h-screen w-[320px] flex-col border-l border-[var(--border-default)] bg-[var(--bg-surface)] shadow-2xl transition-transform sm:w-[400px]',
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
         {/* Заголовок */}
-        <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
           <div className="flex items-center gap-2">
-            <BookMarked size={18} className="text-indigo-400" />
-            <h2 className="font-semibold">Панель ГМа</h2>
+            <BookMarked size={18} className="text-[var(--accent-text)]" />
+            <h2 className="font-semibold text-[var(--text-primary)]">{t('dmScreen.title')}</h2>
           </div>
           <button
             onClick={close}
-            className="rounded-lg p-1.5 transition hover:bg-slate-800"
-            title="Закрыть (Esc)"
+            className="rounded-lg p-1.5 text-[var(--text-muted)] transition hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
+            title={t('dmScreen.closeHint')}
           >
             <X size={18} />
           </button>

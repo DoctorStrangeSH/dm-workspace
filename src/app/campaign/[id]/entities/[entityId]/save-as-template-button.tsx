@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { Sparkles, Check } from 'lucide-react'
 import { createTemplateFromEntity } from '@/lib/actions/templates'
 import { useToast } from '@/components/toast/toast-provider'
+import { Button, Dialog, Input } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   entityId: string
@@ -12,6 +14,7 @@ interface Props {
 }
 
 export default function SaveAsTemplateButton({ entityId, campaignId, defaultName }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [showDialog, setShowDialog] = useState(false)
@@ -22,10 +25,10 @@ export default function SaveAsTemplateButton({ entityId, campaignId, defaultName
     startTransition(async () => {
       const res = await createTemplateFromEntity(entityId, campaignId, name)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
-      toast.success('Шаблон сохранён')
+      toast.success(t('entities.template.toast.saved'))
       setDone(true)
       setTimeout(() => {
         setDone(false)
@@ -36,59 +39,54 @@ export default function SaveAsTemplateButton({ entityId, campaignId, defaultName
 
   return (
     <>
-      <button
+      <Button
+        variant="secondary"
+        size="sm"
+        icon={<Sparkles size={14} />}
         onClick={() => setShowDialog(true)}
-        className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm text-slate-300 transition hover:border-indigo-600"
       >
-        <Sparkles size={14} />
-        Сохранить как шаблон
-      </button>
+        {t('entities.template.saveAs')}
+      </Button>
 
-      {showDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 className="mb-2 text-lg font-semibold">Сохранить как шаблон?</h3>
-            <p className="mb-4 text-sm text-slate-400">
-              Шаблон будет доступен для создания новых сущностей этого типа.
-            </p>
-
-            <label className="mb-1 block text-sm text-slate-300">Название шаблона</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={100}
-              className="mb-4 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-            />
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setShowDialog(false)}
-                disabled={isPending}
-                className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isPending || !name.trim()}
-                className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 transition hover:bg-indigo-500 disabled:opacity-50"
-              >
-                {done ? (
-                  <>
-                    <Check size={14} />
-                    Сохранено
-                  </>
-                ) : isPending ? (
-                  'Сохраняем...'
-                ) : (
-                  'Сохранить'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog
+        open={showDialog}
+        onClose={() => !isPending && setShowDialog(false)}
+        title={t('entities.template.dialogTitle')}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowDialog(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleSave}
+              disabled={isPending || !name.trim()}
+              loading={isPending}
+              icon={done ? <Check size={14} /> : undefined}
+            >
+              {done ? t('entities.template.saved') : t('common.save')}
+            </Button>
+          </>
+        }
+      >
+        <p className="mb-3 text-sm text-[var(--text-muted)]">
+          {t('entities.template.dialogDescription')}
+        </p>
+        <Input
+          label={t('entities.template.nameLabel')}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={100}
+        />
+      </Dialog>
     </>
   )
 }

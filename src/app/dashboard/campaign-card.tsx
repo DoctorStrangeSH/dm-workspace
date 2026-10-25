@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Copy, RefreshCw, Trash2, Crown, Users, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card, Badge, Button, IconButton, Dialog, Tooltip } from '@/components/ui'
+import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
 import type { CampaignWithRole } from '@/lib/types'
 import { deleteCampaign, regenerateInviteCode } from '@/lib/actions/campaigns'
 
@@ -13,6 +15,8 @@ interface Props {
 }
 
 export default function CampaignCard({ campaign }: Props) {
+  const t = useT()
+  const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [copied, setCopied] = useState(false)
   const [inviteCode, setInviteCode] = useState(campaign.invite_code)
@@ -46,7 +50,8 @@ export default function CampaignCard({ campaign }: Props) {
     startTransition(async () => {
       const res = await deleteCampaign(campaign.id)
       if ('error' in res) {
-        alert(res.error)
+        // CHANGES: alert() → toast
+        toast.error(res.error ?? t('common.error'))
       }
       setShowDeleteConfirm(false)
     })
@@ -93,11 +98,11 @@ export default function CampaignCard({ campaign }: Props) {
                   {inviteUrl}
                 </code>
               </div>
-              <Tooltip content="Скопировать ссылку">
+              <Tooltip content={t('campaign.copyLink')}>
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Скопировать ссылку"
+                  label={t('campaign.copyLink')}
                   onClick={handleCopy}
                   disabled={isPending}
                 >
@@ -108,22 +113,22 @@ export default function CampaignCard({ campaign }: Props) {
                   )}
                 </IconButton>
               </Tooltip>
-              <Tooltip content="Перегенерировать код">
+              <Tooltip content={t('campaign.regenerateCode')}>
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Перегенерировать код"
+                  label={t('campaign.regenerateCode')}
                   onClick={handleRegenerate}
                   disabled={isPending}
                 >
                   <RefreshCw size={16} className={cn(isPending && 'animate-spin')} />
                 </IconButton>
               </Tooltip>
-              <Tooltip content="Удалить кампанию">
+              <Tooltip content={t('campaign.deleteTitle')}>
                 <IconButton
                   variant="ghost"
                   size="sm"
-                  label="Удалить кампанию"
+                  label={t('campaign.deleteTitle')}
                   onClick={() => setShowDeleteConfirm(true)}
                   disabled={isPending}
                   className="text-[var(--danger)]"
@@ -139,8 +144,8 @@ export default function CampaignCard({ campaign }: Props) {
       <Dialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        title="Удалить кампанию?"
-        description={`«${campaign.name}» будет удалена навсегда. Восстановить нельзя.`}
+        title={t('campaign.deleteConfirm.title')}
+        description={t('campaign.deleteConfirm.description', { name: campaign.name })}
         size="sm"
         footer={
           <>
@@ -150,17 +155,15 @@ export default function CampaignCard({ campaign }: Props) {
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isPending}
             >
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button variant="danger" size="md" onClick={handleDelete} loading={isPending}>
-              Удалить
+              {t('common.delete')}
             </Button>
           </>
         }
       >
-        <p className="text-sm text-[var(--text-muted)]">
-          Это действие нельзя отменить. Все главы, сущности, персонажи и сцены будут удалены.
-        </p>
+        <p className="text-sm text-[var(--text-muted)]">{t('campaign.deleteConfirm.cannotUndo')}</p>
       </Dialog>
     </>
   )

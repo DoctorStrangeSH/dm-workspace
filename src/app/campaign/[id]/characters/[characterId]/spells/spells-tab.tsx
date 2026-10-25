@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Plus, Sparkles, Moon } from 'lucide-react'
 import { longRest } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import { EmptyState } from '@/components/ui'
+import { EmptyState, Button, Dialog } from '@/components/ui'
 import SpellCard from './spell-card'
 import SpellSlotsTracker from './spell-slots-tracker'
 import AddSpellDialog from './add-spell-dialog'
 import { abilityModifier, formatModifier, proficiencyBonus } from '@/lib/dnd/formulas'
+import { useI18n } from '@/lib/i18n'
+import { pluralize } from '@/lib/i18n/plural'
 import type { Character, CharacterSpell, CharacterData } from '@/lib/types'
 
 interface Props {
@@ -19,16 +21,15 @@ interface Props {
 }
 
 export default function SpellsTab({ character, campaignId, canEdit }: Props) {
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [showAddDialog, setShowAddDialog] = useState(false)
+  const [showRestConfirm, setShowRestConfirm] = useState(false)
 
   const data: CharacterData = character.data_json
 
-  // CHANGES: обёрнуто в useMemo, чтобы ссылка на spells была стабильной.
-  // Раньше `data.spells ?? []` создавал новый [] каждый рендер,
-  // из-за чего useMemo(spellsByLevel) пересчитывался всегда.
   const spells = useMemo(() => character.data_json.spells ?? [], [character.data_json.spells])
   const slots = data.spellSlots ?? {}
 
@@ -44,27 +45,24 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
     return groups
   }, [spells])
 
-  const handleLongRest = () => {
-    if (!confirm('Завершить долгий отдых? Восстановятся HP, ячейки заклинаний и death saves.')) {
-      return
-    }
-
+  const doLongRest = () => {
     startTransition(async () => {
       const res = await longRest(character.id, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Долгий отдых завершён')
+        toast.success(t('spells.toast.longRestDone'))
         router.refresh()
       }
+      setShowRestConfirm(false)
     })
   }
 
   const handleRoll = (spell: CharacterSpell) => {
     const spellAbility = data.spellcastingAbility
     if (!spellAbility) {
-      toast.info(`${spell.name}`, {
-        description: 'Не указана заклинательная характеристика',
+      toast.info(spell.name, {
+        description: t('spells.noCastingAbility'),
       })
       return
     }
@@ -76,7 +74,10 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
     const total = roll + bonus
 
     toast.info(`${spell.name}: ${formatModifier(bonus)} = ${total}`, {
-      description: `Атака заклинанием: [${roll}] ${formatModifier(bonus)}`,
+      description: t('spells.spellAttackDesc', {
+        roll,
+        modifier: formatModifier(bonus),
+      }),
     })
   }
 
@@ -84,31 +85,45 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
     .map(Number)
     .sort((a, b) => a - b)
 
+  const levelLabel = (level: number) => {
+    if (level === 0) return t('spells.cantrips')
+    const word = pluralize(lang, level, {
+      one: t('spells.levelWord.one'),
+      few: t('spells.levelWord.few'),
+      many: t('spells.levelWord.many'),
+    })
+    return t('spells.levelLabel', { level, word })
+  }
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {canEdit && (
           <>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Plus size={14} />}
               onClick={() => setShowAddDialog(true)}
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white transition hover:bg-indigo-500"
             >
-              <Plus size={14} />
-              Добавить заклинание
-            </button>
+              {t('spells.add')}
+            </Button>
 
-            <button
-              onClick={handleLongRest}
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<Moon size={14} />}
+              onClick={() => setShowRestConfirm(true)}
               disabled={isPending}
-              className="flex items-center gap-2 rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
             >
-              <Moon size={14} />
-              Долгий отдых
-            </button>
+              {t('spells.longRest')}
+            </Button>
           </>
         )}
 
-        <div className="ml-auto text-sm text-slate-500">Всего: {spells.length}</div>
+        <div className="ml-auto text-sm text-[var(--text-muted)]">
+          {t('common.total')}: {spells.length}
+        </div>
       </div>
 
       <SpellSlotsTracker
@@ -121,11 +136,9 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
       {spells.length === 0 ? (
         <EmptyState
           icon="✨"
-          title="Заклинаний пока нет"
+          title={t('spells.empty.title')}
           description={
-            canEdit
-              ? 'Добавь первое заклинание — вручную или из справочника (скоро).'
-              : 'У персонажа нет заклинаний.'
+            canEdit ? t('spells.empty.descriptionEdit') : t('spells.empty.descriptionPlayer')
           }
           size="md"
           dashed={false}
@@ -134,10 +147,12 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
         <div className="space-y-4">
           {levelKeys.map((level) => (
             <div key={level}>
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wider text-slate-400 uppercase">
-                <Sparkles size={14} className="text-violet-400" />
-                {level === 0 ? 'Заговоры' : `${level} уровень`}
-                <span className="font-normal text-slate-600">({spellsByLevel[level].length})</span>
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
+                <Sparkles size={14} className="text-[var(--accent-text)]" />
+                {levelLabel(level)}
+                <span className="font-normal text-[var(--text-subtle)]">
+                  ({spellsByLevel[level].length})
+                </span>
               </h3>
 
               <div className="space-y-1.5">
@@ -164,6 +179,32 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
           onClose={() => setShowAddDialog(false)}
         />
       )}
+
+      {/* CHANGES: confirm() → Dialog */}
+      <Dialog
+        open={showRestConfirm}
+        onClose={() => !isPending && setShowRestConfirm(false)}
+        title={t('spells.longRestConfirm.title')}
+        description={t('spells.longRestConfirm.description')}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowRestConfirm(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="primary" size="md" onClick={doLongRest} loading={isPending}>
+              {t('spells.longRestConfirm.confirm')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">{t('spells.longRestConfirm.hint')}</p>
+      </Dialog>
     </div>
   )
 }

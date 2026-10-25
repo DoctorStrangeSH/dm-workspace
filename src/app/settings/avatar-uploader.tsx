@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from 'react'
 import { Camera, Loader2 } from 'lucide-react'
 import { uploadAvatar } from '@/lib/actions/settings'
 import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   currentUrl: string | null
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function AvatarUploader({ currentUrl, displayName }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [preview, setPreview] = useState<string | null>(currentUrl)
@@ -29,10 +31,10 @@ export default function AvatarUploader({ currentUrl, displayName }: Props) {
     startTransition(async () => {
       const res = await uploadAvatar(formData)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         setPreview(currentUrl)
       } else {
-        toast.success('Аватар обновлён')
+        toast.success(t('settings.avatar.toast.updated'))
       }
     })
   }
@@ -42,13 +44,13 @@ export default function AvatarUploader({ currentUrl, displayName }: Props) {
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-slate-700 transition hover:border-indigo-500"
+        className="group relative h-20 w-20 overflow-hidden rounded-full border-2 border-[var(--border-default)] transition hover:border-[var(--accent)]"
         disabled={isPending}
       >
         {preview ? (
           <img src={preview} alt={displayName} className="h-full w-full object-cover" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-indigo-950/60 text-2xl font-bold text-indigo-300">
+          <div className="flex h-full w-full items-center justify-center bg-[var(--accent-subtle)] text-2xl font-bold text-[var(--accent-text)]">
             {displayName.charAt(0).toUpperCase()}
           </div>
         )}
@@ -63,9 +65,9 @@ export default function AvatarUploader({ currentUrl, displayName }: Props) {
 
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
 
-      <div className="text-sm text-slate-400">
-        <p className="font-medium text-slate-200">Аватар</p>
-        <p className="text-xs">PNG, JPG, WebP. Макс 2 MB.</p>
+      <div className="text-sm text-[var(--text-muted)]">
+        <p className="font-medium text-[var(--text-primary)]">{t('settings.avatar.title')}</p>
+        <p className="text-xs">{t('settings.avatar.hint')}</p>
       </div>
     </div>
   )

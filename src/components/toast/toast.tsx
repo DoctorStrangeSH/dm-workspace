@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import type { ToastItem, ToastType } from '@/lib/toast-types'
 
 interface Props {
@@ -45,6 +46,7 @@ const STYLES: Record<
 }
 
 export default function Toast({ toast, onClose }: Props) {
+  const t = useT()
   const [isVisible, setIsVisible] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
   const style = STYLES[toast.type]
@@ -81,7 +83,8 @@ export default function Toast({ toast, onClose }: Props) {
       <button
         onClick={handleClose}
         className="shrink-0 rounded p-1 transition hover:bg-white/10"
-        title="Закрыть"
+        title={t('common.close')}
+        aria-label={t('common.close')}
       >
         <X size={14} className="text-[var(--text-muted)]" />
       </button>

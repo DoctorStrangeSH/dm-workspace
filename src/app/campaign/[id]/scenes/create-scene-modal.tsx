@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react'
 import { X } from 'lucide-react'
 import { createScene } from '@/lib/actions/scenes'
 import { useToast } from '@/components/toast/toast-provider'
+import { Input, Select, Button, IconButton } from '@/components/ui'
+import { useT } from '@/lib/i18n'
+import type { GridType } from '@/lib/types'
 
 interface Props {
   campaignId: string
@@ -11,10 +14,11 @@ interface Props {
 }
 
 export default function CreateSceneModal({ campaignId, onClose }: Props) {
+  const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState('')
-  const [gridType, setGridType] = useState<'square' | 'hex' | 'none'>('square')
+  const [gridType, setGridType] = useState<GridType>('square')
   const [gridSize, setGridSize] = useState(50)
   const [width, setWidth] = useState(30)
   const [height, setHeight] = useState(20)
@@ -22,7 +26,7 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      toast.error('Введите название')
+      toast.error(t('scenes.form.nameRequired'))
       return
     }
 
@@ -35,107 +39,96 @@ export default function CreateSceneModal({ campaignId, onClose }: Props) {
         height,
       })
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         return
       }
-      toast.success('Сцена создана')
+      toast.success(t('scenes.toast.created'))
       onClose()
     })
   }
 
+  const gridOptions = [
+    { value: 'square', label: t('scenes.gridType.square') },
+    { value: 'hex', label: t('scenes.gridType.hex') },
+    { value: 'none', label: t('scenes.gridType.none') },
+  ]
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-800 p-4">
-          <h2 className="font-semibold">Новая сцена</h2>
-          <button onClick={onClose} disabled={isPending} className="rounded p-1 hover:bg-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
+        <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
+          <h2 className="font-semibold text-[var(--text-primary)]">{t('scenes.form.title')}</h2>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            label={t('common.close')}
+            onClick={onClose}
+            disabled={isPending}
+          >
             <X size={18} />
-          </button>
+          </IconButton>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 p-4">
-          <div>
-            <label className="mb-1 block text-sm text-slate-300">
-              Название <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Подземелье гоблинов"
-              autoFocus
-              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+          <Input
+            label={t('common.name')}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('scenes.form.namePlaceholder')}
+            autoFocus
+            required
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Select
+              label={t('scenes.form.gridType')}
+              value={gridType}
+              onChange={(e) => setGridType(e.target.value as GridType)}
+              options={gridOptions}
+            />
+            <Input
+              label={t('scenes.form.gridSize')}
+              type="number"
+              value={gridSize}
+              onChange={(e) => setGridSize(Number(e.target.value) || 50)}
+              min={20}
+              max={150}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Тип сетки</label>
-              <select
-                value={gridType}
-                // CHANGES: было `as unknown`, стало точное приведение к union
-                onChange={(e) => setGridType(e.target.value as 'square' | 'hex' | 'none')}
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
-              >
-                <option value="square">Квадрат</option>
-                <option value="hex">Гекс</option>
-                <option value="none">Без сетки</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Размер клетки (px)</label>
-              <input
-                type="number"
-                value={gridSize}
-                onChange={(e) => setGridSize(Number(e.target.value) || 50)}
-                min={20}
-                max={150}
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Ширина (клеток)</label>
-              <input
-                type="number"
-                value={width}
-                onChange={(e) => setWidth(Number(e.target.value) || 30)}
-                min={5}
-                max={100}
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm text-slate-300">Высота (клеток)</label>
-              <input
-                type="number"
-                value={height}
-                onChange={(e) => setHeight(Number(e.target.value) || 20)}
-                min={5}
-                max={100}
-                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white"
-              />
-            </div>
+            <Input
+              label={t('scenes.form.width')}
+              type="number"
+              value={width}
+              onChange={(e) => setWidth(Number(e.target.value) || 30)}
+              min={5}
+              max={100}
+            />
+            <Input
+              label={t('scenes.form.height')}
+              type="number"
+              value={height}
+              onChange={(e) => setHeight(Number(e.target.value) || 20)}
+              min={5}
+              max={100}
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={onClose}
               disabled={isPending}
-              className="rounded-lg bg-slate-800 px-4 py-2 transition hover:bg-slate-700 disabled:opacity-50"
             >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {isPending ? 'Создаём...' : 'Создать'}
-            </button>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="md" loading={isPending}>
+              {isPending ? t('scenes.form.creating') : t('common.create')}
+            </Button>
           </div>
         </form>
       </div>

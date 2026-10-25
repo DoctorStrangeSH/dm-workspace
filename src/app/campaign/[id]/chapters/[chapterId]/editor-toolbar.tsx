@@ -3,6 +3,7 @@
 import { Pencil, Eye, Columns, Bold, Italic, List, Link2, Quote, Code2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton, Tooltip } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import SaveStatus from './save-status'
 
 export type ViewMode = 'edit' | 'split' | 'preview'
@@ -30,52 +31,70 @@ export default function EditorToolbar({
   exportButton,
   hideViewModes = false,
 }: Props) {
+  const t = useT()
+
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] pb-3">
-      {/* Режимы */}
       {!hideViewModes && (
         <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
           <ViewButton
             active={view === 'edit'}
             onClick={() => onViewChange('edit')}
             icon={<Pencil size={14} />}
-            label="Редактор"
+            label={t('chapters.editor')}
           />
           <ViewButton
             active={view === 'split'}
             onClick={() => onViewChange('split')}
             icon={<Columns size={14} />}
-            label="Разделённый"
+            label={t('chapters.view.split')}
           />
           <ViewButton
             active={view === 'preview'}
             onClick={() => onViewChange('preview')}
             icon={<Eye size={14} />}
-            label="Просмотр"
+            label={t('chapters.preview')}
           />
         </div>
       )}
 
-      {/* Быстрые вставки */}
       {!readOnly && view !== 'preview' && onInsert && (
         <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
-          <Tooltip content="Жирный (Ctrl+B)">
-            <ToolButton onClick={() => onInsert('**жирный**', true)} icon={<Bold size={14} />} />
+          <Tooltip content={t('chapters.toolbar.boldHint')}>
+            <ToolButton
+              onClick={() => onInsert(`**${t('chapters.toolbar.boldSample')}**`, true)}
+              icon={<Bold size={14} />}
+            />
           </Tooltip>
-          <Tooltip content="Курсив (Ctrl+I)">
-            <ToolButton onClick={() => onInsert('*курсив*', true)} icon={<Italic size={14} />} />
+          <Tooltip content={t('chapters.toolbar.italicHint')}>
+            <ToolButton
+              onClick={() => onInsert(`*${t('chapters.toolbar.italicSample')}*`, true)}
+              icon={<Italic size={14} />}
+            />
           </Tooltip>
-          <Tooltip content="Список">
-            <ToolButton onClick={() => onInsert('\n- элемент списка')} icon={<List size={14} />} />
+          <Tooltip content={t('chapters.toolbar.listHint')}>
+            <ToolButton
+              onClick={() => onInsert(`\n- ${t('chapters.toolbar.listSample')}`)}
+              icon={<List size={14} />}
+            />
           </Tooltip>
-          <Tooltip content="Ссылка">
-            <ToolButton onClick={() => onInsert('[текст](url)')} icon={<Link2 size={14} />} />
+          <Tooltip content={t('chapters.toolbar.linkHint')}>
+            <ToolButton
+              onClick={() => onInsert(`[${t('chapters.toolbar.linkTextSample')}](url)`)}
+              icon={<Link2 size={14} />}
+            />
           </Tooltip>
-          <Tooltip content="Цитата">
-            <ToolButton onClick={() => onInsert('\n> цитата\n')} icon={<Quote size={14} />} />
+          <Tooltip content={t('chapters.toolbar.quoteHint')}>
+            <ToolButton
+              onClick={() => onInsert(`\n> ${t('chapters.toolbar.quoteSample')}\n`)}
+              icon={<Quote size={14} />}
+            />
           </Tooltip>
-          <Tooltip content="Код">
-            <ToolButton onClick={() => onInsert('`код`', true)} icon={<Code2 size={14} />} />
+          <Tooltip content={t('chapters.toolbar.codeHint')}>
+            <ToolButton
+              onClick={() => onInsert(`\`${t('chapters.toolbar.codeSample')}\``, true)}
+              icon={<Code2 size={14} />}
+            />
           </Tooltip>
         </div>
       )}

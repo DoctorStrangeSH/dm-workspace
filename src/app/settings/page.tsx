@@ -10,9 +10,14 @@ import DeleteAccountSection from './delete-account-section'
 import ThemeToggle from '@/components/theme-toggle'
 import { AppShell } from '@/components/app-shell'
 import { Card } from '@/components/ui'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
 export default async function SettingsPage() {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const supabase = await createClient()
   const {
@@ -24,11 +29,17 @@ export default async function SettingsPage() {
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
   return (
-    <AppShell title="Настройки" backHref="/dashboard" actions={<ThemeToggle />} maxWidth="md">
+    <AppShell
+      title={t('nav.settings')}
+      backHref="/dashboard"
+      actions={<ThemeToggle />}
+      maxWidth="md"
+    >
       <div className="space-y-6">
-        {/* Профиль */}
         <Card padding="lg">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">Профиль</h2>
+          <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
+            {t('settings.profile.title')}
+          </h2>
           <div className="space-y-6">
             <AvatarUploader
               currentUrl={profile?.avatar_url ?? null}
@@ -41,15 +52,17 @@ export default async function SettingsPage() {
           </div>
         </Card>
 
-        {/* Безопасность */}
         <Card padding="lg">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">Безопасность</h2>
+          <h2 className="mb-4 text-lg font-semibold text-[var(--text-primary)]">
+            {t('settings.security.title')}
+          </h2>
           <SecurityForm currentEmail={user.email ?? ''} />
         </Card>
 
-        {/* Опасная зона */}
         <Card padding="lg" className="border-[var(--danger)]/40 bg-[var(--danger-subtle)]">
-          <h2 className="mb-4 text-lg font-semibold text-[var(--danger-text)]">Опасная зона</h2>
+          <h2 className="mb-4 text-lg font-semibold text-[var(--danger-text)]">
+            {t('settings.danger.title')}
+          </h2>
           <DeleteAccountSection />
         </Card>
       </div>

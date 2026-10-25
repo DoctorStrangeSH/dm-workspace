@@ -8,6 +8,7 @@ import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import { cn } from '@/lib/utils'
 import { Button, IconButton, Dialog, Badge } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
@@ -18,10 +19,12 @@ interface Props {
 }
 
 export default function InitiativePanel({ sceneId, initialInitiative, isDm, onClose }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [selectedEntry, setSelectedEntry] = useState<InitiativeEntryWithToken | null>(null)
+  const [showEndCombatConfirm, setShowEndCombatConfirm] = useState(false)
 
   const entries = useRealtimeInitiative({
     sceneId,
@@ -33,21 +36,22 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
   const handleNextTurn = () => {
     startTransition(async () => {
       const res = await nextTurn(sceneId)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else router.refresh()
     })
   }
 
-  const handleEndCombat = () => {
-    if (!confirm('Завершить бой?')) return
+  const doEndCombat = () => {
     startTransition(async () => {
       const res = await endCombat(sceneId)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
-      else {
-        toast.success('Бой завершён')
+      if ('error' in res) {
+        toast.error(res.error ?? t('common.error'))
+      } else {
+        toast.success(t('scenes.toast.combatEnded'))
         router.refresh()
         onClose()
       }
+      setShowEndCombatConfirm(false)
     })
   }
 
@@ -55,7 +59,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
     startTransition(async () => {
       const res = await rollInitiativeForToken(entry.id, sceneId)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
         toast.info(`${entry.token.name}: ${res.total}`, {
           description: `[${res.roll}] ${res.dexMod >= 0 ? '+' : ''}${res.dexMod} (DEX)`,
@@ -72,30 +76,30 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
   ) => {
     startTransition(async () => {
       const res = await damageToken(entry.token_id, sceneId, amount, type)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else router.refresh()
     })
   }
 
   return (
     <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-2xl sm:w-[380px]">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
         <div className="flex items-center gap-2">
           <Swords size={18} className="text-[var(--danger)]" />
-          <h2 className="font-semibold text-[var(--text-primary)]">Бой</h2>
+          <h2 className="font-semibold text-[var(--text-primary)]">
+            {t('scenes.initiative.title')}
+          </h2>
           <span className="text-xs text-[var(--text-muted)]">({entries.length})</span>
         </div>
-        <IconButton variant="ghost" size="sm" label="Закрыть" onClick={onClose}>
+        <IconButton variant="ghost" size="sm" label={t('common.close')} onClick={onClose}>
           <X size={18} />
         </IconButton>
       </div>
 
-      {/* Текущий ход */}
       {currentEntry && (
         <div className="border-b border-[var(--danger)]/40 bg-[var(--danger-subtle)] p-3">
           <div className="mb-1 text-xs tracking-wider text-[var(--danger-text)] uppercase">
-            Сейчас
+            {t('scenes.initiative.now')}
           </div>
           <div className="font-semibold text-[var(--text-primary)]">{currentEntry.token.name}</div>
           <Button
@@ -107,15 +111,16 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
             iconPosition="right"
             className="mt-2 w-full"
           >
-            Следующий ход
+            {t('scenes.initiative.nextTurn')}
           </Button>
         </div>
       )}
 
-      {/* Список */}
       <div className="flex-1 overflow-y-auto p-2">
         {entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[var(--text-muted)]">Нет инициативы</p>
+          <p className="py-8 text-center text-sm text-[var(--text-muted)]">
+            {t('scenes.initiative.empty')}
+          </p>
         ) : (
           <div className="space-y-1">
             {entries.map((entry) => {
@@ -135,7 +140,6 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                       : 'hover:bg-[var(--bg-hover)]'
                   )}
                 >
-                  {/* Строка 1: инициатива + имя + AC + кнопка броска */}
                   <div
                     className="flex cursor-pointer items-center gap-2"
                     onClick={() => setSelectedEntry(entry)}
@@ -166,7 +170,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                       <IconButton
                         variant="ghost"
                         size="sm"
-                        label="Бросок инициативы"
+                        label={t('scenes.initiative.roll')}
                         onClick={(e) => {
                           e.stopPropagation()
                           handleRoll(entry)
@@ -178,7 +182,6 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                     )}
                   </div>
 
-                  {/* Строка 2: HP-бар + inline-кнопки */}
                   {hasHP && (
                     <div className="mt-1.5 flex items-center gap-2 pl-7">
                       <div className="h-1.5 flex-1 overflow-hidden rounded bg-[var(--bg-app)]">
@@ -206,7 +209,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                             }}
                             disabled={isPending}
                             className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
-                            title="−5 HP"
+                            title={t('scenes.hp.minus', { n: 5 })}
                           >
                             <Minus size={10} className="inline" />5
                           </button>
@@ -217,7 +220,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                             }}
                             disabled={isPending}
                             className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
-                            title="−1 HP"
+                            title={t('scenes.hp.minus', { n: 1 })}
                           >
                             <Minus size={10} className="inline" />1
                           </button>
@@ -228,7 +231,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                             }}
                             disabled={isPending}
                             className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--success-text)] transition hover:bg-[var(--success-subtle)] disabled:opacity-50"
-                            title="+1 HP"
+                            title={t('scenes.hp.plus', { n: 1 })}
                           >
                             <Plus size={10} className="inline" />1
                           </button>
@@ -239,7 +242,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                             }}
                             disabled={isPending}
                             className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--success-text)] transition hover:bg-[var(--success-subtle)] disabled:opacity-50"
-                            title="+5 HP"
+                            title={t('scenes.hp.plus', { n: 5 })}
                           >
                             <Plus size={10} className="inline" />5
                           </button>
@@ -248,7 +251,6 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                     </div>
                   )}
 
-                  {/* Строка 3: условия */}
                   {conditions.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-0.5 pl-7">
                       {conditions.map((c, i) => (
@@ -269,20 +271,18 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
         )}
       </div>
 
-      {/* Футер */}
       <div className="border-t border-[var(--border-default)] p-3">
         <Button
           variant="secondary"
           size="sm"
-          onClick={handleEndCombat}
+          onClick={() => setShowEndCombatConfirm(true)}
           disabled={isPending}
           className="w-full text-[var(--danger-text)]"
         >
-          Завершить бой
+          {t('scenes.initiative.endCombat')}
         </Button>
       </div>
 
-      {/* Меню урона (Dialog) — оставляем для быстрого доступа */}
       {selectedEntry && (
         <Dialog
           open={true}
@@ -327,6 +327,34 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
           </div>
         </Dialog>
       )}
+
+      {/* CHANGES: confirm() → Dialog */}
+      <Dialog
+        open={showEndCombatConfirm}
+        onClose={() => !isPending && setShowEndCombatConfirm(false)}
+        title={t('scenes.initiative.endCombatConfirm.title')}
+        description={t('scenes.initiative.endCombatConfirm.description')}
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowEndCombatConfirm(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="danger" size="md" onClick={doEndCombat} loading={isPending}>
+              {t('scenes.initiative.endCombatConfirm.confirm')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-[var(--text-muted)]">
+          {t('scenes.initiative.endCombatConfirm.cannotUndo')}
+        </p>
+      </Dialog>
     </aside>
   )
 }

@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Loader2 } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { updateProfile } from '@/lib/actions/settings'
 import { useToast } from '@/components/toast/toast-provider'
+import { Input, Button } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   currentDisplayName: string
@@ -12,6 +14,7 @@ interface Props {
 }
 
 export default function ProfileForm({ currentDisplayName, currentUsername }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [displayName, setDisplayName] = useState(currentDisplayName)
@@ -25,9 +28,9 @@ export default function ProfileForm({ currentDisplayName, currentUsername }: Pro
     startTransition(async () => {
       const res = await updateProfile(formData)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
       } else {
-        toast.success('Профиль обновлён')
+        toast.success(t('settings.profile.toast.updated'))
         router.refresh()
       }
     })
@@ -35,23 +38,19 @@ export default function ProfileForm({ currentDisplayName, currentUsername }: Pro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <div>
-        <label className="mb-1 block text-sm text-slate-300">Имя для отображения</label>
-        <input
-          name="display_name"
-          type="text"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          required
-          minLength={2}
-          maxLength={50}
-          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
-        />
-      </div>
+      <Input
+        name="display_name"
+        type="text"
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        required
+        minLength={2}
+        maxLength={50}
+        label={t('settings.profile.displayName')}
+      />
 
       <div>
-        <label className="mb-1 block text-sm text-slate-300">Username</label>
-        <input
+        <Input
           name="username"
           type="text"
           value={username}
@@ -60,28 +59,20 @@ export default function ProfileForm({ currentDisplayName, currentUsername }: Pro
           minLength={3}
           maxLength={30}
           pattern="[a-zA-Z0-9_]+"
-          className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-indigo-500 focus:outline-none"
+          label={t('settings.profile.username')}
+          hint={t('settings.profile.usernameHint')}
         />
-        <p className="mt-1 text-xs text-slate-500">Буквы, цифры и подчёркивания</p>
       </div>
 
-      <button
+      <Button
         type="submit"
-        disabled={isPending}
-        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition hover:bg-indigo-500 disabled:opacity-50"
+        variant="primary"
+        size="md"
+        icon={<Save size={14} />}
+        loading={isPending}
       >
-        {isPending ? (
-          <>
-            <Loader2 size={14} className="animate-spin" />
-            Сохраняем...
-          </>
-        ) : (
-          <>
-            <Save size={14} />
-            Сохранить
-          </>
-        )}
-      </button>
+        {isPending ? t('common.saving') : t('common.save')}
+      </Button>
     </form>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { X } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 import type { EntityTag } from '@/lib/types'
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function TagChip({ tag, onRemove, size = 'md' }: Props) {
+  const t = useT()
   const sizeClasses = size === 'sm' ? 'text-[10px] px-1.5 py-0.5' : 'text-xs px-2 py-1'
 
   return (
@@ -26,7 +28,7 @@ export default function TagChip({ tag, onRemove, size = 'md' }: Props) {
         <button
           onClick={() => onRemove(tag.id)}
           className="rounded-full p-0.5 opacity-0 transition group-hover:opacity-100 hover:bg-white/10"
-          title="Удалить тег"
+          title={t('entities.tags.removeHint')}
         >
           <X size={size === 'sm' ? 8 : 10} />
         </button>

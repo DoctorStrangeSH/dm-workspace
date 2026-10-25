@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Search, X, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   onSearch: (q: string) => void
@@ -13,23 +14,20 @@ interface Props {
   isPending?: boolean
 }
 
-const RARITY_LABELS: Record<string, string> = {
-  common: 'Обычный',
-  uncommon: 'Необычный',
-  rare: 'Редкий',
-  'very rare': 'Очень редкий',
-  legendary: 'Легендарный',
-  artifact: 'Артефакт',
-  varies: 'Варьируется',
+// CHANGES: хардкод цветов → семантические токены
+const RARITY_COLORS: Record<string, string> = {
+  common: 'text-[var(--text-muted)]',
+  uncommon: 'text-[var(--success-text)]',
+  rare: 'text-[var(--info-text)]',
+  'very rare': 'text-[var(--accent-text)]',
+  legendary: 'text-[var(--warning-text)]',
+  artifact: 'text-[var(--danger-text)]',
+  varies: 'text-[var(--text-muted)]',
 }
 
-const RARITY_COLORS: Record<string, string> = {
-  common: 'text-slate-400',
-  uncommon: 'text-emerald-400',
-  rare: 'text-sky-400',
-  'very rare': 'text-violet-400',
-  legendary: 'text-amber-400',
-  artifact: 'text-red-400',
+/** 'very rare' → 'veryRare' (для i18n-ключа) */
+function rarityI18nKey(raw: string): string {
+  return raw.replace(/\s+([a-z])/g, (_, c: string) => c.toUpperCase())
 }
 
 export default function ItemsSearch({
@@ -40,13 +38,14 @@ export default function ItemsSearch({
   availableRarities,
   isPending,
 }: Props) {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [types, setTypes] = useState<string[]>([])
   const [rarities, setRarities] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
 
-  const toggleType = (t: string) => {
-    const next = types.includes(t) ? types.filter((x) => x !== t) : [...types, t]
+  const toggleType = (type: string) => {
+    const next = types.includes(type) ? types.filter((x) => x !== type) : [...types, type]
     setTypes(next)
     onFilterType(next)
   }
@@ -57,11 +56,16 @@ export default function ItemsSearch({
     onFilterRarity(next)
   }
 
+  const filtersCount = types.length + rarities.length
+
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search size={16} className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" />
+          <Search
+            size={16}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--text-subtle)]"
+          />
           <input
             type="search"
             value={query}
@@ -69,9 +73,9 @@ export default function ItemsSearch({
               setQuery(e.target.value)
               onSearch(e.target.value)
             }}
-            placeholder="Поиск предметов..."
+            placeholder={t('items.searchPlaceholder')}
             disabled={isPending}
-            className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2.5 pr-9 pl-9 text-sm text-white placeholder:text-slate-600 focus:border-indigo-500 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] py-2.5 pr-9 pl-9 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
@@ -79,9 +83,10 @@ export default function ItemsSearch({
                 setQuery('')
                 onSearch('')
               }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 hover:bg-slate-800"
+              className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 hover:bg-[var(--bg-hover)]"
+              aria-label={t('common.clear')}
             >
-              <X size={14} className="text-slate-500" />
+              <X size={14} className="text-[var(--text-subtle)]" />
             </button>
           )}
         </div>
@@ -90,69 +95,78 @@ export default function ItemsSearch({
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
             'flex items-center gap-2 rounded-lg border px-3 py-2.5 transition',
-            showFilters || types.length > 0 || rarities.length > 0
-              ? 'border-indigo-600 bg-indigo-950/60 text-indigo-300'
-              : 'border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700'
+            showFilters || filtersCount > 0
+              ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+              : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
           )}
         >
           <Filter size={14} />
-          <span className="hidden sm:inline">Фильтры</span>
-          {types.length + rarities.length > 0 && (
-            <span className="rounded-full bg-indigo-600 px-1.5 text-xs text-white">
-              {types.length + rarities.length}
+          <span className="hidden sm:inline">{t('items.filters')}</span>
+          {filtersCount > 0 && (
+            <span className="rounded-full bg-[var(--accent)] px-1.5 text-xs text-white">
+              {filtersCount}
             </span>
           )}
         </button>
       </div>
 
       {showFilters && (
-        <div className="mt-3 space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-3">
+        <div className="mt-3 space-y-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
           {availableRarities.length > 0 && (
             <div>
-              <div className="mb-2 text-xs tracking-wider text-slate-500 uppercase">Редкость</div>
+              <div className="mb-2 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
+                {t('items.filter.rarity')}
+              </div>
               <div className="flex flex-wrap gap-1">
-                {availableRarities.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => toggleRarity(r)}
-                    className={cn(
-                      'rounded border px-2 py-1 text-xs transition',
-                      rarities.includes(r)
-                        ? 'border-indigo-500 bg-indigo-600 text-white'
-                        : 'border-slate-800 bg-slate-950 hover:border-slate-700',
-                      !rarities.includes(r) && RARITY_COLORS[r]
-                    )}
-                  >
-                    {RARITY_LABELS[r] ?? r}
-                  </button>
-                ))}
+                {availableRarities.map((r) => {
+                  const isActive = rarities.includes(r)
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => toggleRarity(r)}
+                      className={cn(
+                        'rounded border px-2 py-1 text-xs transition',
+                        isActive
+                          ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                          : cn(
+                              'border-[var(--border-default)] bg-[var(--bg-app)] hover:border-[var(--border-hover)]',
+                              RARITY_COLORS[r] ?? 'text-[var(--text-muted)]'
+                            )
+                      )}
+                    >
+                      {t(`itemRarity.${rarityI18nKey(r)}`)}
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
           {availableTypes.length > 0 && (
             <div>
-              <div className="mb-2 text-xs tracking-wider text-slate-500 uppercase">Тип</div>
+              <div className="mb-2 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
+                {t('items.filter.type')}
+              </div>
               <div className="flex flex-wrap gap-1">
-                {availableTypes.slice(0, 30).map((t) => (
+                {availableTypes.slice(0, 30).map((type) => (
                   <button
-                    key={t}
-                    onClick={() => toggleType(t)}
+                    key={type}
+                    onClick={() => toggleType(type)}
                     className={cn(
                       'rounded border px-2 py-1 text-xs capitalize transition',
-                      types.includes(t)
-                        ? 'border-indigo-500 bg-indigo-600 text-white'
-                        : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
+                      types.includes(type)
+                        ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                        : 'border-[var(--border-default)] bg-[var(--bg-app)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
                     )}
                   >
-                    {t}
+                    {type}
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {(types.length > 0 || rarities.length > 0) && (
+          {filtersCount > 0 && (
             <button
               onClick={() => {
                 setTypes([])
@@ -160,9 +174,9 @@ export default function ItemsSearch({
                 onFilterType([])
                 onFilterRarity([])
               }}
-              className="text-xs text-slate-500 transition hover:text-white"
+              className="text-xs text-[var(--text-subtle)] transition hover:text-[var(--text-primary)]"
             >
-              Сбросить
+              {t('items.resetFilters')}
             </button>
           )}
         </div>

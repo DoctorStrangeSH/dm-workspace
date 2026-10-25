@@ -7,9 +7,14 @@ import Link from 'next/link'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { AppShell } from '@/components/app-shell'
 import { Button, Card } from '@/components/ui'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
 export default async function JoinPage({ params }: { params: Promise<{ code: string }> }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { code } = await params
 
@@ -31,14 +36,12 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
         <Card padding="lg" className="w-full text-center">
           <XCircle size={48} className="mx-auto mb-4 text-[var(--danger)]" />
           <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">
-            Не удалось присоединиться
+            {t('join.error.title')}
           </h1>
-          <p className="mb-6 text-sm text-[var(--text-muted)]">
-            Код приглашения недействителен или устарел.
-          </p>
+          <p className="mb-6 text-sm text-[var(--text-muted)]">{t('join.error.description')}</p>
           <Link href="/dashboard">
             <Button variant="primary" size="md">
-              На главную
+              {t('join.error.goHome')}
             </Button>
           </Link>
         </Card>
@@ -57,16 +60,17 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
     <AppShell maxWidth="sm" className="flex items-center justify-center">
       <Card padding="lg" className="w-full text-center">
         <CheckCircle2 size={48} className="mx-auto mb-4 text-[var(--success)]" />
-        <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">Добро пожаловать!</h1>
+        <h1 className="mb-2 text-xl font-bold text-[var(--text-primary)]">
+          {t('join.success.title')}
+        </h1>
         <p className="mb-6 text-sm text-[var(--text-muted)]">
-          Ты присоединился к кампании{' '}
-          <span className="font-medium text-[var(--text-primary)]">
-            «{campaign?.name ?? 'Без названия'}»
-          </span>
+          {t('join.success.description', {
+            name: campaign?.name ?? t('join.success.untitled'),
+          })}
         </p>
         <Link href="/dashboard">
           <Button variant="primary" size="md">
-            Перейти к кампаниям
+            {t('join.success.goToCampaigns')}
           </Button>
         </Link>
       </Card>

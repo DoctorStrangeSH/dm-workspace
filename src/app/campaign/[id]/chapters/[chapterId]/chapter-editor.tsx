@@ -11,6 +11,7 @@ import { toFilename } from '@/lib/slugify'
 import { useAutosave } from '@/lib/hooks/use-autosave'
 import { useHotkey } from '@/lib/hooks/use-hotkey'
 import { useIsMobile } from '@/lib/hooks/use-media-query'
+import { useT } from '@/lib/i18n'
 import EditorToolbar, { type ViewMode } from './editor-toolbar'
 import CMEditor from './cm-editor'
 import MarkdownPreview from './markdown-preview'
@@ -45,6 +46,7 @@ export default function ChapterEditor({
   entities = [],
   chapterTitle,
 }: Props) {
+  const t = useT()
   const isMobile = useIsMobile()
   const [content, setContent] = useState(initialContent)
   const [userView, setUserView] = useState<ViewMode>('split')
@@ -105,7 +107,7 @@ export default function ChapterEditor({
     if (!match) {
       const timeSinceOpen = Date.now() - lastOpenTimeRef.current
       if (timeSinceOpen < 300) return
-      setTrigger((t) => (t.isOpen ? { ...t, isOpen: false } : t))
+      setTrigger((tr) => (tr.isOpen ? { ...tr, isOpen: false } : tr))
       return
     }
 
@@ -159,7 +161,7 @@ export default function ChapterEditor({
         },
       })
 
-      setTrigger((t) => ({ ...t, isOpen: false }))
+      setTrigger((tr) => ({ ...tr, isOpen: false }))
       cmView.focus()
     },
     [trigger.start, trigger.end]
@@ -218,7 +220,7 @@ export default function ChapterEditor({
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            Редактор
+            {t('chapters.editor')}
           </button>
           <button
             onClick={() => setMobileView('preview')}
@@ -228,7 +230,7 @@ export default function ChapterEditor({
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
-            Просмотр
+            {t('chapters.preview')}
           </button>
         </div>
       )}
@@ -282,7 +284,7 @@ export default function ChapterEditor({
                 entities={entities}
                 position={trigger.position}
                 onSelect={handleSelect}
-                onClose={() => setTrigger((t) => ({ ...t, isOpen: false }))}
+                onClose={() => setTrigger((tr) => ({ ...tr, isOpen: false }))}
               />
             )}
           </div>
@@ -294,7 +296,7 @@ export default function ChapterEditor({
               <MarkdownPreview content={content} campaignId={campaignId} entityMap={entityMap} />
             ) : (
               <div className="flex h-full items-center justify-center text-sm text-[var(--text-subtle)]">
-                Превью появится, когда ты начнёшь писать
+                {t('chapters.previewEmpty')}
               </div>
             )}
           </div>
@@ -303,7 +305,7 @@ export default function ChapterEditor({
 
       {readOnly && (
         <div className="mt-3 text-center text-xs text-[var(--text-subtle)]">
-          Режим просмотра — редактирование доступно только ГМу
+          {t('chapters.readOnlyHint')}
         </div>
       )}
     </div>

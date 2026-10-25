@@ -14,32 +14,34 @@ import type { LucideIcon } from 'lucide-react'
 
 export interface CampaignNavItem {
   href: string
-  label: string
+  labelKey: string
   icon: LucideIcon
   exact?: boolean
+  dmOnly?: boolean
 }
 
 export function getCampaignNavItems(base: string): CampaignNavItem[] {
   return [
-    { href: base, label: 'Обзор', icon: Home, exact: true },
-    { href: `${base}/sessions`, label: 'Сессии', icon: Calendar },
-    { href: `${base}/chapters`, label: 'Главы', icon: BookOpen },
-    { href: `${base}/characters`, label: 'Персонажи', icon: Sword },
-    { href: `${base}/scenes`, label: 'Сцены', icon: Map },
-    { href: `${base}/entities`, label: 'Сущности', icon: Users },
-    { href: `${base}/bestiary`, label: 'Бестиарий', icon: Library },
-    { href: `${base}/spells`, label: 'Заклинания', icon: Sparkles },
-    { href: `${base}/items`, label: 'Предметы', icon: Package },
-    { href: `${base}/generators`, label: 'Генераторы', icon: Dices },
+    { href: base, labelKey: 'nav.overview', icon: Home, exact: true },
+    { href: `${base}/sessions`, labelKey: 'nav.sessions', icon: Calendar },
+    { href: `${base}/chapters`, labelKey: 'nav.chapters', icon: BookOpen },
+    { href: `${base}/characters`, labelKey: 'nav.characters', icon: Sword },
+    { href: `${base}/scenes`, labelKey: 'nav.scenes', icon: Map },
+    { href: `${base}/entities`, labelKey: 'nav.entities', icon: Users },
+    { href: `${base}/bestiary`, labelKey: 'nav.bestiary', icon: Library },
+    { href: `${base}/spells`, labelKey: 'nav.spells', icon: Sparkles },
+    { href: `${base}/items`, labelKey: 'nav.items', icon: Package },
+    // CHANGES (задача 1): генераторы — только DM
+    { href: `${base}/generators`, labelKey: 'nav.generators', icon: Dices, dmOnly: true },
   ]
 }
 
 export function getMobileNavItems(base: string): CampaignNavItem[] {
   return [
-    { href: base, label: 'Обзор', icon: Home, exact: true },
-    { href: `${base}/chapters`, label: 'Главы', icon: BookOpen },
-    { href: `${base}/characters`, label: 'Персонажи', icon: Sword },
-    { href: `${base}/scenes`, label: 'Сцены', icon: Map },
-    { href: `${base}/entities`, label: 'Сущности', icon: Users },
+    { href: base, labelKey: 'nav.overview', icon: Home, exact: true },
+    { href: `${base}/chapters`, labelKey: 'nav.chapters', icon: BookOpen },
+    { href: `${base}/characters`, labelKey: 'nav.characters', icon: Sword },
+    { href: `${base}/scenes`, labelKey: 'nav.scenes', icon: Map },
+    { href: `${base}/entities`, labelKey: 'nav.entities', icon: Users },
   ]
 }

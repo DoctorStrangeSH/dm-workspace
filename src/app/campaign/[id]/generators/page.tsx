@@ -5,9 +5,14 @@ import { notFound, redirect } from 'next/navigation'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import { GeneratorsClient } from './generators-client'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
 export default async function GeneratorsPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
+
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
   const { id: campaignId } = await params
   const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
@@ -20,18 +25,16 @@ export default async function GeneratorsPage({ params }: { params: Promise<{ id:
     <div className="max-w-5xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaign.name, href: `/campaign/${campaignId}` },
-          { label: 'Генераторы' },
+          { label: t('nav.generators') },
         ]}
         className="mb-4"
       />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Генераторы</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">
-          Сокровища, магазины, энкаунтеры, wild magic, безумие — для импровизации
-        </p>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('nav.generators')}</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">{t('generators.subtitle')}</p>
       </div>
 
       <GeneratorsClient />

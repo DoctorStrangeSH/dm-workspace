@@ -1,5 +1,6 @@
 export const instant = false
 
+import { Suspense } from 'react'
 import { connection } from 'next/server'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -24,6 +25,8 @@ import HandoutButton from './handouts/handout-button'
 import { HandoutViewer } from './handouts/handout-viewer'
 import SessionLogButton from './logs/session-log-button'
 import ThemeToggle from '@/components/theme-toggle'
+import { LangToggle } from '@/components/ui'
+import { SessionModeToggle } from './session-mode-toggle'
 import type { Entity, Chapter } from '@/lib/types'
 
 export default async function CampaignLayout({
@@ -132,10 +135,16 @@ export default async function CampaignLayout({
               <>
                 <MusicButton campaignId={id} playlists={playlists} playerState={playerState} />
                 <HandoutButton campaignId={id} handouts={handouts} />
+                {/* CHANGES (5.4): Session Mode — только DM */}
+                <SessionModeToggle campaignId={id} />
               </>
             )}
 
             <SessionLogButton campaignId={id} log={sessionLog} isDm={role === 'dm'} />
+
+            <Suspense fallback={null}>
+              <LangToggle />
+            </Suspense>
 
             <ThemeToggle />
 

@@ -2,62 +2,56 @@ export const instant = false
 
 import { connection } from 'next/server'
 import { notFound, redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { searchSrdSpellsAction } from '@/lib/actions/spells-search'
+import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import SpellsClient from './spells-client'
+import { getLang } from '@/lib/i18n/get-lang'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
 export default async function SpellsPage({ params }: { params: Promise<{ id: string }> }) {
   await connection()
 
-  const { id: campaignId } = await params
-  const { campaign, isMember } = await getCampaignAccess(campaignId)
+  const lang = await getLang()
+  const t = createT(getDictionary(lang))
 
+  const { id: campaignId } = await params
+  const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
   if (!campaign) notFound()
   if (!isMember) redirect('/dashboard')
 
-  const initialSpells = await searchSrdSpellsAction({ limit: 100 })
-
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: characters } = await supabase
+    .from('characters')
+    .select('id, name')
+    .eq('campaign_id', campaignId)
+    .eq('is_active', true)
 
-  let characters: Array<{ id: string; name: string }> = []
-  if (user) {
-    const { data } = await supabase
-      .from('characters')
-      .select('id, name')
-      .eq('campaign_id', campaignId)
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-    characters = data ?? []
-  }
+  const spells = await searchSrdSpellsAction({ limit: 100 })
 
   return (
     <div className="max-w-6xl">
       <Breadcrumbs
         items={[
-          { label: 'Дашборд', href: '/dashboard' },
+          { label: t('nav.dashboard'), href: '/dashboard' },
           { label: campaign.name, href: `/campaign/${campaignId}` },
-          { label: 'Заклинания' },
+          { label: t('nav.spells') },
         ]}
         className="mb-4"
       />
 
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Справочник заклинаний</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Поиск заклинаний SRD 2024. Добавь заклинание своему персонажу.
-        </p>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('nav.spells')}</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">{t('spells.subtitle')}</p>
       </div>
 
       <SpellsClient
         campaignId={campaignId}
-        initialSpells={initialSpells}
-        characters={characters}
-        canEdit={characters.length > 0}
+        initialSpells={spells}
+        characters={characters ?? []}
+        canEdit={isDm}
+        lang={lang}
       />
     </div>
   )

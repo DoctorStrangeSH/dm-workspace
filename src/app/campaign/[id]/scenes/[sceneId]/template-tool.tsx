@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useT } from '@/lib/i18n'
 import type { Scene } from '@/lib/types'
 
 type TemplateType = 'cone' | 'sphere' | 'line'
@@ -9,7 +10,7 @@ interface Props {
   scene: Scene
   isActive: boolean
   type: TemplateType
-  size: number // в футах
+  size: number
   onClose?: () => void
 }
 
@@ -18,15 +19,8 @@ interface Point {
   y: number
 }
 
-/**
- * CHANGES: полностью переписана логика.
- * 1. Snap to grid (округление до пересечений).
- * 2. Конус — 60° (стандарт D&D), начало в start, направление — на end.
- * 3. Сфера — центр в start, радиус = size/5 клеток.
- * 4. Линия — от start до end, ширина 5 футов (1 клетка).
- * 5. Escape — сброс.
- */
 export default function TemplateTool({ scene, isActive, type, size, onClose }: Props) {
+  const t = useT()
   const [start, setStart] = useState<Point | null>(null)
   const [end, setEnd] = useState<Point | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -89,7 +83,6 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
   const renderShape = () => {
     if (!startPx || !endPx) return null
 
-    // ─── Сфера ───
     if (type === 'sphere') {
       return (
         <>
@@ -111,22 +104,20 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
             fontWeight="bold"
             style={{ paintOrder: 'stroke', stroke: 'var(--bg-app)', strokeWidth: 3 }}
           >
-            {size} ft
+            {t('common.feetShort', { feet: size })}
           </text>
         </>
       )
     }
 
-    // ─── Конус ───
     if (type === 'cone') {
       const dx = endPx.x - startPx.x
       const dy = endPx.y - startPx.y
 
-      // Если end совпадает с start — не рисуем
       if (dx === 0 && dy === 0) return null
 
       const angle = Math.atan2(dy, dx)
-      const halfAngle = Math.PI / 6 // 30° (60° общий)
+      const halfAngle = Math.PI / 6
 
       const x1 = startPx.x + radiusPx * Math.cos(angle - halfAngle)
       const y1 = startPx.y + radiusPx * Math.sin(angle - halfAngle)
@@ -153,13 +144,12 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
             fontWeight="bold"
             style={{ paintOrder: 'stroke', stroke: 'var(--bg-app)', strokeWidth: 3 }}
           >
-            {size} ft
+            {t('common.feetShort', { feet: size })}
           </text>
         </>
       )
     }
 
-    // ─── Линия ───
     if (type === 'line') {
       const dx = endPx.x - startPx.x
       const dy = endPx.y - startPx.y
@@ -167,7 +157,7 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
       if (length === 0) return null
 
       const perpendicular = { x: -dy / length, y: dx / length }
-      const halfWidth = gridSize / 2 // 5 футов = 1 клетка
+      const halfWidth = gridSize / 2
 
       const p1 = {
         x: startPx.x + perpendicular.x * halfWidth,
@@ -203,7 +193,9 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
             fontWeight="bold"
             style={{ paintOrder: 'stroke', stroke: 'var(--bg-app)', strokeWidth: 3 }}
           >
-            {Math.round((length / gridSize) * 5)} ft
+            {t('common.feetShort', {
+              feet: Math.round((length / gridSize) * 5),
+            })}
           </text>
         </>
       )

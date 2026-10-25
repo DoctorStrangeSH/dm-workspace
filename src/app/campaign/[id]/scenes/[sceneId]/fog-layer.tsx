@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { revealArea } from '@/lib/actions/fog'
 import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeFog } from '@/lib/hooks/use-realtime-fog'
+import { useT } from '@/lib/i18n'
 import type { Scene, FogArea } from '@/lib/types'
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMode }: Props) {
+  const t = useT()
   const toast = useToast()
   const fog = useRealtimeFog({ sceneId: scene.id, initialFog })
   const [dragging, setDragging] = useState(false)
@@ -64,20 +66,16 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
       setDragging(false)
       return
     }
-
     const x = Math.min(start.x, end.x)
     const y = Math.min(start.y, end.y)
     const w = Math.abs(end.x - start.x) + 1
     const h = Math.abs(end.y - start.y) + 1
-
     setDragging(false)
     setStart(null)
     setEnd(null)
-
     if (w === 0 || h === 0) return
-
     const res = await revealArea(scene.id, x, y, w, h)
-    if ('error' in res) toast.error(res.error ?? 'Ошибка')
+    if ('error' in res) toast.error(res.error ?? t('common.error'))
   }
 
   const preview =
@@ -90,11 +88,20 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
         }
       : null
 
+  // CHANGES (задача 3): pointer-events-none по умолчанию.
+  // pointer-events-auto — ТОЛЬКО при brushMode && isDm,
+  // иначе туман перекрывает токены и DM не может их двигать.
+  const isInteractive = isDm && brushMode
+
   return (
     <div
       ref={wrapperRef}
-      className="pointer-events-auto absolute inset-0"
-      style={{ cursor: isDm && brushMode ? 'crosshair' : 'default' }}
+      className={
+        isInteractive
+          ? 'pointer-events-auto absolute inset-0'
+          : 'pointer-events-none absolute inset-0'
+      }
+      style={{ cursor: isInteractive ? 'crosshair' : 'default' }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -130,7 +137,6 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
             )}
           </mask>
         </defs>
-
         <rect
           width={width}
           height={height}

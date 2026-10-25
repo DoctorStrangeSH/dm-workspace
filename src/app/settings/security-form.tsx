@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation'
 import { Key, Mail } from 'lucide-react'
 import { updateEmail, updatePassword } from '@/lib/actions/settings'
 import { useToast } from '@/components/toast/toast-provider'
+import { Input, Button } from '@/components/ui'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   currentEmail: string
 }
 
 export default function SecurityForm({ currentEmail }: Props) {
+  const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -23,9 +26,9 @@ export default function SecurityForm({ currentEmail }: Props) {
 
     startTransition(async () => {
       const res = await updatePassword(formData)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else {
-        toast.success('Пароль обновлён')
+        toast.success(t('settings.security.toast.passwordUpdated'))
         setShowPasswordForm(false)
       }
     })
@@ -37,9 +40,9 @@ export default function SecurityForm({ currentEmail }: Props) {
 
     startTransition(async () => {
       const res = await updateEmail(formData)
-      if ('error' in res) toast.error(res.error ?? 'Ошибка')
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
       else {
-        toast.success(res.message ?? 'Email обновлён')
+        toast.success(res.message ?? t('settings.security.toast.emailUpdated'))
         setShowEmailForm(false)
         router.refresh()
       }
@@ -49,92 +52,82 @@ export default function SecurityForm({ currentEmail }: Props) {
   return (
     <div className="space-y-3">
       {/* Email */}
-      <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3">
+      <div className="flex items-center justify-between rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-3">
         <div className="flex min-w-0 items-center gap-2">
-          <Mail size={14} className="shrink-0 text-slate-400" />
-          <span className="truncate text-sm text-slate-300">{currentEmail}</span>
+          <Mail size={14} className="shrink-0 text-[var(--text-muted)]" />
+          <span className="truncate text-sm text-[var(--text-secondary)]">{currentEmail}</span>
         </div>
-        <button
-          onClick={() => setShowEmailForm(!showEmailForm)}
-          className="shrink-0 rounded bg-slate-800 px-3 py-1 text-xs text-slate-300 transition hover:bg-slate-700"
-        >
-          Изменить
-        </button>
+        <Button variant="secondary" size="sm" onClick={() => setShowEmailForm(!showEmailForm)}>
+          {t('settings.security.change')}
+        </Button>
       </div>
 
       {showEmailForm && (
         <form
           onSubmit={handleEmail}
-          className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
+          className="space-y-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)]/50 p-3"
         >
-          <input
+          <Input
             name="email"
             type="email"
             required
-            placeholder="Новый email"
-            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
+            placeholder={t('settings.security.newEmailPlaceholder')}
           />
           <div className="flex justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => setShowEmailForm(false)}
-              className="rounded bg-slate-800 px-3 py-1 text-xs transition hover:bg-slate-700"
             >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded bg-indigo-600 px-3 py-1 text-xs text-white transition hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {isPending ? 'Сохраняем...' : 'Сохранить'}
-            </button>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="sm" loading={isPending}>
+              {isPending ? t('common.saving') : t('common.save')}
+            </Button>
           </div>
         </form>
       )}
 
       {/* Пароль */}
-      <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 p-3">
+      <div className="flex items-center justify-between rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] p-3">
         <div className="flex items-center gap-2">
-          <Key size={14} className="text-slate-400" />
-          <span className="text-sm text-slate-300">Пароль</span>
+          <Key size={14} className="text-[var(--text-muted)]" />
+          <span className="text-sm text-[var(--text-secondary)]">{t('auth.password')}</span>
         </div>
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => setShowPasswordForm(!showPasswordForm)}
-          className="rounded bg-slate-800 px-3 py-1 text-xs text-slate-300 transition hover:bg-slate-700"
         >
-          Изменить
-        </button>
+          {t('settings.security.change')}
+        </Button>
       </div>
 
       {showPasswordForm && (
         <form
           onSubmit={handlePassword}
-          className="space-y-2 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
+          className="space-y-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)]/50 p-3"
         >
-          <input
+          <Input
             name="password"
             type="password"
             required
             minLength={8}
-            placeholder="Новый пароль (мин. 8)"
-            className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
+            placeholder={t('settings.security.newPasswordPlaceholder')}
           />
           <div className="flex justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => setShowPasswordForm(false)}
-              className="rounded bg-slate-800 px-3 py-1 text-xs transition hover:bg-slate-700"
             >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded bg-indigo-600 px-3 py-1 text-xs text-white transition hover:bg-indigo-500 disabled:opacity-50"
-            >
-              {isPending ? 'Сохраняем...' : 'Сохранить'}
-            </button>
+              {t('common.cancel')}
+            </Button>
+            <Button type="submit" variant="primary" size="sm" loading={isPending}>
+              {isPending ? t('common.saving') : t('common.save')}
+            </Button>
           </div>
         </form>
       )}

@@ -4,30 +4,33 @@ import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { moveToken } from '@/lib/actions/tokens'
 import { useToast } from '@/components/toast/toast-provider'
+import { useT } from '@/lib/i18n'
+import { isBlockedByWalls } from '@/lib/collision'
 import { cn } from '@/lib/utils'
-import type { Token as TokenType } from '@/lib/types'
+import type { Token as TokenType, SceneWall } from '@/lib/types'
 
 interface Props {
   token: TokenType
   gridSize: number
   sceneId: string
   canDrag: boolean
+  walls?: SceneWall[]
   onClick: () => void
 }
 
-export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Props) {
+export default function Token({ token, gridSize, sceneId, canDrag, walls = [], onClick }: Props) {
+  const t = useT()
   const toast = useToast()
   const [dragging, setDragging] = useState(false)
   const [pos, setPos] = useState({ x: token.x, y: token.y })
+  const [blocked, setBlocked] = useState(false)
   const startRef = useRef({ x: 0, y: 0, tokenX: token.x, tokenY: token.y })
   const lastMovedAtRef = useRef(0)
 
   useEffect(() => {
     if (dragging) return
-
     const sinceMoved = Date.now() - lastMovedAtRef.current
     if (sinceMoved < 500) return
-
     setPos({ x: token.x, y: token.y })
   }, [token.x, token.y, dragging])
 
@@ -36,6 +39,8 @@ export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Pr
     token.hp_current !== null && token.hp_max !== null && token.hp_max > 0
       ? (token.hp_current / token.hp_max) * 100
       : null
+
+  const tokenRadius = token.size * 0.3
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!canDrag) return
@@ -57,6 +62,7 @@ export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Pr
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
       setDragging(false)
+      setBlocked(false)
 
       const dx = ev.clientX - startRef.current.x
       const dy = ev.clientY - startRef.current.y
@@ -69,12 +75,28 @@ export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Pr
       const newX = Math.max(0, Math.round(startRef.current.tokenX + dx / gridSize))
       const newY = Math.max(0, Math.round(startRef.current.tokenY + dy / gridSize))
 
+      if (walls.length > 0) {
+        const isBlocked = isBlockedByWalls(
+          { x: token.x, y: token.y },
+          { x: newX, y: newY },
+          tokenRadius,
+          walls
+        )
+        if (isBlocked) {
+          setPos({ x: token.x, y: token.y })
+          setBlocked(true)
+          toast.error(t('scenes.walls.blocked'))
+          setTimeout(() => setBlocked(false), 600)
+          return
+        }
+      }
+
       setPos({ x: newX, y: newY })
       lastMovedAtRef.current = Date.now()
 
       const res = await moveToken(token.id, sceneId, newX, newY)
       if ('error' in res) {
-        toast.error(res.error ?? 'Ошибка')
+        toast.error(res.error ?? t('common.error'))
         setPos({ x: token.x, y: token.y })
       }
     }
@@ -90,6 +112,7 @@ export default function Token({ token, gridSize, sceneId, canDrag, onClick }: Pr
         canDrag && 'cursor-grab active:cursor-grabbing',
         dragging && 'z-50 shadow-[var(--shadow-xl)]',
         token.is_hidden && 'opacity-40',
+        blocked && 'ring-2 ring-[var(--danger)]',
         !dragging && 'transition-[left,top] duration-200'
       )}
       style={{

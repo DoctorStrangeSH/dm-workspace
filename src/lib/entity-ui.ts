@@ -2,70 +2,81 @@ import type { EntityType } from '@/lib/types'
 
 interface TypeStyle {
   icon: string
-  label: string
+  labelKey: string
   color: string
   bg: string
   border: string
 }
 
+/**
+ * CHANGES (К7.4.1):
+ * - `label: string` → `labelKey: string` — для i18n (используй t(style.labelKey))
+ * - Цвета переведены на семантические токены (--accent, --success, ...)
+ *   вместо хардкода indigo/emerald/amber/red/violet/yellow/slate.
+ *   Это позволяет темам (light/dark) работать корректно.
+ */
 export const ENTITY_STYLES: Record<EntityType, TypeStyle> = {
   npc: {
     icon: '👤',
-    label: 'NPC',
-    color: 'text-indigo-300',
-    bg: 'bg-indigo-950/60',
-    border: 'border-indigo-900/50',
+    labelKey: 'entityType.npc',
+    color: 'text-[var(--accent-text)]',
+    bg: 'bg-[var(--accent-subtle)]',
+    border: 'border-[var(--accent)]/40',
   },
   location: {
     icon: '🗺️',
-    label: 'Локация',
-    color: 'text-emerald-300',
-    bg: 'bg-emerald-950/60',
-    border: 'border-emerald-900/50',
+    labelKey: 'entityType.location',
+    color: 'text-[var(--success-text)]',
+    bg: 'bg-[var(--success-subtle)]',
+    border: 'border-[var(--success)]/40',
   },
   item: {
     icon: '⚔️',
-    label: 'Предмет',
-    color: 'text-amber-300',
-    bg: 'bg-amber-950/60',
-    border: 'border-amber-900/50',
+    labelKey: 'entityType.item',
+    color: 'text-[var(--warning-text)]',
+    bg: 'bg-[var(--warning-subtle)]',
+    border: 'border-[var(--warning)]/40',
   },
   monster: {
     icon: '👹',
-    label: 'Монстр',
-    color: 'text-red-300',
-    bg: 'bg-red-950/60',
-    border: 'border-red-900/50',
+    labelKey: 'entityType.monster',
+    color: 'text-[var(--danger-text)]',
+    bg: 'bg-[var(--danger-subtle)]',
+    border: 'border-[var(--danger)]/40',
   },
   faction: {
     icon: '🏛️',
-    label: 'Фракция',
-    color: 'text-violet-300',
-    bg: 'bg-violet-950/60',
-    border: 'border-violet-900/50',
+    labelKey: 'entityType.faction',
+    color: 'text-[var(--info-text)]',
+    bg: 'bg-[var(--info-subtle)]',
+    border: 'border-[var(--info)]/40',
   },
   quest: {
     icon: '📜',
-    label: 'Квест',
-    color: 'text-yellow-300',
-    bg: 'bg-yellow-950/60',
-    border: 'border-yellow-900/50',
+    labelKey: 'entityType.quest',
+    color: 'text-[var(--warning-text)]',
+    bg: 'bg-[var(--warning-subtle)]',
+    border: 'border-[var(--warning)]/40',
   },
   note: {
     icon: '📝',
-    label: 'Заметка',
-    color: 'text-slate-300',
-    bg: 'bg-slate-800/60',
-    border: 'border-slate-700/50',
+    labelKey: 'entityType.note',
+    color: 'text-[var(--text-muted)]',
+    bg: 'bg-[var(--bg-secondary)]',
+    border: 'border-[var(--border-default)]',
   },
 }
 
-export const ENTITY_FILTERS: { value: EntityType | 'all'; label: string }[] = [
-  { value: 'all', label: 'Все' },
-  { value: 'npc', label: '👤 NPC' },
-  { value: 'location', label: '🗺️ Локации' },
-  { value: 'item', label: '⚔️ Предметы' },
-  { value: 'monster', label: '👹 Монстры' },
-  { value: 'faction', label: '🏛️ Фракции' },
-  { value: 'quest', label: '📜 Квесты' },
+/**
+ * CHANGES: `label` убран, теперь рендерим через t('entityType.' + value).
+ * Для 'all' — t('common.all').
+ */
+export const ENTITY_FILTERS: { value: EntityType | 'all' }[] = [
+  { value: 'all' },
+  { value: 'npc' },
+  { value: 'location' },
+  { value: 'item' },
+  { value: 'monster' },
+  { value: 'faction' },
+  { value: 'quest' },
 ]

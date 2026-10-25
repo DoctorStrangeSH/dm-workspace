@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, X, Settings, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/ui'
+import { useT } from '@/lib/i18n' // CHANGES
 import { getCampaignNavItems } from '@/lib/campaign-nav-items'
 
 interface Props {
@@ -14,10 +15,11 @@ interface Props {
 }
 
 export default function MobileSidebar({ campaignId, isDm }: Props) {
+  const t = useT() // CHANGES
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const base = `/campaign/${campaignId}`
-  const items = getCampaignNavItems(base)
+  const items = getCampaignNavItems(base).filter((item) => !item.dmOnly || isDm)
 
   const [prevPathname, setPrevPathname] = useState(pathname)
   if (pathname !== prevPathname) {
@@ -50,7 +52,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
       <IconButton
         variant="ghost"
         size="md"
-        label="Открыть меню"
+        label={t('common.openMenu')}
         onClick={() => setIsOpen(true)}
         className="md:hidden"
       >
@@ -72,9 +74,14 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
       >
         <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
           <span className="text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-            Меню
+            {t('nav.menu')} {/* CHANGES */}
           </span>
-          <IconButton variant="ghost" size="sm" label="Закрыть" onClick={() => setIsOpen(false)}>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            label={t('common.close')}
+            onClick={() => setIsOpen(false)}
+          >
             <X size={18} />
           </IconButton>
         </div>
@@ -98,7 +105,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
                 )}
               >
                 <Icon size={16} />
-                {item.label}
+                {t(item.labelKey)} {/* CHANGES */}
               </Link>
             )
           })}
@@ -117,12 +124,12 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
                 )}
               >
                 <Settings size={16} />
-                Настройки
+                {t('nav.settings')} {/* CHANGES */}
               </Link>
 
               <div className="mt-3 flex items-center gap-2 px-3 text-xs text-[var(--warning-text)]">
                 <Crown size={12} />
-                <span>Режим ГМа</span>
+                <span>{t('role.dm')}</span> {/* CHANGES */}
               </div>
             </div>
           )}
