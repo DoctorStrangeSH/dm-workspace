@@ -11,12 +11,28 @@ begin
     from pg_policies
     where schemaname = 'public'
       and tablename = 'session_rsvp'
-      and cmd in ('INSERT', 'UPDATE', 'DELETE', 'ALL')
+      and cmd in ('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'ALL')
   loop
     execute format('drop policy %I on public.session_rsvp', p.policyname);
   end loop;
 end;
 $$;
+
+
+
+create policy "Campaign members can view session RSVPs"
+on public.session_rsvp
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.sessions s
+    join public.campaign_members cm on cm.campaign_id = s.campaign_id
+    where s.id = session_rsvp.session_id
+      and cm.user_id = (select auth.uid())
+  )
+);
 
 create policy "Members can create own session RSVP"
 on public.session_rsvp
