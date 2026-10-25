@@ -5,13 +5,20 @@ import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 
 export async function addSrdItemToCampaign(itemKey: string, campaignId: string) {
+  if (typeof itemKey !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,119}$/i.test(itemKey)) {
+    return { error: 'Некорректный предмет' }
+  }
+  if (typeof campaignId !== 'string' || !campaignId) return { error: 'Некорректная кампания' }
+
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
 
   // Загружаем предмет
-  const { data: srdItem } = await supabase.from('srd_items').select('*').eq('key', itemKey).single()
+  const { data: srdItem, error: itemError } = await supabase.from('srd_items').select('*').eq('key', itemKey).maybeSingle()
+
+  if (itemError) return { error: 'Не удалось загрузить предмет' }
 
   if (!srdItem) return { error: 'Предмет не найден' }
 

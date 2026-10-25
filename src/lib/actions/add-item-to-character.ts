@@ -1,5 +1,6 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
@@ -10,6 +11,9 @@ export async function addSrdItemToCharacter(
   characterId: string,
   campaignId: string
 ) {
+  if (typeof itemKey !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,119}$/i.test(itemKey)) return { error: 'Некорректный предмет' }
+  if (typeof characterId !== 'string' || !characterId || typeof campaignId !== 'string' || !campaignId) return { error: 'Некорректные данные персонажа' }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -20,7 +24,8 @@ export async function addSrdItemToCharacter(
   const { isDm } = await getCampaignAccess(campaignId)
 
   // Загружаем предмет
-  const { data: srdItem } = await supabase.from('srd_items').select('*').eq('key', itemKey).single()
+  const { data: srdItem, error: itemError } = await supabase.from('srd_items').select('*').eq('key', itemKey).maybeSingle()
+  if (itemError) return { error: 'Не удалось загрузить предмет' }
 
   if (!srdItem) return { error: 'Предмет не найден' }
 
@@ -39,7 +44,9 @@ export async function addSrdItemToCharacter(
   const isOwner = character.user_id === user.id
   if (!isOwner && !isDm) return { error: 'Нет прав' }
 
-  const charData = character.data_json as CharacterData
+  const charData = (character.data_json && typeof character.data_json === 'object' && !Array.isArray(character.data_json) ? character.data_json : {}) as CharacterData
+  const inventory = Array.isArray(charData.inventory) ? charData.inventory : []
+  if (inventory.length >= 500) return { error: 'Инвентарь персонажа достиг лимита' }
 
   // Парсим вес
   let weight: number | undefined
@@ -49,7 +56,7 @@ export async function addSrdItemToCharacter(
   }
 
   const newItem: CharacterInventoryItem = {
-    id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    id: `item-${randomUUID()}`,
     name: srdItem.name_ru ?? srdItem.name,
     quantity: 1,
     weight,
@@ -58,16 +65,18 @@ export async function addSrdItemToCharacter(
 
   const newData: CharacterData = {
     ...charData,
-    inventory: [...(charData.inventory ?? []), newItem],
+    inventory: [...inventory, newItem],
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('characters')
     .update({ data_json: newData })
     .eq('id', characterId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !data) {
     console.error('addSrdItemToCharacter error:', error)
     return { error: 'Не удалось добавить' }
   }
