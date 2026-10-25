@@ -26,15 +26,23 @@ function normalizeMonsterHP(value: unknown): number | null {
 }
 
 /** CHANGES: проверка owner_id ИЛИ token_owners */
-async function canEditToken(tokenId: string, userId: string, isDm: boolean): Promise<boolean> {
-  if (isDm) return true
+async function canEditToken(
+  tokenId: string,
+  sceneId: string,
+  campaignId: string,
+  userId: string,
+  isDm: boolean
+): Promise<boolean> {
   const supabase = await createClient()
   const { data: token } = await supabase
     .from('tokens')
     .select('owner_id')
     .eq('id', tokenId)
-    .single()
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
   if (!token) return false
+  if (isDm) return true
   if (token.owner_id === userId) return true
 
   const { data: owner } = await supabase
@@ -161,17 +169,21 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  const { isDm } = await getCampaignAccess(campaignId)
-  const canEdit = await canEditToken(tokenId, user.id, isDm)
+  const { isDm, isMember } = await getCampaignAccess(campaignId)
+  if (!isMember) return { error: 'Нет доступа к кампании' }
+  const canEdit = await canEditToken(tokenId, sceneId, campaignId, user.id, isDm)
   if (!canEdit) return { error: 'Нет прав на перемещение' }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tokens')
     .update({ x, y })
     .eq('id', tokenId)
     .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось переместить' }
+  if (error || !data) return { error: 'Не удалось переместить' }
   return { success: true }
 }
 
@@ -186,17 +198,21 @@ export async function updateTokenHP(tokenId: string, sceneId: string, hp_current
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  const { isDm } = await getCampaignAccess(campaignId)
-  const canEdit = await canEditToken(tokenId, user.id, isDm)
+  const { isDm, isMember } = await getCampaignAccess(campaignId)
+  if (!isMember) return { error: 'Нет доступа к кампании' }
+  const canEdit = await canEditToken(tokenId, sceneId, campaignId, user.id, isDm)
   if (!canEdit) return { error: 'Нет прав на изменение HP' }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tokens')
     .update({ hp_current: Math.max(0, hp_current) })
     .eq('id', tokenId)
     .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: `Не удалось обновить HP: ${error.message}` }
+  if (error || !data) return { error: `Не удалось обновить HP${error ? `: ${error.message}` : ''}` }
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
 }
@@ -215,21 +231,25 @@ export async function updateTokenConditions(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  const { isDm } = await getCampaignAccess(campaignId)
-  const canEdit = await canEditToken(tokenId, user.id, isDm)
+  const { isDm, isMember } = await getCampaignAccess(campaignId)
+  if (!isMember) return { error: 'Нет доступа к кампании' }
+  const canEdit = await canEditToken(tokenId, sceneId, campaignId, user.id, isDm)
   if (!canEdit) return { error: 'Нет прав' }
 
   if (!Array.isArray(conditions) || conditions.length > 50) {
     return { error: 'Некорректный список состояний' }
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tokens')
     .update({ conditions })
     .eq('id', tokenId)
     .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось обновить' }
+  if (error || !data) return { error: 'Не удалось обновить' }
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
 }

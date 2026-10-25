@@ -20,6 +20,17 @@ export async function createWall(
   if (!isMember) return { error: 'Нет доступа к кампании' }
   if (!isDm) return { error: 'Только ГМ может создавать стены' }
 
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
+  if (!wall || ![wall.x1, wall.y1, wall.x2, wall.y2].every(Number.isFinite)) {
+    return { error: 'Некорректные координаты стены' }
+  }
+
   // Валидация: стена должна иметь ненулевую длину
   const dx = wall.x2 - wall.x1
   const dy = wall.y2 - wall.y1
@@ -70,20 +81,28 @@ export async function deleteWall(
   const { isDm, isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа к кампании' }
   if (!isDm) return { error: 'Только ГМ может удалять стены' }
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('scene_walls')
     .delete()
     .eq('id', wallId)
     .eq('scene_id', sceneId)
     .eq('campaign_id', campaignId)
+    .select('id')
 
-  if (error) {
+  if (error || !deleted?.length) {
     console.error('deleteWall error:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
     })
     return { error: 'Не удалось удалить стену' }
   }
@@ -105,6 +124,13 @@ export async function deleteAllWalls(
   const { isDm, isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа к кампании' }
   if (!isDm) return { error: 'Только ГМ может удалять стены' }
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
 
   const { data, error } = await supabase
     .from('scene_walls')
