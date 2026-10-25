@@ -92,6 +92,10 @@ export async function updateCharacter(
   if (!isOwner && !isDm) return { error: 'Нет прав' }
 
   // TypeScript types do not validate requests sent directly to a server action.
+  if (!updates || typeof updates !== 'object' || Array.isArray(updates)) {
+    return { error: 'Некорректные изменения персонажа' }
+  }
+
   // Build an explicit allowlist so extra fields cannot mutate ownership or other columns.
   const safeUpdates: {
     name?: string
