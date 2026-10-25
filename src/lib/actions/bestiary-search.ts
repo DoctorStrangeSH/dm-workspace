@@ -23,40 +23,62 @@ export interface SrdMonster {
  * CHANGES: searchSrdMonstersAction НЕ кэшируем — фильтры динамические.
  * Но если query/cr/type/size пустые — возвращаем кэшированный базовый список.
  */
+function sanitizeSearchQuery(query: unknown): string {
+  if (typeof query !== 'string') return ''
+  return query.trim().slice(0, 100).replace(/[,%().*\\_]/g, ' ').replace(/\s+/g, ' ')
+}
+
+function normalizeLimit(limit: unknown): number {
+  if (typeof limit !== 'number' || !Number.isFinite(limit)) return 100
+  return Math.min(100, Math.max(1, Math.floor(limit)))
+}
+
+function sanitizeStringFilters(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((entry): entry is string => typeof entry === 'string' && entry.length > 0 && entry.length <= 80)
+    .slice(0, 30)
+}
+
 export async function searchSrdMonstersAction(filters: MonsterFilters = {}): Promise<SrdMonster[]> {
   const { query, cr, type, size, limit = 100 } = filters
+  const searchQuery = sanitizeSearchQuery(query)
+  const safeLimit = normalizeLimit(limit)
+  const safeCr = sanitizeStringFilters(cr)
+  const safeType = sanitizeStringFilters(type)
+  const safeSize = sanitizeStringFilters(size)
 
   const hasFilters =
-    (query && query.trim()) ||
+    Boolean(searchQuery) ||
     (cr && cr.length > 0) ||
     (type && type.length > 0) ||
     (size && size.length > 0)
 
   if (!hasFilters) {
-    return getCachedMonsters(limit)
+    return getCachedMonsters(safeLimit)
   }
 
   // С фильтрами — используем серверный клиент (с cookies, RLS-контекст)
   const supabase = await createClient()
   let q = supabase.from('srd_monsters').select('*')
 
-  if (query?.trim()) {
-    q = q.or(`name.ilike.%${query.trim()}%,name_ru.ilike.%${query.trim()}%`)
+  if (searchQuery) {
+    q = q.or(`name.ilike.%${searchQuery}%,name_ru.ilike.%${searchQuery}%`)
   }
 
-  if (cr && cr.length > 0) {
-    q = q.in('data->>cr', cr)
+  if (safeCr.length > 0) {
+    q = q.in('data->>cr', safeCr)
   }
 
-  if (type && type.length > 0) {
-    q = q.in('data->>type', type)
+  if (safeType.length > 0) {
+    q = q.in('data->>type', safeType)
   }
 
-  if (size && size.length > 0) {
-    q = q.in('data->>size', size)
+  if (safeSize.length > 0) {
+    q = q.in('data->>size', safeSize)
   }
 
-  q = q.order('name').limit(limit)
+  q = q.order('name').limit(safeLimit)
 
   const { data, error } = await q
 
