@@ -1,12 +1,18 @@
 'use server'
 
+import { randomUUID } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { ThemeMode } from '@/lib/types'
 
-// ============================================================
-// Тема (из 2.10.8)
-// ============================================================
+const THEMES: ThemeMode[] = ['dark', 'light', 'system']
+const AVATAR_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 
 export async function getUserSettings() {
   const supabase = await createClient()
@@ -20,21 +26,26 @@ export async function getUserSettings() {
     .from('user_settings')
     .select('*')
     .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (error) return { error: 'Не удалось загрузить настройки' }
+  if (data) return { data }
+
+  const { data: newData, error: insertError } = await supabase
+    .from('user_settings')
+    .upsert({ user_id: user.id }, { onConflict: 'user_id' })
+    .select('*')
     .single()
 
-  if (error) {
-    const { data: newData } = await supabase
-      .from('user_settings')
-      .insert({ user_id: user.id })
-      .select('*')
-      .single()
-    return { data: newData }
-  }
-
-  return { data }
+  if (insertError) return { error: 'Не удалось создать настройки' }
+  return { data: newData }
 }
 
 export async function setTheme(theme: ThemeMode) {
+  if (typeof theme !== 'string' || !THEMES.includes(theme)) {
+    return { error: 'Некорректная тема оформления' }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -56,10 +67,6 @@ export async function setTheme(theme: ThemeMode) {
   return { success: true }
 }
 
-// ============================================================
-// Профиль (6.1)
-// ============================================================
-
 export async function updateProfile(formData: FormData) {
   const supabase = await createClient()
   const {
@@ -68,15 +75,21 @@ export async function updateProfile(formData: FormData) {
 
   if (!user) return { error: 'Не авторизован' }
 
-  const displayName = (formData.get('display_name') as string)?.trim()
-  const username = (formData.get('username') as string)?.trim().toLowerCase().replace(/\s+/g, '_')
-
-  if (!displayName || displayName.length < 2) {
-    return { error: 'Имя должно быть минимум 2 символа' }
+  const rawDisplayName = formData.get('display_name')
+  const rawUsername = formData.get('username')
+  if (typeof rawDisplayName !== 'string' || typeof rawUsername !== 'string') {
+    return { error: 'Заполните имя и username' }
   }
 
-  if (!username || username.length < 3) {
-    return { error: 'Username должен быть минимум 3 символа' }
+  const displayName = rawDisplayName.trim()
+  const username = rawUsername.trim().toLowerCase().replace(/\s+/g, '_')
+
+  if (displayName.length < 2 || displayName.length > 80) {
+    return { error: 'Имя должно содержать от 2 до 80 символов' }
+  }
+
+  if (username.length < 3 || username.length > 30) {
+    return { error: 'Username должен содержать от 3 до 30 символов' }
   }
 
   if (!/^[a-z0-9_]+$/.test(username)) {
@@ -95,6 +108,7 @@ export async function updateProfile(formData: FormData) {
     if (error.code === '23505') {
       return { error: 'Такой username уже занят' }
     }
+    console.error('updateProfile error:', error)
     return { error: 'Не удалось обновить' }
   }
 
@@ -102,10 +116,6 @@ export async function updateProfile(formData: FormData) {
   revalidatePath('/dashboard')
   return { success: true }
 }
-
-// ============================================================
-// Аватар
-// ============================================================
 
 export async function uploadAvatar(formData: FormData) {
   const supabase = await createClient()
@@ -115,80 +125,99 @@ export async function uploadAvatar(formData: FormData) {
 
   if (!user) return { error: 'Не авторизован' }
 
-  const file = formData.get('avatar') as File | null
-  if (!file) return { error: 'Файл не выбран' }
-  if (file.size > 2 * 1024 * 1024) return { error: 'Максимум 2 MB' }
-
-  const ext = file.name.split('.').pop() ?? 'png'
-  const fileName = `${user.id}/avatar.${ext}`
-
-  const { data: existing } = await supabase.storage.from('avatars').list(user.id)
-
-  if (existing && existing.length > 0) {
-    await supabase.storage.from('avatars').remove(existing.map((f) => `${user.id}/${f.name}`))
+  const value = formData.get('avatar')
+  if (!value || typeof value === 'string' || typeof value.arrayBuffer !== 'function') {
+    return { error: 'Файл не выбран' }
   }
 
+  const file = value as File
+  const extension = AVATAR_TYPES[file.type]
+  if (!extension) return { error: 'Поддерживаются только JPEG, PNG, WebP и GIF' }
+  if (file.size <= 0 || file.size > MAX_AVATAR_SIZE) {
+    return { error: 'Размер изображения должен быть от 1 байта до 2 MB' }
+  }
+
+  const fileName = `${user.id}/avatar-${randomUUID()}.${extension}`
   const { error: uploadError } = await supabase.storage
     .from('avatars')
-    .upload(fileName, file, { upsert: true })
+    .upload(fileName, file, { contentType: file.type, upsert: false })
 
-  if (uploadError) return { error: 'Не удалось загрузить' }
+  if (uploadError) {
+    console.error('uploadAvatar upload error:', uploadError)
+    return { error: 'Не удалось загрузить' }
+  }
 
   const {
     data: { publicUrl },
   } = supabase.storage.from('avatars').getPublicUrl(fileName)
 
-  const { error } = await supabase
+  const { error: profileError } = await supabase
     .from('profiles')
     .update({ avatar_url: publicUrl })
     .eq('id', user.id)
 
-  if (error) return { error: 'Не удалось сохранить' }
+  if (profileError) {
+    await supabase.storage.from('avatars').remove([fileName])
+    console.error('uploadAvatar profile update error:', profileError)
+    return { error: 'Не удалось сохранить аватар' }
+  }
+
+  // Only remove older files after the profile points to the new uploaded image.
+  const { data: existing } = await supabase.storage.from('avatars').list(user.id)
+  const oldFiles = (existing ?? [])
+    .filter((file) => file.name !== fileName.split('/').pop())
+    .map((file) => `${user.id}/${file.name}`)
+  if (oldFiles.length > 0) {
+    const { error: cleanupError } = await supabase.storage.from('avatars').remove(oldFiles)
+    if (cleanupError) console.error('uploadAvatar cleanup error:', cleanupError)
+  }
 
   revalidatePath('/settings')
   revalidatePath('/dashboard')
   return { success: true, url: publicUrl }
 }
 
-// ============================================================
-// Безопасность
-// ============================================================
-
 export async function updatePassword(formData: FormData) {
-  const supabase = await createClient()
-  const password = (formData.get('password') as string) ?? ''
+  const value = formData.get('password')
+  const password = typeof value === 'string' ? value : ''
 
-  if (password.length < 8) {
-    return { error: 'Пароль минимум 8 символов' }
+  if (password.length < 8 || password.length > 128) {
+    return { error: 'Пароль должен содержать от 8 до 128 символов' }
   }
 
-  const { error } = await supabase.auth.updateUser({ password })
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Не авторизован' }
 
-  if (error) return { error: error.message }
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) return { error: 'Не удалось обновить пароль' }
   return { success: true }
 }
 
 export async function updateEmail(formData: FormData) {
-  const supabase = await createClient()
-  const email = (formData.get('email') as string)?.trim()
+  const value = formData.get('email')
+  const email = typeof value === 'string' ? value.trim() : ''
 
-  if (!email || !email.includes('@')) {
+  if (!email || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: 'Некорректный email' }
   }
 
-  const { error } = await supabase.auth.updateUser({ email })
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Не авторизован' }
 
-  if (error) return { error: error.message }
+  const { error } = await supabase.auth.updateUser({ email })
+  if (error) return { error: 'Не удалось обновить email' }
 
   return {
     success: true,
     message: 'Проверь почту — нужно подтвердить новый email',
   }
 }
-
-// ============================================================
-// Удаление аккаунта
-// ============================================================
 
 export async function deleteAccount(password: string) {
   const supabase = await createClient()
@@ -197,24 +226,20 @@ export async function deleteAccount(password: string) {
   } = await supabase.auth.getUser()
 
   if (!user || !user.email) return { error: 'Не авторизован' }
+  if (typeof password !== 'string' || !password || password.length > 128) {
+    return { error: 'Введите пароль' }
+  }
 
-  // Проверяем пароль
   const { error: authError } = await supabase.auth.signInWithPassword({
     email: user.email,
     password,
   })
 
-  if (authError) {
-    return { error: 'Неверный пароль' }
-  }
+  if (authError) return { error: 'Неверный пароль' }
 
-  // Удаляем профиль (каскадно удалит всё)
   const { error } = await supabase.from('profiles').delete().eq('id', user.id)
-
   if (error) return { error: 'Не удалось удалить' }
 
-  // Выходим
   await supabase.auth.signOut()
-
   return { success: true }
 }
