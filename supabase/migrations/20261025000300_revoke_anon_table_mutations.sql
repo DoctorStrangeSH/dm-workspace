@@ -12,7 +12,7 @@ begin
     where schemaname = 'public'
   loop
     execute format(
-      'revoke insert, update, delete, truncate, references, trigger on table public.%I from anon',
+      'revoke insert, update, delete, truncate, references, trigger on table public.%I from anon, public',
       t.tablename
     );
   end loop;
