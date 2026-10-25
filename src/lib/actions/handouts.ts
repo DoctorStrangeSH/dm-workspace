@@ -36,14 +36,10 @@ export async function createHandout(campaignId: string, formData: FormData) {
   const { error: uploadError } = await supabase.storage.from('handouts').upload(fileName, file)
   if (uploadError) return { error: 'Не удалось загрузить' }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('handouts').getPublicUrl(fileName)
-
   const { error } = await supabase.from('handouts').insert({
     campaign_id: campaignId,
     name,
-    image_url: publicUrl,
+    image_url: fileName,
   })
 
   if (error) return { error: 'Не удалось создать' }
