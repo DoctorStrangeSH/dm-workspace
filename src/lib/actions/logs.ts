@@ -17,11 +17,27 @@ export async function logEvent(
 
   if (!user) return { error: 'Не авторизован' }
 
+  // Server actions are directly callable; never trust the client to be a campaign member.
+  const { isMember } = await getCampaignAccess(campaignId)
+  if (!isMember) return { error: 'Нет доступа к кампании' }
+
+  const normalizedType = eventType.trim()
+  const normalizedDescription = description.trim()
+  if (!normalizedType || normalizedType.length > 80) {
+    return { error: 'Некорректный тип события' }
+  }
+  if (!normalizedDescription || normalizedDescription.length > 500) {
+    return { error: 'Некорректное описание события' }
+  }
+  if (JSON.stringify(metadata).length > 20_000) {
+    return { error: 'Слишком большие данные события' }
+  }
+
   const { error } = await supabase.from('session_logs').insert({
     campaign_id: campaignId,
     actor_id: user.id,
-    event_type: eventType,
-    description,
+    event_type: normalizedType,
+    description: normalizedDescription,
     metadata,
   })
 
