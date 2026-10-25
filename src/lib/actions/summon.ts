@@ -71,10 +71,10 @@ export async function createSummonRequest(
 
   if (error) {
     console.error('createSummonRequest error:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
     })
     return { error: 'Не удалось создать запрос' }
   }
@@ -151,10 +151,10 @@ export async function approveSummonRequest(
 
   if (updateError || !updatedRequest) {
     console.error('approveSummonRequest error:', {
-      code: updateError.code,
-      message: updateError.message,
-      details: updateError.details,
-      hint: updateError.hint,
+      code: updateError?.code,
+      message: updateError?.message,
+      details: updateError?.details,
+      hint: updateError?.hint,
     })
     return { error: 'Не удалось подтвердить запрос' }
   }
