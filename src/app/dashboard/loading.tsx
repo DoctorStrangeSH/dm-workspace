@@ -18,6 +18,17 @@ export default function DashboardLoading() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {/* Hero — повторяет геометрию обновлённого дашборда */}
+        <div className="mb-8 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-primary)] p-5 sm:p-8">
+          <Skeleton width="190px" height="12px" />
+          <div className="mt-4">
+            <Skeleton width="min(420px, 80%)" height="36px" />
+          </div>
+          <div className="mt-3">
+            <Skeleton width="min(520px, 90%)" height="16px" />
+          </div>
+        </div>
+
         {/* Заголовок */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-2">
