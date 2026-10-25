@@ -20,9 +20,40 @@ export async function createSummonRequest(
   const { isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа к кампании' }
 
-  const count = Math.max(1, Math.min(20, Math.floor(data.monsterCount)))
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { error: 'Некорректные данные призыва' }
+  }
+  if (typeof data.monsterName !== 'string' || !data.monsterName.trim()) {
+    return { error: 'Укажите имя монстра' }
+  }
+  if (data.monsterName.trim().length > 150) return { error: 'Имя монстра слишком длинное' }
+  if (!Number.isInteger(data.monsterCount) || data.monsterCount < 1 || data.monsterCount > 20) {
+    return { error: 'Количество монстров должно быть от 1 до 20' }
+  }
+  if (data.monsterEntityId !== null && typeof data.monsterEntityId !== 'string') {
+    return { error: 'Некорректное существо' }
+  }
+
+  const { data: scene } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
+
+  if (data.monsterEntityId) {
+    const { data: entity } = await supabase
+      .from('entities')
+      .select('id')
+      .eq('id', data.monsterEntityId)
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+    if (!entity) return { error: 'Существо не найдено в этой кампании' }
+  }
+
+  const count = data.monsterCount
   const name = data.monsterName.trim()
-  if (!name) return { error: 'Укажите имя монстра' }
 
   const { data: created, error } = await supabase
     .from('summon_requests')
@@ -74,15 +105,17 @@ export async function approveSummonRequest(
     .single()
 
   if (fetchError || !request) return { error: 'Запрос не найден' }
+  if (request.scene_id !== sceneId) return { error: 'Запрос относится к другой сцене' }
   if (request.status !== 'pending') return { error: 'Запрос уже обработан' }
 
   const { data: scene } = await supabase
     .from('scenes')
     .select('width, height')
     .eq('id', sceneId)
-    .single()
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
 
-  if (!scene) return { error: 'Сцена не найдена' }
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
 
   const centerX = Math.floor(scene.width / 2)
   const centerY = Math.floor(scene.height / 2)
@@ -102,7 +135,7 @@ export async function approveSummonRequest(
     createdTokenIds.push(res.tokenId)
   }
 
-  const { error: updateError } = await supabase
+  const { data: updatedRequest, error: updateError } = await supabase
     .from('summon_requests')
     .update({
       status: 'approved',
@@ -110,8 +143,13 @@ export async function approveSummonRequest(
       resolved_at: new Date().toISOString(),
     })
     .eq('id', requestId)
+    .eq('campaign_id', campaignId)
+    .eq('scene_id', sceneId)
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
 
-  if (updateError) {
+  if (updateError || !updatedRequest) {
     console.error('approveSummonRequest error:', {
       code: updateError.code,
       message: updateError.message,
@@ -144,7 +182,7 @@ export async function rejectSummonRequest(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Только ГМ может отклонять призыв' }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('summon_requests')
     .update({
       status: 'rejected',
@@ -154,8 +192,10 @@ export async function rejectSummonRequest(
     .eq('id', requestId)
     .eq('campaign_id', campaignId)
     .eq('status', 'pending')
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !updated) {
     console.error('rejectSummonRequest error:', {
       code: error.code,
       message: error.message,
