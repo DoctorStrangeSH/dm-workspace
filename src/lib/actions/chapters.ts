@@ -61,7 +61,7 @@ export async function updateChapterTitle(chapterId: string, campaignId: string, 
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .update({ title: trimmed })
     .eq('id', chapterId)
