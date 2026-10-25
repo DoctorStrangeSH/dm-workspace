@@ -17,8 +17,26 @@ export async function createSession(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Только ГМ' }
 
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { error: 'Некорректные данные сессии' }
+  }
+  if (typeof data.title !== 'string' || typeof data.startsAt !== 'string') {
+    return { error: 'Укажите название и дату сессии' }
+  }
   const trimmedTitle = data.title.trim()
   if (!trimmedTitle) return { error: 'Введите название' }
+  if (trimmedTitle.length > 150) return { error: 'Название слишком длинное' }
+  if (data.description !== undefined && typeof data.description !== 'string') {
+    return { error: 'Некорректное описание' }
+  }
+  if (data.description && data.description.length > 5000) {
+    return { error: 'Описание слишком длинное' }
+  }
+  if (!Number.isFinite(Date.parse(data.startsAt))) return { error: 'Некорректная дата сессии' }
+  const duration = data.durationMinutes ?? 180
+  if (!Number.isInteger(duration) || duration < 15 || duration > 1440) {
+    return { error: 'Длительность должна быть от 15 минут до 24 часов' }
+  }
 
   const supabase = await createClient()
   const {
@@ -31,7 +49,7 @@ export async function createSession(
     title: trimmedTitle,
     description: data.description?.trim() || null,
     starts_at: data.startsAt,
-    duration_minutes: data.durationMinutes ?? 180,
+    duration_minutes: duration,
     created_by: user.id,
   })
 
@@ -49,19 +67,25 @@ export async function deleteSession(sessionId: string, campaignId: string) {
   if (!isDm) return { error: 'Только ГМ' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('sessions')
     .delete()
     .eq('id', sessionId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось удалить' }
+  if (error || !data) return { error: 'Не удалось удалить' }
 
   revalidatePath(`/campaign/${campaignId}/sessions`)
   return { success: true }
 }
 
 export async function setRsvp(sessionId: string, status: RsvpStatus) {
+  if (status !== 'yes' && status !== 'no' && status !== 'maybe') {
+    return { error: 'Некорректный ответ на приглашение' }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -75,6 +99,9 @@ export async function setRsvp(sessionId: string, status: RsvpStatus) {
     .single()
 
   if (!session) return { error: 'Сессия не найдена' }
+
+  const { isMember } = await getCampaignAccess(session.campaign_id)
+  if (!isMember) return { error: 'Нет доступа к кампании' }
 
   const { error } = await supabase.from('session_rsvp').upsert(
     {
