@@ -82,6 +82,7 @@ select
 from pg_default_acl d
 join pg_roles creator on creator.oid = d.defaclrole
 cross join lateral aclexplode(d.defaclacl) x
+left join pg_roles grantee on grantee.oid = x.grantee
 where d.defaclnamespace is null
   and d.defaclobjtype = 'r'
 order by creator.rolname, grantee, x.privilege_type;
