@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Handout } from '@/lib/types'
+import { withAuthorizedHandoutUrl } from '@/lib/handouts/storage'
 
 interface Options {
   campaignId: string
@@ -32,13 +33,13 @@ export function useRealtimeHandouts({ campaignId, initialHandouts, enabled = tru
         if (!record) return
         setHandouts((prev) => {
           if (prev.some((h) => h.id === record.id)) return prev
-          return [record, ...prev]
+          return [withAuthorizedHandoutUrl(record), ...prev]
         })
       })
       .on('broadcast', { event: 'UPDATE' }, (payload) => {
         const record = payload.payload.record as Handout
         if (!record) return
-        setHandouts((prev) => prev.map((h) => (h.id === record.id ? record : h)))
+        setHandouts((prev) => prev.map((h) => (h.id === record.id ? withAuthorizedHandoutUrl(record) : h)))
       })
       .on('broadcast', { event: 'DELETE' }, (payload) => {
         const old = payload.payload.old_record as { id: string }
