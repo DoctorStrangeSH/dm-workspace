@@ -396,7 +396,7 @@ begin
   v_is_dm := public.is_campaign_dm(p_campaign_id);
 
   return query
-  select t.id, t.name, t.color, count(distinct et.entity_id)::bigint as entities_count
+  select t.id, t.name, t.color, count(distinct e.id)::bigint as entities_count
   from public.tags t
   left join public.entity_tags et on et.tag_id = t.id
   left join public.entities e
