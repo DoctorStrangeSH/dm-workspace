@@ -12,6 +12,9 @@ export async function addTagToEntity(entityId: string, campaignId: string, tagNa
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (typeof tagName !== 'string' || tagName.length > 80) {
+    return { error: 'Имя тега должно быть не длиннее 80 символов' }
+  }
   const normalized = normalizeTagName(tagName)
   if (!normalized) return { error: 'Пустое имя тега' }
 
@@ -86,15 +89,34 @@ export async function removeTagFromEntity(entityId: string, tagId: string, campa
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
-  const supabase = await createClient()
+  if (typeof entityId !== 'string' || typeof tagId !== 'string') {
+    return { error: 'Некорректная сущность или тег' }
+  }
 
-  const { error } = await supabase
+  const supabase = await createClient()
+  const { data: entity } = await supabase
+    .from('entities')
+    .select('id')
+    .eq('id', entityId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  const { data: tag } = await supabase
+    .from('tags')
+    .select('id')
+    .eq('id', tagId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!entity || !tag) return { error: 'Сущность или тег не найдены в этой кампании' }
+
+  const { data: deleted, error } = await supabase
     .from('entity_tags')
     .delete()
     .eq('entity_id', entityId)
     .eq('tag_id', tagId)
+    .select('entity_id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !deleted) {
     console.error('removeTagFromEntity error:', error)
     return { error: 'Не удалось удалить тег' }
   }
@@ -111,19 +133,24 @@ export async function renameTag(tagId: string, campaignId: string, newName: stri
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (typeof newName !== 'string' || newName.length > 80) {
+    return { error: 'Имя тега должно быть не длиннее 80 символов' }
+  }
   const normalized = normalizeTagName(newName)
   if (!normalized) return { error: 'Пустое имя' }
 
   const supabase = await createClient()
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('tags')
     .update({ name: normalized })
     .eq('id', tagId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
-    if (error.code === '23505') {
+  if (error || !updated) {
+    if (error?.code === '23505') {
       return { error: 'Такой тег уже есть' }
     }
     console.error('renameTag error:', error)
@@ -143,13 +170,15 @@ export async function deleteTag(tagId: string, campaignId: string) {
 
   const supabase = await createClient()
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('tags')
     .delete()
     .eq('id', tagId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !deleted) {
     console.error('deleteTag error:', error)
     return { error: 'Не удалось удалить тег' }
   }
