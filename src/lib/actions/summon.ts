@@ -197,10 +197,10 @@ export async function rejectSummonRequest(
 
   if (error || !updated) {
     console.error('rejectSummonRequest error:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
     })
     return { error: 'Не удалось отклонить запрос' }
   }
