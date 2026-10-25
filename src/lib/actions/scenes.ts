@@ -153,25 +153,48 @@ export async function setActiveScene(sceneId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (typeof sceneId !== 'string' || !sceneId || typeof campaignId !== 'string' || !campaignId) {
+    return { error: 'Некорректная сцена' }
+  }
+
   const supabase = await createClient()
 
-  // Снимаем active со всех сцен кампании
-  await supabase
+  // Validate the target before changing the current active scene.
+  const { data: target, error: targetError } = await supabase
+    .from('scenes')
+    .select('id')
+    .eq('id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+
+  if (targetError || !target) {
+    return { error: 'Сцена не найдена в этой кампании' }
+  }
+
+  // Do not report success if the current active scene could not be cleared.
+  const { error: deactivateError } = await supabase
     .from('scenes')
     .update({ is_active: false })
     .eq('campaign_id', campaignId)
     .eq('is_active', true)
 
-  // Ставим active на выбранную
-  const { error } = await supabase
+  if (deactivateError) {
+    console.error('setActiveScene deactivate error:', deactivateError)
+    return { error: 'Не удалось изменить активную сцену' }
+  }
+
+  // Check the affected row so a stale/deleted target is not reported as success.
+  const { data: activated, error: activateError } = await supabase
     .from('scenes')
     .update({ is_active: true })
     .eq('id', sceneId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
-    console.error('setActiveScene error:', error)
-    return { error: 'Не удалось активировать' }
+  if (activateError || !activated) {
+    if (activateError) console.error('setActiveScene activate error:', activateError)
+    return { error: 'Не удалось активировать сцену' }
   }
 
   revalidatePath(`/campaign/${campaignId}/scenes`)
