@@ -99,10 +99,10 @@ export async function deleteWall(
 
   if (error || !deleted?.length) {
     console.error('deleteWall error:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint,
     })
     return { error: 'Не удалось удалить стену' }
   }
