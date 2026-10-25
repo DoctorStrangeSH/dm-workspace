@@ -69,6 +69,23 @@ export async function createToken(
   const { isDm, isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа к кампании' }
 
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { error: 'Некорректные данные токена' }
+  }
+  if (typeof data.name !== 'string') return { error: 'Введите имя' }
+  if (!Number.isFinite(data.x) || !Number.isFinite(data.y)) {
+    return { error: 'Некорректные координаты токена' }
+  }
+  if (data.size !== undefined && (!Number.isFinite(data.size) || data.size < 0.25 || data.size > 10)) {
+    return { error: 'Размер токена должен быть от 0.25 до 10' }
+  }
+  if (data.hp_current !== undefined && data.hp_current !== null && typeof data.hp_current !== 'number' && typeof data.hp_current !== 'string') {
+    return { error: 'Некорректное текущее HP' }
+  }
+  if (data.hp_max !== undefined && data.hp_max !== null && typeof data.hp_max !== 'number' && typeof data.hp_max !== 'string') {
+    return { error: 'Некорректное максимальное HP' }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -89,13 +106,14 @@ export async function createToken(
 
   const name = data.name.trim()
   if (!name) return { error: 'Введите имя' }
+  if (name.length > 150) return { error: 'Имя слишком длинное' }
 
   let hpCurrent = data.hp_current ?? null
   let hpMax = data.hp_max ?? null
   if (typeof hpCurrent === 'string') hpCurrent = normalizeMonsterHP(hpCurrent)
   if (typeof hpMax === 'string') hpMax = normalizeMonsterHP(hpMax)
-  if (hpCurrent !== null && typeof hpCurrent !== 'number') hpCurrent = null
-  if (hpMax !== null && typeof hpMax !== 'number') hpMax = null
+  if (hpCurrent !== null && (typeof hpCurrent !== 'number' || !Number.isFinite(hpCurrent))) hpCurrent = null
+  if (hpMax !== null && (typeof hpMax !== 'number' || !Number.isFinite(hpMax))) hpMax = null
 
   const { data: token, error } = await supabase
     .from('tokens')
@@ -133,6 +151,7 @@ export async function createToken(
 }
 
 export async function moveToken(tokenId: string, sceneId: string, x: number, y: number) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return { error: 'Некорректные координаты' }
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -157,6 +176,7 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
 }
 
 export async function updateTokenHP(tokenId: string, sceneId: string, hp_current: number) {
+  if (!Number.isFinite(hp_current) || hp_current < 0) return { error: 'Некорректное значение HP' }
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
@@ -199,6 +219,10 @@ export async function updateTokenConditions(
   const canEdit = await canEditToken(tokenId, user.id, isDm)
   if (!canEdit) return { error: 'Нет прав' }
 
+  if (!Array.isArray(conditions) || conditions.length > 50) {
+    return { error: 'Некорректный список состояний' }
+  }
+
   const { error } = await supabase
     .from('tokens')
     .update({ conditions })
@@ -221,15 +245,19 @@ export async function toggleTokenVisibility(tokenId: string, sceneId: string) {
     .from('tokens')
     .select('is_hidden')
     .eq('id', tokenId)
-    .single()
+    .eq('scene_id', sceneId)
+    .maybeSingle()
   if (!token) return { error: 'Токен не найден' }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tokens')
     .update({ is_hidden: !token.is_hidden })
     .eq('id', tokenId)
+    .eq('scene_id', sceneId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось' }
+  if (error || !data) return { error: 'Не удалось' }
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
 }
@@ -241,8 +269,14 @@ export async function deleteToken(tokenId: string, sceneId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase.from('tokens').delete().eq('id', tokenId).eq('scene_id', sceneId)
-  if (error) return { error: 'Не удалось удалить' }
+  const { data, error } = await supabase
+    .from('tokens')
+    .delete()
+    .eq('id', tokenId)
+    .eq('scene_id', sceneId)
+    .select('id')
+    .maybeSingle()
+  if (error || !data) return { error: 'Не удалось удалить' }
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
 }
