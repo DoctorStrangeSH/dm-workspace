@@ -128,15 +128,18 @@ export async function rollInitiativeForToken(initiativeEntryId: string, sceneId:
   const roll = Math.floor(Math.random() * 20) + 1
   const total = roll + dexMod
 
-  const { error } = await supabase
+  const { data: updatedEntry, error } = await supabase
     .from('initiative')
     .update({ initiative: total })
     .eq('id', initiativeEntryId)
     .eq('scene_id', sceneId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось обновить инициативу' }
+  if (error || !updatedEntry) return { error: 'Не удалось обновить инициативу' }
 
-  await recalculateTurnOrder(sceneId)
+  const orderUpdated = await recalculateTurnOrder(sceneId)
+  if (!orderUpdated) return { error: 'Инициатива обновлена, но не удалось пересчитать порядок ходов' }
   await logEvent(
     campaignId,
     'initiative_roll',
@@ -159,29 +162,41 @@ export async function rollAllInitiatives(sceneId: string) {
 
   if (!entries) return { error: 'Нет инициативы' }
 
+  const results = []
   for (const entry of entries) {
-    await rollInitiativeForToken(entry.id, sceneId)
+    results.push(await rollInitiativeForToken(entry.id, sceneId))
+  }
+
+  const failedRolls = results.filter((result) => !('success' in result && result.success))
+  if (failedRolls.length > 0) {
+    revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
+    return { error: `Не удалось выполнить бросок инициативы для ${failedRolls.length} из ${entries.length} участников` }
   }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
 }
 
-async function recalculateTurnOrder(sceneId: string) {
+async function recalculateTurnOrder(sceneId: string): Promise<boolean> {
   const supabase = await createClient()
-  const { data: entries } = await supabase
+  const { data: entries, error: fetchError } = await supabase
     .from('initiative')
     .select('id, initiative')
     .eq('scene_id', sceneId)
     .order('initiative', { ascending: false })
 
-  if (!entries) return
+  if (fetchError || !entries || entries.length === 0) return false
   for (let i = 0; i < entries.length; i++) {
-    await supabase
+    const { data: updated, error } = await supabase
       .from('initiative')
       .update({ turn_order: i, is_current: i === 0 })
       .eq('id', entries[i].id)
+      .eq('scene_id', sceneId)
+      .select('id')
+      .maybeSingle()
+    if (error || !updated) return false
   }
+  return true
 }
 
 export async function nextTurn(sceneId: string) {
