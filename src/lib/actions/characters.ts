@@ -91,20 +91,59 @@ export async function updateCharacter(
   const isOwner = character.user_id === user.id
   if (!isOwner && !isDm) return { error: 'Нет прав' }
 
+  // TypeScript types do not validate requests sent directly to a server action.
+  // Build an explicit allowlist so extra fields cannot mutate ownership or other columns.
+  const safeUpdates: {
+    name?: string
+    data_json?: CharacterData
+    is_active?: boolean
+    is_visible_to_party?: boolean
+  } = {}
+
   if (updates.name !== undefined) {
+    if (typeof updates.name !== 'string') return { error: 'Некорректное имя' }
     const trimmed = updates.name.trim()
     if (trimmed.length < 2) return { error: 'Имя слишком короткое' }
     if (trimmed.length > 150) return { error: 'Имя слишком длинное' }
-    updates.name = trimmed
+    safeUpdates.name = trimmed
   }
 
-  const { error } = await supabase
+  if (updates.data_json !== undefined) {
+    const value: unknown = updates.data_json
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return { error: 'Некорректные данные персонажа' }
+    }
+    if (JSON.stringify(value).length > 200_000) {
+      return { error: 'Данные персонажа слишком большие' }
+    }
+    safeUpdates.data_json = value as CharacterData
+  }
+
+  if (updates.is_active !== undefined) {
+    if (typeof updates.is_active !== 'boolean') return { error: 'Некорректный статус персонажа' }
+    safeUpdates.is_active = updates.is_active
+  }
+
+  if (updates.is_visible_to_party !== undefined) {
+    if (typeof updates.is_visible_to_party !== 'boolean') {
+      return { error: 'Некорректная видимость персонажа' }
+    }
+    safeUpdates.is_visible_to_party = updates.is_visible_to_party
+  }
+
+  if (Object.keys(safeUpdates).length === 0) {
+    return { error: 'Нет изменений для сохранения' }
+  }
+
+  const { data: updated, error } = await supabase
     .from('characters')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', characterId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось обновить' }
+  if (error || !updated) return { error: 'Не удалось обновить' }
 
   revalidatePath(`/campaign/${campaignId}/characters`)
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
