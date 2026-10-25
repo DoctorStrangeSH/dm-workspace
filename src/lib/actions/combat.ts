@@ -338,24 +338,61 @@ export async function damageToken(
   if (error || !updatedToken) return { error: 'Не удалось обновить' }
 
   if (token.character_id) {
-    const { data: char } = await supabase
+    const { data: char, error: characterFetchError } = await supabase
       .from('characters')
       .select('data_json')
       .eq('id', token.character_id)
       .eq('campaign_id', campaignId)
       .maybeSingle()
-    if (char) {
-      const previous = char.data_json
-      const data: { hp?: { current?: number; max?: number; temp?: number } } =
-        previous && typeof previous === 'object' && !Array.isArray(previous)
-          ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
-          : {}
-      data.hp = { ...data.hp, current: newHP }
-      await supabase
-        .from('characters')
-        .update({ data_json: data })
-        .eq('id', token.character_id)
+
+    if (characterFetchError || !char) {
+      // Best-effort rollback: avoid leaving token HP changed when its linked character cannot be synchronized.
+      const { data: rolledBack, error: rollbackError } = await supabase
+        .from('tokens')
+        .update({ hp_current: token.hp_current })
+        .eq('id', tokenId)
+        .eq('scene_id', sceneId)
         .eq('campaign_id', campaignId)
+        .eq('hp_current', newHP)
+        .select('id')
+        .maybeSingle()
+      if (rollbackError || !rolledBack) {
+        return { error: 'HP токена обновлено, но персонаж не найден; не удалось автоматически восстановить прежнее HP токена' }
+      }
+      return { error: 'Не удалось загрузить связанного персонажа; изменение HP отменено' }
+    }
+
+    const previous = char.data_json
+    const data: { hp?: { current?: number; max?: number; temp?: number } } =
+      previous && typeof previous === 'object' && !Array.isArray(previous)
+        ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
+        : {}
+    data.hp = { ...data.hp, current: newHP }
+
+    const { data: updatedCharacter, error: characterUpdateError } = await supabase
+      .from('characters')
+      .update({ data_json: data })
+      .eq('id', token.character_id)
+      .eq('campaign_id', campaignId)
+      .select('id')
+      .maybeSingle()
+
+    if (characterUpdateError || !updatedCharacter) {
+      // Best-effort rollback, guarded by the value written above to reduce the chance of overwriting a concurrent change.
+      const { data: rolledBack, error: rollbackError } = await supabase
+        .from('tokens')
+        .update({ hp_current: token.hp_current })
+        .eq('id', tokenId)
+        .eq('scene_id', sceneId)
+        .eq('campaign_id', campaignId)
+        .eq('hp_current', newHP)
+        .select('id')
+        .maybeSingle()
+
+      if (rollbackError || !rolledBack) {
+        return { error: 'Не удалось синхронизировать HP персонажа и восстановить HP токена; проверьте значения HP вручную' }
+      }
+      return { error: 'Не удалось обновить HP персонажа; изменение HP токена отменено' }
     }
   }
 
