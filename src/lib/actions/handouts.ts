@@ -20,9 +20,18 @@ export async function createHandout(campaignId: string, formData: FormData) {
   if (file.size > 20 * 1024 * 1024) return { error: 'Файл > 20 MB' }
   if (!file.type.startsWith('image/')) return { error: 'Можно загружать только изображения' }
 
+  const extByMime: Record<string, string> = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'image/avif': 'avif',
+  }
+  const ext = extByMime[file.type]
+  if (!ext) return { error: 'Поддерживаются PNG, JPEG, WebP, GIF и AVIF' }
+
   const supabase = await createClient()
-  const ext = file.name.split('.').pop() ?? 'png'
-  const fileName = `${campaignId}/${Date.now()}-${name.replace(/\s+/g, '-').toLowerCase()}.${ext}`
+  const fileName = `${campaignId}/${crypto.randomUUID()}.${ext}`
 
   const { error: uploadError } = await supabase.storage.from('handouts').upload(fileName, file)
   if (uploadError) return { error: 'Не удалось загрузить' }
@@ -50,6 +59,13 @@ export async function showHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
+  const { data: target } = await supabase
+    .from('handouts')
+    .select('id')
+    .eq('id', handoutId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!target) return { error: 'Материал не найден' }
 
   await supabase
     .from('handouts')
