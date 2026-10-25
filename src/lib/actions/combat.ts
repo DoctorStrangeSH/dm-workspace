@@ -234,37 +234,80 @@ export async function damageToken(
   amount: number,
   type: 'damage' | 'heal' | 'set'
 ) {
+  if (!Number.isFinite(amount) || amount < 0) return { error: 'Некорректное значение HP' }
+  if (type !== 'damage' && type !== 'heal' && type !== 'set') {
+    return { error: 'Неизвестный тип изменения HP' }
+  }
+
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Не авторизован' }
+
+  const { isDm, isMember } = await getCampaignAccess(campaignId)
+  if (!isMember) return { error: 'Нет доступа к кампании' }
+
   const { data: token } = await supabase
     .from('tokens')
-    .select('hp_current, hp_max, character_id, name')
+    .select('id, owner_id, hp_current, hp_max, character_id, name')
     .eq('id', tokenId)
-    .single()
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
 
-  if (!token || token.hp_current === null || token.hp_max === null)
+  if (!token) return { error: 'Токен не найден в этой сцене' }
+  if (token.hp_current === null || token.hp_max === null) {
     return { error: 'У токена нет HP' }
+  }
+
+  if (!isDm && token.owner_id !== user.id) {
+    const { data: owner } = await supabase
+      .from('token_owners')
+      .select('user_id')
+      .eq('token_id', tokenId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (!owner) return { error: 'Нет прав на изменение HP' }
+  }
 
   let newHP = token.hp_current
   if (type === 'damage') newHP = Math.max(0, token.hp_current - amount)
   else if (type === 'heal') newHP = Math.min(token.hp_max, token.hp_current + amount)
-  else if (type === 'set') newHP = Math.max(0, Math.min(token.hp_max, amount))
+  else newHP = Math.max(0, Math.min(token.hp_max, amount))
 
-  const { error } = await supabase.from('tokens').update({ hp_current: newHP }).eq('id', tokenId)
-  if (error) return { error: 'Не удалось обновить' }
+  const { data: updatedToken, error } = await supabase
+    .from('tokens')
+    .update({ hp_current: newHP })
+    .eq('id', tokenId)
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
+  if (error || !updatedToken) return { error: 'Не удалось обновить' }
 
   if (token.character_id) {
     const { data: char } = await supabase
       .from('characters')
       .select('data_json')
       .eq('id', token.character_id)
-      .single()
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
     if (char) {
-      const data = char.data_json as { hp?: { current?: number; max?: number; temp?: number } }
+      const previous = char.data_json
+      const data: { hp?: { current?: number; max?: number; temp?: number } } =
+        previous && typeof previous === 'object' && !Array.isArray(previous)
+          ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
+          : {}
       data.hp = { ...data.hp, current: newHP }
-      await supabase.from('characters').update({ data_json: data }).eq('id', token.character_id)
+      await supabase
+        .from('characters')
+        .update({ data_json: data })
+        .eq('id', token.character_id)
+        .eq('campaign_id', campaignId)
     }
   }
 
@@ -274,7 +317,7 @@ export async function damageToken(
   await logEvent(
     campaignId,
     'token_damage',
-    `${token.name}: ${type === 'damage' ? '-' : '+'}${amount} HP`
+    `${token.name}: ${type === 'damage' ? '-' : type === 'heal' ? '+' : ''}${amount} HP`
   )
 
   return { success: true, hp: newHP }
