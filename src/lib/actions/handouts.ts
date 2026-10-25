@@ -9,12 +9,16 @@ export async function createHandout(campaignId: string, formData: FormData) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
-  const name = (formData.get('name') as string)?.trim()
-  const file = formData.get('image') as File | null
+  const rawName = formData.get('name')
+  const rawFile = formData.get('image')
+  const name = typeof rawName === 'string' ? rawName.trim() : ''
+  const file = typeof File !== 'undefined' && rawFile instanceof File ? rawFile : null
 
   if (!name) return { error: 'Введите название' }
-  if (!file) return { error: 'Выберите изображение' }
+  if (name.length > 150) return { error: 'Название слишком длинное' }
+  if (!file || file.size === 0) return { error: 'Выберите изображение' }
   if (file.size > 20 * 1024 * 1024) return { error: 'Файл > 20 MB' }
+  if (!file.type.startsWith('image/')) return { error: 'Можно загружать только изображения' }
 
   const supabase = await createClient()
   const ext = file.name.split('.').pop() ?? 'png'
@@ -57,10 +61,11 @@ export async function showHandout(handoutId: string, campaignId: string) {
     .from('handouts')
     .update({ is_visible: true })
     .eq('id', handoutId)
+    .eq('campaign_id', campaignId)
     .select('name')
-    .single()
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось показать' }
+  if (error || !handout) return { error: 'Не удалось показать' }
 
   await logEvent(campaignId, 'handout_show', `Показан хендаут: ${handout?.name ?? '?'}`)
 
@@ -73,11 +78,14 @@ export async function hideHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('handouts')
     .update({ is_visible: false })
     .eq('id', handoutId)
-  if (error) return { error: 'Не удалось скрыть' }
+    .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
+  if (error || !data) return { error: 'Не удалось скрыть' }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
@@ -88,12 +96,14 @@ export async function deleteHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('handouts')
     .delete()
     .eq('id', handoutId)
     .eq('campaign_id', campaignId)
-  if (error) return { error: 'Не удалось удалить' }
+    .select('id')
+    .maybeSingle()
+  if (error || !data) return { error: 'Не удалось удалить' }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
