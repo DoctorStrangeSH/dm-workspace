@@ -298,7 +298,7 @@ export async function damageToken(
       .maybeSingle()
     if (char) {
       const previous = char.data_json
-      const data =
+      const data: { hp?: { current?: number; max?: number; temp?: number } } =
         previous && typeof previous === 'object' && !Array.isArray(previous)
           ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
           : {}
