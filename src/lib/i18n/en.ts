@@ -57,6 +57,11 @@ export const en: Dictionary = {
 
   // ─── Dashboard ───
   'dashboard.myCampaigns': 'My campaigns',
+  'dashboard.workspaceLabel': 'YOUR NEXT ADVENTURE STARTS HERE',
+  'dashboard.welcomeTitle': 'Your story. Your world.',
+  'dashboard.welcomeDescription': 'All your campaigns, characters, and world notes in one place. Continue an adventure or create a new one.',
+  'dashboard.campaignsEyebrow': 'YOUR WORLDS',
+  'dashboard.campaignCount': 'Campaigns: {count}',
   'dashboard.asDm': 'I am the DM',
   'dashboard.asPlayer': 'I am a player',
   'dashboard.empty.title': 'No campaigns yet',

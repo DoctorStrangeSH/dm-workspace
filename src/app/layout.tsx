@@ -22,18 +22,24 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a12' },
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#0c0b0a' },
+    { media: '(prefers-color-scheme: light)', color: '#faf7f0' },
   ],
 }
 
 export const metadata: Metadata = {
-  title: 'DM Workspace',
-  description: 'Мастерская ГМа',
+  title: {
+    default: 'DM Workspace — мастерская мира',
+    template: '%s | DM Workspace',
+  },
+  applicationName: 'DM Workspace',
+  description:
+    'Единое рабочее пространство для мастеров и игроков Dungeons & Dragons: кампании, персонажи, заметки и виртуальный игровой стол.',
   metadataBase: new URL('https://dm-workspace.vercel.app'),
   openGraph: {
-    title: 'DM Workspace',
-    description: 'Мастерская ГМа',
+    title: 'DM Workspace — мастерская мира',
+    description:
+      'Кампании, персонажи, заметки и виртуальный игровой стол для Dungeons & Dragons.',
     type: 'website',
   },
 }

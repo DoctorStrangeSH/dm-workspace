@@ -57,6 +57,11 @@ export const ru: Dictionary = {
 
   // ─── Dashboard ───
   'dashboard.myCampaigns': 'Мои кампании',
+  'dashboard.workspaceLabel': 'ТВОЁ ПРИКЛЮЧЕНИЕ НАЧИНАЕТСЯ ЗДЕСЬ',
+  'dashboard.welcomeTitle': 'Твоя история. Твой мир.',
+  'dashboard.welcomeDescription': 'Все кампании, персонажи и заметки о мире — в одном месте. Продолжай приключение или создай новое.',
+  'dashboard.campaignsEyebrow': 'ТВОИ МИРЫ',
+  'dashboard.campaignCount': 'Кампаний: {count}',
   'dashboard.asDm': 'Я — ГМ',
   'dashboard.asPlayer': 'Я — Игрок',
   'dashboard.empty.title': 'Пока нет ни одной кампании',
