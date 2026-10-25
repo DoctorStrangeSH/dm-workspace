@@ -16,25 +16,46 @@ export interface SrdItem {
   data: any
 }
 
+function sanitizeSearchQuery(query: unknown): string {
+  if (typeof query !== 'string') return ''
+  return query.trim().slice(0, 100).replace(/[,%().*\\_]/g, ' ').replace(/\s+/g, ' ')
+}
+
+function normalizeLimit(limit: unknown): number {
+  if (typeof limit !== 'number' || !Number.isFinite(limit)) return 100
+  return Math.min(100, Math.max(1, Math.floor(limit)))
+}
+
+function sanitizeStringFilters(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((entry): entry is string => typeof entry === 'string' && entry.length > 0 && entry.length <= 80)
+    .slice(0, 30)
+}
+
 export async function searchSrdItemsAction(filters: ItemFilters = {}): Promise<SrdItem[]> {
   const supabase = await createClient()
   const { query, type, rarity, limit = 100 } = filters
+  const searchQuery = sanitizeSearchQuery(query)
+  const safeLimit = normalizeLimit(limit)
+  const safeType = sanitizeStringFilters(type)
+  const safeRarity = sanitizeStringFilters(rarity)
 
   let q = supabase.from('srd_items').select('*')
 
-  if (query?.trim()) {
-    q = q.or(`name.ilike.%${query.trim()}%,name_ru.ilike.%${query.trim()}%`)
+  if (searchQuery) {
+    q = q.or(`name.ilike.%${searchQuery}%,name_ru.ilike.%${searchQuery}%`)
   }
 
-  if (type && type.length > 0) {
-    q = q.in('data->>item_type', type)
+  if (safeType.length > 0) {
+    q = q.in('data->>item_type', safeType)
   }
 
-  if (rarity && rarity.length > 0) {
-    q = q.in('data->>rarity', rarity)
+  if (safeRarity.length > 0) {
+    q = q.in('data->>rarity', safeRarity)
   }
 
-  q = q.order('name').limit(limit)
+  q = q.order('name').limit(safeLimit)
 
   const { data, error } = await q
 
