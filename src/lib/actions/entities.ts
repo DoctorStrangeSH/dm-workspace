@@ -159,13 +159,15 @@ export async function deleteEntity(entityId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('entities')
     .delete()
     .eq('id', entityId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !data) {
     console.error('deleteEntity error:', error)
     return { error: 'Не удалось удалить' }
   }
