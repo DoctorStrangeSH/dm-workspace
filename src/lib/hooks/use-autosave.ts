@@ -22,6 +22,7 @@ export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: 
   const isFirstRenderRef = useRef(true)
   const savingRef = useRef(false)
   const saveQueuedRef = useRef(false)
+  const saveNowRef = useRef<() => Promise<void>>(async () => {})
 
   useEffect(() => {
     latestValueRef.current = value
@@ -59,10 +60,14 @@ export function useAutosave<T>({ value, onSave, delay = 1500, enabled = true }: 
       savingRef.current = false
       if (saveQueuedRef.current) {
         saveQueuedRef.current = false
-        void saveNow()
+        void saveNowRef.current()
       }
     }
   }, [onSave])
+
+  useEffect(() => {
+    saveNowRef.current = saveNow
+  }, [saveNow])
 
   useEffect(() => {
     if (!enabled) return
