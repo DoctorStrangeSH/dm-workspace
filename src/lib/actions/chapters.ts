@@ -61,13 +61,15 @@ export async function updateChapterTitle(chapterId: string, campaignId: string, 
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .update({ title: trimmed })
     .eq('id', chapterId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !data) {
     console.error('updateChapterTitle error:', error)
     return { error: 'Не удалось обновить' }
   }
@@ -85,13 +87,15 @@ export async function toggleChapterVisibility(
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .update({ is_visible_to_players: visible })
     .eq('id', chapterId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !data) {
     console.error('toggleChapterVisibility error:', error)
     return { error: 'Не удалось переключить' }
   }
@@ -105,13 +109,15 @@ export async function deleteChapter(chapterId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .delete()
     .eq('id', chapterId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !data) {
     console.error('deleteChapter error:', error)
     return { error: 'Не удалось удалить' }
   }
@@ -127,19 +133,38 @@ export async function reorderChapters(campaignId: string, orderedIds: string[]) 
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
-  const supabase = await createClient()
+  if (orderedIds.length > 500 || new Set(orderedIds).size !== orderedIds.length) {
+    return { error: 'Некорректный список глав' }
+  }
 
-  // Обновляем order_index для каждой главы
+  const supabase = await createClient()
+  const { data: chapters, error: fetchError } = await supabase
+    .from('chapters')
+    .select('id')
+    .eq('campaign_id', campaignId)
+
+  if (fetchError) {
+    console.error('reorderChapters fetch error:', fetchError)
+    return { error: 'Не удалось проверить список глав' }
+  }
+
+  const allowedIds = new Set((chapters ?? []).map((chapter) => chapter.id))
+  if (orderedIds.some((id) => !allowedIds.has(id))) {
+    return { error: 'Список содержит неизвестную главу' }
+  }
+
   const updates = orderedIds.map((id, index) =>
     supabase
       .from('chapters')
       .update({ order_index: index })
       .eq('id', id)
       .eq('campaign_id', campaignId)
+      .select('id')
+      .maybeSingle()
   )
 
   const results = await Promise.all(updates)
-  const failed = results.find((r) => r.error)
+  const failed = results.find((result) => result.error || !result.data)
   if (failed) {
     console.error('reorderChapters error:', failed.error)
     return { error: 'Не удалось сохранить порядок' }
@@ -233,11 +258,12 @@ export async function bulkDeleteChapters(chapterIds: string[], campaignId: strin
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .delete()
     .in('id', chapterIds)
     .eq('campaign_id', campaignId)
+    .select('id')
 
   if (error) {
     console.error('bulkDeleteChapters error:', error)
@@ -245,7 +271,7 @@ export async function bulkDeleteChapters(chapterIds: string[], campaignId: strin
   }
 
   revalidatePath(`/campaign/${campaignId}/chapters`)
-  return { success: true, deletedCount: chapterIds.length }
+  return { success: true, deletedCount: data?.length ?? 0 }
 }
 
 export async function bulkSetVisibility(
@@ -265,11 +291,12 @@ export async function bulkSetVisibility(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('chapters')
     .update({ is_visible_to_players: visible })
     .in('id', chapterIds)
     .eq('campaign_id', campaignId)
+    .select('id')
 
   if (error) {
     console.error('bulkSetVisibility error:', error)
@@ -277,5 +304,5 @@ export async function bulkSetVisibility(
   }
 
   revalidatePath(`/campaign/${campaignId}/chapters`)
-  return { success: true, updatedCount: chapterIds.length }
+  return { success: true, updatedCount: data?.length ?? 0 }
 }
