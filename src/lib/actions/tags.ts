@@ -150,7 +150,7 @@ export async function renameTag(tagId: string, campaignId: string, newName: stri
     .maybeSingle()
 
   if (error || !updated) {
-    if (error.code === '23505') {
+    if (error?.code === '23505') {
       return { error: 'Такой тег уже есть' }
     }
     console.error('renameTag error:', error)
