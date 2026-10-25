@@ -8,8 +8,9 @@ export async function createPlaylist(campaignId: string, name: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (typeof name !== 'string') return { error: 'Некорректное название' }
   const trimmed = name.trim()
-  if (!trimmed) return { error: 'Введите название' }
+  if (!trimmed || trimmed.length > 120) return { error: 'Название должно быть от 1 до 120 символов' }
 
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -29,13 +30,15 @@ export async function deletePlaylist(playlistId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('playlists')
     .delete()
     .eq('id', playlistId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось удалить' }
+  if (error || !deleted) return { error: 'Плейлист не найден или не удалось удалить' }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
@@ -45,16 +48,39 @@ export async function addTrack(playlistId: string, campaignId: string, formData:
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
-  const file = formData.get('audio') as File | null
-  const name = (formData.get('name') as string)?.trim()
-
-  if (!file) return { error: 'Выберите аудиофайл' }
-  if (!name) return { error: 'Введите название' }
+  const fileValue = formData.get('audio')
+  const nameValue = formData.get('name')
+  if (!(fileValue instanceof File) || fileValue.size === 0) return { error: 'Выберите аудиофайл' }
+  if (typeof nameValue !== 'string') return { error: 'Введите название' }
+  const file = fileValue
+  const name = nameValue.trim()
+  if (!name || name.length > 150) return { error: 'Название должно быть от 1 до 150 символов' }
   if (file.size > 20 * 1024 * 1024) return { error: 'Файл > 20 MB' }
 
+  const allowedAudioTypes: Record<string, string> = {
+    'audio/mpeg': 'mp3',
+    'audio/mp3': 'mp3',
+    'audio/wav': 'wav',
+    'audio/x-wav': 'wav',
+    'audio/ogg': 'ogg',
+    'audio/mp4': 'm4a',
+    'audio/aac': 'aac',
+    'audio/flac': 'flac',
+    'audio/webm': 'webm',
+  }
+  const ext = allowedAudioTypes[file.type]
+  if (!ext) return { error: 'Неподдерживаемый формат аудио' }
+
   const supabase = await createClient()
-  const ext = file.name.split('.').pop() ?? 'mp3'
-  const fileName = `${campaignId}/${playlistId}-${Date.now()}.${ext}`
+  const { data: playlist } = await supabase
+    .from('playlists')
+    .select('id')
+    .eq('id', playlistId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!playlist) return { error: 'Плейлист не найден в этой кампании' }
+
+  const fileName = `${campaignId}/${crypto.randomUUID()}.${ext}`
 
   const { error: uploadError } = await supabase.storage.from('music').upload(fileName, file)
 
@@ -83,7 +109,10 @@ export async function addTrack(playlistId: string, campaignId: string, formData:
     order_index: (lastTrack?.order_index ?? -1) + 1,
   })
 
-  if (error) return { error: 'Не удалось добавить трек' }
+  if (error) {
+    await supabase.storage.from('music').remove([fileName])
+    return { error: 'Не удалось добавить трек' }
+  }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
@@ -94,13 +123,15 @@ export async function removeTrack(trackId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('tracks')
     .delete()
     .eq('id', trackId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось удалить' }
+  if (error || !deleted) return { error: 'Трек не найден или не удалось удалить' }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
@@ -110,7 +141,18 @@ export async function playTrack(campaignId: string, trackId: string, isPlaying: 
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (typeof isPlaying !== 'boolean' || typeof trackId !== 'string' || !trackId) {
+    return { error: 'Некорректные параметры воспроизведения' }
+  }
+
   const supabase = await createClient()
+  const { data: track } = await supabase
+    .from('tracks')
+    .select('id')
+    .eq('id', trackId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!track) return { error: 'Трек не найден в этой кампании' }
 
   const { error } = await supabase.from('music_player_state').upsert({
     campaign_id: campaignId,
