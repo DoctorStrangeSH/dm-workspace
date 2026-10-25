@@ -70,7 +70,7 @@ export default function CampaignCard({ campaign }: Props) {
 
   return (
     <>
-      <Card padding="md" hoverable className="group relative flex min-h-52 flex-col overflow-hidden rounded-xl shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lg)]">
+      <Card padding="md" hoverable className="group relative flex min-h-52 flex-col overflow-hidden rounded-xl shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)]/50 hover:shadow-[var(--shadow-lg)]">
         <div className="mb-3 flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <div className="mb-1.5 flex items-center gap-2">
