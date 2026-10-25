@@ -29,14 +29,11 @@ export default function CampaignCard({ campaign }: Props) {
     }
   }, [])
 
-  const inviteUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/join/${inviteCode}`
-      : `/join/${inviteCode}`
+  const inviteUrl = `/join/${inviteCode}`
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(inviteUrl)
+      await navigator.clipboard.writeText(window.location.origin + inviteUrl)
       setCopied(true)
       if (copiedTimer.current) clearTimeout(copiedTimer.current)
       copiedTimer.current = setTimeout(() => setCopied(false), 2000)
