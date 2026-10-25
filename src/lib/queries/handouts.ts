@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import type { Handout } from '@/lib/types'
+import { withAuthorizedHandoutUrl } from '@/lib/handouts/storage'
 
 export async function getHandouts(campaignId: string): Promise<Handout[]> {
   const supabase = await createClient()
@@ -9,7 +10,7 @@ export async function getHandouts(campaignId: string): Promise<Handout[]> {
     .eq('campaign_id', campaignId)
     .order('created_at', { ascending: false })
 
-  return (data ?? []) as Handout[]
+  return ((data ?? []) as Handout[]).map(withAuthorizedHandoutUrl)
 }
 
 export async function getActiveHandout(campaignId: string): Promise<Handout | null> {
@@ -21,5 +22,5 @@ export async function getActiveHandout(campaignId: string): Promise<Handout | nu
     .eq('is_visible', true)
     .maybeSingle()
 
-  return (data as Handout) ?? null
+  return data ? withAuthorizedHandoutUrl(data as Handout) : null
 }
