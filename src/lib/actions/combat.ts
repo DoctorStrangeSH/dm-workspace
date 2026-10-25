@@ -28,7 +28,8 @@ export async function startCombat(sceneId: string) {
 
   if (!tokens || tokens.length === 0) return { error: 'Нет токенов для инициативы' }
 
-  await supabase.from('initiative').delete().eq('scene_id', sceneId)
+  const { error: clearError } = await supabase.from('initiative').delete().eq('scene_id', sceneId)
+  if (clearError) return { error: 'Не удалось подготовить инициативу' }
 
   const entries = tokens.map((t) => ({
     scene_id: sceneId,
@@ -207,17 +208,49 @@ export async function nextTurn(sceneId: string) {
     .maybeSingle()
 
   if (!currentEntry) {
-    await supabase.from('initiative').update({ is_current: true }).eq('id', entries[0].id)
+    const { data: activated, error } = await supabase
+      .from('initiative')
+      .update({ is_current: true })
+      .eq('id', entries[0].id)
+      .eq('scene_id', sceneId)
+      .select('id')
+      .maybeSingle()
+    if (error || !activated) return { error: 'Не удалось установить текущий ход' }
+
     revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
     return { success: true }
   }
 
   const nextIndex = (currentEntry.turn_order + 1) % entries.length
-  await supabase.from('initiative').update({ is_current: false }).eq('id', currentEntry.id)
-
   const nextEntry = entries.find((e) => e.turn_order === nextIndex)
-  if (nextEntry)
-    await supabase.from('initiative').update({ is_current: true }).eq('id', nextEntry.id)
+  if (!nextEntry) return { error: 'Не удалось определить следующий ход' }
+
+  const { data: cleared, error: clearError } = await supabase
+    .from('initiative')
+    .update({ is_current: false })
+    .eq('id', currentEntry.id)
+    .eq('scene_id', sceneId)
+    .select('id')
+    .maybeSingle()
+  if (clearError || !cleared) return { error: 'Не удалось завершить текущий ход' }
+
+  const { data: activated, error: activateError } = await supabase
+    .from('initiative')
+    .update({ is_current: true })
+    .eq('id', nextEntry.id)
+    .eq('scene_id', sceneId)
+    .select('id')
+    .maybeSingle()
+
+  if (activateError || !activated) {
+    // Best-effort recovery so a failed transition does not leave combat without a current turn.
+    await supabase
+      .from('initiative')
+      .update({ is_current: true })
+      .eq('id', currentEntry.id)
+      .eq('scene_id', sceneId)
+    return { error: 'Не удалось перейти к следующему ходу' }
+  }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
   return { success: true }
