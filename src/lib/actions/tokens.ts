@@ -100,16 +100,54 @@ export async function createToken(
   } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  if (!isDm) {
-    if (!data.characterId) return { error: 'Игрок может добавить только своего персонажа' }
+  if (!isDm && !data.characterId) {
+    return { error: 'Игрок может добавить только своего персонажа' }
+  }
+
+  // Never allow a token in this campaign to reference a character or monster
+  // from another campaign, even when the action is called directly.
+  if (data.characterId) {
     const { data: char } = await supabase
       .from('characters')
       .select('user_id, campaign_id')
       .eq('id', data.characterId)
-      .single()
-    if (!char || char.user_id !== user.id || char.campaign_id !== campaignId) {
+      .maybeSingle()
+    if (!char || char.campaign_id !== campaignId) {
+      return { error: 'Персонаж не найден в этой кампании' }
+    }
+    if (!isDm && char.user_id !== user.id) {
       return { error: 'Нельзя добавить чужого персонажа' }
     }
+  }
+
+  if (data.entityId) {
+    const { data: entity } = await supabase
+      .from('entities')
+      .select('id')
+      .eq('id', data.entityId)
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+    if (!entity) return { error: 'Существо не найдено в этой кампании' }
+  }
+
+  if (data.image_url !== undefined) {
+    if (typeof data.image_url !== 'string' || data.image_url.length > 2048) {
+      return { error: 'Некорректная ссылка на изображение' }
+    }
+    try {
+      const imageUrl = new URL(data.image_url)
+      if (imageUrl.protocol !== 'https:' && imageUrl.protocol !== 'http:') {
+        return { error: 'Некорректная ссылка на изображение' }
+      }
+    } catch {
+      return { error: 'Некорректная ссылка на изображение' }
+    }
+  }
+  if (data.color !== undefined && (typeof data.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(data.color))) {
+    return { error: 'Некорректный цвет токена' }
+  }
+  if (data.owner_id !== undefined && data.owner_id !== null && typeof data.owner_id !== 'string') {
+    return { error: 'Некорректный владелец токена' }
   }
 
   const name = data.name.trim()
