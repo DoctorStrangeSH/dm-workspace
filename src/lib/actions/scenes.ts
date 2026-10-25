@@ -18,9 +18,19 @@ export async function createScene(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (!data || typeof data.name !== 'string') return { error: 'Некорректные данные сцены' }
   const name = data.name.trim()
   if (!name || name.length < 2) {
     return { error: 'Название минимум 2 символа' }
+  }
+
+  const gridType = data.grid_type ?? 'square'
+  const gridSize = data.grid_size ?? 50
+  const width = data.width ?? 30
+  const height = data.height ?? 20
+  if (!['square', 'hex', 'none'].includes(gridType)) return { error: 'Некорректный тип сетки' }
+  if (![gridSize, width, height].every(Number.isFinite) || gridSize < 10 || gridSize > 200 || width < 1 || width > 500 || height < 1 || height > 500) {
+    return { error: 'Некорректные размеры сцены' }
   }
 
   const supabase = await createClient()
@@ -29,10 +39,10 @@ export async function createScene(
     .insert({
       campaign_id: campaignId,
       name,
-      grid_type: data.grid_type ?? 'square',
-      grid_size: data.grid_size ?? 50,
-      width: data.width ?? 30,
-      height: data.height ?? 20,
+      grid_type: gridType,
+      grid_size: gridSize,
+      width,
+      height,
     })
     .select('id')
     .single()
@@ -62,20 +72,52 @@ export async function updateScene(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return { error: 'Некорректные данные сцены' }
+  const safeData: Record<string, unknown> = {}
+  const allowedKeys = ['name', 'grid_type', 'grid_size', 'width', 'height', 'image_url', 'fog_enabled'] as const
+  for (const key of Object.keys(data)) {
+    if (!allowedKeys.includes(key as (typeof allowedKeys)[number])) return { error: 'Недопустимое поле сцены' }
+  }
+  if (Object.keys(data).length === 0) return { error: 'Нет изменений' }
   if (data.name !== undefined) {
+    if (typeof data.name !== 'string') return { error: 'Некорректное название' }
     const trimmed = data.name.trim()
     if (trimmed.length < 2) return { error: 'Название слишком короткое' }
-    data.name = trimmed
+    if (trimmed.length > 150) return { error: 'Название слишком длинное' }
+    safeData.name = trimmed
+  }
+  if (data.grid_type !== undefined) {
+    if (!['square', 'hex', 'none'].includes(data.grid_type)) return { error: 'Некорректный тип сетки' }
+    safeData.grid_type = data.grid_type
+  }
+  for (const key of ['grid_size', 'width', 'height'] as const) {
+    const value = data[key]
+    if (value !== undefined) {
+      const min = key === 'grid_size' ? 10 : 1
+      const max = key === 'grid_size' ? 200 : 500
+      if (!Number.isFinite(value) || value < min || value > max) return { error: 'Некорректные размеры сцены' }
+      safeData[key] = value
+    }
+  }
+  if (data.image_url !== undefined) {
+    if (data.image_url !== null && (typeof data.image_url !== 'string' || data.image_url.length > 2048)) return { error: 'Некорректная ссылка на карту' }
+    safeData.image_url = data.image_url
+  }
+  if (data.fog_enabled !== undefined) {
+    if (typeof data.fog_enabled !== 'boolean') return { error: 'Некорректное состояние тумана' }
+    safeData.fog_enabled = data.fog_enabled
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('scenes')
-    .update(data)
+    .update(safeData)
     .eq('id', sceneId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !updated) {
     console.error('updateScene error:', error)
     return { error: 'Не удалось обновить' }
   }
@@ -90,13 +132,15 @@ export async function deleteScene(sceneId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('scenes')
     .delete()
     .eq('id', sceneId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !deleted) {
     console.error('deleteScene error:', error)
     return { error: 'Не удалось удалить' }
   }
@@ -139,13 +183,19 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (!(file instanceof File) || file.size === 0) return { error: 'Выберите файл карты' }
   if (file.size > 10 * 1024 * 1024) {
     return { error: 'Файл больше 10 MB' }
   }
 
+  const extByMime: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
+  const ext = extByMime[file.type]
+  if (!ext) return { error: 'Поддерживаются PNG, JPEG и WebP' }
+
   const supabase = await createClient()
-  const ext = file.name.split('.').pop() ?? 'png'
-  const fileName = `${campaignId}/${sceneId}-${Date.now()}.${ext}`
+  const { data: scene } = await supabase.from('scenes').select('id').eq('id', sceneId).eq('campaign_id', campaignId).maybeSingle()
+  if (!scene) return { error: 'Сцена не принадлежит кампании' }
+  const fileName = `${campaignId}/${sceneId}-${crypto.randomUUID()}.${ext}`
 
   const { error: uploadError } = await supabase.storage
     .from('scene-maps')
@@ -160,13 +210,15 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
     data: { publicUrl },
   } = supabase.storage.from('scene-maps').getPublicUrl(fileName)
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('scenes')
     .update({ image_url: publicUrl })
     .eq('id', sceneId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !updated) {
     return { error: 'Не удалось сохранить URL' }
   }
 

@@ -21,6 +21,16 @@ export async function sendMessage(
   const { isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа' }
 
+  if (typeof content !== 'string') return { error: 'Некорректное сообщение' }
+  if (!['text', 'system', 'roll', 'whisper'].includes(type)) return { error: 'Некорректный тип сообщения' }
+  let metadataSize = 0
+  try {
+    metadataSize = JSON.stringify(metadata ?? {}).length
+  } catch {
+    return { error: 'Некорректные метаданные' }
+  }
+  if (metadataSize > 20_000) return { error: 'Метаданные слишком большие' }
+
   const trimmed = content.trim()
   if (!trimmed) return { error: 'Пустое сообщение' }
   if (trimmed.length > 5000) return { error: 'Слишком длинное' }
@@ -54,7 +64,8 @@ export async function deleteMessage(messageId: string, campaignId: string) {
 
   if (!user) return { error: 'Не авторизован' }
 
-  const { isDm } = await getCampaignAccess(campaignId)
+  const { isDm, isMember } = await getCampaignAccess(campaignId)
+  if (!isMember) return { error: 'Нет доступа' }
 
   const { data: message } = await supabase
     .from('messages')
@@ -71,13 +82,15 @@ export async function deleteMessage(messageId: string, campaignId: string) {
     return { error: 'Нет прав' }
   }
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('messages')
     .delete()
     .eq('id', messageId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !deleted) {
     console.error('deleteMessage error:', error)
     return { error: 'Не удалось удалить' }
   }

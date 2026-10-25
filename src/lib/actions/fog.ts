@@ -20,6 +20,9 @@ export async function revealArea(
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }
 
+  if (![x, y, width, height].every(Number.isFinite) || x < 0 || y < 0 || width <= 0 || height <= 0 || width > 10000 || height > 10000 || x > 10000 || y > 10000) {
+    return { error: 'Некорректные координаты области' }
+  }
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
@@ -66,7 +69,7 @@ export async function clearFog(sceneId: string) {
   if (!scene) return { error: 'Сцена не найдена' }
 
   // Удаляем старые раскрытия
-  const { error: delError } = await supabase.from('fog_areas').delete().eq('scene_id', sceneId)
+  const { error: delError } = await supabase.from('fog_areas').delete().eq('scene_id', sceneId).eq('campaign_id', campaignId)
 
   if (delError) return { error: 'Не удалось очистить' }
 
