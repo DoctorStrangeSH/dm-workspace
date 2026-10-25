@@ -103,7 +103,7 @@ export async function removeTokenOwner(
     .maybeSingle()
 
   if (error || !removed) {
-    console.error('removeTokenOwner error:', { code: error.code, message: error.message })
+    console.error('removeTokenOwner error:', { code: error?.code, message: error?.message })
     return { error: 'Не удалось удалить' }
   }
 
