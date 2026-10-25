@@ -1,5 +1,6 @@
 'use server'
 
+import { randomInt } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
@@ -53,14 +54,16 @@ export async function deleteCampaign(campaignId: string) {
 
   if (!user) return { error: 'Не авторизован' }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('campaigns')
     .delete()
     .eq('id', campaignId)
     .eq('owner_id', user.id)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
-    console.error('deleteCampaign error:', error)
+  if (error || !data) {
+    if (error) console.error('deleteCampaign error:', error)
     return { error: 'Не удалось удалить кампанию' }
   }
 
@@ -76,22 +79,25 @@ export async function regenerateInviteCode(campaignId: string) {
 
   if (!user) return { error: 'Не авторизован' }
 
-  // Генерим новый код в стиле БД: 8 символов из md5
-  const newCode = Math.random().toString(36).substring(2, 10)
+  // Keep the existing eight-character format while using a cryptographically secure RNG.
+  const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz'
+  const newCode = Array.from({ length: 8 }, () => alphabet[randomInt(alphabet.length)]).join('')
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('campaigns')
     .update({ invite_code: newCode })
     .eq('id', campaignId)
     .eq('owner_id', user.id)
+    .select('invite_code')
+    .maybeSingle()
 
-  if (error) {
-    console.error('regenerateInviteCode error:', error)
+  if (error || !data) {
+    if (error) console.error('regenerateInviteCode error:', error)
     return { error: 'Не удалось обновить код' }
   }
 
   revalidatePath('/dashboard')
-  return { success: true, inviteCode: newCode }
+  return { success: true, inviteCode: data.invite_code }
 }
 
 export async function joinCampaign(code: string) {
