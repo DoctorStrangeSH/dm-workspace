@@ -12,6 +12,10 @@ export async function createTemplateFromEntity(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (typeof entityId !== 'string' || !entityId || typeof templateName !== 'string') {
+    return { error: 'Некорректные данные шаблона' }
+  }
+
   const name = templateName.trim()
   if (!name || name.length > 100) {
     return { error: 'Имя должно быть от 1 до 100 символов' }
@@ -24,7 +28,7 @@ export async function createTemplateFromEntity(
     .select('type, description, data_json')
     .eq('id', entityId)
     .eq('campaign_id', campaignId)
-    .single()
+    .maybeSingle()
 
   if (fetchError || !entity) {
     return { error: 'Сущность не найдена' }
@@ -43,7 +47,7 @@ export async function createTemplateFromEntity(
     .select('id')
     .single()
 
-  if (error) {
+  if (error || !data) {
     console.error('createTemplateFromEntity error:', error)
     return { error: 'Не удалось создать шаблон' }
   }
@@ -55,17 +59,22 @@ export async function createTemplateFromEntity(
 export async function deleteTemplate(templateId: string, campaignId: string) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
+  if (typeof templateId !== 'string' || !templateId) {
+    return { error: 'Некорректный шаблон' }
+  }
 
   const supabase = await createClient()
 
-  const { error } = await supabase
+  const { data: deleted, error } = await supabase
     .from('entity_templates')
     .delete()
     .eq('id', templateId)
     .eq('campaign_id', campaignId)
     .eq('is_builtin', false)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !deleted) {
     console.error('deleteTemplate error:', error)
     return { error: 'Не удалось удалить шаблон' }
   }
