@@ -69,6 +69,23 @@ export async function createToken(
   const { isDm, isMember } = await getCampaignAccess(campaignId)
   if (!isMember) return { error: 'Нет доступа к кампании' }
 
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { error: 'Некорректные данные токена' }
+  }
+  if (typeof data.name !== 'string') return { error: 'Введите имя' }
+  if (!Number.isFinite(data.x) || !Number.isFinite(data.y)) {
+    return { error: 'Некорректные координаты токена' }
+  }
+  if (data.size !== undefined && (!Number.isFinite(data.size) || data.size < 0.25 || data.size > 10)) {
+    return { error: 'Размер токена должен быть от 0.25 до 10' }
+  }
+  if (data.hp_current !== undefined && data.hp_current !== null && typeof data.hp_current !== 'number' && typeof data.hp_current !== 'string') {
+    return { error: 'Некорректное текущее HP' }
+  }
+  if (data.hp_max !== undefined && data.hp_max !== null && typeof data.hp_max !== 'number' && typeof data.hp_max !== 'string') {
+    return { error: 'Некорректное максимальное HP' }
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -85,23 +102,6 @@ export async function createToken(
     if (!char || char.user_id !== user.id || char.campaign_id !== campaignId) {
       return { error: 'Нельзя добавить чужого персонажа' }
     }
-  }
-
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    return { error: 'Некорректные данные токена' }
-  }
-  if (typeof data.name !== 'string') return { error: 'Введите имя' }
-  if (!Number.isFinite(data.x) || !Number.isFinite(data.y)) {
-    return { error: 'Некорректные координаты токена' }
-  }
-  if (data.size !== undefined && (!Number.isFinite(data.size) || data.size < 0.25 || data.size > 10)) {
-    return { error: 'Размер токена должен быть от 0.25 до 10' }
-  }
-  if (data.hp_current !== undefined && data.hp_current !== null && typeof data.hp_current !== 'number' && typeof data.hp_current !== 'string') {
-    return { error: 'Некорректное текущее HP' }
-  }
-  if (data.hp_max !== undefined && data.hp_max !== null && typeof data.hp_max !== 'number' && typeof data.hp_max !== 'string') {
-    return { error: 'Некорректное максимальное HP' }
   }
 
   const name = data.name.trim()
@@ -249,7 +249,7 @@ export async function toggleTokenVisibility(tokenId: string, sceneId: string) {
     .maybeSingle()
   if (!token) return { error: 'Токен не найден' }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('tokens')
     .update({ is_hidden: !token.is_hidden })
     .eq('id', tokenId)
