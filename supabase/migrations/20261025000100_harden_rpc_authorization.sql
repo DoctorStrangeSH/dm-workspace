@@ -120,7 +120,9 @@ begin
       and t.depth < 10
       and (v_is_dm or e.is_visible_to_players = true)
   )
-  select * from tree order by depth, entity_name;
+  select tree.relation_id, tree.entity_id, tree.entity_name, tree.depth
+  from tree
+  order by tree.depth, tree.entity_name;
 end;
 $function$;
 
