@@ -9,16 +9,29 @@ export async function createHandout(campaignId: string, formData: FormData) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
-  const name = (formData.get('name') as string)?.trim()
-  const file = formData.get('image') as File | null
+  const rawName = formData.get('name')
+  const rawFile = formData.get('image')
+  const name = typeof rawName === 'string' ? rawName.trim() : ''
+  const file = typeof File !== 'undefined' && rawFile instanceof File ? rawFile : null
 
   if (!name) return { error: 'Введите название' }
-  if (!file) return { error: 'Выберите изображение' }
+  if (name.length > 150) return { error: 'Название слишком длинное' }
+  if (!file || file.size === 0) return { error: 'Выберите изображение' }
   if (file.size > 20 * 1024 * 1024) return { error: 'Файл > 20 MB' }
+  if (!file.type.startsWith('image/')) return { error: 'Можно загружать только изображения' }
+
+  const extByMime: Record<string, string> = {
+    'image/png': 'png',
+    'image/jpeg': 'jpg',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'image/avif': 'avif',
+  }
+  const ext = extByMime[file.type]
+  if (!ext) return { error: 'Поддерживаются PNG, JPEG, WebP, GIF и AVIF' }
 
   const supabase = await createClient()
-  const ext = file.name.split('.').pop() ?? 'png'
-  const fileName = `${campaignId}/${Date.now()}-${name.replace(/\s+/g, '-').toLowerCase()}.${ext}`
+  const fileName = `${campaignId}/${crypto.randomUUID()}.${ext}`
 
   const { error: uploadError } = await supabase.storage.from('handouts').upload(fileName, file)
   if (uploadError) return { error: 'Не удалось загрузить' }
@@ -46,6 +59,13 @@ export async function showHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
+  const { data: target } = await supabase
+    .from('handouts')
+    .select('id')
+    .eq('id', handoutId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+  if (!target) return { error: 'Материал не найден' }
 
   await supabase
     .from('handouts')
@@ -57,10 +77,11 @@ export async function showHandout(handoutId: string, campaignId: string) {
     .from('handouts')
     .update({ is_visible: true })
     .eq('id', handoutId)
+    .eq('campaign_id', campaignId)
     .select('name')
-    .single()
+    .maybeSingle()
 
-  if (error) return { error: 'Не удалось показать' }
+  if (error || !handout) return { error: 'Не удалось показать' }
 
   await logEvent(campaignId, 'handout_show', `Показан хендаут: ${handout?.name ?? '?'}`)
 
@@ -73,11 +94,14 @@ export async function hideHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('handouts')
     .update({ is_visible: false })
     .eq('id', handoutId)
-  if (error) return { error: 'Не удалось скрыть' }
+    .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
+  if (error || !data) return { error: 'Не удалось скрыть' }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
@@ -88,12 +112,14 @@ export async function deleteHandout(handoutId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('handouts')
     .delete()
     .eq('id', handoutId)
     .eq('campaign_id', campaignId)
-  if (error) return { error: 'Не удалось удалить' }
+    .select('id')
+    .maybeSingle()
+  if (error || !data) return { error: 'Не удалось удалить' }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
