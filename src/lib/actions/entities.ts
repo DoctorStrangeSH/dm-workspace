@@ -78,25 +78,73 @@ export async function updateEntity(
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
 
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { error: 'Некорректные данные сущности' }
+  }
+
+  // Never pass the caller's object directly to the database: server-action
+  // arguments are runtime input, regardless of their TypeScript annotation.
+  const safeUpdates: {
+    name?: string
+    description?: string
+    image_url?: string | null
+    is_visible_to_players?: boolean
+    data_json?: Record<string, unknown>
+  } = {}
+
   if (data.name !== undefined) {
+    if (typeof data.name !== 'string') return { error: 'Некорректное имя' }
     const trimmed = data.name.trim()
     if (trimmed.length < 2) return { error: 'Имя слишком короткое' }
     if (trimmed.length > 150) return { error: 'Имя слишком длинное' }
-    data.name = trimmed
+    safeUpdates.name = trimmed
   }
 
-  if (data.description !== undefined && data.description.length > 5000) {
-    return { error: 'Описание слишком длинное' }
+  if (data.description !== undefined) {
+    if (typeof data.description !== 'string') return { error: 'Некорректное описание' }
+    if (data.description.length > 5000) return { error: 'Описание слишком длинное' }
+    safeUpdates.description = data.description
+  }
+
+  if (data.image_url !== undefined) {
+    if (data.image_url !== null && (typeof data.image_url !== 'string' || data.image_url.length > 2048)) {
+      return { error: 'Некорректная ссылка на изображение' }
+    }
+    safeUpdates.image_url = data.image_url
+  }
+
+  if (data.is_visible_to_players !== undefined) {
+    if (typeof data.is_visible_to_players !== 'boolean') {
+      return { error: 'Некорректная видимость сущности' }
+    }
+    safeUpdates.is_visible_to_players = data.is_visible_to_players
+  }
+
+  if (data.data_json !== undefined) {
+    const value: unknown = data.data_json
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return { error: 'Некорректные данные сущности' }
+    }
+    if (JSON.stringify(value).length > 100_000) {
+      return { error: 'Данные сущности слишком большие' }
+    }
+    safeUpdates.data_json = value as Record<string, unknown>
+  }
+
+  if (Object.keys(safeUpdates).length === 0) {
+    return { error: 'Нет изменений для сохранения' }
   }
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('entities')
-    .update(data)
+    .update(safeUpdates)
     .eq('id', entityId)
     .eq('campaign_id', campaignId)
+    .select('id')
+    .maybeSingle()
 
-  if (error) {
+  if (error || !updated) {
     console.error('updateEntity error:', error)
     return { error: 'Не удалось обновить' }
   }
