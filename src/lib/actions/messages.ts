@@ -22,7 +22,7 @@ export async function sendMessage(
   if (!isMember) return { error: 'Нет доступа' }
 
   if (typeof content !== 'string') return { error: 'Некорректное сообщение' }
-  if (!['text', 'system', 'roll', 'combat'].includes(type)) return { error: 'Некорректный тип сообщения' }
+  if (!['text', 'system', 'roll', 'whisper'].includes(type)) return { error: 'Некорректный тип сообщения' }
   let metadataSize = 0
   try {
     metadataSize = JSON.stringify(metadata ?? {}).length
