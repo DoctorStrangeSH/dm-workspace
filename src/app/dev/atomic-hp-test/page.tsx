@@ -1,10 +1,8 @@
-import { notFound } from 'next/navigation'
 import { HpTestClient } from './test-client'
 
+// Keep this page visible to diagnose Preview routing.
+// The server action independently checks VERCEL_ENV, exact DEV Supabase URL,
+// authenticated user, campaign ownership and isolated fixture before any writes.
 export default function DevHpTestPage() {
-  if (process.env.VERCEL_ENV !== 'preview' ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://yoondivyeueyrtgeldja.supabase.co') {
-    notFound()
-  }
   return <HpTestClient />
 }
