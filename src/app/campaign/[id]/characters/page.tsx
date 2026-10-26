@@ -5,6 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { getCampaignCharacters } from '@/lib/queries/characters'
+import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import { EmptyState, Card } from '@/components/ui'
 import CreateCharacterButton from './create-character-button'
@@ -75,7 +76,7 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {characters.map((char) => {
-            const hp = char.data_json.hp
+            const hp = validCharacterHP(char.data_json?.hp)
             const hpPercent = hp && hp.max > 0
               ? Math.min(100, Math.max(0, (hp.current / hp.max) * 100))
               : 0
