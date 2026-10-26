@@ -11,6 +11,7 @@ import {
   type CharacterInventoryItem,
 } from '@/lib/types'
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
+import { validateLevelUpASI } from '@/lib/dnd/level-up-asi-validation'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { isSubclassForClass, isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
@@ -667,7 +668,12 @@ export async function levelUp(
   const access = await checkCharacterAccess(characterId, campaignId)
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
+  if (!Number.isSafeInteger(access.data.level) || access.data.level < 1 || access.data.level > 20) {
+    return { error: 'Некорректный уровень персонажа' }
+  }
   if (access.data.level >= 20) return { error: 'Максимальный уровень — 20' }
+  const asiError = validateLevelUpASI(access.data.level + 1, options?.abilityChanges)
+  if (asiError) return { error: asiError }
   if (!validCharacterHP(access.data.hp)) return { error: 'Некорректные исходные HP' }
   if (!['average', 'roll'].includes(options?.hpMethod)) return { error: 'Некорректный способ расчёта HP' }
 
