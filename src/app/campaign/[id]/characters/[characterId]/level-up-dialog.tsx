@@ -215,7 +215,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 </p>
               )}
             </div>
-          )}}
+          )}
 
           {/* ASI */}
           {showASI && (
