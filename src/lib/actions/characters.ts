@@ -12,6 +12,7 @@ import {
 } from '@/lib/types'
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
 import { validateLevelUpASI } from '@/lib/dnd/level-up-asi-validation'
+import { validLevelUpHPGain } from '@/lib/dnd/valid-level-up-hp-gain'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { isSubclassForClass, isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
@@ -685,6 +686,9 @@ export async function levelUp(
 
   if (!Number.isSafeInteger(hpGain) || hpGain < 1) {
     return { error: 'Не удалось рассчитать HP: выбранный класс не распознан. Проверьте класс персонажа (подкласс нельзя использовать вместо класса).' }
+  }
+  if (!validLevelUpHPGain(access.data.hp.max, hpGain)) {
+    return { error: 'Повышение уровня привело бы к некорректному максимуму HP' }
   }
   const newData = applyLevelUp(access.data, hpGain, options.abilityChanges)
   if (!validCharacterHP(newData.hp)) return { error: 'Некорректные итоговые HP' }
