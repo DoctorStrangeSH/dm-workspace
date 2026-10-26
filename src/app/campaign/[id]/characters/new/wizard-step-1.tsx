@@ -2,7 +2,7 @@
 
 import { Input, Select } from '@/components/ui'
 import { useT } from '@/lib/i18n'
-import { baseClassSlug, SRD_SUBCLASS_BASE } from '@/lib/dnd/srd-class-utils'
+import { baseClassSlug, SRD_SUBCLASS_BASE, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
@@ -48,7 +48,7 @@ export default function WizardStep1({
 
   const subclassOptions = Object.entries(SRD_SUBCLASS_BASE)
     .filter(([, parent]) => parent === baseClassSlug(classSlug))
-    .map(([value]) => ({ value, label: value.replace(/^srd-2024_/, '').replaceAll('-', ' ') }))
+    .map(([value]) => ({ value, label: subclassDisplayName(value) }))
 
   return (
     <div className="space-y-6">
