@@ -19,3 +19,8 @@ export function parseSrdHitDie(value: unknown): 6 | 8 | 10 | 12 | null {
       : NaN
   return n === 6 || n === 8 || n === 10 || n === 12 ? n : null
 }
+
+/** Reject subclass IDs and prefixed legacy IDs at server write boundaries. */
+export function isCanonicalCharacterClass(value: unknown): value is string {
+  return typeof value === 'string' && SRD_BASE_CLASSES.has(value)
+}
