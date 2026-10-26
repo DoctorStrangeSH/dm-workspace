@@ -211,10 +211,10 @@ export default function ChapterEditor({
   return (
     <div className="flex flex-col">
       {isMobile && !readOnly && (
-        <div className="mb-3 flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
+        <div className="mb-3 flex items-center gap-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
           <button
             onClick={() => setMobileView('edit')}
-            className={`flex-1 rounded px-3 py-1.5 text-xs transition-colors ${
+            className={`min-h-10 flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
               mobileView === 'edit'
                 ? 'bg-[var(--accent)] text-white'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -266,7 +266,7 @@ export default function ChapterEditor({
         {showEditor && (
           <div
             ref={wrapperRef}
-            className="relative h-[calc(100vh-320px)] overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] sm:h-[700px]"
+            className="relative h-[calc(100vh-320px)] overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-[var(--shadow-sm)] sm:h-[700px]"
           >
             <CMEditor
               ref={cmRef}
@@ -291,7 +291,7 @@ export default function ChapterEditor({
         )}
 
         {showPreview && (
-          <div className="h-[calc(100vh-320px)] overflow-auto rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]/50 p-6 sm:h-[700px]">
+          <div className="h-[calc(100vh-320px)] overflow-auto rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]/50 p-4 shadow-[var(--shadow-sm)] sm:h-[700px] sm:p-6">
             {content.trim() ? (
               <MarkdownPreview content={content} campaignId={campaignId} entityMap={entityMap} />
             ) : (
