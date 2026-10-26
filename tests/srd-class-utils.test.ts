@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { baseClassSlug, isSrdBaseClass, parseSrdHitDie, isCanonicalCharacterClass, isSubclassForClass } from '../src/lib/dnd/srd-class-utils'
+import { baseClassSlug, isSrdBaseClass, parseSrdHitDie, isCanonicalCharacterClass, isSubclassForClass, subclassDisplayName } from '../src/lib/dnd/srd-class-utils'
 
 test('only SRD 2024 base classes are selectable', () => {
   const accepted = ['fighter', 'druid', 'wizard', 'barbarian', 'bard', 'cleric',
@@ -39,4 +39,10 @@ test('SRD subclass belongs only to its corresponding base class', () => {
   assert.equal(isSubclassForClass('srd-2024_circle-of-the-land', 'druid'), true)
   assert.equal(isSubclassForClass('srd-2024_circle-of-the-land', 'fighter'), false)
   assert.equal(isSubclassForClass('srd-2024_fighter', 'fighter'), false)
+})
+
+test('SRD subclass labels are human-readable Russian names', () => {
+  assert.equal(subclassDisplayName('srd-2024_champion'), 'Чемпион')
+  assert.equal(subclassDisplayName('srd-2024_circle-of-the-land'), 'Круг земли')
+  assert.equal(subclassDisplayName('srd-2024_unknown-subclass'), 'unknown subclass')
 })
