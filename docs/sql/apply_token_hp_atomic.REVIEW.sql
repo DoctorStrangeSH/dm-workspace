@@ -46,7 +46,10 @@ BEGIN
     SELECT 1 FROM public.campaign_members m
     WHERE m.campaign_id = v_token.campaign_id AND m.user_id = v_user
       AND (
-        m.role = 'dm'
+        (m.role = 'dm' AND EXISTS (
+          SELECT 1 FROM public.campaigns cp
+          WHERE cp.id = v_token.campaign_id AND cp.owner_id = v_user
+        ))
         OR v_token.owner_id = v_user
         OR EXISTS (
           SELECT 1 FROM public.token_owners o
