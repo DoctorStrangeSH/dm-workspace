@@ -5,7 +5,8 @@ const ABILITIES = new Set<AbilityKey>(['str', 'dex', 'con', 'int', 'wis', 'cha']
 
 export function validateLevelUpASI(
   newLevel: number,
-  changes: unknown
+  changes: unknown,
+  currentAbilities?: unknown
 ): string | null {
   if (changes !== undefined && (changes === null || typeof changes !== 'object' || Array.isArray(changes))) {
     return 'Некорректное распределение характеристик'
@@ -23,5 +24,18 @@ export function validateLevelUpASI(
     total += amount
   }
   if (total !== 2) return 'Распределите ровно 2 очка характеристик'
+  if (!currentAbilities || typeof currentAbilities !== 'object' || Array.isArray(currentAbilities)) {
+    return 'Некорректные исходные характеристики'
+  }
+  const abilities = currentAbilities as Record<string, unknown>
+  for (const [key, amount] of entries) {
+    const current = abilities[key]
+    if (typeof current !== 'number' || !Number.isSafeInteger(current) || current < 1 || current > 20) {
+      return 'Некорректные исходные характеристики'
+    }
+    if (current + (amount as number) > 20) {
+      return 'Характеристика не может превышать 20'
+    }
+  }
   return null
 }
