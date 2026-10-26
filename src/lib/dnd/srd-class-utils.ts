@@ -45,3 +45,23 @@ export function isSubclassForClass(subclass: unknown, baseClass: unknown): boole
   return typeof subclass === 'string' && typeof baseClass === 'string' &&
     SRD_SUBCLASS_BASE[subclass] === baseClass
 }
+
+/** Russian display names for supported SRD 2024 subclasses. Stored keys remain unchanged. */
+export const SRD_SUBCLASS_NAMES_RU: Record<string, string> = {
+  'srd-2024_path-of-the-berserker': 'Путь берсерка',
+  'srd-2024_college-of-lore': 'Коллегия знаний',
+  'srd-2024_life-domain': 'Домен жизни',
+  'srd-2024_circle-of-the-land': 'Круг земли',
+  'srd-2024_champion': 'Чемпион',
+  'srd-2024_warrior-of-the-open-hand': 'Воин открытой ладони',
+  'srd-2024_oath-of-devotion': 'Клятва преданности',
+  'srd-2024_hunter': 'Охотник',
+  'srd-2024_thief': 'Вор',
+  'srd-2024_draconic-sorcery': 'Драконье чародейство',
+  'srd-2024_fiend-patron': 'Покровитель-исчадие',
+  'srd-2024_evoker': 'Школа воплощения',
+}
+
+export function subclassDisplayName(key: string): string {
+  return SRD_SUBCLASS_NAMES_RU[key] ?? key.replace(/^srd-2024_/, '').replaceAll('-', ' ')
+}
