@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { logEvent } from './logs'
 import { abilityModifier } from '@/lib/dnd/formulas'
+import { getEquipmentBonuses } from '@/lib/dnd/equipment-bonuses'
+import type { CharacterInventoryItem } from '@/lib/types'
 
 async function getSceneCampaign(sceneId: string): Promise<string | null> {
   const supabase = await createClient()
@@ -107,14 +109,17 @@ export async function rollInitiativeForToken(initiativeEntryId: string, sceneId:
 
   // Достаём DEX
   let dex = 10
+  let equipmentInitiative = 0
   if (token.character_id) {
     const { data: char } = await supabase
       .from('characters')
       .select('data_json')
       .eq('id', token.character_id)
+      .eq('campaign_id', campaignId)
       .single()
-    const dj = char?.data_json as { abilities?: { dex?: number } } | undefined
-    if (dj?.abilities?.dex !== undefined) dex = dj.abilities.dex
+    const dj = char?.data_json as { abilities?: { dex?: number }; inventory?: CharacterInventoryItem[] } | undefined
+    if (typeof dj?.abilities?.dex === 'number' && Number.isFinite(dj.abilities.dex)) dex = dj.abilities.dex
+    equipmentInitiative = getEquipmentBonuses(dj?.inventory).initiative
   } else if (token.entity_id) {
     const { data: entity } = await supabase
       .from('entities')
@@ -127,7 +132,7 @@ export async function rollInitiativeForToken(initiativeEntryId: string, sceneId:
 
   const dexMod = abilityModifier(dex)
   const roll = Math.floor(Math.random() * 20) + 1
-  const total = roll + dexMod
+  const total = roll + dexMod + equipmentInitiative
 
   const { data: updatedEntry, error } = await supabase
     .from('initiative')
@@ -144,11 +149,11 @@ export async function rollInitiativeForToken(initiativeEntryId: string, sceneId:
   await logEvent(
     campaignId,
     'initiative_roll',
-    `${token.name}: инициатива ${total} (1d20=${roll}, DEX ${dexMod >= 0 ? '+' : ''}${dexMod})`
+    `${token.name}: инициатива ${total} (1d20=${roll}, DEX ${dexMod >= 0 ? '+' : ''}${dexMod}, экипировка ${equipmentInitiative >= 0 ? '+' : ''}${equipmentInitiative})`
   )
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
-  return { success: true, roll, dexMod, total }
+  return { success: true, roll, dexMod, equipmentInitiative, total }
 }
 
 export async function rollAllInitiatives(sceneId: string) {
