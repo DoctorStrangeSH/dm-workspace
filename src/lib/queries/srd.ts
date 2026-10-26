@@ -33,7 +33,15 @@ export const getSrdClasses = unstable_cache(
     const supabase = createSrdClient()
     const { data, error } = await supabase.from('srd_classes').select('*').order('name')
     if (error) return []
-    return data ?? []
+    // The imported SRD table also contains subclasses (e.g. Circle of the Land).
+    // Only base classes may populate CharacterData.class.
+    const baseClasses = new Set([
+      'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
+      'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard',
+    ])
+    return (data ?? []).filter((entry) =>
+      baseClasses.has(entry.key.replace(/^srd-2024_/, ''))
+    )
   },
   ['srd-classes'],
   { revalidate: 3600, tags: ['srd'] }
