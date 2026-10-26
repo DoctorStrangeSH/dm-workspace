@@ -27,7 +27,7 @@ BEGIN
   END IF;
   IF p_token_id IS NULL OR p_scene_id IS NULL OR p_amount IS NULL
      OR p_amount < 0 OR p_amount > 1000000
-     OR p_mode NOT IN ('damage', 'heal', 'set') THEN
+     OR p_mode IS NULL OR p_mode NOT IN ('damage', 'heal', 'set') THEN
     RAISE EXCEPTION 'Invalid HP request' USING ERRCODE = '22023';
   END IF;
 
