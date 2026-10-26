@@ -6,6 +6,7 @@ import { getCampaignAccess } from '@/lib/queries/access'
 import { searchSrdMonstersAction, getAvailableCRs } from '@/lib/actions/bestiary-search'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import BestiaryClient from './bestiary-client'
+import { BookOpen, Sparkles } from 'lucide-react'
 import { getLang } from '@/lib/i18n/get-lang'
 import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 
@@ -36,10 +37,20 @@ export default async function BestiaryPage({ params }: { params: Promise<{ id: s
         className="mb-4"
       />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('nav.bestiary')}</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{t('bestiary.subtitle')}</p>
-      </div>
+      <section className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[linear-gradient(120deg,var(--bg-primary),var(--bg-secondary))] p-5 shadow-[var(--shadow-sm)] sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-20 h-64 w-64 rounded-full border border-[var(--accent)]/20">
+          <div className="absolute inset-9 rounded-full border border-[var(--accent)]/15" />
+          <Sparkles size={22} className="absolute bottom-10 left-8 text-[var(--accent)]/35" />
+        </div>
+        <div className="relative max-w-2xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[var(--accent)]/25 bg-[var(--accent-subtle)] px-3 py-1.5 text-xs font-medium text-[var(--accent-text)]">
+            <BookOpen size={14} aria-hidden="true" />
+            {lang === 'en' ? 'Creature compendium' : 'Энциклопедия существ'}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">{t('nav.bestiary')}</h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-secondary)] sm:text-base">{t('bestiary.subtitle')}</p>
+        </div>
+      </section>
 
       <BestiaryClient
         campaignId={campaignId}
