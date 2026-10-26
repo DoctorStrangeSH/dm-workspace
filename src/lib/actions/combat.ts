@@ -339,20 +339,6 @@ export async function damageToken(
     return { error: 'Некорректные исходные HP токена' }
   }
 
-  // Refuse to mutate the token when its linked character already has corrupt HP.
-  // The read is still repeated below before synchronizing, to avoid writing stale data.
-  if (token.character_id) {
-    const { data: linked, error: linkedError } = await supabase
-      .from('characters')
-      .select('data_json')
-      .eq('id', token.character_id)
-      .eq('campaign_id', campaignId)
-      .maybeSingle()
-    if (linkedError || !linked || !validCharacterHP(linked.data_json?.hp)) {
-      return { error: 'HP связанного персонажа некорректны; изменение токена отменено' }
-    }
-  }
-
   // Disabled by default. Enable only after the reviewed RPC has been deployed and
   // authorized on DEV, and after ALL character HP writers have been coordinated.
   if (process.env.ATOMIC_TOKEN_HP_RPC_ENABLED === 'true') {
@@ -382,6 +368,20 @@ export async function damageToken(
     await logEvent(campaignId, 'token_damage',
       `${token.name}: ${type === 'damage' ? '-' : type === 'heal' ? '+' : ''}${amount} HP`)
     return { success: true, hp }
+  }
+
+  // Refuse to mutate the token when its linked character already has corrupt HP.
+  // The read is still repeated below before synchronizing, to avoid writing stale data.
+  if (token.character_id) {
+    const { data: linked, error: linkedError } = await supabase
+      .from('characters')
+      .select('data_json')
+      .eq('id', token.character_id)
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+    if (linkedError || !linked || !validCharacterHP(linked.data_json?.hp)) {
+      return { error: 'HP связанного персонажа некорректны; изменение токена отменено' }
+    }
   }
 
   let newHP = token.hp_current
