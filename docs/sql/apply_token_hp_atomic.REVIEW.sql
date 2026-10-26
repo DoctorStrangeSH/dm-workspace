@@ -104,7 +104,7 @@ BEGIN
     END IF;
     v_current := (v_char_hp ->> 'current')::integer;
     v_hp_max := (v_char_hp ->> 'max')::integer;
-    IF v_hp_max <= 0 OR v_current > v_hp_max
+    IF v_hp_max <= 0 OR v_current < 0 OR v_current > v_hp_max
       OR v_hp_max <> v_token.hp_max OR v_current <> v_token.hp_current THEN
       RAISE EXCEPTION 'Token and character HP disagree' USING ERRCODE = '22023';
     END IF;
@@ -119,11 +119,18 @@ BEGIN
   END IF;
 
   -- Locking both rows guarantees consistency only among writers that use this RPC.
+  -- Fail closed on a partial update rather than falsely reporting success.
   UPDATE public.tokens SET hp_current = v_new WHERE id = v_token.id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Token disappeared during HP update' USING ERRCODE = 'P0002';
+  END IF;
   IF v_token.character_id IS NOT NULL THEN
     UPDATE public.characters
     SET data_json = jsonb_set(data_json, '{hp,current}', to_jsonb(v_new), false)
     WHERE id = v_char.id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Linked character disappeared during HP update' USING ERRCODE = 'P0002';
+    END IF;
   END IF;
   RETURN v_new;
 END;
