@@ -62,6 +62,9 @@ BEGIN
     OR v_token.hp_current > v_token.hp_max THEN
     RAISE EXCEPTION 'Invalid token HP' USING ERRCODE = '22023';
   END IF;
+  IF p_mode = 'set' AND p_expected_hp IS NULL THEN
+    RAISE EXCEPTION 'Setting HP requires expected current HP' USING ERRCODE = '22023';
+  END IF;
   IF p_expected_hp IS NOT NULL AND v_token.hp_current <> p_expected_hp THEN
     RAISE EXCEPTION 'HP changed; retry' USING ERRCODE = '40001';
   END IF;
@@ -82,6 +85,9 @@ BEGIN
       OR (v_char_hp ->> 'current') !~ '^[0-9]+$'
       OR (v_char_hp ->> 'max') !~ '^[0-9]+$' THEN
       RAISE EXCEPTION 'Invalid linked character HP' USING ERRCODE = '22023';
+    END IF;
+    IF length(v_char_hp ->> 'current') > 10 OR length(v_char_hp ->> 'max') > 10 THEN
+      RAISE EXCEPTION 'Linked character HP out of integer range' USING ERRCODE = '22023';
     END IF;
     v_current := (v_char_hp ->> 'current')::integer;
     v_hp_max := (v_char_hp ->> 'max')::integer;
