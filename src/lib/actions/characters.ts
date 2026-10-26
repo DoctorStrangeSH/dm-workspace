@@ -12,6 +12,7 @@ import {
 } from '@/lib/types'
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
 import { abilityModifier } from '@/lib/dnd/formulas'
+import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
 
@@ -47,6 +48,7 @@ export async function createCharacter(
   if (trimmed.length > 150) return { error: 'Имя слишком длинное' }
 
   const data: CharacterData = { ...createEmptyCharacterData(), ...initialData }
+  if (!validCharacterHP(data.hp)) return { error: 'Некорректные значения HP' }
   const ability = getSpellcastingAbility(data.class)
   if (ability) data.spellcastingAbility = ability
 
@@ -119,6 +121,9 @@ export async function updateCharacter(
     }
     if (JSON.stringify(value).length > 200_000) {
       return { error: 'Данные персонажа слишком большие' }
+    }
+    if (!validCharacterHP((value as Record<string, unknown>).hp)) {
+      return { error: 'Некорректные значения HP' }
     }
     safeUpdates.data_json = value as CharacterData
   }
@@ -262,6 +267,13 @@ export async function updateCharacterHP(
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
 
+  if (!newHP || typeof newHP !== 'object' || Array.isArray(newHP)) {
+    return { error: 'Некорректные значения HP' }
+  }
+  if (!validCharacterHP(access.data.hp)) return { error: 'Некорректные исходные HP' }
+  if (Object.keys(newHP).some((key) => !['current', 'max', 'temp'].includes(key))) {
+    return { error: 'Некорректные поля HP' }
+  }
   const newData: CharacterData = {
     ...access.data,
     hp: { ...access.data.hp, ...newHP },
@@ -269,10 +281,12 @@ export async function updateCharacterHP(
   if (newData.hp.current > newData.hp.max) newData.hp.current = newData.hp.max
   if (newData.hp.current < 0) newData.hp.current = 0
 
+  if (!validCharacterHP(newData.hp)) return { error: 'Некорректные значения HP' }
   const save = await saveCharacterData(characterId, campaignId, newData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
+  revalidatePath(`/campaign/${campaignId}/characters`)
   return { success: true }
 }
 
@@ -634,6 +648,8 @@ export async function levelUp(
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
   if (access.data.level >= 20) return { error: 'Максимальный уровень — 20' }
+  if (!validCharacterHP(access.data.hp)) return { error: 'Некорректные исходные HP' }
+  if (!['average', 'roll'].includes(options?.hpMethod)) return { error: 'Некорректный способ расчёта HP' }
 
   const conMod = abilityModifier(access.data.abilities.con)
   const hpGain =
@@ -641,7 +657,11 @@ export async function levelUp(
       ? rollHP(access.data.class, conMod)
       : getAverageHP(access.data.class, conMod)
 
+  if (!Number.isSafeInteger(hpGain) || hpGain < 1) {
+    return { error: 'Неизвестный класс или некорректная прибавка HP' }
+  }
   const newData = applyLevelUp(access.data, hpGain, options.abilityChanges)
+  if (!validCharacterHP(newData.hp)) return { error: 'Некорректные итоговые HP' }
 
   if (!newData.spellcastingAbility) {
     const ability = getSpellcastingAbility(newData.class)
