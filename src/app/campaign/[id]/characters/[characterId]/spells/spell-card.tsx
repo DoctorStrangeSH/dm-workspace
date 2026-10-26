@@ -59,19 +59,20 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]">
-        <div
-          className="flex cursor-pointer items-center gap-2 p-3 transition hover:bg-[var(--bg-hover)]"
-          onClick={() => setIsOpen(!isOpen)}
-        >
+      <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] transition-colors duration-200 hover:border-[var(--accent)]/40 motion-reduce:transition-none">
+        <div className="flex items-center gap-2 p-3 transition-colors hover:bg-[var(--bg-hover)]">
           {canEdit && spell.level > 0 && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 togglePrepared()
               }}
+              type="button"
+              disabled={isPending}
+              aria-label={`${spell.name}: ${spell.prepared ? t('spells.prepared') : t('spells.notPrepared')}`}
+              aria-pressed={!!spell.prepared}
               className={cn(
-                'flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition',
+                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 spell.prepared
                   ? 'border-[var(--accent)] bg-[var(--accent)]'
                   : 'border-[var(--border-default)] hover:border-[var(--border-hover)]'
@@ -82,10 +83,8 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
             </button>
           )}
 
-          <ChevronDown
-            size={14}
-            className={cn('shrink-0 text-[var(--text-subtle)] transition', isOpen && 'rotate-180')}
-          />
+          <button type="button" onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-label={`${spell.name}: ${isOpen ? t('common.close') : spell.name}`} className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+            <ChevronDown size={14} aria-hidden="true" className={cn('shrink-0 text-[var(--text-subtle)] transition-transform duration-200 motion-reduce:transition-none', isOpen && 'rotate-180')} />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -102,13 +101,15 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
             </div>
           </div>
 
+          </button>
+
           {onRoll && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
                 onRoll(spell)
               }}
-              className="rounded p-1.5 transition hover:bg-[var(--bg-hover)]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" aria-label={t('spells.roll')}
               title={t('spells.roll')}
             >
               <Dices size={14} className="text-[var(--text-muted)]" />
@@ -122,7 +123,7 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
                 setShowDeleteConfirm(true)
               }}
               disabled={isPending}
-              className="rounded p-1.5 transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-50" aria-label={t('common.delete')}
               title={t('common.delete')}
             >
               <Trash2 size={14} className="text-[var(--danger)]" />
