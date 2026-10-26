@@ -124,14 +124,14 @@ export default function ChapterItem({
         ref={setNodeRef}
         style={style}
         className={cn(
-          'group rounded-xl border bg-[var(--bg-surface)] transition-colors',
+          'group rounded-2xl border bg-[var(--bg-surface)] shadow-[var(--shadow-sm)] transition-all duration-150',
           isSelected
             ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
-            : 'border-[var(--border-default)] hover:border-[var(--border-hover)]',
+            : 'border-[var(--border-default)] hover:border-[var(--accent)]/40 hover:shadow-[var(--shadow-md)]',
           isDragging && 'border-[var(--accent)] shadow-[var(--shadow-xl)]'
         )}
       >
-        <div className="flex items-center gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-2 p-3 sm:gap-3 sm:p-4">
           {isSelectionMode && (
             <Checkbox
               checked={isSelected}
@@ -151,7 +151,7 @@ export default function ChapterItem({
             </div>
           )}
 
-          <FileText size={18} className="shrink-0 text-[var(--accent-text)]" />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--accent-text)]"><FileText size={18} aria-hidden="true" /></span>
 
           <div className="min-w-0 flex-1">
             {isEditing ? (
@@ -165,7 +165,7 @@ export default function ChapterItem({
                     if (e.key === 'Escape') handleCancelEdit()
                   }}
                   disabled={isPending}
-                  className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                  className="min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
                 />
                 <IconButton
                   variant="ghost"
@@ -192,7 +192,7 @@ export default function ChapterItem({
                 onClick={() => onToggleSelect?.(chapter.id)}
                 className="block w-full text-left"
               >
-                <h3 className="truncate font-medium text-[var(--text-primary)]">
+                <h3 className="break-words font-semibold text-[var(--text-primary)]">
                   <HighlightedText text={chapter.title} query={searchQuery} />
                 </h3>
                 {!chapter.is_visible_to_players && isDm && (
@@ -203,7 +203,7 @@ export default function ChapterItem({
               </button>
             ) : (
               <Link href={`/campaign/${campaignId}/chapters/${chapter.id}`} className="block">
-                <h3 className="truncate font-medium text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)]">
+                <h3 className="break-words font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)]">
                   <HighlightedText text={chapter.title} query={searchQuery} />
                 </h3>
                 {!chapter.is_visible_to_players && isDm && (
@@ -216,7 +216,7 @@ export default function ChapterItem({
           </div>
 
           {isDm && !isEditing && !isSelectionMode && (
-            <div className="flex items-center gap-1 opacity-0 transition group-hover:opacity-100">
+            <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-1 opacity-100 transition md:opacity-60 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
               <IconButton
                 variant="ghost"
                 size="sm"
