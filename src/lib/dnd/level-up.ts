@@ -8,7 +8,7 @@ import { getSpellSlotsForLevel } from '@/lib/dnd/spell-slots'
  */
 export function getAverageHP(classSlug: string, conMod: number): number {
   const cls = CLASSES.find((c) => c.slug === classSlug)
-  if (!cls) return 0
+  if (!cls || !Number.isSafeInteger(conMod)) return 0
 
   const average = Math.floor(cls.hitDie / 2) + 1
   return Math.max(1, average + conMod)
@@ -19,7 +19,7 @@ export function getAverageHP(classSlug: string, conMod: number): number {
  */
 export function rollHP(classSlug: string, conMod: number): number {
   const cls = CLASSES.find((c) => c.slug === classSlug)
-  if (!cls) return 0
+  if (!cls || !Number.isSafeInteger(conMod)) return 0
 
   const roll = Math.floor(Math.random() * cls.hitDie) + 1
   return Math.max(1, roll + conMod)
