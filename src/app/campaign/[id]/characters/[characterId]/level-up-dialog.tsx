@@ -267,7 +267,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   const score = data.abilities[ability]
                   const isSelected1 = asiAbility1 === ability
                   const isSelected2 = asiAbility2 === ability
-                  const canSelect = score < 20
+                  const canSelect = Number.isSafeInteger(score) && score + (asiMode === 'plus2' ? 2 : 1) <= 20
 
                   return (
                     <button
@@ -296,6 +296,9 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                       <span className="flex items-center gap-2">
                         <span className="text-[var(--text-subtle)]">{score}</span>
                         {(isSelected1 || isSelected2) && (
+                          <span className="font-semibold text-[var(--success-text)]">→ {score + (asiMode === 'plus2' ? 2 : 1)}</span>
+                        )}
+                        {(isSelected1 || isSelected2) && (
                           <span className="text-xs text-[var(--success-text)]">
                             +{asiMode === 'plus2' ? 2 : 1}
                           </span>
@@ -305,6 +308,13 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   )
                 })}
               </div>
+              <p aria-live="polite" className="mt-2 text-xs text-[var(--text-muted)]">
+                {asiMode === 'plus2'
+                  ? (asiAbility1 ? `${abilityLabel(lang, asiAbility1)}: ${data.abilities[asiAbility1]} → ${data.abilities[asiAbility1] + 2}` : 'Выберите характеристику для +2')
+                  : (asiAbility1 && asiAbility2
+                    ? `${abilityLabel(lang, asiAbility1)}: ${data.abilities[asiAbility1]} → ${data.abilities[asiAbility1] + 1}; ${abilityLabel(lang, asiAbility2)}: ${data.abilities[asiAbility2]} → ${data.abilities[asiAbility2] + 1}`
+                    : 'Выберите две разные характеристики для +1')}
+              </p>
             </div>
           )}
 
