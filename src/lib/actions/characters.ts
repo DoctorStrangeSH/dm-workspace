@@ -13,6 +13,7 @@ import {
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
+import { isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
 
@@ -49,6 +50,9 @@ export async function createCharacter(
 
   const data: CharacterData = { ...createEmptyCharacterData(), ...initialData }
   if (!validCharacterHP(data.hp)) return { error: 'Некорректные значения HP' }
+  if (data.class !== '' && !isCanonicalCharacterClass(data.class)) {
+    return { error: 'Выберите основной класс персонажа, а не подкласс' }
+  }
   const ability = getSpellcastingAbility(data.class)
   if (ability) data.spellcastingAbility = ability
 
@@ -124,6 +128,12 @@ export async function updateCharacter(
     }
     if (!validCharacterHP((value as Record<string, unknown>).hp)) {
       return { error: 'Некорректные значения HP' }
+    }
+    // Preserve legacy records during unrelated edits, but never allow a new invalid class.
+    const nextClass = (value as Record<string, unknown>).class
+    const previousClass = (character.data_json as Record<string, unknown> | null)?.class
+    if (nextClass !== previousClass && !isCanonicalCharacterClass(nextClass)) {
+      return { error: 'Выберите основной класс персонажа, а не подкласс' }
     }
     safeUpdates.data_json = value as CharacterData
   }
