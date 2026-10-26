@@ -240,16 +240,20 @@ async function checkCharacterAccess(
 async function saveCharacterData(
   characterId: string,
   campaignId: string,
-  data: CharacterData
+  data: CharacterData,
+  expectedData?: CharacterData
 ): Promise<SaveResult> {
   const supabase = await createClient()
-  const { error } = await supabase
+  let query = supabase
     .from('characters')
     .update({ data_json: data })
     .eq('id', characterId)
     .eq('campaign_id', campaignId)
+  if (expectedData) query = query.eq('data_json', JSON.stringify(expectedData))
+  const { data: saved, error } = await query.select('id').maybeSingle()
 
   if (error) return { error: 'Не удалось сохранить' }
+  if (!saved) return { error: 'Персонаж изменился в другой вкладке. Обновите страницу и повторите действие.' }
   // CHANGES: {} → { success: true } (типобезопасно)
   return { success: true }
 }
@@ -282,7 +286,7 @@ export async function updateCharacterHP(
   if (newData.hp.current < 0) newData.hp.current = 0
 
   if (!validCharacterHP(newData.hp)) return { error: 'Некорректные значения HP' }
-  const save = await saveCharacterData(characterId, campaignId, newData)
+  const save = await saveCharacterData(characterId, campaignId, newData, access.data)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
