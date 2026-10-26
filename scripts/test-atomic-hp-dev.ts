@@ -35,24 +35,24 @@ async function main() {
   const ownership = await db.from('tokens').select('campaign_id').eq('id', tokenId).eq('scene_id', sceneId).single()
   if (ownership.error || ownership.data.campaign_id !== campaignId) throw Error('Token is not in fixture campaign')
   const before = await read()
-  assert.equal(before.hp_current, 10, 'Disposable token must start at exactly 10 HP')
+  assert.equal(before.hp_current, 3, 'Disposable token must start at exactly 3 HP')
   assert.ok(before.hp_max !== null && before.hp_max === 10)
   const rpc = (p_amount: number, p_mode: 'damage' | 'heal' | 'set', p_expected_hp: number | null = null) =>
     db.rpc('apply_token_hp_atomic', { p_token_id: tokenId, p_scene_id: sceneId, p_amount, p_mode, p_expected_hp })
-  const results = await Promise.all([rpc(3, 'damage'), rpc(4, 'damage')])
+  const results = await Promise.all([rpc(2, 'damage'), rpc(4, 'heal')])
   for (const result of results) if (result.error) throw result.error
   const after = await read()
-  assert.equal(after.hp_current, 3, 'Concurrent damage lost an update')
+  assert.equal(after.hp_current, 5, 'Concurrent damage/heal lost an update')
   if (after.character_id) {
     const ch = await db.from('characters').select('data_json').eq('id', after.character_id).single()
     if (ch.error) throw Error('Test user must be allowed to read fixture character to verify sync: ' + ch.error.message)
-    assert.equal((ch.data.data_json as { hp?: { current?: number } }).hp?.current, 3, 'Token/character HP mismatch')
+    assert.equal((ch.data.data_json as { hp?: { current?: number } }).hp?.current, 5, 'Token/character HP mismatch')
   }
-  const stale = await rpc(8, 'set', 10)
+  const stale = await rpc(8, 'set', 3)
   assert.ok(stale.error, 'Stale expected-HP set unexpectedly succeeded')
-  assert.equal((await read()).hp_current, 3, 'Stale set modified HP')
-  console.log('PASS: concurrent damage 10→3; character sync; stale set rejected')
-  console.log('Fixture remains at 3 HP; reset or remove disposable fixture manually')
+  assert.equal((await read()).hp_current, 5, 'Stale set modified HP')
+  console.log('PASS: concurrent damage 2 and heal 4: 3→5; character sync; stale set rejected')
+  console.log('Fixture remains at 5 HP; reset or remove disposable fixture manually')
 }
 
 main().catch((err: unknown) => {
