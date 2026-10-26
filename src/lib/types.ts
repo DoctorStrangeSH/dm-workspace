@@ -439,6 +439,8 @@ export type SpellSlots = Record<number, SpellSlotLevel>
 export interface CharacterInventoryItem {
   itemType?: import('@/lib/dnd/inventory-metadata').ItemType
   rarity?: import('@/lib/dnd/inventory-metadata').ItemRarity
+  acBonus?: number
+  initiativeBonus?: number
   id: string
   name: string
   quantity: number
