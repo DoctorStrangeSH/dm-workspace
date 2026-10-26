@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { getAverageHP, rollHP, applyLevelUp } from '../src/lib/dnd/level-up'
+import { getAverageHP, rollHP, applyLevelUp, canLevelUp } from '../src/lib/dnd/level-up'
 import { createEmptyCharacterData } from '../src/lib/types'
 
 test('average HP gain respects hit dice and Constitution', () => {
@@ -45,4 +45,13 @@ test('level-up data preserves subclass and unrelated character fields', () => {
   assert.deepEqual(after.features, before.features)
   assert.equal(after.notes, before.notes)
   assert.deepEqual(before.hp, { current: 3, max: 10, temp: 0 })
+})
+
+test('level-up eligibility requires an integer level from 1 through 19', () => {
+  for (const level of [1, 2, 19]) {
+    assert.equal(canLevelUp({ ...createEmptyCharacterData(), level }), true)
+  }
+  for (const level of [0, -1, 1.5, 20, 21, Number.NaN, Number.POSITIVE_INFINITY]) {
+    assert.equal(canLevelUp({ ...createEmptyCharacterData(), level }), false)
+  }
 })
