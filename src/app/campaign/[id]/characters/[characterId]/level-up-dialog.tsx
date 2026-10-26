@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation'
 import { X, TrendingUp, Dices, Sparkles } from 'lucide-react'
 import { levelUp } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import { getAverageHP, rollHP, canLevelUp } from '@/lib/dnd/level-up'
+import { getAverageHP, canLevelUp } from '@/lib/dnd/level-up'
 import { abilityModifier } from '@/lib/dnd/formulas'
-import { hasASI } from '@/lib/dnd/constants'
+import { CLASSES, hasASI } from '@/lib/dnd/constants'
+import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { useI18n } from '@/lib/i18n'
 import { abilityLabel } from '@/lib/i18n/labels'
 import { cn } from '@/lib/utils'
@@ -41,7 +42,11 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
   const [asiAbility2, setAsiAbility2] = useState<AbilityKey | null>(null)
 
   const averageHP = getAverageHP(data.class, conMod)
-  const rolledHP = rollHP(data.class, conMod)
+  const hitDie = CLASSES.find((cls) => cls.slug === data.class)?.hitDie
+  const hp = validCharacterHP(data.hp)
+  const minGain = Math.max(1, 1 + conMod)
+  const maxGain = hitDie ? Math.max(1, hitDie + conMod) : null
+  const canPreviewHP = hp !== null && hitDie !== undefined
 
   if (!canLevelUp(data)) {
     return (
@@ -66,6 +71,10 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
   }
 
   const handleSubmit = () => {
+    if (!canPreviewHP) {
+      toast.error(lang === 'en' ? 'Character HP or class is invalid' : 'Некорректные HP или класс персонажа')
+      return
+    }
     if (!canSubmit()) {
       toast.error(t('levelUp.asiRequired'))
       return
@@ -169,11 +178,19 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 />
                 <span className="mt-1 text-xs text-[var(--text-muted)]">{t('levelUp.hpRoll')}</span>
                 <span className="mt-1 text-lg font-bold text-[var(--warning-text)]">
-                  ~{rolledHP}
+                  {hitDie ? `1d${hitDie}${conMod >= 0 ? '+' : ''}${conMod}` : '—'}
                 </span>
               </button>
             </div>
           </div>
+
+          {!canPreviewHP && (
+            <p role="alert" className="text-sm text-[var(--danger-text)]">
+              {lang === 'en'
+                ? 'Cannot level up: character HP or class is invalid.'
+                : 'Повышение уровня недоступно: неверные HP или класс персонажа.'}
+            </p>
+          )}
 
           {/* ASI */}
           {showASI && (
@@ -266,7 +283,11 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
             <div className="mb-1 flex justify-between">
               <span className="text-[var(--text-subtle)]">HP</span>
               <span className="text-[var(--text-secondary)]">
-                {data.hp.max} → {data.hp.max + (hpChoice === 'average' ? averageHP : 0)}+
+                {hp ? hp.max : '—'} → {hp && canPreviewHP
+                  ? hpChoice === 'average'
+                    ? hp.max + averageHP
+                    : `${hp.max + minGain}–${hp.max + (maxGain ?? minGain)}`
+                  : '—'}
               </span>
             </div>
             <div className="flex justify-between">
@@ -292,7 +313,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={isPending || !canSubmit()}
+            disabled={isPending || !canSubmit() || !canPreviewHP}
             className="rounded-lg bg-[var(--success)] px-4 py-2 font-medium text-white transition hover:bg-[var(--success)]/90 disabled:opacity-50"
           >
             {isPending ? t('levelUp.submitting') : t('levelUp.submit', { level: newLevel })}
