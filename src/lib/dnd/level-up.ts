@@ -29,7 +29,7 @@ export function rollHP(classSlug: string, conMod: number): number {
  * Проверка: можно ли повысить уровень.
  */
 export function canLevelUp(data: CharacterData): boolean {
-  return data.level < 20
+  return Number.isSafeInteger(data.level) && data.level >= 1 && data.level < 20
 }
 
 /**
