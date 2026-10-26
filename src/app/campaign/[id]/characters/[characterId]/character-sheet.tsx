@@ -29,6 +29,7 @@ import {
   parseDice,
   rollDice,
 } from '@/lib/dnd/formulas'
+import { SRD_SUBCLASS_BASE, isSubclassForClass } from '@/lib/dnd/srd-class-utils'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { getEquipmentBonuses } from '@/lib/dnd/equipment-bonuses'
@@ -61,6 +62,9 @@ export default function CharacterSheet({
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState(character.name)
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [editingClass, setEditingClass] = useState(false)
+  const [draftClass, setDraftClass] = useState(character.data_json.class)
+  const [draftSubclass, setDraftSubclass] = useState(character.data_json.subclass ?? '')
 
   const data = character.data_json
   const safeHP = validCharacterHP(data.hp)
@@ -69,6 +73,30 @@ export default function CharacterSheet({
 
   const race = RACES.find((r) => r.slug === data.race)
   const cls = CLASSES.find((c) => c.slug === data.class)
+  const subclassLabel = data.subclass?.replace(/^srd-2024_/, '').replaceAll('-', ' ')
+  const subclassChoices = Object.entries(SRD_SUBCLASS_BASE).filter(([, parent]) => parent === draftClass)
+
+  const saveClass = () => {
+    if (!CLASSES.some((c) => c.slug === draftClass)) {
+      toast.error('Выберите основной класс персонажа')
+      return
+    }
+    if (draftSubclass && !isSubclassForClass(draftSubclass, draftClass)) {
+      toast.error('Подкласс не соответствует выбранному классу')
+      return
+    }
+    startTransition(async () => {
+      const nextData = { ...data, class: draftClass, subclass: draftSubclass || undefined }
+      const result = await updateCharacter(character.id, campaignId, { data_json: nextData })
+      if ('error' in result) {
+        toast.error(result.error)
+      } else {
+        toast.success('Класс сохранён')
+        setEditingClass(false)
+        router.refresh()
+      }
+    })
+  }
 
   const handleSaveName = () => {
     if (editName.trim() === character.name) {
@@ -210,8 +238,40 @@ export default function CharacterSheet({
             )}
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {race?.name} · {cls?.name} · {t('characters.level', { level: data.level })}
+              {race?.name ?? data.race} · {cls?.name ?? (data.class || 'Класс не выбран')}
+              {subclassLabel ? ` · ${subclassLabel}` : ''} · {t('characters.level', { level: data.level })}
             </p>
+            {canEdit && !editingClass && (
+              <button type="button" className="mt-1 text-xs text-[var(--accent-text)] underline"
+                onClick={() => { setDraftClass(data.class); setDraftSubclass(data.subclass ?? ''); setEditingClass(true) }}>
+                Изменить класс и подкласс
+              </button>
+            )}
+            {canEdit && editingClass && (
+              <div className="mt-3 flex max-w-sm flex-col gap-2 rounded-lg border border-[var(--border-default)] p-3">
+                <label className="text-xs">Основной класс
+                  <select className="mt-1 w-full rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2"
+                    value={draftClass} disabled={isPending}
+                    onChange={(e) => { setDraftClass(e.target.value); setDraftSubclass('') }}>
+                    <option value="">Выберите класс</option>
+                    {CLASSES.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs">Подкласс (необязательно)
+                  <select className="mt-1 w-full rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2"
+                    value={draftSubclass} disabled={isPending}
+                    onChange={(e) => setDraftSubclass(e.target.value)}>
+                    <option value="">Без подкласса</option>
+                    {subclassChoices.map(([key]) => <option key={key} value={key}>{key.replace(/^srd-2024_/, '').replaceAll('-', ' ')}</option>)}
+                  </select>
+                </label>
+                <div className="flex gap-2">
+                  <Button size="sm" disabled={isPending || !draftClass} onClick={saveClass}>Сохранить</Button>
+                  <Button size="sm" variant="secondary" disabled={isPending} onClick={() => setEditingClass(false)}>Отмена</Button>
+                </div>
+                <p className="text-xs text-[var(--text-subtle)]">HP и характеристики при смене класса не пересчитываются автоматически.</p>
+              </div>
+            )}
             <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
               {t('characters.owner')}: {owner.display_name ?? owner.username}
             </p>
