@@ -47,6 +47,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
   const minGain = Math.max(1, 1 + conMod)
   const maxGain = hitDie ? Math.max(1, hitDie + conMod) : null
   const canPreviewHP = hp !== null && hitDie !== undefined
+  const predictedMaxHP = hp && canPreviewHP && hpChoice === 'average' ? hp.max + averageHP : null
 
   if (!canLevelUp(data)) {
     return (
@@ -190,11 +191,31 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
 
           {!canPreviewHP && (
             <p role="alert" className="text-sm text-[var(--danger-text)]">
-              {lang === 'en'
-                ? 'Cannot level up: character HP or class is invalid.'
-                : 'Повышение уровня недоступно: неверные HP или класс персонажа.'}
+              {!hp
+                ? (lang === 'en' ? 'Cannot level up: invalid hit points.' : 'Невозможно повысить уровень: некорректные HP.')
+                : (lang === 'en' ? 'Cannot level up: base class is not recognized.' : 'Невозможно повысить уровень: основной класс не распознан.')}
             </p>
           )}
+          {canPreviewHP && hp && (
+            <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] p-3"
+              aria-live="polite">
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {lang === 'en' ? 'HP after level up' : 'HP после повышения уровня'}
+              </p>
+              {predictedMaxHP !== null ? (
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {hp.max} → <strong>{predictedMaxHP}</strong> {lang === 'en' ? 'max HP' : 'макс. HP'}
+                  {' · '}{lang === 'en' ? 'current HP will equal the new maximum' : 'Текущие HP станут равны новому максимуму'}
+                </p>
+              ) : (
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {lang === 'en'
+                    ? `Current max: ${hp.max}. The new maximum depends on a random roll (${minGain}–${maxGain}).`
+                    : `Текущий максимум: ${hp.max}. Новый максимум зависит от броска кубика (прибавка ${minGain}–${maxGain}).`}
+                </p>
+              )}
+            </div>
+          )}}
 
           {/* ASI */}
           {showASI && (
