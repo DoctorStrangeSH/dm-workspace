@@ -63,6 +63,7 @@ export default function CharacterSheet({
   const [editName, setEditName] = useState(character.name)
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [editingClass, setEditingClass] = useState(false)
+  const [confirmingClassChange, setConfirmingClassChange] = useState(false)
   const [draftClass, setDraftClass] = useState(character.data_json.class)
   const [draftSubclass, setDraftSubclass] = useState(character.data_json.subclass ?? '')
 
@@ -76,6 +77,9 @@ export default function CharacterSheet({
   const subclassLabel = data.subclass?.replace(/^srd-2024_/, '').replaceAll('-', ' ')
   const subclassChoices = Object.entries(SRD_SUBCLASS_BASE).filter(([, parent]) => parent === draftClass)
 
+  const classChanged = draftClass !== data.class
+  const subclassChanged = draftSubclass !== (data.subclass ?? '')
+
   const saveClass = () => {
     if (!CLASSES.some((c) => c.slug === draftClass)) {
       toast.error('Выберите основной класс персонажа')
@@ -83,6 +87,14 @@ export default function CharacterSheet({
     }
     if (draftSubclass && !isSubclassForClass(draftSubclass, draftClass)) {
       toast.error('Подкласс не соответствует выбранному классу')
+      return
+    }
+    if (!classChanged && !subclassChanged) {
+      setEditingClass(false)
+      return
+    }
+    if (classChanged && !confirmingClassChange) {
+      setConfirmingClassChange(true)
       return
     }
     startTransition(async () => {
@@ -93,6 +105,7 @@ export default function CharacterSheet({
       } else {
         toast.success('Класс сохранён')
         setEditingClass(false)
+        setConfirmingClassChange(false)
         router.refresh()
       }
     })
@@ -243,7 +256,7 @@ export default function CharacterSheet({
             </p>
             {canEdit && !editingClass && (
               <button type="button" className="mt-1 text-xs text-[var(--accent-text)] underline"
-                onClick={() => { setDraftClass(data.class); setDraftSubclass(data.subclass ?? ''); setEditingClass(true) }}>
+                onClick={() => { setDraftClass(data.class); setDraftSubclass(data.subclass ?? ''); setConfirmingClassChange(false); setEditingClass(true) }}>
                 Изменить класс и подкласс
               </button>
             )}
@@ -252,7 +265,7 @@ export default function CharacterSheet({
                 <label className="text-xs">Основной класс
                   <select className="mt-1 w-full rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2"
                     value={draftClass} disabled={isPending}
-                    onChange={(e) => { setDraftClass(e.target.value); setDraftSubclass('') }}>
+                    onChange={(e) => { setDraftClass(e.target.value); setDraftSubclass(''); setConfirmingClassChange(false) }}>
                     <option value="">Выберите класс</option>
                     {CLASSES.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}
                   </select>
@@ -266,10 +279,17 @@ export default function CharacterSheet({
                   </select>
                 </label>
                 <div className="flex gap-2">
-                  <Button size="sm" disabled={isPending || !draftClass} onClick={saveClass}>Сохранить</Button>
-                  <Button size="sm" variant="secondary" disabled={isPending} onClick={() => setEditingClass(false)}>Отмена</Button>
+                  <Button size="sm" disabled={isPending || !draftClass} onClick={saveClass}>{classChanged && confirmingClassChange ? 'Подтвердить смену класса' : 'Сохранить'}</Button>
+                  <Button size="sm" variant="secondary" disabled={isPending} onClick={() => { setEditingClass(false); setConfirmingClassChange(false) }}>Отмена</Button>
                 </div>
-                <p className="text-xs text-[var(--text-subtle)]">HP и характеристики при смене класса не пересчитываются автоматически.</p>
+                {classChanged && confirmingClassChange && (
+                  <p role="alert" className="text-sm text-[var(--text-primary)]">
+                    Вы меняете основной класс. HP, характеристики, владения, спасброски,
+                    навыки, заклинания и особенности останутся прежними. Проверьте их вручную
+                    после сохранения. Нажмите «Подтвердить смену класса» для продолжения.
+                  </p>
+                )}
+                <p className="text-xs text-[var(--text-subtle)]">HP, владения и особенности не пересчитываются автоматически.</p>
               </div>
             )}
             <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
