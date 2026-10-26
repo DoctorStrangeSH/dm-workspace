@@ -14,6 +14,7 @@ import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { isSubclassForClass, isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
+import { validateCharacterIdentityUpdate } from '@/lib/dnd/character-identity-validation'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
 
@@ -132,18 +133,11 @@ export async function updateCharacter(
     if (!validCharacterHP((value as Record<string, unknown>).hp)) {
       return { error: 'Некорректные значения HP' }
     }
-    // Preserve legacy records during unrelated edits, but never allow a new invalid class.
-    const nextClass = (value as Record<string, unknown>).class
-    const previousClass = (character.data_json as Record<string, unknown> | null)?.class
-    if (nextClass !== previousClass && !isCanonicalCharacterClass(nextClass)) {
-      return { error: 'Выберите основной класс персонажа, а не подкласс' }
-    }
-    const nextSubclass = (value as Record<string, unknown>).subclass
-    const oldSubclass = (character.data_json as Record<string, unknown> | null)?.subclass
-    if (nextSubclass !== oldSubclass && nextSubclass !== undefined &&
-      !isSubclassForClass(nextSubclass, nextClass)) {
-      return { error: 'Подкласс не соответствует выбранному классу' }
-    }
+    const identityError = validateCharacterIdentityUpdate(
+      character.data_json as Record<string, unknown>,
+      value as Record<string, unknown>
+    )
+    if (identityError) return { error: identityError }
     safeUpdates.data_json = value as CharacterData
   }
 
