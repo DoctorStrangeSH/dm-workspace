@@ -35,10 +35,12 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
   }, [token.x, token.y, dragging])
 
   const sizePx = gridSize * token.size
-  const hpPercent =
-    token.hp_current !== null && token.hp_max !== null && token.hp_max > 0
-      ? (token.hp_current / token.hp_max) * 100
-      : null
+  const hasValidHP = Number.isFinite(token.hp_current) && Number.isFinite(token.hp_max) &&
+    token.hp_current !== null && token.hp_max !== null && token.hp_max > 0 && token.hp_current >= 0
+  const hpPercent = hasValidHP
+    ? Math.max(0, Math.min(100, (token.hp_current! / token.hp_max!) * 100))
+    : null
+  const conditions = Array.isArray(token.conditions) ? token.conditions : []
 
   const tokenRadius = token.size * 0.3
 
@@ -109,6 +111,7 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
     <div
       className={cn(
         'absolute rounded-full border-2 select-none',
+        hpPercent === 0 && 'ring-2 ring-[var(--danger)]/60',
         canDrag && 'cursor-grab active:cursor-grabbing',
         dragging && 'z-50 shadow-[var(--shadow-xl)]',
         token.is_hidden && 'opacity-40',
@@ -142,7 +145,7 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
       )}
 
       {hpPercent !== null && (
-        <div className="pointer-events-none absolute right-0 -bottom-1 left-0 h-1 overflow-hidden rounded bg-[var(--bg-app)]">
+        <div className="pointer-events-none absolute right-0 -bottom-2 left-0 h-1.5 overflow-hidden rounded-full border border-[var(--border-default)] bg-[var(--bg-app)]" role="img" aria-label={`HP ${token.hp_current} / ${token.hp_max}`}>
           <div
             className={cn(
               'h-full transition-all',
@@ -157,13 +160,14 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
         </div>
       )}
 
-      <div className="pointer-events-none absolute -bottom-5 left-1/2 -translate-x-1/2 rounded bg-[var(--bg-app)]/80 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-[var(--text-secondary)]">
-        {token.name}
+      <div className="pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)]/95 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+        <span className="max-w-24 truncate">{token.name}</span>
+        {hpPercent !== null && <span className="shrink-0 font-semibold tabular-nums text-[var(--text-primary)]">{token.hp_current}/{token.hp_max}</span>}
       </div>
 
-      {token.conditions.length > 0 && (
+      {conditions.length > 0 && (
         <div className="pointer-events-none absolute -top-2 -right-2 flex gap-0.5">
-          {token.conditions.slice(0, 3).map((c, i) => (
+          {conditions.slice(0, 3).map((c, i) => (
             <span
               key={i}
               className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[8px]"
@@ -172,6 +176,9 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
               {c.icon ?? '●'}
             </span>
           ))}
+          {conditions.length > 3 && (
+            <span className="flex h-4 min-w-5 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] px-0.5 text-[9px] font-bold text-[var(--text-primary)]" title={conditions.slice(3).map(c => c.name).join(', ')}>+{conditions.length - 3}</span>
+          )}
         </div>
       )}
     </div>
