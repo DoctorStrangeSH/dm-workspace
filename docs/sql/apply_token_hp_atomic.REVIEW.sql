@@ -92,6 +92,11 @@ BEGIN
     IF length(v_char_hp ->> 'current') > 10 OR length(v_char_hp ->> 'max') > 10 THEN
       RAISE EXCEPTION 'Linked character HP out of integer range' USING ERRCODE = '22023';
     END IF;
+    -- Even ten digits may exceed int4; validate numeric range before casting.
+    IF (v_char_hp ->> 'current')::numeric > 2147483647
+      OR (v_char_hp ->> 'max')::numeric > 2147483647 THEN
+      RAISE EXCEPTION 'Linked character HP out of integer range' USING ERRCODE = '22023';
+    END IF;
     v_current := (v_char_hp ->> 'current')::integer;
     v_hp_max := (v_char_hp ->> 'max')::integer;
     IF v_hp_max <= 0 OR v_current > v_hp_max
