@@ -29,6 +29,7 @@ import {
   parseDice,
   rollDice,
 } from '@/lib/dnd/formulas'
+import { changeCharacterClass } from '@/lib/dnd/character-class-change'
 import { SRD_SUBCLASS_BASE, isSubclassForClass } from '@/lib/dnd/srd-class-utils'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
@@ -98,7 +99,7 @@ export default function CharacterSheet({
       return
     }
     startTransition(async () => {
-      const nextData = { ...data, class: draftClass, subclass: draftSubclass || undefined }
+      const nextData = changeCharacterClass(data, draftClass, draftSubclass || undefined)
       const result = await updateCharacter(character.id, campaignId, { data_json: nextData })
       if ('error' in result) {
         toast.error(result.error)
