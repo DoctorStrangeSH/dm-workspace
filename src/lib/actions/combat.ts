@@ -455,6 +455,8 @@ export async function damageToken(
       .update({ data_json: data })
       .eq('id', token.character_id)
       .eq('campaign_id', campaignId)
+      // Reject stale whole-document writes if another action changed the sheet.
+      .eq('data_json', JSON.stringify(previous))
       .select('id')
       .maybeSingle()
 
