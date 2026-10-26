@@ -353,6 +353,29 @@ export async function damageToken(
     }
   }
 
+  // Disabled by default. Enable only after the reviewed RPC has been deployed and
+  // authorized on DEV, and after ALL character HP writers have been coordinated.
+  if (process.env.ATOMIC_TOKEN_HP_RPC_ENABLED === 'true') {
+    if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production' && process.env.ATOMIC_TOKEN_HP_ALLOW_LOCAL !== 'true') {
+      return { error: 'Атомарный HP не активирован для этого окружения' }
+    }
+    const { data: hp, error: rpcError } = await supabase.rpc('apply_token_hp_atomic', {
+      p_token_id: tokenId,
+      p_scene_id: sceneId,
+      p_amount: amount,
+      p_mode: type,
+      p_expected_hp: type === 'set' ? token.hp_current : null,
+    })
+    if (rpcError || typeof hp !== 'number') {
+      return { error: 'Атомарное изменение HP не удалось. Проверьте доступ и обновите сцену.' }
+    }
+    revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
+    if (token.character_id) revalidatePath(`/campaign/${campaignId}/characters/${token.character_id}`)
+    await logEvent(campaignId, 'token_damage',
+      `${token.name}: ${type === 'damage' ? '-' : type === 'heal' ? '+' : ''}${amount} HP`)
+    return { success: true, hp }
+  }
+
   let newHP = token.hp_current
   if (type === 'damage') newHP = Math.max(0, token.hp_current - amount)
   else if (type === 'heal') newHP = Math.min(token.hp_max, token.hp_current + amount)
