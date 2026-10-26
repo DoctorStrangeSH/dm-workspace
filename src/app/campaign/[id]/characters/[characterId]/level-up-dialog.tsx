@@ -65,10 +65,14 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
     )
   }
 
+  const isEligibleASI = (ability: AbilityKey, amount: number) =>
+    Number.isSafeInteger(data.abilities[ability]) && data.abilities[ability] + amount <= 20
+
   const canSubmit = () => {
     if (!showASI) return true
-    if (asiMode === 'plus2') return !!asiAbility1
-    return !!asiAbility1 && !!asiAbility2 && asiAbility1 !== asiAbility2
+    if (asiMode === 'plus2') return !!asiAbility1 && isEligibleASI(asiAbility1, 2)
+    return !!asiAbility1 && !!asiAbility2 && asiAbility1 !== asiAbility2 &&
+      isEligibleASI(asiAbility1, 1) && isEligibleASI(asiAbility2, 1)
   }
 
   const handleSubmit = () => {
@@ -233,6 +237,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   onClick={() => {
                     setAsiMode('plus2')
                     setAsiAbility2(null)
+                    setAsiAbility1(null)
                   }}
                   className={cn(
                     'flex-1 rounded border px-2 py-1 text-xs transition',
@@ -245,7 +250,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAsiMode('plus1plus1')}
+                  onClick={() => { setAsiMode('plus1plus1'); setAsiAbility1(null); setAsiAbility2(null) }}
                   className={cn(
                     'flex-1 rounded border px-2 py-1 text-xs transition',
                     asiMode === 'plus1plus1'
