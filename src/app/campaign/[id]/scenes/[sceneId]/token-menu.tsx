@@ -68,7 +68,7 @@ export default function TokenMenu({
   )
   const canEdit = isDm || token.owner_id === currentUserId || isAdditionalOwner
   const hasValidHP = localHP !== null && Number.isSafeInteger(localHP) && token.hp_max !== null && Number.isSafeInteger(token.hp_max) && token.hp_max > 0 && localHP >= 0
-  const hpPercent = hasValidHP ? Math.min(100, Math.max(0, (localHP! / token.hp_max!) * 100)) : 0
+  const hpPercent = hasValidHP ? Math.min(100, Math.max(0, (localHP! / (token.hp_max ?? 1)) * 100)) : 0
 
   // CHANGES (5.3): владельцы токена
   const owners = tokenOwners.filter((o) => o.token_id === token.id)
