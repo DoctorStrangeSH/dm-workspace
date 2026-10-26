@@ -53,7 +53,9 @@ BEGIN
         OR v_token.owner_id = v_user
         OR EXISTS (
           SELECT 1 FROM public.token_owners o
-          WHERE o.token_id = v_token.id AND o.user_id = v_user
+          WHERE o.token_id = v_token.id
+            AND o.campaign_id = v_token.campaign_id
+            AND o.user_id = v_user
         )
       )
   ) THEN
@@ -64,6 +66,9 @@ BEGIN
     OR v_token.hp_max <= 0 OR v_token.hp_current < 0
     OR v_token.hp_current > v_token.hp_max THEN
     RAISE EXCEPTION 'Invalid token HP' USING ERRCODE = '22023';
+  END IF;
+  IF p_expected_hp IS NOT NULL AND (p_expected_hp < 0 OR p_expected_hp > v_token.hp_max) THEN
+    RAISE EXCEPTION 'Invalid expected HP' USING ERRCODE = '22023';
   END IF;
   IF p_mode = 'set' AND p_expected_hp IS NULL THEN
     RAISE EXCEPTION 'Setting HP requires expected current HP' USING ERRCODE = '22023';
