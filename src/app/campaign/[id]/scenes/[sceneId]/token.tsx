@@ -14,11 +14,12 @@ interface Props {
   gridSize: number
   sceneId: string
   canDrag: boolean
+  isActiveTurn?: boolean
   walls?: SceneWall[]
   onClick: () => void
 }
 
-export default function Token({ token, gridSize, sceneId, canDrag, walls = [], onClick }: Props) {
+export default function Token({ token, gridSize, sceneId, canDrag, isActiveTurn = false, walls = [], onClick }: Props) {
   const t = useT()
   const toast = useToast()
   const [dragging, setDragging] = useState(false)
@@ -116,6 +117,7 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
         dragging && 'z-50 shadow-[var(--shadow-xl)]',
         token.is_hidden && 'opacity-40',
         blocked && 'ring-2 ring-[var(--danger)]',
+        isActiveTurn && 'z-20 ring-[3px] ring-[var(--accent)] shadow-[0_0_0_5px_var(--accent-subtle)]',
         !dragging && 'transition-[left,top] duration-200'
       )}
       style={{
@@ -128,6 +130,9 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
       }}
       onMouseDown={handleMouseDown}
     >
+      {isActiveTurn && (
+        <div aria-hidden="true" className="pointer-events-none absolute -inset-2 rounded-full border-2 border-[var(--accent)]/65 motion-safe:animate-pulse" />
+      )}
       {token.image_url ? (
         <Image
           src={token.image_url}
@@ -160,7 +165,9 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
         </div>
       )}
 
-      <div className="pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)]/95 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-[var(--text-secondary)] shadow-[var(--shadow-sm)]">
+      <div className={cn('pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] whitespace-nowrap shadow-[var(--shadow-sm)]', isActiveTurn ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--text-primary)]' : 'border-[var(--border-default)] bg-[var(--bg-surface)]/95 text-[var(--text-secondary)]')} data-turn-active={isActiveTurn}>
+        <span className="sr-only">{isActiveTurn ? 'Current turn' : ''}</span>
+        {/* */}
         <span className="max-w-24 truncate">{token.name}</span>
         {hpPercent !== null && <span className="shrink-0 font-semibold tabular-nums text-[var(--text-primary)]">{token.hp_current}/{token.hp_max}</span>}
       </div>
