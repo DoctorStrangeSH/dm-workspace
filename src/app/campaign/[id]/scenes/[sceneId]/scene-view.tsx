@@ -759,7 +759,7 @@ export default function SceneView({
       {showInitiative && liveInitiative.length > 0 && (
         <InitiativePanel
           sceneId={scene.id}
-          initialInitiative={liveInitiative}
+          entries={liveInitiative}
           isDm={isDm}
           onClose={() => setShowInitiative(false)}
         />
