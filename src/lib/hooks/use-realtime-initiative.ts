@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
@@ -12,6 +12,7 @@ interface Options {
 
 export function useRealtimeInitiative({ sceneId, initialInitiative, enabled = true }: Options) {
   const [initiative, setInitiative] = useState<InitiativeEntryWithToken[]>(initialInitiative)
+  const requestVersion = useRef(0)
 
   const [prevInitial, setPrevInitial] = useState(initialInitiative)
   if (initialInitiative !== prevInitial) {
@@ -23,8 +24,10 @@ export function useRealtimeInitiative({ sceneId, initialInitiative, enabled = tr
     if (!enabled) return
 
     const supabase = createClient()
+    let active = true
 
     const refresh = async () => {
+      const version = ++requestVersion.current
       // 1. Инициатива + token
       const { data } = await supabase
         .from('initiative')
@@ -37,11 +40,11 @@ export function useRealtimeInitiative({ sceneId, initialInitiative, enabled = tr
         .eq('scene_id', sceneId)
         .order('turn_order')
 
-      if (!data) return
+      if (!active || version !== requestVersion.current || !data) return
 
-      const entries = data.map((row) => {
+      const entries = data.flatMap((row) => {
         const token = Array.isArray(row.token) ? row.token[0] : row.token
-        return { ...row, token } as InitiativeEntryWithToken
+        return token ? [{ ...row, token } as InitiativeEntryWithToken] : []
       })
 
       // CHANGES: подтягиваем AC
@@ -69,6 +72,8 @@ export function useRealtimeInitiative({ sceneId, initialInitiative, enabled = tr
         const dj = row.data_json as { ac?: number } | null
         if (typeof dj?.ac === 'number') acByEntityId.set(row.id, dj.ac)
       }
+
+      if (!active || version !== requestVersion.current) return
 
       setInitiative(
         entries.map((entry) => ({
@@ -108,10 +113,14 @@ export function useRealtimeInitiative({ sceneId, initialInitiative, enabled = tr
         },
         refresh
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') void refresh()
+      })
 
     return () => {
-      supabase.removeChannel(channel)
+      active = false
+      requestVersion.current++
+      void supabase.removeChannel(channel)
     }
   }, [sceneId, enabled])
 
