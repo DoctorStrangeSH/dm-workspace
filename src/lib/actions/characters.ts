@@ -665,7 +665,7 @@ export async function levelUp(
       : getAverageHP(access.data.class, conMod)
 
   if (!Number.isSafeInteger(hpGain) || hpGain < 1) {
-    return { error: 'Неизвестный класс или некорректная прибавка HP' }
+    return { error: 'Не удалось рассчитать HP: выбранный класс не распознан. Проверьте класс персонажа (подкласс нельзя использовать вместо класса).' }
   }
   const newData = applyLevelUp(access.data, hpGain, options.abilityChanges)
   if (!validCharacterHP(newData.hp)) return { error: 'Некорректные итоговые HP' }
