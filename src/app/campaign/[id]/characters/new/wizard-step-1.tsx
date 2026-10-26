@@ -4,6 +4,7 @@ import { Input, Select } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { baseClassSlug, SRD_SUBCLASS_BASE, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
+import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
 interface Props {
@@ -39,11 +40,11 @@ export default function WizardStep1({
   const useDb = species.length > 0 && classes.length > 0
 
   const raceOptions = useDb
-    ? species.map((s) => ({ value: s.key, label: s.name_ru ?? s.name }))
+    ? species.map((s) => ({ value: s.key, label: s.name_ru || (characterSpeciesName(s.key) !== s.key ? characterSpeciesName(s.key) : s.name) }))
     : RACES.map((r) => ({ value: r.slug, label: r.name }))
 
   const classOptions = useDb
-    ? classes.map((c) => ({ value: c.key, label: c.name_ru ?? c.name }))
+    ? classes.map((c) => ({ value: c.key, label: c.name_ru || (characterClassName(c.key) !== c.key ? characterClassName(c.key) : c.name) }))
     : CLASSES.map((c) => ({ value: c.slug, label: c.name }))
 
   const subclassOptions = Object.entries(SRD_SUBCLASS_BASE)
