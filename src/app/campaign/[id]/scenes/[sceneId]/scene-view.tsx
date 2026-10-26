@@ -703,6 +703,7 @@ export default function SceneView({
             <TokenLayer
               scene={scene}
               initialTokens={tokens}
+              activeTokenId={currentTurn?.token_id ?? null}
               isDm={isDm}
               currentUserId={currentUserId}
               walls={localWalls}
