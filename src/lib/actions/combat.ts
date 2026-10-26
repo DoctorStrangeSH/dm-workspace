@@ -427,9 +427,10 @@ export async function damageToken(
     }
 
     const previous = char.data_json
+    // Never mutate the snapshot used for optimistic JSONB comparison.
     const data: { hp?: { current?: number; max?: number; temp?: number } } =
       previous && typeof previous === 'object' && !Array.isArray(previous)
-        ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
+        ? structuredClone(previous as { hp?: { current?: number; max?: number; temp?: number } })
         : {}
     const characterHP = validCharacterHP(data.hp)
     if (!characterHP || newHP > characterHP.max) {
