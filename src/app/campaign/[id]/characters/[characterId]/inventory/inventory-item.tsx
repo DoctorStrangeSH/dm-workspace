@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, Shield, Sparkles, Trash2, Pencil, X } from 'lucide-react'
+import { Check, Shield, Sparkles, Trash2, Pencil, X, Package } from 'lucide-react'
 import {
   updateInventoryItem,
   removeInventoryItem,
@@ -89,19 +89,23 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
 
   return (
     <>
-      <div className="group flex items-center gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
-        <div className="flex shrink-0 flex-col gap-1">
+      <div className="group rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 transition-colors hover:border-[var(--accent)]/40">
+        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--accent-text)]">{item.attuned ? <Sparkles size={18} /> : item.equipped ? <Shield size={18} /> : <Package size={18} />}</div>
+        <div className="flex shrink-0 items-center gap-1">
           {canEdit ? (
             <button
               onClick={handleToggleEquipped}
               disabled={isPending}
               className={cn(
-                'flex h-5 w-5 items-center justify-center rounded border-2 transition',
+                'flex h-9 w-9 items-center justify-center rounded-lg border-2 transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 item.equipped
                   ? 'border-[var(--info)] bg-[var(--info)]'
                   : 'border-[var(--border-default)] hover:border-[var(--border-hover)]'
               )}
               title={item.equipped ? t('inventory.item.unequip') : t('inventory.item.equip')}
+              aria-label={`${item.name}: ${item.equipped ? t('inventory.item.unequip') : t('inventory.item.equip')}`}
+              aria-pressed={!!item.equipped}
             >
               {item.equipped && <Shield size={10} className="text-white" />}
             </button>
@@ -113,12 +117,12 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
 
         <div className="min-w-0 flex-1">
           {isEditing ? (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                className="min-w-28 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
               />
               <input
                 type="number"
@@ -169,38 +173,43 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
         )}
 
         {canEdit && !isEditing && (
-          <div className="flex shrink-0 items-center gap-1 opacity-0 transition group-hover:opacity-100">
+          <div className="ml-auto flex shrink-0 items-center gap-1 md:opacity-60 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100">
             <button
               onClick={handleToggleAttuned}
               disabled={isPending}
               className={cn(
-                'rounded p-1.5 transition',
+                'flex h-9 w-9 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 item.attuned
                   ? 'text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]'
                   : 'text-[var(--text-subtle)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)]'
               )}
               title={item.attuned ? t('inventory.item.unattune') : t('inventory.item.attune')}
+              aria-label={`${item.name}: ${item.attuned ? t('inventory.item.unattune') : t('inventory.item.attune')}`}
+              aria-pressed={!!item.attuned}
             >
               <Sparkles size={12} />
             </button>
             <button
               onClick={() => setIsEditing(true)}
               disabled={isPending}
-              className="rounded p-1.5 transition hover:bg-[var(--bg-hover)]"
+              className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
               title={t('common.edit')}
+              aria-label={`${t('common.edit')}: ${item.name}`}
             >
               <Pencil size={12} className="text-[var(--text-muted)]" />
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isPending}
-              className="rounded p-1.5 transition hover:bg-[var(--danger-subtle)]"
+              className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
               title={t('common.delete')}
+              aria-label={`${t('common.delete')}: ${item.name}`}
             >
               <Trash2 size={12} className="text-[var(--danger)]" />
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {/* CHANGES: confirm() → Dialog */}
