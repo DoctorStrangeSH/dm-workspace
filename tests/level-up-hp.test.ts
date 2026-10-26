@@ -26,3 +26,23 @@ test('level up increases max HP and restores current without changing temporary 
   assert.deepEqual(after.hp, { current: 16, max: 16, temp: 2 })
   assert.deepEqual(before.hp, { current: 3, max: 10, temp: 2 })
 })
+
+test('all base classes return safe positive average HP', () => {
+  const classes = ['barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
+    'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard']
+  for (const cls of classes) {
+    const gain = getAverageHP(cls, 0)
+    assert.ok(Number.isSafeInteger(gain) && gain >= 1 && gain <= 12, cls)
+  }
+})
+
+test('level-up data preserves subclass and unrelated character fields', () => {
+  const before = { ...createEmptyCharacterData(), class: 'fighter',
+    subclass: 'srd-2024_champion', notes: 'Keep', features: ['Second Wind'],
+    hp: { current: 3, max: 10, temp: 0 } }
+  const after = applyLevelUp(before, 6)
+  assert.equal(after.subclass, before.subclass)
+  assert.deepEqual(after.features, before.features)
+  assert.equal(after.notes, before.notes)
+  assert.deepEqual(before.hp, { current: 3, max: 10, temp: 0 })
+})
