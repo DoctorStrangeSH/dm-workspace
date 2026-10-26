@@ -476,6 +476,8 @@ export interface DeathSaves {
 export interface CharacterData {
   level: number
   class: string
+  /** Optional SRD subclass identifier; distinct from the base class. */
+  subclass?: string
   race: string
   background?: string
   alignment?: string
