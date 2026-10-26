@@ -18,6 +18,7 @@ import {
   getPointsRemaining,
   isStandardArrayUsed,
 } from '@/lib/dnd/character-builder'
+import { baseClassSlug, SRD_SUBCLASS_BASE } from '@/lib/dnd/srd-class-utils'
 import { srdSpeciesToRaceInfo, srdClassToClassInfo } from '@/lib/dnd/srd-adapter'
 import type { AbilityKey, SkillKey } from '@/lib/types'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
@@ -39,6 +40,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
   const [name, setName] = useState('')
   const [raceSlug, setRaceSlug] = useState('')
   const [classSlug, setClassSlug] = useState('')
+  const [subclassSlug, setSubclassSlug] = useState('')
   const [level, setLevel] = useState(1)
 
   const [abilities, setAbilities] = useState<Record<AbilityKey, number>>({
@@ -96,7 +98,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
 
   const characterData = useMemo(() => {
     if (!race || !classInfo || !background) return null
-    return buildCharacterData({
+    const built = buildCharacterData({
       name,
       level,
       race,
@@ -105,7 +107,9 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
       baseAbilities: abilities,
       chosenSkills,
     })
-  }, [name, level, race, classInfo, background, abilities, chosenSkills])
+    if (subclassSlug && SRD_SUBCLASS_BASE[subclassSlug] === baseClassSlug(classSlug)) built.subclass = subclassSlug
+    return built
+  }, [name, level, race, classInfo, background, abilities, chosenSkills, classSlug, subclassSlug])
 
   const handleNext = () => {
     if (!isStepValid) return
@@ -179,7 +183,9 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
             raceSlug={raceSlug}
             setRaceSlug={setRaceSlug}
             classSlug={classSlug}
-            setClassSlug={setClassSlug}
+            setClassSlug={(value) => { setClassSlug(value); setSubclassSlug('') }}
+            subclassSlug={subclassSlug}
+            setSubclassSlug={setSubclassSlug}
             level={level}
             setLevel={setLevel}
             species={species}
