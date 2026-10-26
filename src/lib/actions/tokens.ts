@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
+import { damageToken } from './combat'
 import type { TokenCondition } from '@/lib/types'
 
 async function getSceneCampaign(sceneId: string): Promise<string | null> {
@@ -225,34 +226,12 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
   return { success: true }
 }
 
+/** Route absolute HP edits through the same ownership and character-sync checks as combat. */
 export async function updateTokenHP(tokenId: string, sceneId: string, hp_current: number) {
-  if (!Number.isFinite(hp_current) || hp_current < 0) return { error: 'Некорректное значение HP' }
-  const campaignId = await getSceneCampaign(sceneId)
-  if (!campaignId) return { error: 'Сцена не найдена' }
-
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { error: 'Не авторизован' }
-
-  const { isDm, isMember } = await getCampaignAccess(campaignId)
-  if (!isMember) return { error: 'Нет доступа к кампании' }
-  const canEdit = await canEditToken(tokenId, sceneId, campaignId, user.id, isDm)
-  if (!canEdit) return { error: 'Нет прав на изменение HP' }
-
-  const { data, error } = await supabase
-    .from('tokens')
-    .update({ hp_current: Math.max(0, hp_current) })
-    .eq('id', tokenId)
-    .eq('scene_id', sceneId)
-    .eq('campaign_id', campaignId)
-    .select('id')
-    .maybeSingle()
-
-  if (error || !data) return { error: `Не удалось обновить HP${error ? `: ${error.message}` : ''}` }
-  revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
-  return { success: true }
+  if (!Number.isSafeInteger(hp_current) || hp_current < 0 || hp_current > 1_000_000) {
+    return { error: 'Некорректное значение HP' }
+  }
+  return damageToken(tokenId, sceneId, hp_current, 'set')
 }
 
 export async function updateTokenConditions(
