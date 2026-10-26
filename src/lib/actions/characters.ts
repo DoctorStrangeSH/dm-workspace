@@ -322,7 +322,7 @@ export async function rollDeathSave(
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
 
-  const data = access.data
+  const data = structuredClone(access.data)
   const deathSaves = data.deathSaves ?? { successes: 0, failures: 0, stabilized: false }
   const roll = Math.floor(Math.random() * 20) + 1
 
