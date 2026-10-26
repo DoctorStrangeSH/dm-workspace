@@ -12,13 +12,14 @@ import type { Token as TokenType, SceneWall } from '@/lib/types'
 interface Props {
   token: TokenType
   gridSize: number
+  zoomScale?: number
   sceneId: string
   canDrag: boolean
   walls?: SceneWall[]
   onClick: () => void
 }
 
-export default function Token({ token, gridSize, sceneId, canDrag, walls = [], onClick }: Props) {
+export default function Token({ token, gridSize, zoomScale = 1, sceneId, canDrag, walls = [], onClick }: Props) {
   const t = useT()
   const toast = useToast()
   const [dragging, setDragging] = useState(false)
@@ -63,8 +64,8 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
       if (ev.pointerId !== activePointerId) return
       const dx = ev.clientX - startRef.current.x
       const dy = ev.clientY - startRef.current.y
-      const newX = Math.max(0, startRef.current.tokenX + dx / gridSize)
-      const newY = Math.max(0, startRef.current.tokenY + dy / gridSize)
+      const newX = Math.max(0, startRef.current.tokenX + dx / (gridSize * zoomScale))
+      const newY = Math.max(0, startRef.current.tokenY + dy / (gridSize * zoomScale))
       setPos({ x: Math.round(newX), y: Math.round(newY) })
     }
 
@@ -87,8 +88,8 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
         return
       }
 
-      const newX = Math.max(0, Math.round(startRef.current.tokenX + dx / gridSize))
-      const newY = Math.max(0, Math.round(startRef.current.tokenY + dy / gridSize))
+      const newX = Math.max(0, Math.round(startRef.current.tokenX + dx / (gridSize * zoomScale)))
+      const newY = Math.max(0, Math.round(startRef.current.tokenY + dy / (gridSize * zoomScale)))
 
       if (walls.length > 0 && isBlockedByWalls(
         { x: token.x, y: token.y },
