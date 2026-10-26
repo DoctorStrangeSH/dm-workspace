@@ -672,7 +672,7 @@ export async function levelUp(
     return { error: 'Некорректный уровень персонажа' }
   }
   if (access.data.level >= 20) return { error: 'Максимальный уровень — 20' }
-  const asiError = validateLevelUpASI(access.data.level + 1, options?.abilityChanges)
+  const asiError = validateLevelUpASI(access.data.level + 1, options?.abilityChanges, access.data.abilities)
   if (asiError) return { error: asiError }
   if (!validCharacterHP(access.data.hp)) return { error: 'Некорректные исходные HP' }
   if (!['average', 'roll'].includes(options?.hpMethod)) return { error: 'Некорректный способ расчёта HP' }
