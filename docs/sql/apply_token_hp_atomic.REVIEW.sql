@@ -105,6 +105,7 @@ BEGIN
     v_new := LEAST(v_token.hp_max, p_amount);
   END IF;
 
+  -- Locking both rows guarantees consistency only among writers that use this RPC.
   UPDATE public.tokens SET hp_current = v_new WHERE id = v_token.id;
   IF v_token.character_id IS NOT NULL THEN
     UPDATE public.characters
@@ -117,5 +118,6 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.apply_token_hp_atomic(uuid,uuid,integer,text,integer) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.apply_token_hp_atomic(uuid,uuid,integer,text,integer) FROM anon;
+REVOKE ALL ON FUNCTION public.apply_token_hp_atomic(uuid,uuid,integer,text,integer) FROM service_role;
 GRANT EXECUTE ON FUNCTION public.apply_token_hp_atomic(uuid,uuid,integer,text,integer) TO authenticated;
 COMMIT;
