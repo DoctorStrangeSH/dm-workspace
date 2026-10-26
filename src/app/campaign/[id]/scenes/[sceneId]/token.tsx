@@ -167,7 +167,6 @@ export default function Token({ token, gridSize, sceneId, canDrag, isActiveTurn 
 
       <div className={cn('pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] whitespace-nowrap shadow-[var(--shadow-sm)]', isActiveTurn ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--text-primary)]' : 'border-[var(--border-default)] bg-[var(--bg-surface)]/95 text-[var(--text-secondary)]')} data-turn-active={isActiveTurn}>
         <span className="sr-only">{isActiveTurn ? 'Current turn' : ''}</span>
-        {/* */}
         <span className="max-w-24 truncate">{token.name}</span>
         {hpPercent !== null && <span className="shrink-0 font-semibold tabular-nums text-[var(--text-primary)]">{token.hp_current}/{token.hp_max}</span>}
       </div>
