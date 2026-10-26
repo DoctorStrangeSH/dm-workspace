@@ -13,7 +13,7 @@ import {
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
-import { isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
+import { isSubclassForClass, isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
 
@@ -52,6 +52,9 @@ export async function createCharacter(
   if (!validCharacterHP(data.hp)) return { error: 'Некорректные значения HP' }
   if (data.class !== '' && !isCanonicalCharacterClass(data.class)) {
     return { error: 'Выберите основной класс персонажа, а не подкласс' }
+  }
+  if (data.subclass && !isSubclassForClass(data.subclass, data.class)) {
+    return { error: 'Подкласс не соответствует выбранному классу' }
   }
   const ability = getSpellcastingAbility(data.class)
   if (ability) data.spellcastingAbility = ability
@@ -134,6 +137,12 @@ export async function updateCharacter(
     const previousClass = (character.data_json as Record<string, unknown> | null)?.class
     if (nextClass !== previousClass && !isCanonicalCharacterClass(nextClass)) {
       return { error: 'Выберите основной класс персонажа, а не подкласс' }
+    }
+    const nextSubclass = (value as Record<string, unknown>).subclass
+    const oldSubclass = (character.data_json as Record<string, unknown> | null)?.subclass
+    if (nextSubclass !== oldSubclass && nextSubclass !== undefined &&
+      !isSubclassForClass(nextSubclass, nextClass)) {
+      return { error: 'Подкласс не соответствует выбранному классу' }
     }
     safeUpdates.data_json = value as CharacterData
   }
