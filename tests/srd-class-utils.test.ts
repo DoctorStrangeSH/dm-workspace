@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { baseClassSlug, isSrdBaseClass, parseSrdHitDie, isCanonicalCharacterClass } from '../src/lib/dnd/srd-class-utils'
+import { baseClassSlug, isSrdBaseClass, parseSrdHitDie, isCanonicalCharacterClass, isSubclassForClass } from '../src/lib/dnd/srd-class-utils'
 
 test('only SRD 2024 base classes are selectable', () => {
   const accepted = ['fighter', 'druid', 'wizard', 'barbarian', 'bard', 'cleric',
@@ -32,4 +32,11 @@ test('server accepts canonical classes but not subclasses or prefixed class IDs'
   for (const value of ['srd-2024_fighter', 'srd-2024_circle-of-the-land', 'champion', '', null, 10]) {
     assert.equal(isCanonicalCharacterClass(value), false)
   }
+})
+
+test('SRD subclass belongs only to its corresponding base class', () => {
+  assert.equal(isSubclassForClass('srd-2024_champion', 'fighter'), true)
+  assert.equal(isSubclassForClass('srd-2024_circle-of-the-land', 'druid'), true)
+  assert.equal(isSubclassForClass('srd-2024_circle-of-the-land', 'fighter'), false)
+  assert.equal(isSubclassForClass('srd-2024_fighter', 'fighter'), false)
 })
