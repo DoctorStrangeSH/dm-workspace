@@ -42,15 +42,25 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
 
   const tokenRadius = token.size * 0.3
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!canDrag) return
+  // Pointer Events support mouse, touch and stylus with the same drag rules.
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!canDrag || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return
     e.preventDefault()
     e.stopPropagation()
 
     setDragging(true)
     startRef.current = { x: e.clientX, y: e.clientY, tokenX: pos.x, tokenY: pos.y }
+    const activePointerId = e.pointerId
 
-    const handleMouseMove = (ev: MouseEvent) => {
+    const cleanup = () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerCancel)
+      setDragging(false)
+    }
+
+    const handlePointerMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== activePointerId) return
       const dx = ev.clientX - startRef.current.x
       const dy = ev.clientY - startRef.current.y
       const newX = Math.max(0, startRef.current.tokenX + dx / gridSize)
@@ -58,15 +68,20 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
       setPos({ x: Math.round(newX), y: Math.round(newY) })
     }
 
-    const handleMouseUp = async (ev: MouseEvent) => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
-      setDragging(false)
+    const handlePointerCancel = (ev: PointerEvent) => {
+      if (ev.pointerId !== activePointerId) return
+      cleanup()
+      setPos({ x: token.x, y: token.y })
+      setBlocked(false)
+    }
+
+    const handlePointerUp = async (ev: PointerEvent) => {
+      if (ev.pointerId !== activePointerId) return
+      cleanup()
       setBlocked(false)
 
       const dx = ev.clientX - startRef.current.x
       const dy = ev.clientY - startRef.current.y
-
       if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
         onClick()
         return
@@ -75,25 +90,21 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
       const newX = Math.max(0, Math.round(startRef.current.tokenX + dx / gridSize))
       const newY = Math.max(0, Math.round(startRef.current.tokenY + dy / gridSize))
 
-      if (walls.length > 0) {
-        const isBlocked = isBlockedByWalls(
-          { x: token.x, y: token.y },
-          { x: newX, y: newY },
-          tokenRadius,
-          walls
-        )
-        if (isBlocked) {
-          setPos({ x: token.x, y: token.y })
-          setBlocked(true)
-          toast.error(t('scenes.walls.blocked'))
-          setTimeout(() => setBlocked(false), 600)
-          return
-        }
+      if (walls.length > 0 && isBlockedByWalls(
+        { x: token.x, y: token.y },
+        { x: newX, y: newY },
+        tokenRadius,
+        walls
+      )) {
+        setPos({ x: token.x, y: token.y })
+        setBlocked(true)
+        toast.error(t('scenes.walls.blocked'))
+        setTimeout(() => setBlocked(false), 600)
+        return
       }
 
       setPos({ x: newX, y: newY })
       lastMovedAtRef.current = Date.now()
-
       const res = await moveToken(token.id, sceneId, newX, newY)
       if ('error' in res) {
         toast.error(res.error ?? t('common.error'))
@@ -101,8 +112,9 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
       }
     }
 
-    window.addEventListener('mousemove', handleMouseMove)
-    window.addEventListener('mouseup', handleMouseUp)
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerCancel)
   }
 
   return (
@@ -122,8 +134,10 @@ export default function Token({ token, gridSize, sceneId, canDrag, walls = [], o
         height: sizePx,
         borderColor: token.color,
         backgroundColor: `${token.color}33`,
+        touchAction: canDrag ? 'none' : 'auto',
       }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
+      onClick={!canDrag ? onClick : undefined}
     >
       {token.image_url ? (
         <Image
