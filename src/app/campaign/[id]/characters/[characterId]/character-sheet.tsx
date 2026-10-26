@@ -30,7 +30,7 @@ import {
   rollDice,
 } from '@/lib/dnd/formulas'
 import { changeCharacterClass } from '@/lib/dnd/character-class-change'
-import { SRD_SUBCLASS_BASE, isSubclassForClass } from '@/lib/dnd/srd-class-utils'
+import { SRD_SUBCLASS_BASE, isSubclassForClass, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { getEquipmentBonuses } from '@/lib/dnd/equipment-bonuses'
@@ -75,7 +75,7 @@ export default function CharacterSheet({
 
   const race = RACES.find((r) => r.slug === data.race)
   const cls = CLASSES.find((c) => c.slug === data.class)
-  const subclassLabel = data.subclass?.replace(/^srd-2024_/, '').replaceAll('-', ' ')
+  const subclassLabel = (data.subclass ? subclassDisplayName(data.subclass) : undefined)
   const subclassChoices = Object.entries(SRD_SUBCLASS_BASE).filter(([, parent]) => parent === draftClass)
 
   const classChanged = draftClass !== data.class
@@ -276,7 +276,7 @@ export default function CharacterSheet({
                     value={draftSubclass} disabled={isPending}
                     onChange={(e) => setDraftSubclass(e.target.value)}>
                     <option value="">Без подкласса</option>
-                    {subclassChoices.map(([key]) => <option key={key} value={key}>{key.replace(/^srd-2024_/, '').replaceAll('-', ' ')}</option>)}
+                    {subclassChoices.map(([key]) => <option key={key} value={key}>{subclassDisplayName(key)}</option>)}
                   </select>
                 </label>
                 <div className="flex gap-2">
