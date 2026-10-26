@@ -8,7 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 
 async function main() {
   const env = process.env
-  const required = ['DEV_SUPABASE_ANON_KEY', 'DEV_HP_TEST_EMAIL', 'DEV_HP_TEST_PASSWORD', 'DEV_HP_SCENE_ID', 'DEV_HP_TOKEN_ID']
+  const required = ['DEV_SUPABASE_ANON_KEY', 'DEV_HP_TEST_EMAIL', 'DEV_HP_TEST_PASSWORD', 'DEV_HP_SCENE_ID', 'DEV_HP_TOKEN_ID', 'DEV_HP_FIXTURE_CAMPAIGN_ID']
   if (env.RUN_DEV_HP_TESTS !== 'YES') throw Error('Opt-in required: RUN_DEV_HP_TESTS=YES')
   for (const k of required) if (!env[k]) throw Error(`Missing ${k}`)
   const url = env.DEV_SUPABASE_URL
@@ -24,6 +24,16 @@ async function main() {
     if (r.error) throw r.error
     return r.data
   }
+  // Refuse to damage ordinary game tokens: require an explicitly marked fixture campaign.
+  const campaignId = env.DEV_HP_FIXTURE_CAMPAIGN_ID!
+  const campaign = await db.from('campaigns').select('name').eq('id', campaignId).single()
+  if (campaign.error || !campaign.data.name.startsWith('[ATOMIC-HP-TEST]')) {
+    throw Error('Fixture campaign must have [ATOMIC-HP-TEST] name prefix')
+  }
+  const scene = await db.from('scenes').select('campaign_id').eq('id', sceneId).single()
+  if (scene.error || scene.data.campaign_id !== campaignId) throw Error('Scene is not in fixture campaign')
+  const ownership = await db.from('tokens').select('campaign_id').eq('id', tokenId).eq('scene_id', sceneId).single()
+  if (ownership.error || ownership.data.campaign_id !== campaignId) throw Error('Token is not in fixture campaign')
   const before = await read()
   assert.equal(before.hp_current, 20, 'Disposable token must start at exactly 20 HP')
   assert.ok(before.hp_max !== null && before.hp_max >= 20)
