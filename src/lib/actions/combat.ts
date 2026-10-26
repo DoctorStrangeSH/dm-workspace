@@ -356,7 +356,15 @@ export async function damageToken(
   // Disabled by default. Enable only after the reviewed RPC has been deployed and
   // authorized on DEV, and after ALL character HP writers have been coordinated.
   if (process.env.ATOMIC_TOKEN_HP_RPC_ENABLED === 'true') {
-    if (process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production' && process.env.ATOMIC_TOKEN_HP_ALLOW_LOCAL !== 'true') {
+    // Fail closed unless connected to the explicitly confirmed DEV Supabase project.
+    // NODE_ENV is normally 'production' for preview deployments, so it is not
+    // a reliable way to distinguish DEV from production databases.
+    const devSupabaseUrl = 'https://yoondivyeueyrtgeldja.supabase.co'
+    if (
+      process.env.VERCEL_ENV === 'production' ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL !== devSupabaseUrl ||
+      process.env.ATOMIC_TOKEN_HP_DEV_CONFIRMED !== 'true'
+    ) {
       return { error: 'Атомарный HP не активирован для этого окружения' }
     }
     const { data: hp, error: rpcError } = await supabase.rpc('apply_token_hp_atomic', {
