@@ -71,8 +71,12 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
   }
 
   const handleSubmit = () => {
-    if (!canPreviewHP) {
-      toast.error(lang === 'en' ? 'Character HP or class is invalid' : 'Некорректные HP или класс персонажа')
+    if (!hp) {
+      toast.error(lang === 'en' ? 'Character HP is invalid' : 'Некорректные значения HP персонажа')
+      return
+    }
+    if (hitDie === undefined) {
+      toast.error(lang === 'en' ? 'Select a valid base class before leveling up' : 'Укажите основной класс персонажа перед повышением уровня')
       return
     }
     if (!canSubmit()) {
