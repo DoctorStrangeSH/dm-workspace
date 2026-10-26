@@ -33,12 +33,14 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
   const [editQuantity, setEditQuantity] = useState(item.quantity)
   const [editType, setEditType] = useState<ItemType>(item.itemType ?? 'other')
   const [editRarity, setEditRarity] = useState<ItemRarity>(item.rarity ?? 'common')
+  const [editAcBonus, setEditAcBonus] = useState(item.acBonus ?? 0)
+  const [editInitiativeBonus, setEditInitiativeBonus] = useState(item.initiativeBonus ?? 0)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const itemId = item.id
 
   const handleSaveEdit = () => {
-    if (!editName.trim() || editQuantity < 1) {
+    if (!editName.trim() || !Number.isSafeInteger(editQuantity) || editQuantity < 1 || ![editAcBonus, editInitiativeBonus].every(n => Number.isInteger(n) && n >= -5 && n <= 5)) {
       toast.error(t('inventory.item.invalidValues'))
       return
     }
@@ -50,6 +52,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
         quantity: editQuantity,
         itemType: editType,
         rarity: editRarity,
+        acBonus: editAcBonus,
+        initiativeBonus: editInitiativeBonus,
       })
       if ('error' in res) {
         toast.error(res.error)
@@ -142,6 +146,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
               <select aria-label={lang === 'en' ? 'Rarity' : 'Редкость'} value={editRarity} onChange={(e) => setEditRarity(e.target.value as ItemRarity)} className="min-h-9 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
                 {ITEM_RARITIES.map((value) => <option key={value} value={value}>{itemRarityLabel(value, lang)}</option>)}
               </select>
+              <label className="flex flex-col gap-1 text-xs text-[var(--text-muted)]">${lang === 'en' ? 'AC bonus' : 'Бонус КД'}<input type="number" min={-5} max={5} step={1} value={editAcBonus} onChange={e => setEditAcBonus(Number(e.target.value))} className="w-20 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-[var(--text-primary)]" /></label>
+              <label className="flex flex-col gap-1 text-xs text-[var(--text-muted)]">${lang === 'en' ? 'Initiative' : 'Инициатива'}<input type="number" min={-5} max={5} step={1} value={editInitiativeBonus} onChange={e => setEditInitiativeBonus(Number(e.target.value))} className="w-20 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-[var(--text-primary)]" /></label>
               <button
                 onClick={handleSaveEdit}
                 disabled={isPending}
@@ -156,6 +162,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                   setEditQuantity(item.quantity)
                   setEditType(item.itemType ?? 'other')
                   setEditRarity(item.rarity ?? 'common')
+                  setEditAcBonus(item.acBonus ?? 0)
+                  setEditInitiativeBonus(item.initiativeBonus ?? 0)
                 }}
                 className="rounded p-1 hover:bg-[var(--bg-hover)]"
               >
@@ -180,6 +188,13 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                   {item.rarity && itemRarityLabel(item.rarity, lang) && (
                     <span className={cn('rounded-md border px-2 py-0.5 text-[11px] font-semibold', itemRarityClass(item.rarity))}>{itemRarityLabel(item.rarity, lang)}</span>
                   )}
+                </div>
+              )}
+              {(item.acBonus !== undefined && item.acBonus !== 0 || item.initiativeBonus !== undefined && item.initiativeBonus !== 0) && (
+                <div className="mt-1 text-xs text-[var(--accent-text)]">
+                  {lang === 'en' ? 'Bonuses when equipped' : 'Бонусы при экипировке'}:
+                  {item.acBonus ? ` AC ${item.acBonus > 0 ? '+' : ''}${item.acBonus}` : ''}
+                  {item.initiativeBonus ? ` · ${lang === 'en' ? 'Initiative' : 'Инициатива'} ${item.initiativeBonus > 0 ? '+' : ''}${item.initiativeBonus}` : ''}
                 </div>
               )}
               {item.notes && (
