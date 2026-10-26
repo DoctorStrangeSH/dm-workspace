@@ -85,10 +85,18 @@ export function srdClassToClassInfo(cls: SrdClass): ClassInfo {
     'persuasion',
   ]
 
+  const slug = cls.key.replace(/^srd-2024_/, '')
+  const rawHitDie = data.hit_die
+  const parsedHitDie = typeof rawHitDie === 'number' ? rawHitDie : Number(String(rawHitDie ?? '').replace(/^d/i, ''))
+  const hitDie: 6 | 8 | 10 | 12 =
+    parsedHitDie === 6 || parsedHitDie === 8 || parsedHitDie === 10 || parsedHitDie === 12
+      ? parsedHitDie
+      : 8
+
   return {
-    slug: cls.key,
+    slug,
     name: cls.name_ru ?? cls.name,
-    hitDie: (data.hit_die ?? 8) as 6 | 8 | 10 | 12,
+    hitDie,
     primaryAbility: 'str',
     savingThrows,
     skillChoices: {
