@@ -31,7 +31,8 @@ import {
 } from '@/lib/dnd/formulas'
 import { changeCharacterClass } from '@/lib/dnd/character-class-change'
 import { SRD_SUBCLASS_BASE, isSubclassForClass, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
-import { RACES, CLASSES } from '@/lib/dnd/constants'
+import { CLASSES } from '@/lib/dnd/constants'
+import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { getEquipmentBonuses } from '@/lib/dnd/equipment-bonuses'
 import type { AbilityKey, SkillKey, Character } from '@/lib/types'
@@ -73,8 +74,6 @@ export default function CharacterSheet({
   const equipmentBonuses = getEquipmentBonuses(data.inventory)
   const profBonus = proficiencyBonus(data.level)
 
-  const race = RACES.find((r) => r.slug === data.race)
-  const cls = CLASSES.find((c) => c.slug === data.class)
   const subclassLabel = (data.subclass ? subclassDisplayName(data.subclass) : undefined)
   const subclassChoices = Object.entries(SRD_SUBCLASS_BASE).filter(([, parent]) => parent === draftClass)
 
@@ -252,7 +251,7 @@ export default function CharacterSheet({
             )}
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {race?.name ?? data.race} · {cls?.name ?? (data.class || 'Класс не выбран')}
+              {characterSpeciesName(data.race)} · {characterClassName(data.class)}
               {subclassLabel ? ` · ${subclassLabel}` : ''} · {t('characters.level', { level: data.level })}
             </p>
             {canEdit && !editingClass && (
