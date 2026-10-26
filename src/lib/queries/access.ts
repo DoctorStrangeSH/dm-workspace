@@ -55,7 +55,9 @@ export async function getCampaignAccess(campaignId: string): Promise<CampaignAcc
   return {
     campaign,
     role,
-    isDm: role === 'dm',
+    // Match the existing database RLS helpers, which authorize the campaign owner.
+    // A delegated 'dm' membership alone is not sufficient for privileged writes.
+    isDm: role === 'dm' && campaign.owner_id === user.id,
     isMember: role !== null,
   }
 }
