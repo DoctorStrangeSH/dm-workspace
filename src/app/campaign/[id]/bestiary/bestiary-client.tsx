@@ -60,6 +60,11 @@ export default function BestiaryClient({
         isPending={isPending}
       />
 
+      <div className="mb-4 flex items-center justify-between gap-2 px-1 text-xs text-[var(--text-muted)]" role="status" aria-live="polite">
+        <span>{lang === 'en' ? 'Creatures found' : 'Найдено существ'}: <strong className="font-semibold tabular-nums text-[var(--text-primary)]">{monsters.length}</strong></span>
+        {isPending && <span>{lang === 'en' ? 'Searching…' : 'Поиск…'}</span>}
+      </div>
+
       {monsters.length === 0 ? (
         <EmptyState
           icon="🐉"
@@ -68,7 +73,7 @@ export default function BestiaryClient({
           size="md"
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {monsters.map((monster) => (
             <MonsterCard
               key={monster.key}
