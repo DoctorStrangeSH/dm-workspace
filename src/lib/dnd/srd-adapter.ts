@@ -1,6 +1,7 @@
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 import type { RaceInfo, ClassInfo } from '@/lib/dnd/constants'
 import type { AbilityKey, SkillKey } from '@/lib/types'
+import { baseClassSlug, parseSrdHitDie } from '@/lib/dnd/srd-class-utils'
 
 const ABILITY_MAP: Record<string, AbilityKey> = {
   strength: 'str',
@@ -85,13 +86,8 @@ export function srdClassToClassInfo(cls: SrdClass): ClassInfo {
     'persuasion',
   ]
 
-  const slug = cls.key.replace(/^srd-2024_/, '')
-  const rawHitDie = data.hit_die
-  const parsedHitDie = typeof rawHitDie === 'number' ? rawHitDie : Number(String(rawHitDie ?? '').replace(/^d/i, ''))
-  const hitDie: 6 | 8 | 10 | 12 =
-    parsedHitDie === 6 || parsedHitDie === 8 || parsedHitDie === 10 || parsedHitDie === 12
-      ? parsedHitDie
-      : 8
+  const slug = baseClassSlug(cls.key)
+  const hitDie = parseSrdHitDie(data.hit_die) ?? 8
 
   return {
     slug,
