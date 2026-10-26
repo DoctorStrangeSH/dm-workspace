@@ -55,3 +55,11 @@ test('level-up eligibility requires an integer level from 1 through 19', () => {
     assert.equal(canLevelUp({ ...createEmptyCharacterData(), level }), false)
   }
 })
+
+test('rejects invalid Constitution modifiers rather than producing invalid HP', () => {
+  for (const invalid of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY, 1.5]) {
+    assert.equal(getAverageHP('fighter', invalid), 0)
+    assert.equal(rollHP('fighter', invalid), 0)
+  }
+  assert.equal(getAverageHP('fighter', -5), 1)
+})
