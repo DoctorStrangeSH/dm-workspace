@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache'
 import { createSrdClient } from '@/lib/supabase/srd'
+import { isSrdBaseClass } from '@/lib/dnd/srd-class-utils'
 
 export interface SrdSpecies {
   key: string
@@ -35,13 +36,7 @@ export const getSrdClasses = unstable_cache(
     if (error) return []
     // The imported SRD table also contains subclasses (e.g. Circle of the Land).
     // Only base classes may populate CharacterData.class.
-    const baseClasses = new Set([
-      'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
-      'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard',
-    ])
-    return (data ?? []).filter((entry) =>
-      baseClasses.has(entry.key.replace(/^srd-2024_/, ''))
-    )
+    return (data ?? []).filter((entry) => isSrdBaseClass(entry.key))
   },
   ['srd-classes'],
   { revalidate: 3600, tags: ['srd'] }
