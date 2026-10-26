@@ -31,6 +31,7 @@ import {
 } from '@/lib/dnd/formulas'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
 import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
+import { getEquipmentBonuses } from '@/lib/dnd/equipment-bonuses'
 import type { AbilityKey, SkillKey, Character } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
@@ -63,6 +64,7 @@ export default function CharacterSheet({
 
   const data = character.data_json
   const safeHP = validCharacterHP(data.hp)
+  const equipmentBonuses = getEquipmentBonuses(data.inventory)
   const profBonus = proficiencyBonus(data.level)
 
   const race = RACES.find((r) => r.slug === data.race)
@@ -122,7 +124,7 @@ export default function CharacterSheet({
   }
 
   const rollInitiative = () => {
-    const bonus = getInitiative(data)
+    const bonus = getInitiative(data) + equipmentBonuses.initiative
     const expr = parseDice(`1d20${bonus >= 0 ? '+' : ''}${bonus}`)
     if (!expr) return
     const result = rollDice(expr)
@@ -245,9 +247,14 @@ export default function CharacterSheet({
             </div>
 
             <div className="mb-4">
+              {(equipmentBonuses.ac !== 0 || equipmentBonuses.initiative !== 0) && (
+                <p className="mb-2 text-xs text-[var(--accent-text)]" role="status">
+                  {lang === 'en' ? 'Equipped item bonuses' : 'Бонусы экипированных предметов'}: {equipmentBonuses.ac !== 0 ? `AC ${formatModifier(equipmentBonuses.ac)}` : ''} {equipmentBonuses.initiative !== 0 ? `${t('characters.initiative')} ${formatModifier(equipmentBonuses.initiative)}` : ''}
+                </p>
+              )}
               <CombatStats
-                ac={data.ac}
-                initiative={getInitiative(data)}
+                ac={data.ac + equipmentBonuses.ac}
+                initiative={getInitiative(data) + equipmentBonuses.initiative}
                 speed={data.speed}
                 passivePerception={getPassivePerception(data)}
                 onRollInitiative={rollInitiative}
