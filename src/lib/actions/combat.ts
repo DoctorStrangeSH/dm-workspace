@@ -364,9 +364,11 @@ export async function damageToken(
     .eq('id', tokenId)
     .eq('scene_id', sceneId)
     .eq('campaign_id', campaignId)
+    .eq('hp_current', token.hp_current)
     .select('id')
     .maybeSingle()
-  if (error || !updatedToken) return { error: 'Не удалось обновить' }
+  if (error) return { error: 'Не удалось обновить HP' }
+  if (!updatedToken) return { error: 'HP токена уже изменились другим участником. Обновите данные и повторите действие.' }
 
   if (token.character_id) {
     const { data: char, error: characterFetchError } = await supabase
