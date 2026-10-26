@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { logEvent } from './logs'
@@ -322,6 +323,31 @@ export async function damageToken(
     if (!owner) return { error: 'Нет прав на изменение HP' }
   }
 
+  if (
+    !Number.isSafeInteger(amount) ||
+    !Number.isSafeInteger(token.hp_current) ||
+    !Number.isSafeInteger(token.hp_max) ||
+    token.hp_max <= 0 ||
+    token.hp_current < 0 ||
+    token.hp_current > token.hp_max
+  ) {
+    return { error: 'Некорректные исходные HP токена' }
+  }
+
+  // Refuse to mutate the token when its linked character already has corrupt HP.
+  // The read is still repeated below before synchronizing, to avoid writing stale data.
+  if (token.character_id) {
+    const { data: linked, error: linkedError } = await supabase
+      .from('characters')
+      .select('data_json')
+      .eq('id', token.character_id)
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+    if (linkedError || !linked || !validCharacterHP(linked.data_json?.hp)) {
+      return { error: 'HP связанного персонажа некорректны; изменение токена отменено' }
+    }
+  }
+
   let newHP = token.hp_current
   if (type === 'damage') newHP = Math.max(0, token.hp_current - amount)
   else if (type === 'heal') newHP = Math.min(token.hp_max, token.hp_current + amount)
@@ -367,7 +393,24 @@ export async function damageToken(
       previous && typeof previous === 'object' && !Array.isArray(previous)
         ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
         : {}
-    data.hp = { ...data.hp, current: newHP }
+    const characterHP = validCharacterHP(data.hp)
+    if (!characterHP || newHP > characterHP.max) {
+      // Preserve both records when the character's HP changed or disagrees with the token.
+      const { data: rolledBack, error: rollbackError } = await supabase
+        .from('tokens')
+        .update({ hp_current: token.hp_current })
+        .eq('id', tokenId)
+        .eq('scene_id', sceneId)
+        .eq('campaign_id', campaignId)
+        .eq('hp_current', newHP)
+        .select('id')
+        .maybeSingle()
+      if (rollbackError || !rolledBack) {
+        return { error: 'HP персонажа изменились; проверьте синхронизацию с токеном вручную' }
+      }
+      return { error: 'HP персонажа некорректны или меньше HP токена; изменение отменено' }
+    }
+    data.hp = { ...characterHP, current: newHP }
 
     const { data: updatedCharacter, error: characterUpdateError } = await supabase
       .from('characters')
