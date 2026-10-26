@@ -26,6 +26,7 @@ import { useToast } from '@/components/toast/toast-provider'
 import { Button, Input, Dropdown, Tooltip, Dialog } from '@/components/ui'
 import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
+import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import AddTokenModal from './add-token-modal'
 import InitiativePanel from './initiative-panel'
 import FogLayer from './fog-layer'
@@ -151,7 +152,7 @@ export default function SceneView({
     ctrl: true,
     handler: () => {
       if (isDm) {
-        if (initiative.length === 0) handleStartCombat()
+        if (liveInitiative.length === 0) handleStartCombat()
         else setShowInitiative((v) => !v)
       }
     },
@@ -247,7 +248,8 @@ export default function SceneView({
   }
 
   const refresh = () => router.refresh()
-  const currentTurn = initiative.find((e) => e.is_current)
+  const liveInitiative = useRealtimeInitiative({ sceneId: scene.id, initialInitiative: initiative })
+  const currentTurn = liveInitiative.find((e) => e.is_current)
 
   const getGridCoords = (e: React.MouseEvent): { x: number; y: number } | null => {
     if (!wallWrapperRef.current) return null
@@ -430,14 +432,14 @@ export default function SceneView({
             </Button>
           )}
 
-          {initiative.length > 0 ? (
+          {liveInitiative.length > 0 ? (
             <Button
               variant="danger"
               size="sm"
               icon={<Swords size={14} />}
               onClick={() => setShowInitiative(!showInitiative)}
             >
-              {t('scenes.combatWithCount', { count: initiative.length })}
+              {t('scenes.combatWithCount', { count: liveInitiative.length })}
             </Button>
           ) : (
             isDm && (
@@ -530,7 +532,7 @@ export default function SceneView({
             </Button>
           )}
 
-          {isDm && initiative.length === 0 && (
+          {isDm && liveInitiative.length === 0 && (
             <Button
               variant="danger"
               size="sm"
@@ -543,14 +545,14 @@ export default function SceneView({
             </Button>
           )}
 
-          {initiative.length > 0 && (
+          {liveInitiative.length > 0 && (
             <Button
               variant="danger"
               size="sm"
               icon={<Swords size={14} />}
               onClick={() => setShowInitiative(!showInitiative)}
             >
-              {t('scenes.combatWithCount', { count: initiative.length })}
+              {t('scenes.combatWithCount', { count: liveInitiative.length })}
             </Button>
           )}
 
@@ -754,10 +756,10 @@ export default function SceneView({
         />
       )}
 
-      {showInitiative && initiative.length > 0 && (
+      {showInitiative && liveInitiative.length > 0 && (
         <InitiativePanel
           sceneId={scene.id}
-          initialInitiative={initiative}
+          initialInitiative={liveInitiative}
           isDm={isDm}
           onClose={() => setShowInitiative(false)}
         />
