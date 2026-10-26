@@ -206,7 +206,7 @@ export default function TokenMenu({
                     'h-full transition-all',
                     hpPercent > 50
                       ? 'bg-[var(--success)]'
-                      : (localHP / token.hp_max) * 100 > 25
+                      : hpPercent > 25
                         ? 'bg-[var(--warning)]'
                         : 'bg-[var(--danger)]'
                   )}
