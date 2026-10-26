@@ -9,6 +9,7 @@ import type { Scene, Token as TokenType, SceneWall, TokenOwnerWithProfile } from
 
 interface Props {
   scene: Scene
+  zoomScale?: number
   initialTokens: TokenType[]
   isDm: boolean
   currentUserId: string | null
@@ -20,6 +21,7 @@ interface Props {
 
 export default function TokenLayer({
   scene,
+  zoomScale = 1,
   initialTokens,
   isDm,
   currentUserId,
@@ -65,6 +67,7 @@ export default function TokenLayer({
               key={token.id}
               token={token}
               gridSize={scene.grid_size}
+              zoomScale={zoomScale}
               sceneId={scene.id}
               canDrag={canDragToken(token)}
               walls={walls}
