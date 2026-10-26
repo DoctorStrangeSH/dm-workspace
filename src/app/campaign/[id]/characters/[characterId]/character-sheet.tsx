@@ -30,6 +30,7 @@ import {
   rollDice,
 } from '@/lib/dnd/formulas'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
+import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import type { AbilityKey, SkillKey, Character } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
@@ -61,6 +62,7 @@ export default function CharacterSheet({
   const [showLevelUp, setShowLevelUp] = useState(false)
 
   const data = character.data_json
+  const safeHP = validCharacterHP(data.hp)
   const profBonus = proficiencyBonus(data.level)
 
   const race = RACES.find((r) => r.slug === data.race)
@@ -253,15 +255,25 @@ export default function CharacterSheet({
             </div>
 
             <div className="mb-4">
-              <HPTracker
-                characterId={character.id}
-                campaignId={campaignId}
-                hp={data.hp}
-                canEdit={canEdit}
-              />
+              {safeHP ? (
+                <HPTracker
+                  characterId={character.id}
+                  campaignId={campaignId}
+                  hp={safeHP}
+                  canEdit={canEdit}
+                />
+              ) : (
+                <Card padding="md">
+                  <p role="status" className="text-sm text-[var(--text-secondary)]">
+                    {lang === 'en'
+                      ? 'HP data is invalid. Ask the DM to correct the character values.'
+                      : 'Данные HP некорректны. Попросите мастера исправить значения персонажа.'}
+                  </p>
+                </Card>
+              )}
             </div>
 
-            {data.hp.current === 0 && (
+            {safeHP?.current === 0 && (
               <div className="mb-4">
                 <DeathSavesTracker
                   characterId={character.id}
