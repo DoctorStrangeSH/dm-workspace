@@ -142,8 +142,17 @@ if (a.status !== 'fulfilled' || b.status !== 'fulfilled'
   throw new Error('Concurrent RPC request failed; inspect outcomes before retrying')
 }
 const values = [a.value.body, b.value.body]
-if (!values.every((v) => typeof v === 'number') || !values.includes(start - 7)) {
-  throw new Error('Unexpected concurrent HP responses; check DEV HP snapshot')
+const expectedResponses = [start - 3, start - 7].sort((x, y) => x - y)
+const actualResponses = values
+  .filter((v): v is number => typeof v === 'number')
+  .sort((x, y) => x - y)
+if (actualResponses.length !== 2
+  || actualResponses[0] !== expectedResponses[0]
+  || actualResponses[1] !== expectedResponses[1]) {
+  throw new Error(
+    'Unexpected concurrent HP responses: expected serialized states ' +
+    expectedResponses.join(',') + '; got ' + actualResponses.join(','),
+  )
 }
 const after = await readHP(tokens[0]!)
 if (after.token.hp_current !== start - 7 || after.charHP.current !== start - 7 ||
