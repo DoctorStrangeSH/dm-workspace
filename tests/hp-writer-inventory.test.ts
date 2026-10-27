@@ -58,11 +58,12 @@ test('full character updates remain an explicit linked-HP rollout blocker', () =
 
 test('token HP setter delegates to the shared damage action', () => {
   const updateTokenHP = actionBody(tokens, 'updateTokenHP')
-  assert.match(updateTokenHP, /return damageToken\\(tokenId, sceneId, hp_current, 'set'\\)/)
+  assert.ok(updateTokenHP.includes("return damageToken(tokenId, sceneId, hp_current, 'set')"))
   // The shared damageToken implementation remains a rollout blocker until its
   // writes use the atomic transaction for linked characters.
   const damageToken = actionBody(combat, 'damageToken')
-  assert.match(damageToken, /\\.from\\('tokens'\\)[\\s\\S]*\\.update\\(\\{ hp_current: newHP \\}\\)/)
+  assert.ok(damageToken.includes(".from('tokens')"))
+  assert.ok(damageToken.includes(".update({ hp_current: newHP })"))
 })
 
 test('whole-character update remains a potential HP bypass until transactionally guarded', () => {
