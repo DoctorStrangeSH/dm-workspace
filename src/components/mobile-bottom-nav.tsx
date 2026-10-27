@@ -31,6 +31,8 @@ export function MobileBottomNav({ campaignId }: Props) {
               key={item.href}
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
+              aria-label={t(item.labelKey)}
+              title={t(item.labelKey)}
               className={cn(
                 'relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] leading-tight font-medium transition-colors touch-manipulation active:bg-[var(--bg-active)]',
                 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
@@ -41,7 +43,7 @@ export function MobileBottomNav({ campaignId }: Props) {
             >
               {isActive && <span aria-hidden="true" className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-b-full bg-[var(--accent)]" />}
               <Icon size={22} strokeWidth={isActive ? 2.3 : 1.8} aria-hidden="true" />
-              <span className="max-w-full truncate text-center">{t(item.labelKey)}</span>
+              <span className="line-clamp-2 max-w-full break-words text-center leading-tight">{t(item.labelKey)}</span>
             </Link>
           )
         })}
