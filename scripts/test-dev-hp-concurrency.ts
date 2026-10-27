@@ -60,6 +60,39 @@ const readHP = async (jwt: string) => {
   if (chars.length !== 1 || !chars[0].data_json.hp) throw new Error('Character not visible to test identity')
   return { token: tokenRows[0], charHP: chars[0].data_json.hp }
 }
+// A confirmation flag alone cannot distinguish disposable records from player data.
+const testPrefix = 'HP-DEV-TEST-'
+const readRows = async <T>(table: string, select: string, filter: string): Promise<T[]> => {
+  const response = await fetch(devUrl + '/rest/v1/' + table + '?' + filter + '&select=' + select, {
+    headers: { apikey: anonKey!, Authorization: 'Bearer ' + tokens[0]! },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!response.ok) throw new Error('Cannot verify disposable ' + table + ' record')
+  return await response.json() as T[]
+}
+const fixtureToken = await readHP(tokens[0]!)
+const campaigns = await readRows<{ name: string }>(
+  'campaigns', 'name', 'id=eq.' + fixtureToken.token.campaign_id,
+)
+const characters = await readRows<{ name: string }>(
+  'characters', 'name', 'id=eq.' + fixtureToken.token.character_id,
+)
+const siblingTokens = await readRows<{ id: string }>(
+  'tokens', 'id', 'character_id=eq.' + fixtureToken.token.character_id,
+)
+if (campaigns.length !== 1 || characters.length !== 1
+  || !campaigns[0].name.startsWith(testPrefix)
+  || !characters[0].name.startsWith(testPrefix)) {
+  throw new Error('Campaign and character must both use disposable HP-DEV-TEST- prefix')
+}
+if (siblingTokens.length !== 1 || siblingTokens[0].id !== tokenId) {
+  throw new Error('Installed DEV RPC test requires exactly one visible linked token')
+}
+const secondToken = await readHP(tokens[1]!)
+if (secondToken.token.character_id !== fixtureToken.token.character_id
+  || secondToken.token.campaign_id !== fixtureToken.token.campaign_id) {
+  throw new Error('Second DEV test user cannot verify the same disposable fixture')
+}
 const before = await readHP(tokens[0]!)
 if (before.token.hp_current !== start || before.charHP.current !== start ||
   before.token.hp_max !== before.charHP.max) {
