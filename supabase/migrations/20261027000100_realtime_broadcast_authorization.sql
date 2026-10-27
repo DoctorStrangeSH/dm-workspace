@@ -7,6 +7,69 @@
 
 begin;
 
+
+-- Split the legacy mixed-audience campaign topic into resource-specific topics.
+-- Fixed search_path and schema-qualified Broadcast function for SECURITY DEFINER.
+create or replace function public.broadcast_scene_walls()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $function$
+begin
+  perform realtime.broadcast_changes(
+    'walls:' || coalesce(new.campaign_id, old.campaign_id)::text,
+    tg_op,
+    tg_op,
+    tg_table_name,
+    tg_table_schema,
+    new,
+    old
+  );
+  return coalesce(new, old);
+end;
+$function$;
+
+create or replace function public.broadcast_summon_requests()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $function$
+begin
+  perform realtime.broadcast_changes(
+    'summons:' || coalesce(new.campaign_id, old.campaign_id)::text,
+    tg_op,
+    tg_op,
+    tg_table_name,
+    tg_table_schema,
+    new,
+    old
+  );
+  return coalesce(new, old);
+end;
+$function$;
+
+create or replace function public.broadcast_token_owners()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $function$
+begin
+  perform realtime.broadcast_changes(
+    'token-owners:' || coalesce(new.campaign_id, old.campaign_id)::text,
+    tg_op,
+    tg_op,
+    tg_table_name,
+    tg_table_schema,
+    new,
+    old
+  );
+  return coalesce(new, old);
+end;
+$function$;
+
 drop policy if exists "Authenticated can receive broadcasts" on realtime.messages;
 
 create policy "Campaign members can receive scoped broadcasts"
@@ -60,6 +123,35 @@ using (
     -- The legacy campaign:<id> topic is deliberately not authorized: it currently
     -- multiplexes walls, summons and token ownership with mixed payload audiences.
     -- Split these senders/topics before restoring wall/summon/token-owner realtime.
+    or (
+      realtime.topic() like 'walls:%'
+      and exists (
+        select 1
+        from public.campaign_members cm
+        where cm.user_id = (select auth.uid())
+          and realtime.topic() = 'walls:' || cm.campaign_id::text
+      )
+    )
+    -- Summon requests contain requester/context data; restrict the stream to DMs.
+    or (
+      realtime.topic() like 'summons:%'
+      and exists (
+        select 1
+        from public.campaign_members cm
+        where cm.user_id = (select auth.uid())
+          and cm.role = 'dm'
+          and realtime.topic() = 'summons:' || cm.campaign_id::text
+      )
+    )
+    or (
+      realtime.topic() like 'token-owners:%'
+      and exists (
+        select 1
+        from public.campaign_members cm
+        where cm.user_id = (select auth.uid())
+          and realtime.topic() = 'token-owners:' || cm.campaign_id::text
+      )
+    )
     -- Handout broadcasts contain raw rows today. Temporarily DM-only until
     -- the trigger publishes a separate player-safe DTO/topic.
     or (
