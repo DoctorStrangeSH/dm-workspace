@@ -33,7 +33,7 @@ const ChaptersSearch = forwardRef<HTMLInputElement, Props>(function ChaptersSear
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={t('chapters.search.placeholder')}
-          className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] py-2.5 pr-24 pl-9 text-sm text-[var(--text-primary)] transition placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
+          className="w-full min-h-11 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] py-3 pr-24 pl-10 text-sm text-[var(--text-primary)] transition placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
           aria-label={t('chapters.search.ariaLabel')}
         />
 
