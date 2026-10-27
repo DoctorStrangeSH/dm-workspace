@@ -255,7 +255,7 @@ export default function CharacterSheet({
               {subclassLabel ? ` · ${subclassLabel}` : ''} · {t('characters.level', { level: data.level })}
             </p>
             {canEdit && !editingClass && (
-              <button type="button" className="mt-1 text-xs text-[var(--accent-text)] underline"
+              <button type="button" className="mt-2 inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium text-[var(--accent-text)] underline underline-offset-2 touch-manipulation"
                 onClick={() => { setDraftClass(data.class); setDraftSubclass(data.subclass ?? ''); setConfirmingClassChange(false); setEditingClass(true) }}>
                 Изменить класс и подкласс
               </button>
@@ -263,7 +263,7 @@ export default function CharacterSheet({
             {canEdit && editingClass && (
               <div className="mt-3 flex max-w-sm flex-col gap-2 rounded-lg border border-[var(--border-default)] p-3">
                 <label className="text-xs">Основной класс
-                  <select className="mt-1 w-full rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2"
+                  <select className="mt-1 min-h-11 w-full rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2"
                     value={draftClass} disabled={isPending}
                     onChange={(e) => { setDraftClass(e.target.value); setDraftSubclass(''); setConfirmingClassChange(false) }}>
                     <option value="">Выберите класс</option>
@@ -278,9 +278,9 @@ export default function CharacterSheet({
                     {subclassChoices.map(([key]) => <option key={key} value={key}>{subclassDisplayName(key)}</option>)}
                   </select>
                 </label>
-                <div className="flex gap-2">
-                  <Button size="sm" disabled={isPending || !draftClass} onClick={saveClass}>{classChanged && confirmingClassChange ? 'Подтвердить смену класса' : 'Сохранить'}</Button>
-                  <Button size="sm" variant="secondary" disabled={isPending} onClick={() => { setEditingClass(false); setConfirmingClassChange(false) }}>Отмена</Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="md" className="min-h-11" disabled={isPending || !draftClass} onClick={saveClass}>{classChanged && confirmingClassChange ? 'Подтвердить смену класса' : 'Сохранить'}</Button>
+                  <Button size="md" className="min-h-11" variant="secondary" disabled={isPending} onClick={() => { setEditingClass(false); setConfirmingClassChange(false) }}>Отмена</Button>
                 </div>
                 {classChanged && confirmingClassChange && (
                   <p role="alert" className="text-sm text-[var(--text-primary)]">
