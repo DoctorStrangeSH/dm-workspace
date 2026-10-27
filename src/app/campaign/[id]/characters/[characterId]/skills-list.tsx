@@ -58,7 +58,7 @@ export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props
               onClick={() => onRoll?.(skill)}
               disabled={!onRoll}
               className={cn(
-                'group flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors',
+                'group flex min-h-11 items-center gap-2 rounded px-2 py-2 text-left text-sm transition-colors touch-manipulation',
                 onRoll && 'hover:bg-[var(--bg-hover)]',
                 !onRoll && 'cursor-default'
               )}
@@ -88,7 +88,7 @@ export default function SkillsList({ proficientSkills, getBonus, onRoll }: Props
               </span>
               {onRoll && (
                 <Dices
-                  size={12}
+                  size={16}
                   className="shrink-0 text-[var(--text-subtle)] transition group-hover:text-[var(--text-muted)]"
                 />
               )}
