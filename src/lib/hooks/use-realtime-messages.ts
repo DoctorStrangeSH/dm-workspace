@@ -24,10 +24,16 @@ export function useRealtimeMessages({ campaignId, initialMessages, enabled = tru
     if (!enabled) return
 
     const supabase = createClient()
+    let cancelled = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    console.log('[messages realtime] creating channel for campaign:', campaignId)
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
 
-    const channel = supabase
+      console.log('[messages realtime] creating channel for campaign:', campaignId)
+
+      channel = supabase
       .channel(`messages:${campaignId}`, {
         config: { private: true },
       })
@@ -64,9 +70,13 @@ export function useRealtimeMessages({ campaignId, initialMessages, enabled = tru
       .subscribe((status, err) => {
         console.log('[messages realtime] status:', status, 'err:', err)
       })
+    }
+
+    void setup()
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
     }
   }, [campaignId, enabled])
 
