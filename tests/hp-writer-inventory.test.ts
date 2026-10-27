@@ -42,3 +42,15 @@ test('token HP writes and linked-token creation remain explicit rollout blockers
   // until creation initializes from canonical character HP transactionally.
   assert.match(createToken, /hp_current:\s*hpCurrent/)
 })
+
+
+test('full character updates remain an explicit linked-HP rollout blocker', () => {
+  const updateCharacter = actionBody(characters, 'updateCharacter')
+  assert.match(updateCharacter, /data_json/)
+  assert.match(updateCharacter, /safeUpdates\.data_json/)
+  const gate = readFileSync('docs/HP_MULTI_TOKEN_DEV_ACCEPTANCE.md', 'utf8')
+  for (const writer of ['createToken', 'updateTokenHP', 'updateCharacterHP', 'rollDeathSave', 'longRest', 'levelUp', 'updateCharacter', 'saveCharacterData']) {
+    assert.match(gate, new RegExp(writer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  }
+  assert.match(gate, /Do not enable.*ATOMIC_TOKEN_HP_RPC_ENABLED/)
+})
