@@ -229,13 +229,9 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
     return { error: 'Не удалось загрузить' }
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('scene-maps').getPublicUrl(fileName)
-
   const { data: updated, error } = await supabase
     .from('scenes')
-    .update({ image_url: publicUrl })
+    .update({ image_url: fileName })
     .eq('id', sceneId)
     .eq('campaign_id', campaignId)
     .select('id')
@@ -246,5 +242,5 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
   }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
-  return { success: true, url: publicUrl }
+  return { success: true, url: '/api/scenes/' + sceneId + '/map' }
 }
