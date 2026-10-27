@@ -23,8 +23,14 @@ export function useRealtimeMusic({ campaignId, initialState }: Options) {
     if (!campaignId) return
 
     const supabase = createClient()
+    let cancelled = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const channel = supabase
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
+
+      channel = supabase
       .channel(`music:${campaignId}`, {
         config: { private: true },
       })
@@ -37,9 +43,13 @@ export function useRealtimeMusic({ campaignId, initialState }: Options) {
         if (record) setState(record)
       })
       .subscribe()
+    }
+
+    void setup()
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
     }
   }, [campaignId])
 
