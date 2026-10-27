@@ -90,10 +90,11 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
 
       {canEdit && (
         <div className="space-y-2">
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-4 gap-2">
             <Button
               variant="danger"
-              size="sm"
+              size="md"
+              className="min-h-12 min-w-0 touch-manipulation"
               onClick={() => updateHP({ current: Math.max(0, hp.current - 5) })}
               disabled={isPending || hp.current === 0}
             >
@@ -101,7 +102,8 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
             </Button>
             <Button
               variant="danger"
-              size="sm"
+              size="md"
+              className="min-h-12 min-w-0 touch-manipulation"
               onClick={() => updateHP({ current: Math.max(0, hp.current - 1) })}
               disabled={isPending || hp.current === 0}
             >
@@ -109,7 +111,8 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
             </Button>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
+              className="min-h-12 min-w-0 touch-manipulation"
               onClick={() => updateHP({ current: Math.min(hp.max, hp.current + 1) })}
               disabled={isPending || hp.current === hp.max}
             >
@@ -117,7 +120,8 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
             </Button>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
+              className="min-h-12 min-w-0 touch-manipulation"
               onClick={() => updateHP({ current: Math.min(hp.max, hp.current + 5) })}
               disabled={isPending || hp.current === hp.max}
             >
@@ -125,25 +129,31 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
             </Button>
           </div>
 
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <input
               type="number"
+              inputMode="numeric"
+              aria-label="Количество HP для изменения"
               value={customValue}
               onChange={(e) => setCustomValue(e.target.value)}
               placeholder="N"
               min={1}
-              className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
+              className="min-h-12 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 py-2 text-base text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
             />
             <Button
               variant="danger"
-              size="sm"
+              size="md"
+              className="min-h-12 min-w-12 touch-manipulation"
+              aria-label="Нанести указанное количество урона"
               onClick={() => applyCustom(-1)}
               disabled={isPending || !customValue}
               icon={<Minus size={12} />}
             />
             <Button
               variant="primary"
-              size="sm"
+              size="md"
+              className="min-h-12 min-w-12 touch-manipulation"
+              aria-label="Восстановить указанное количество HP"
               onClick={() => applyCustom(1)}
               disabled={isPending || !customValue}
               icon={<Plus size={12} />}
