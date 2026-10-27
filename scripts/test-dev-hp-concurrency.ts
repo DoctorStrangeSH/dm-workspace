@@ -1,8 +1,8 @@
 /**
  * DEV-only real concurrent RPC harness. Run using two disposable authenticated
  * test users and a disposable linked token with valid matching character HP.
- * Usage: DEV_SUPABASE_URL=... DEV_SUPABASE_ANON_KEY=... DEV_TEST_JWT_A=...
- * DEV_TEST_JWT_B=... DEV_HP_TOKEN_ID=... DEV_HP_SCENE_ID=...
+ * Usage: DEV_SUPABASE_URL=... DEV_SUPABASE_ANON_KEY=... DEV_TEST_EMAIL_A=... DEV_TEST_PASSWORD_A=...
+ * DEV_TEST_EMAIL_B=... DEV_TEST_PASSWORD_B=... DEV_HP_TOKEN_ID=... DEV_HP_SCENE_ID=...
  * DEV_HP_EXPECTED_START=20 npx tsx scripts/test-dev-hp-concurrency.ts
  * Never log JWTs, run on prod, or point this at real player data.
  */
@@ -14,7 +14,23 @@ const url = env.DEV_SUPABASE_URL
 const devUrl = 'https://yoondivyeueyrtgeldja.supabase.co'
 if (url !== devUrl) throw new Error('Refusing non-DEV Supabase URL')
 const anonKey = env.DEV_SUPABASE_ANON_KEY
-const tokens = [env.DEV_TEST_JWT_A, env.DEV_TEST_JWT_B]
+const signIn = async (email: string | undefined, password: string | undefined): Promise<string> => {
+  if (!email || !password) throw new Error('DEV test email/password variables required')
+  const response = await fetch(devUrl + '/auth/v1/token?grant_type=password', {
+    method: 'POST',
+    headers: { apikey: anonKey!, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!response.ok) throw new Error('DEV test account sign-in failed')
+  const result = await response.json() as { access_token?: string }
+  if (!result.access_token) throw new Error('DEV test session missing')
+  return result.access_token
+}
+const tokens = await Promise.all([
+  signIn(env.DEV_TEST_EMAIL_A, env.DEV_TEST_PASSWORD_A),
+  signIn(env.DEV_TEST_EMAIL_B, env.DEV_TEST_PASSWORD_B),
+])
 const tokenId = env.DEV_HP_TOKEN_ID
 const sceneId = env.DEV_HP_SCENE_ID
 const start = Number(env.DEV_HP_EXPECTED_START)
