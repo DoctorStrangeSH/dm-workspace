@@ -30,6 +30,7 @@ select 'Manual WebSocket test required' as check_name,
 -- E. Non-DM member cannot subscribe to handouts:A while raw-row broadcasts remain.
 -- F. DM A cannot subscribe to handouts:B.
 -- G. campaign:<id>, summons:<id>, token-owners:<id> remain denied until sender/receiver
---    topics and payload audiences are explicitly aligned.
+--    topics and payload audiences are explicitly aligned; wall realtime on the legacy
+--    campaign:<id> topic will be unavailable during this staged security rollout.
 -- H. Attempt client-originated Broadcast writes; they must be denied unless a
 --    separate, narrowly scoped publish policy explicitly permits the feature.
