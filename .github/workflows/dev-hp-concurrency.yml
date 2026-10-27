@@ -46,6 +46,8 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - name: Check harness CommonJS compilation
+        run: npx esbuild scripts/test-dev-hp-concurrency.ts --platform=node --format=cjs --outfile=/tmp/dev-hp-harness-check.cjs
       - name: Verify secrets are configured
         shell: bash
         run: |
