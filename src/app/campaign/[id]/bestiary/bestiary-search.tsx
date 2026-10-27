@@ -62,7 +62,7 @@ export default function BestiarySearch({
   const filtersCount = selectedCRs.length + selectedTypes.length
 
   return (
-    <div className="mb-4">
+    <div className="mb-4 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 sm:p-4">
       {/* Поиск */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
@@ -72,6 +72,7 @@ export default function BestiarySearch({
           />
           <input
             type="search"
+            aria-label={t('bestiary.searchPlaceholder')}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value)
@@ -79,7 +80,7 @@ export default function BestiarySearch({
             }}
             placeholder={t('bestiary.searchPlaceholder')}
             disabled={isPending}
-            className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] py-2.5 pr-9 pl-9 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] py-3 pr-9 pl-10 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
@@ -96,9 +97,12 @@ export default function BestiarySearch({
         </div>
 
         <button
+          type="button"
+          aria-expanded={showFilters}
+          aria-label={t('bestiary.filters')}
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
-            'flex items-center gap-2 rounded-lg border px-3 py-2.5 transition',
+            'flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 transition',
             showFilters || filtersCount > 0
               ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
               : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
@@ -116,7 +120,7 @@ export default function BestiarySearch({
 
       {/* Фильтры */}
       {showFilters && (
-        <div className="mt-3 space-y-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
+        <div className="mt-3 space-y-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] p-3 sm:p-4">
           <div>
             <div className="mb-2 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
               {t('bestiary.filter.cr')}
