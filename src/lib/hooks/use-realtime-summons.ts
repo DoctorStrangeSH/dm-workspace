@@ -25,25 +25,44 @@ export function useRealtimeSummons({ campaignId, initialRequests }: Options) {
       channel = supabase
       .channel(`summons:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
-        const req = payload.payload?.record as SummonRequestWithRequester | undefined
-        if (!req || req.campaign_id !== campaignId) return
-        setRequests((prev) => {
+        const record = payload.payload?.record as Omit<SummonRequestWithRequester, 'requester'> | undefined
+        if (!record || record.campaign_id !== campaignId) return
+        void supabase
+          .from('profiles')
+          .select('id, username, display_name')
+          .eq('id', record.requester_id)
+          .maybeSingle()
+          .then(({ data: requester }) => {
+            if (!requester || cancelled) return
+            const req: SummonRequestWithRequester = { ...record, requester }
+            setRequests((prev) => {
           if (prev.some((r) => r.id === req.id)) return prev
           return [...prev, req]
-        })
+            })
+          })
       })
       .on('broadcast', { event: 'UPDATE' }, (payload) => {
-        const req = payload.payload?.record as SummonRequestWithRequester | undefined
-        if (!req || req.campaign_id !== campaignId) return
-        setRequests((prev) => {
-          if (req.status === 'pending') {
-            if (prev.some((r) => r.id === req.id)) {
-              return prev.map((r) => (r.id === req.id ? req : r))
-            }
-            return [...prev, req]
-          }
-          return prev.filter((r) => r.id !== req.id)
-        })
+        const record = payload.payload?.record as Omit<SummonRequestWithRequester, 'requester'> | undefined
+        if (!record || record.campaign_id !== campaignId) return
+        if (record.status !== 'pending') {
+          setRequests((prev) => prev.filter((r) => r.id !== record.id))
+          return
+        }
+        void supabase
+          .from('profiles')
+          .select('id, username, display_name')
+          .eq('id', record.requester_id)
+          .maybeSingle()
+          .then(({ data: requester }) => {
+            if (!requester || cancelled) return
+            const req: SummonRequestWithRequester = { ...record, requester }
+            setRequests((prev) => {
+              if (prev.some((r) => r.id === req.id)) {
+                return prev.map((r) => (r.id === req.id ? req : r))
+              }
+              return [...prev, req]
+            })
+          })
       })
       .subscribe()
     }
