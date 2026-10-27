@@ -12,6 +12,7 @@ SELECT
   c.data_json -> 'hp' ->> 'max' AS character_hp_max,
   CASE
     WHEN c.id IS NULL THEN 'missing_character'
+    WHEN t.hp_current IS NULL OR t.hp_max IS NULL THEN 'missing_token_hp'
     WHEN c.campaign_id IS DISTINCT FROM t.campaign_id THEN 'cross_campaign_link'
     WHEN jsonb_typeof(c.data_json -> 'hp' -> 'current') IS DISTINCT FROM 'number'
       OR jsonb_typeof(c.data_json -> 'hp' -> 'max') IS DISTINCT FROM 'number'
