@@ -4,6 +4,8 @@ This checklist is **not proof of transactional consistency**. The adjacent CI te
 
 | Entry point | Current behavior | Required before atomic rollout |
 |---|---|---|
+| `createToken` | Direct token insert accepts HP fields and may create a linked token with a divergent snapshot | Initialize linked-token HP from canonical character HP in the same transaction; validate relink/cross-campaign paths |
+| `updateTokenHP` | Routes absolute HP set through `damageToken`; remains a distinct write entry point | Enforce canonical expected-HP / all-linked-token synchronization |
 | `damageToken` | DEV-only optional RPC; otherwise legacy token + character path | All linked-token combat writes must use compatible lock protocol |
 | `updateCharacterHP` | Character JSON CAS; may leave linked token stale | Transactionally synchronize / reject linked-token edits |
 | `rollDeathSave` | Natural 20 changes character HP only | Transactional character/token HP update |
@@ -12,6 +14,6 @@ This checklist is **not proof of transactional consistency**. The adjacent CI te
 | `updateCharacter` | Can accept full `data_json` (including HP) | Cannot bypass coordinated HP protocol |
 | `saveCharacterData` | Whole-document JSON CAS for other actions | Ensure stale-data rejection and no HP bypass |
 
-**Stop condition:** Do not enable `ATOMIC_TOKEN_HP_RPC_ENABLED` or remove the review-only SQL safety barrier until all paths are inventoried and either coordinated transactionally or explicitly blocked for linked characters. Validate two tokens per character, concurrent level-up/damage, multiple writers, permission checks and rollbacks with disposable DEV fixtures.
+**Stop condition:** Do not enable `ATOMIC_TOKEN_HP_RPC_ENABLED` or remove the review-only SQL safety barrier until all paths are inventoried and either coordinated transactionally or explicitly blocked for linked characters. Validate two tokens per character, token creation/relink, concurrent level-up/damage, multiple writers, permission checks and rollbacks with disposable DEV fixtures.
 
 Only tests and documentation in this PR; no database changes.
