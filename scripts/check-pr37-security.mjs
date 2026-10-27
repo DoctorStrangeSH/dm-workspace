@@ -116,6 +116,12 @@ check('All migrated Realtime hooks use private channels and refresh auth before 
   }
 })
 
+check('Scene map uploads use unique filenames without requiring Storage UPDATE', () => {
+  const scenes = read('../src/lib/actions/scenes.ts')
+  has(scenes, /\x60\$\{campaignId\}\/\$\{sceneId\}-\$\{crypto\.randomUUID\(\)\}/, 'Map upload must generate an unguessable unique object path')
+  has(scenes, /\.upload\(fileName, file, \{ upsert: false \}\)/, 'New map uploads must not request Storage UPDATE/upsert')
+})
+
 check('Storage read policies scope objects to the matching campaign and record', () => {
   has(handouts, /cm\.campaign_id::text = \(storage\.foldername\(name\)\)\[1\]/i, 'Handouts must be scoped to the first path segment')
   has(handouts, /h\.campaign_id = cm\.campaign_id/i, 'Handout object must belong to the member campaign')
