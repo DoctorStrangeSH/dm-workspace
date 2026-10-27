@@ -57,6 +57,17 @@ BEGIN
     END IF;
   END IF;
 
+  -- Lock every linked token in deterministic order, after locking character.
+  -- All coordinated HP writers must follow character -> tokens lock order.
+  IF v_preflight_token.character_id IS NOT NULL THEN
+    PERFORM t.id
+    FROM public.tokens t
+    WHERE t.character_id = v_preflight_token.character_id
+      AND t.campaign_id = v_preflight_token.campaign_id
+    ORDER BY t.id
+    FOR UPDATE;
+  END IF;
+
   SELECT t.* INTO v_token
   FROM public.tokens t
   JOIN public.scenes s ON s.id = t.scene_id AND s.campaign_id = t.campaign_id
@@ -165,6 +176,17 @@ BEGIN
   -- Locking both rows guarantees consistency only among writers that use this RPC.
   -- Fail closed on a partial update rather than falsely reporting success.
   IF v_token.character_id IS NOT NULL THEN
+    -- Fail closed if any sibling token already disagrees; do not hide drift.
+    IF EXISTS (
+      SELECT 1 FROM public.tokens t
+      WHERE t.character_id = v_char.id
+        AND t.campaign_id = v_token.campaign_id
+        AND (t.hp_current IS DISTINCT FROM v_token.hp_current
+          OR t.hp_max IS DISTINCT FROM v_token.hp_max)
+    ) THEN
+      RAISE EXCEPTION 'Linked token HP disagree; reconcile before retry' USING ERRCODE = '22023';
+    END IF;
+
     UPDATE public.tokens SET hp_current = v_new
     WHERE character_id = v_token.character_id
       AND campaign_id = v_token.campaign_id;
