@@ -20,7 +20,8 @@
 | Unauthorized | 20/20 | nonmember applies damage(1) | permission denied; no write |
 | Cross-campaign | 20/20 | scene/token mismatch | error; no write |
 | Malformed character | invalid fixture | damage(1) | error; no partial write |
-| Multiple tokens | 20/20 each | damage through two linked tokens | **must NOT silently diverge**; expected to expose unresolved multi-token propagation |
+| Multiple tokens (installed DEV RPC) | 20/20 each | damage through two linked tokens | **Known blocker:** installed RPC can leave a sibling token stale; record this without claiming success |
+| Multiple tokens (review SQL after DEV installation) | 20/20 each | damage(3) through token A, damage(4) through token B | Character and BOTH tokens end at 13/20; no lost damage or partial writes |
 | Character JSON edit | 20/20 | HP update + spell/inventory edit | no loss of non-HP fields; reject/retry stale writes |
 
 ## Technical execution guidance
@@ -30,7 +31,7 @@ Use the Supabase RPC HTTPS endpoint with two independently authenticated DEV use
 RPC arguments:
 `{ p_token_id, p_scene_id, p_amount, p_mode: 'damage'|'heal'|'set', p_expected_hp: null|number }`.
 
-For damage/damage the existing installed RPC uses row locks to serialize **same-token** operations. For two tokens linked to one character, the current implementation may not update every sibling token: treat that as an **expected blocker**, not as test success.
+For damage/damage the existing installed RPC uses row locks to serialize **same-token** operations. For two tokens linked to one character, the currently installed DEV RPC does **not** include the sibling-token SQL draft from PR #164. Do not treat a sibling mismatch as a passed test. After a reviewed DEV-only installation, test that two concurrent requests through different tokens produce 13/20 everywhere.
 
 ### Unimplemented scenarios — do not falsely mark as passed
 
