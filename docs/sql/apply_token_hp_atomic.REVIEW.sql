@@ -1,7 +1,9 @@
 -- REVIEW DRAFT ONLY. Not in supabase/migrations; must NOT be applied to production.
 -- Verify actual schema, RLS and migration ownership in isolated DEV before promotion.
 -- This function intentionally fails closed if token & linked character HP disagree.
--- Linked token lock order: character -> token. Deploy only alongside coordinated HP writers.
+-- Linked token lock order: character -> token; sibling locks by UUID.
+-- REVIEW ONLY: this sibling propagation requires coordinated token writers and
+-- concurrency testing before deployment.
 BEGIN;
 CREATE OR REPLACE FUNCTION public.apply_token_hp_atomic(
   p_token_id uuid,
@@ -19,6 +21,7 @@ DECLARE
   v_token public.tokens%ROWTYPE;
   v_preflight_token public.tokens%ROWTYPE;
   v_char public.characters%ROWTYPE;
+  v_sibling public.tokens%ROWTYPE;
   v_new integer;
   v_char_hp jsonb;
   v_hp_max integer;
@@ -52,6 +55,17 @@ BEGIN
     IF NOT FOUND THEN
       RAISE EXCEPTION 'Linked character not found' USING ERRCODE = 'P0002';
     END IF;
+  END IF;
+
+  -- Lock every linked token in deterministic order, after locking character.
+  -- All coordinated HP writers must follow character -> tokens lock order.
+  IF v_preflight_token.character_id IS NOT NULL THEN
+    PERFORM t.id
+    FROM public.tokens t
+    WHERE t.character_id = v_preflight_token.character_id
+      AND t.campaign_id = v_preflight_token.campaign_id
+    ORDER BY t.id
+    FOR UPDATE;
   END IF;
 
   SELECT t.* INTO v_token
@@ -133,6 +147,24 @@ BEGIN
     END IF;
   END IF;
 
+  -- REVIEW: acquire and validate every linked token BEFORE any HP write.
+  -- The locked character prevents cooperating linked-token writers from
+  -- concurrently progressing into this section. Other direct token writers
+  -- must be audited before this code can be deployed.
+  IF v_token.character_id IS NOT NULL THEN
+    FOR v_sibling IN
+      SELECT * FROM public.tokens
+      WHERE character_id = v_token.character_id
+        AND campaign_id = v_token.campaign_id
+      ORDER BY id FOR UPDATE
+    LOOP
+      IF v_sibling.hp_current IS DISTINCT FROM v_current
+         OR v_sibling.hp_max IS DISTINCT FROM v_hp_max THEN
+        RAISE EXCEPTION 'Linked token HP disagree' USING ERRCODE = '22023';
+      END IF;
+    END LOOP;
+  END IF;
+
   IF p_mode = 'damage' THEN
     v_new := GREATEST(0, v_token.hp_current - p_amount);
   ELSIF p_mode = 'heal' THEN
@@ -143,7 +175,24 @@ BEGIN
 
   -- Locking both rows guarantees consistency only among writers that use this RPC.
   -- Fail closed on a partial update rather than falsely reporting success.
-  UPDATE public.tokens SET hp_current = v_new WHERE id = v_token.id;
+  IF v_token.character_id IS NOT NULL THEN
+    -- Fail closed if any sibling token already disagrees; do not hide drift.
+    IF EXISTS (
+      SELECT 1 FROM public.tokens t
+      WHERE t.character_id = v_char.id
+        AND t.campaign_id = v_token.campaign_id
+        AND (t.hp_current IS DISTINCT FROM v_token.hp_current
+          OR t.hp_max IS DISTINCT FROM v_token.hp_max)
+    ) THEN
+      RAISE EXCEPTION 'Linked token HP disagree; reconcile before retry' USING ERRCODE = '22023';
+    END IF;
+
+    UPDATE public.tokens SET hp_current = v_new
+    WHERE character_id = v_token.character_id
+      AND campaign_id = v_token.campaign_id;
+  ELSE
+    UPDATE public.tokens SET hp_current = v_new WHERE id = v_token.id;
+  END IF;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Token disappeared during HP update' USING ERRCODE = 'P0002';
   END IF;

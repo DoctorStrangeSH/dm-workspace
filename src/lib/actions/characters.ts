@@ -277,6 +277,30 @@ async function saveCharacterData(
   return { success: true }
 }
 
+/** Temporary fail-closed barrier until linked character/token HP updates are atomic.
+ * A visible linked token blocks direct HP writes; query failures also block writes.
+ * RLS invisibility must be addressed before production rollout.
+ */
+async function blockUnsynchronizedLinkedHP(
+  characterId: string,
+  campaignId: string
+): Promise<ErrorResult | null> {
+  const supabase = await createClient()
+  // RPC is not installed yet; fail closed until reviewed and enabled in DEV.
+  // Its SECURITY DEFINER implementation can see linked tokens hidden by RLS.
+  const { data: hasLinkedTokens, error } = await supabase.rpc('has_linked_character_tokens', {
+    p_character_id: characterId,
+    p_campaign_id: campaignId,
+  })
+  if (error || typeof hasLinkedTokens !== 'boolean') {
+    return { error: 'Не удалось безопасно проверить связанные токены. Изменение HP временно недоступно.' }
+  }
+  if (hasLinkedTokens) {
+    return { error: 'HP персонажа связано с токеном на карте. Изменение требует атомарной синхронизации; обратитесь к мастеру.' }
+  }
+  return null
+}
+
 // ============================================================
 // HP
 // ============================================================
@@ -305,6 +329,10 @@ export async function updateCharacterHP(
   if (newData.hp.current < 0) newData.hp.current = 0
 
   if (!validCharacterHP(newData.hp)) return { error: 'Некорректные значения HP' }
+  if (newData.hp.current !== access.data.hp.current || newData.hp.max !== access.data.hp.max) {
+    const linkedHPError = await blockUnsynchronizedLinkedHP(characterId, campaignId)
+    if (linkedHPError) return linkedHPError
+  }
   const save = await saveCharacterData(characterId, campaignId, newData, access.data)
   if ('error' in save) return save
 
@@ -512,6 +540,12 @@ export async function longRest(
   const newSlots: SpellSlots = {}
   for (const [level, slot] of Object.entries(access.data.spellSlots ?? {})) {
     newSlots[Number(level)] = { ...slot, current: slot.max }
+  }
+
+  if (!validCharacterHP(access.data.hp)) return { error: 'Некорректные исходные HP' }
+  if (access.data.hp.current !== access.data.hp.max) {
+    const linkedHPError = await blockUnsynchronizedLinkedHP(characterId, campaignId)
+    if (linkedHPError) return linkedHPError
   }
 
   const save = await saveCharacterData(characterId, campaignId, {

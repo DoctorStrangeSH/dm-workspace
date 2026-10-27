@@ -105,12 +105,17 @@ export async function createToken(
     return { error: 'Игрок может добавить только своего персонажа' }
   }
 
+  // Linked tokens must start from character HP, never from client-supplied HP.
+  // NOTE: the character read and token INSERT are not yet one transaction;
+  // concurrent level-up/token creation remains a rollout blocker.
+  let linkedHP: { current: number; max: number } | null = null
+
   // Never allow a token in this campaign to reference a character or monster
   // from another campaign, even when the action is called directly.
   if (data.characterId) {
     const { data: char } = await supabase
       .from('characters')
-      .select('user_id, campaign_id')
+      .select('user_id, campaign_id, data_json')
       .eq('id', data.characterId)
       .maybeSingle()
     if (!char || char.campaign_id !== campaignId) {
@@ -119,6 +124,13 @@ export async function createToken(
     if (!isDm && char.user_id !== user.id) {
       return { error: 'Нельзя добавить чужого персонажа' }
     }
+    const hp = (char.data_json as { hp?: { current?: unknown; max?: unknown } } | null)?.hp
+    if (!hp || !Number.isSafeInteger(hp.current) || !Number.isSafeInteger(hp.max)
+      || (hp.max as number) <= 0 || (hp.current as number) < 0
+      || (hp.current as number) > (hp.max as number)) {
+      return { error: 'У персонажа некорректные HP. Нельзя создать связанный токен.' }
+    }
+    linkedHP = { current: hp.current as number, max: hp.max as number }
   }
 
   if (data.entityId) {
@@ -161,6 +173,16 @@ export async function createToken(
   if (typeof hpMax === 'string') hpMax = normalizeMonsterHP(hpMax)
   if (hpCurrent !== null && (typeof hpCurrent !== 'number' || !Number.isFinite(hpCurrent))) hpCurrent = null
   if (hpMax !== null && (typeof hpMax !== 'number' || !Number.isFinite(hpMax))) hpMax = null
+
+  if (linkedHP) {
+    // Explicitly reject client HP that disagrees with the character snapshot.
+    if ((hpCurrent !== null && hpCurrent !== linkedHP.current)
+      || (hpMax !== null && hpMax !== linkedHP.max)) {
+      return { error: 'HP токена должны совпадать с HP персонажа' }
+    }
+    hpCurrent = linkedHP.current
+    hpMax = linkedHP.max
+  }
 
   const { data: token, error } = await supabase
     .from('tokens')
