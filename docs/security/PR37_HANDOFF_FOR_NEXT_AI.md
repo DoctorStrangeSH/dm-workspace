@@ -1,5 +1,13 @@
 # HANDOFF — PR #37 Realtime + private Storage security
 
+## FOLLOW-UP — 2026-10-27: sixth migration applied to DEV
+
+DEV Supabase security advisors found all eight internal `public.broadcast_*` trigger functions `SECURITY DEFINER` and executable by `anon`/`authenticated` via public RPC. These functions are intended for database triggers, **not** client RPC. Added `supabase/migrations/20261027000600_revoke_broadcast_trigger_rpc_execute.sql`; **applied successfully to real DEV** via Supabase migration `pr37_revoke_broadcast_trigger_rpc_execute`. Read-only confirmation using `has_function_privilege` showed all eight functions have `anon_can_execute=false` and `authenticated_can_execute=false`. Trigger executability by Postgres is unaffected by client-role EXECUTE revocations (CI runs handout INSERT/UPDATE/DELETE trigger tests after the sixth migration; verify new HEAD CI once complete). **PROD remains unchanged.**
+
+Network-accessible browser/HTTP verification from the current execution environment is blocked (DNS resolution failed; web open of project origin failed). Vercel latest status intermittently returns `build-rate-limit`, so do not claim the preview was tested. True Auth+Storage REST+Realtime WebSocket tests and coordinated PROD deployment are still required. No billable Supabase branch was created. **DO NOT reapply the six migrations to DEV.**
+
+---
+
 ## FOLLOW-UP — 2026-10-27: map upload must not request UPDATE
 
 During app/Storage review, discovered `src/lib/actions/scenes.ts` generates a new `crypto.randomUUID()` Storage filename on each map upload but supplied `{ upsert: true }`. The PR's DM-only Storage policies provide INSERT and DELETE but no UPDATE, so upsert could require a missing UPDATE/SELECT permission. Fixed to `{ upsert: false }` on PR branch (commit `f2fe670`), added a static regression check (commit `817a7a1`). **These application changes must be deployed to DEV before manually testing new map uploads.** No production or cloud database settings changed in this fix. This does **not** establish that a real browser upload has succeeded.
