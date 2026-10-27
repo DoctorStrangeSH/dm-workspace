@@ -61,10 +61,10 @@ The live trigger functions currently publish both summon requests and token owne
 
 ## Implementation status (2026-10-27)
 
-- Added a staged migration that replaces the broad Broadcast SELECT policy with exact membership checks and splits the three legacy `campaign:<id>` publishers into separate topics.
-- Walls and token-owner events are scoped to campaign members; summon requests and raw-row handout events are restricted to campaign DMs until payload minimization is implemented.
-- The hooks for walls, summons and token owners now use private channels. This has not been applied to DEV/production and has not yet passed real WebSocket integration tests.
-- During this intermediate state, players will not receive handout Broadcast updates, and the mixed legacy `campaign:<id>` topic is intentionally denied. Restore player handout updates only after implementing a player-safe payload/topic.
+- The PR contains staged migrations that replace the broad Broadcast SELECT policy with exact membership checks and split the three legacy `campaign:<id>` publishers into resource-specific topics.
+- The handout trigger now emits a minimal DTO to `handouts-visible:<campaign_id>` for visible handouts only; hiding or deleting a visible handout emits a removal event. The legacy `handouts:<campaign_id>` stream remains DM-only.
+- The hooks for walls, summons and token owners use private channels. This has not been applied to DEV/production and has not yet passed real WebSocket integration tests.
+- CI includes static PR #37 security checks and currently passes on the latest head. These checks do not execute SQL migrations or prove runtime RLS authorization. The legacy `campaign:<id>` topic remains intentionally denied until every sender/consumer is migrated and tested.
 
 ## Notes
 
