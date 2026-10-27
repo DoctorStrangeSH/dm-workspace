@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
+import { damageToken } from './combat'
 import type { TokenCondition } from '@/lib/types'
 
 async function getSceneCampaign(sceneId: string): Promise<string | null> {
