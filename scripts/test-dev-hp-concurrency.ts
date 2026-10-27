@@ -53,3 +53,5 @@ if (!values.every((v) => typeof v === 'number') || !values.includes(start - 7)) 
   throw new Error('Unexpected concurrent HP responses; check DEV HP snapshot')
 }
 console.log('RPC responses consistent with serialized damage. Independently verify ALL linked tokens and character HP.')
+
+export {}
