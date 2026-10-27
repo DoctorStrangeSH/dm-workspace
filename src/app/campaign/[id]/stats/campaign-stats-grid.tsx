@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BookOpen, Users, Link2, Hash } from 'lucide-react'
+import { BookOpen, Users, Link2, Hash, ArrowUpRight } from 'lucide-react'
 import { Card } from '@/components/ui'
 import type { CampaignStats } from '@/lib/types'
 
@@ -55,22 +55,33 @@ export default function CampaignStatsGrid({ campaignId, stats }: Props) {
   ]
 
   return (
-    <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-      {items.map((item) => {
-        const Icon = item.icon
-        return (
-          <Link key={item.label} href={item.href} className="group">
-            <Card padding="md" hoverable className="h-full">
-              <Icon size={18} className={`${item.color} mb-2`} />
-              <div className="text-2xl font-bold text-[var(--text-primary)]">{item.value}</div>
-              <div className="mb-1 text-xs text-[var(--text-muted)]">{item.label}</div>
-              <div className="line-clamp-2 text-[10px] text-[var(--text-subtle)]">
-                {item.subtext}
-              </div>
-            </Card>
-          </Link>
-        )
-      })}
-    </div>
+    <section className="mb-8" aria-label="Статистика кампании">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {items.map((item) => {
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="group block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+            >
+              <Card padding="md" hoverable className="relative h-full min-h-36 overflow-hidden rounded-2xl transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-[var(--accent)]/40 group-hover:shadow-[var(--shadow-md)]">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-secondary)]">
+                    <Icon size={18} className={item.color} aria-hidden="true" />
+                  </span>
+                  <ArrowUpRight size={16} className="text-[var(--text-subtle)] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                </div>
+                <div className="text-3xl font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">{item.value}</div>
+                <div className="mt-1 text-sm font-medium text-[var(--text-secondary)]">{item.label}</div>
+                <div className="mt-2 line-clamp-2 text-xs leading-relaxed text-[var(--text-subtle)]">
+                  {item.subtext}
+                </div>
+              </Card>
+            </Link>
+          )
+        })}
+      </div>
+    </section>
   )
 }
