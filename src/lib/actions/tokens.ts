@@ -226,33 +226,15 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
 }
 
 export async function updateTokenHP(tokenId: string, sceneId: string, hp_current: number) {
-  if (!Number.isFinite(hp_current) || hp_current < 0) return { error: 'Некорректное значение HP' }
-  const campaignId = await getSceneCampaign(sceneId)
-  if (!campaignId) return { error: 'Сцена не найдена' }
+  if (!Number.isSafeInteger(hp_current) || hp_current < 0 || hp_current > 1_000_000) {
+    return { error: 'Некорректное значение HP' }
+  }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return { error: 'Не авторизован' }
-
-  const { isDm, isMember } = await getCampaignAccess(campaignId)
-  if (!isMember) return { error: 'Нет доступа к кампании' }
-  const canEdit = await canEditToken(tokenId, sceneId, campaignId, user.id, isDm)
-  if (!canEdit) return { error: 'Нет прав на изменение HP' }
-
-  const { data, error } = await supabase
-    .from('tokens')
-    .update({ hp_current: Math.max(0, hp_current) })
-    .eq('id', tokenId)
-    .eq('scene_id', sceneId)
-    .eq('campaign_id', campaignId)
-    .select('id')
-    .maybeSingle()
-
-  if (error || !data) return { error: `Не удалось обновить HP${error ? `: ${error.message}` : ''}` }
-  revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
-  return { success: true }
+  // Route absolute HP changes through the shared combat action so its
+  // authorization checks and linked-character synchronization are applied.
+  // This is not yet a database transaction; damageToken's multi-row write
+  // remains a known rollout blocker until the atomic RPC is safely deployed.
+  return damageToken(tokenId, sceneId, hp_current, 'set')
 }
 
 export async function updateTokenConditions(
