@@ -18,6 +18,7 @@ import { validCharacterHP } from '@/lib/dnd/valid-character-hp'
 import { isSubclassForClass, isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
 import { validateCharacterIdentityUpdate } from '@/lib/dnd/character-identity-validation'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
+import { isExpectedLevelUpTransition } from '@/lib/dnd/level-up-transition-guard'
 import { logEvent } from './logs'
 
 // ============================================================
@@ -696,6 +697,17 @@ export async function levelUp(
   if (!newData.spellcastingAbility) {
     const ability = getSpellcastingAbility(newData.class)
     if (ability) newData.spellcastingAbility = ability
+  }
+
+  // Final fail-closed guard: ensure the proposed payload exactly matches the
+  // independently recalculated server-side transition before CAS persistence.
+  const expectedTransition = applyLevelUp(access.data, hpGain, options.abilityChanges)
+  if (!expectedTransition.spellcastingAbility) {
+    const ability = getSpellcastingAbility(expectedTransition.class)
+    if (ability) expectedTransition.spellcastingAbility = ability
+  }
+  if (!isExpectedLevelUpTransition(access.data, newData, expectedTransition)) {
+    return { error: 'Некорректные данные повышения уровня' }
   }
 
   const save = await saveCharacterData(characterId, campaignId, newData, access.data)
