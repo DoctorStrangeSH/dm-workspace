@@ -16,7 +16,8 @@
     "test:e2e:update": "playwright test --update-snapshots",
     "test:e2e:smoke": "playwright test tests/smoke.spec.ts",
     "test:e2e:screenshots": "playwright test tests/screenshots.spec.ts",
-    "seed:test": "tsx scripts/seed-test-user.ts"
+    "seed:test": "tsx scripts/seed-test-user.ts",
+    "test:security:pr37": "node scripts/check-pr37-security.mjs && node --import tsx --test tests/visible-handout.test.ts"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",

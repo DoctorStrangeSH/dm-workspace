@@ -156,7 +156,7 @@ export default function HandoutPanel({ campaignId, handouts, onClose }: Props) {
             >
               <div className="relative aspect-video overflow-hidden bg-[var(--bg-secondary)]">
                 <img
-                  src={handout.image_url}
+                  src={'/api/handouts/' + handout.id + '/image'}
                   alt={handout.name}
                   className="h-full w-full object-cover"
                 />

@@ -2,9 +2,11 @@ name: CI
 
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
+      - security/realtime-storage-hardening-plan
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -32,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: PR #37 security migration static checks
+        run: npm run test:security:pr37
+
       - name: Lint
         run: npm run lint
 
@@ -40,3 +45,43 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+  postgres-security:
+    name: PR #37 isolated PostgreSQL RLS tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: pr37_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pr37_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: test-only-password
+      PGDATABASE: pr37_test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build minimal disposable authorization fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/pr37_ci_fixture.sql
+      - name: Apply staged Realtime migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000100_realtime_broadcast_authorization.sql
+      - name: Apply staged private Storage migrations
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000200_private_handout_storage.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000300_private_music_storage.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000400_private_scene_maps_storage.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000500_fix_private_scene_maps_object_name.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000600_revoke_broadcast_trigger_rpc_execute.sql
+      - name: Assert role-scoped Storage and Realtime behavior
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/pr37_ci_assertions.sql

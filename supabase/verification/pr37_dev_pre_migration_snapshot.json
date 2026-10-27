@@ -1,0 +1,116 @@
+{
+  "captured_at": "2026-10-27",
+  "dev_project": "yoondivyeueyrtgeldja",
+  "functions": [
+    {
+      "proname": "broadcast_fog_changes",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_fog_changes()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nbegin\r\n  perform realtime.broadcast_changes(\r\n    'fog:' || coalesce(new.scene_id, old.scene_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  return coalesce(new, old);\r\nend;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_handout_changes",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_handout_changes()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nbegin\r\n  perform realtime.broadcast_changes(\r\n    'handouts:' || coalesce(new.campaign_id, old.campaign_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  return coalesce(new, old);\r\nend;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_message_changes",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_message_changes()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nbegin\r\n  perform realtime.broadcast_changes(\r\n    'messages:' || coalesce(new.campaign_id, old.campaign_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  return coalesce(new, old);\r\nend;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_music_state",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_music_state()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nbegin\r\n  perform realtime.broadcast_changes(\r\n    'music:' || coalesce(new.campaign_id, old.campaign_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  return coalesce(new, old);\r\nend;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_scene_walls",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_scene_walls()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nBEGIN\r\n  PERFORM realtime.broadcast_changes(\r\n    'campaign:' || COALESCE(NEW.campaign_id, OLD.campaign_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  RETURN COALESCE(NEW, OLD);\r\nEND;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_summon_requests",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_summon_requests()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nBEGIN\r\n  PERFORM realtime.broadcast_changes(\r\n    'campaign:' || COALESCE(NEW.campaign_id, OLD.campaign_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  RETURN COALESCE(NEW, OLD);\r\nEND;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_token_changes",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_token_changes()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nbegin\r\n  perform realtime.broadcast_changes(\r\n    'tokens:' || coalesce(new.scene_id, old.scene_id)::text,\r\n    TG_OP,\r\n    TG_OP,\r\n    TG_TABLE_NAME,\r\n    TG_TABLE_SCHEMA,\r\n    NEW,\r\n    OLD\r\n  );\r\n  return coalesce(new, old);\r\nend;\r\n$function$\n",
+      "proconfig": null
+    },
+    {
+      "proname": "broadcast_token_owners",
+      "definition": "CREATE OR REPLACE FUNCTION public.broadcast_token_owners()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nBEGIN\r\n  PERFORM realtime.broadcast_changes(\r\n    'campaign:' || COALESCE(NEW.campaign_id, OLD.campaign_id)::text,\r\n    TG_OP, TG_OP, TG_TABLE_NAME, TG_TABLE_SCHEMA, NEW, OLD\r\n  );\r\n  RETURN COALESCE(NEW, OLD);\r\nEND;\r\n$function$\n",
+      "proconfig": null
+    }
+  ],
+  "policies": [
+    {
+      "schemaname": "realtime",
+      "tablename": "messages",
+      "policyname": "Authenticated can receive broadcasts",
+      "cmd": "SELECT",
+      "roles": "{authenticated}",
+      "qual": "true",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Anyone can view avatars",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'avatars'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Anyone can view handouts",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'handouts'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Anyone can view music",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'music'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Anyone can view scene maps",
+      "cmd": "SELECT",
+      "roles": "{public}",
+      "qual": "(bucket_id = 'scene-maps'::text)",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Campaign DMs can delete scene maps",
+      "cmd": "DELETE",
+      "roles": "{authenticated}",
+      "qual": "((bucket_id = 'scene-maps'::text) AND ((storage.foldername(name))[1] IN ( SELECT (cm.campaign_id)::text AS campaign_id\n   FROM campaign_members cm\n  WHERE ((cm.user_id = ( SELECT auth.uid() AS uid)) AND (cm.role = 'dm'::campaign_role)))))",
+      "with_check": null
+    }
+  ],
+  "buckets": [
+    {
+      "id": "handouts",
+      "public": true
+    },
+    {
+      "id": "music",
+      "public": true
+    },
+    {
+      "id": "scene-maps",
+      "public": true
+    }
+  ]
+}

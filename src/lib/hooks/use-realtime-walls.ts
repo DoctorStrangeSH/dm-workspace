@@ -28,7 +28,7 @@ export function useRealtimeWalls({ sceneId, campaignId, initialWalls }: Options)
       await supabase.realtime.setAuth()
       if (cancelled) return
 
-      const channel = supabase.channel(`campaign:${campaignId}`, {
+      const channel = supabase.channel(`walls:${campaignId}`, {
         config: { private: true },
       })
 

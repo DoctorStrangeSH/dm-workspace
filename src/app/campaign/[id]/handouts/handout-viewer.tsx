@@ -40,7 +40,7 @@ export function HandoutViewer({ campaignId, initialHandouts }: Props) {
       </div>
       <div className="relative flex flex-1 items-center justify-center overflow-auto p-4">
         <Image
-          src={activeHandout.image_url}
+          src={`/api/handouts/${activeHandout.id}/image`}
           alt={activeHandout.name}
           fill
           sizes="100vw"

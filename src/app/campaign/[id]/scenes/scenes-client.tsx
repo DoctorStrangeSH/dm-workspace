@@ -108,7 +108,7 @@ export default function ScenesClient({ campaignId, initialScenes, isDm }: Props)
                 <div className="relative aspect-video overflow-hidden bg-[var(--bg-app)]">
                   {scene.image_url ? (
                     <img
-                      src={scene.image_url}
+                      src={'/api/scenes/' + scene.id + '/map'}
                       alt={scene.name}
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />

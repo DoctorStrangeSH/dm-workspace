@@ -222,20 +222,16 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
 
   const { error: uploadError } = await supabase.storage
     .from('scene-maps')
-    .upload(fileName, file, { upsert: true })
+    .upload(fileName, file, { upsert: false })
 
   if (uploadError) {
     console.error('uploadMap error:', uploadError)
     return { error: 'Не удалось загрузить' }
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('scene-maps').getPublicUrl(fileName)
-
   const { data: updated, error } = await supabase
     .from('scenes')
-    .update({ image_url: publicUrl })
+    .update({ image_url: fileName })
     .eq('id', sceneId)
     .eq('campaign_id', campaignId)
     .select('id')
@@ -246,5 +242,5 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
   }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
-  return { success: true, url: publicUrl }
+  return { success: true, url: '/api/scenes/' + sceneId + '/map' }
 }

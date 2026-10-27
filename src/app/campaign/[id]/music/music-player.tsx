@@ -66,7 +66,7 @@ export function MusicPlayer({ campaignId, initialState, currentTrack }: Props) {
         className="w-20 accent-[var(--accent)]"
       />
 
-      <audio ref={audioRef} src={currentTrack.audio_url} loop preload="auto" />
+      <audio ref={audioRef} src={'/api/music/tracks/' + currentTrack.id + '/audio'} loop preload="auto" />
     </div>
   )
 }
