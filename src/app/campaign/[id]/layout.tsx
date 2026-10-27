@@ -159,7 +159,7 @@ export default async function CampaignLayout({
 
         <div className="flex">
           <CampaignSidebar campaignId={campaign.id} isDm={role === 'dm'} />
-          <main className="min-w-0 flex-1 p-3 pb-20 sm:p-6 md:pb-6">{children}</main>
+          <main className="min-w-0 flex-1 p-3 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:p-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">{children}</main>
         </div>
 
         <MobileBottomNav campaignId={campaign.id} />
