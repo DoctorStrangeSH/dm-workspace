@@ -14,7 +14,14 @@ export function useRealtimeTokenOwners({ campaignId, initialOwners }: Options) {
 
   useEffect(() => {
     const supabase = createClient()
-    const channel = supabase
+    let cancelled = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
+
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
+
+      channel = supabase
       .channel(`token-owners:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const rec = payload.payload?.record as TokenOwnerWithProfile | undefined
@@ -34,9 +41,13 @@ export function useRealtimeTokenOwners({ campaignId, initialOwners }: Options) {
         )
       })
       .subscribe()
+    }
+
+    void setup()
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
     }
   }, [campaignId])
 
