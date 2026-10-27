@@ -229,7 +229,7 @@ using (
           and cm.role = 'dm'
           and realtime.topic() = 'handouts:' || cm.campaign_id::text
       )
-    ),
+    )
     -- Player-safe visible handout DTOs only; the trigger omits hidden rows and
     -- emits DELETE when a handout is hidden or removed.
     or (
