@@ -39,3 +39,16 @@ test('all SQL drafts remain disabled and never grant callers EXECUTE', () => {
     assert.match(sql, /REVOKE ALL.*FROM authenticated/)
   }
 })
+
+test('combat RPC validates and updates all sibling tokens atomically', () => {
+  const siblingLock = position(combat, 'FOR v_sibling IN')
+  const siblingCheck = position(combat, "Linked token HP disagree")
+  const siblingWrite = position(combat, 'UPDATE public.tokens SET hp_current = v_new')
+  const characterWrite = position(combat, 'UPDATE public.characters')
+  assert.ok(siblingLock < siblingCheck && siblingCheck < siblingWrite)
+  assert.ok(siblingWrite < characterWrite)
+  assert.match(combat, /WHERE character_id = v_token\.character_id\s+AND campaign_id = v_token\.campaign_id;/)
+  assert.match(combat, /ORDER BY id FOR UPDATE/)
+  assert.match(combat, /v_sibling\.hp_current IS DISTINCT FROM v_current/)
+  assert.match(combat, /v_sibling\.hp_max IS DISTINCT FROM v_hp_max/)
+})
