@@ -15,8 +15,14 @@ export function useRealtimeSummons({ campaignId, initialRequests }: Options) {
 
   useEffect(() => {
     const supabase = createClient()
+    let cancelled = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const channel = supabase
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
+
+      channel = supabase
       .channel(`summons:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const req = payload.payload?.record as SummonRequestWithRequester | undefined
@@ -40,9 +46,13 @@ export function useRealtimeSummons({ campaignId, initialRequests }: Options) {
         })
       })
       .subscribe()
+    }
+
+    void setup()
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
     }
   }, [campaignId])
 
