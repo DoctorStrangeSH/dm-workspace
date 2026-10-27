@@ -14,7 +14,7 @@ Status: **design / audit only**. Do not change dashboard settings or merge until
 
 1. **Inventory payload confidentiality** for each broadcast table. In particular, `broadcast_handout_changes` sends a full row before any player visibility filter. Do not reuse a member-readable topic for DM-only payloads.
 2. **Design topics by audience**. Campaign member topics for safe updates, explicit DM-only topics for unpublished handouts, and scene topics authorized by joining `public.scenes` to `public.campaign_members`. On shared topics transmit only player-safe fields and events; never send unpublished `image_url` or secret records. Review fog, tokens, walls, and summon metadata.
-3. **Align senders/receivers**. Existing triggers publish summons and token owners to `campaign:<id>`, but hooks listen elsewhere. Choose a consistent private topic and test events.
+3. **Align senders/receivers**. The staged migration now routes walls to `walls:<campaign_id>`, summon requests to `summons:<campaign_id>`, and token owners to `token-owners:<campaign_id>`. Corresponding browser hooks use private channels and set Realtime auth before subscribing. Validate these changes in staging before applying the migration.
 4. **Install narrow `realtime.messages` SELECT policies** for `extension='broadcast'`, `auth.uid()`, and exact topic authorization via `realtime.topic()`. Handle sender permissions separately; do not grant client INSERT unless a feature explicitly requires client Broadcast writes. Confirm trigger `realtime.broadcast_changes` continues to work.
 5. **Migrate remaining browser Broadcast hooks to `private:true`**. After all subscribe and publish paths are verified, disable **Allow public access** in DEV, then rerun DM/member/outsider/anon WebSocket tests.
 6. **Harden storage uploads**: replace the three broad authenticated INSERT policies with DM-only rules that enforce `storage.foldername(name)[1]` matches a campaign for which `public.is_campaign_dm` is true. Verify all upload flows, file sizes, types, deletion/overwrite paths. Public buckets do not protect secret media.
@@ -58,6 +58,13 @@ The live trigger functions currently publish both summon requests and token owne
 - Direct public URL access to confidential handouts fails **after storage migration**; visible items are still viewable through intended authorized flow.
 - Non-DM upload into another campaign's Storage prefix is denied.
 - Do not merge/release unless all gates pass on staging.
+
+## Implementation status (2026-10-27)
+
+- Added a staged migration that replaces the broad Broadcast SELECT policy with exact membership checks and splits the three legacy `campaign:<id>` publishers into separate topics.
+- Walls and token-owner events are scoped to campaign members; summon requests and raw-row handout events are restricted to campaign DMs until payload minimization is implemented.
+- The hooks for walls, summons and token owners now use private channels. This has not been applied to DEV/production and has not yet passed real WebSocket integration tests.
+- During this intermediate state, players will not receive handout Broadcast updates, and the mixed legacy `campaign:<id>` topic is intentionally denied. Restore player handout updates only after implementing a player-safe payload/topic.
 
 ## Notes
 
