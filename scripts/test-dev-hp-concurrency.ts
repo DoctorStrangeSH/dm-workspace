@@ -6,6 +6,7 @@
  * DEV_HP_EXPECTED_START=20 npx tsx scripts/test-dev-hp-concurrency.ts
  * Never log JWTs, run on prod, or point this at real player data.
  */
+async function main() {
 const env = process.env
 if (env.DEV_HP_DISPOSABLE_FIXTURE_CONFIRMED !== 'true') {
   throw new Error('Explicit disposable DEV fixture confirmation required')
@@ -151,5 +152,12 @@ if (after.token.hp_current !== start - 7 || after.charHP.current !== start - 7 |
 }
 console.log(JSON.stringify({ result: 'verified one linked token and character', beforeHP: start, afterHP: after.token.hp_current }))
 console.log('Check any additional sibling tokens separately; installed DEV RPC may leave them stale.')
+
+}
+
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : 'DEV HP harness failed')
+  process.exitCode = 1
+})
 
 export {}
