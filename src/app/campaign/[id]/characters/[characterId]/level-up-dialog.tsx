@@ -113,6 +113,13 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
       toast.success(t('levelUp.toast.success', { level: res.newLevel, hp: res.hpGain }), {
         duration: 5000,
       })
+      if (res.linkedTokensNeedSync) {
+        toast.info(lang === 'en'
+          ? 'Character HP updated, but linked map tokens were not synchronized. Ask the DM to review their HP before combat.'
+          : 'HP персонажа обновлены, но связанные токены на карте не синхронизированы. Попросите мастера проверить их HP перед боем.', {
+          duration: 10000,
+        })
+      }
       router.refresh()
       onClose()
     })
