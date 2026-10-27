@@ -1,0 +1,54 @@
+name: DEV HP concurrency (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      token_id:
+        description: Disposable DEV HP token UUID
+        required: true
+        type: string
+      scene_id:
+        description: Disposable DEV HP scene UUID
+        required: true
+        type: string
+      expected_start_hp:
+        description: Current disposable fixture HP; runs exactly once per snapshot
+        required: true
+        default: '20'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dev-hp-concurrency
+  cancel-in-progress: false
+
+jobs:
+  hp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: dev-hp-fixture
+    env:
+      DEV_SUPABASE_URL: https://yoondivyeueyrtgeldja.supabase.co
+      DEV_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+      DEV_TEST_JWT_A: ${{ secrets.DEV_HP_TEST_JWT_A }}
+      DEV_TEST_JWT_B: ${{ secrets.DEV_HP_TEST_JWT_B }}
+      DEV_HP_TOKEN_ID: ${{ inputs.token_id }}
+      DEV_HP_SCENE_ID: ${{ inputs.scene_id }}
+      DEV_HP_EXPECTED_START: ${{ inputs.expected_start_hp }}
+      DEV_HP_DISPOSABLE_FIXTURE_CONFIRMED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Verify secrets are configured
+        shell: bash
+        run: |
+          test -n "$DEV_SUPABASE_ANON_KEY"
+          test -n "$DEV_TEST_JWT_A"
+          test -n "$DEV_TEST_JWT_B"
+      - name: Run real DEV-only parallel HP RPC checks
+        run: npx tsx scripts/test-dev-hp-concurrency.ts
