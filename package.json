@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "test:unit": "tsx --test tests/srd-class-utils.test.ts tests/character-class-change.test.ts tests/character-identity-validation.test.ts tests/character-display-names.test.ts tests/level-up-hp.test.ts tests/level-up-asi-validation.test.ts tests/valid-level-up-hp-gain.test.ts",
+    "test:unit": "tsx --test tests/srd-class-utils.test.ts tests/character-class-change.test.ts tests/character-identity-validation.test.ts tests/character-display-names.test.ts tests/level-up-hp.test.ts tests/level-up-asi-validation.test.ts tests/valid-level-up-hp-gain.test.ts tests/atomic-level-up-hp-contract.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:update": "playwright test --update-snapshots",
