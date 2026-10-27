@@ -24,13 +24,22 @@ export function useRealtimeTokenOwners({ campaignId, initialOwners }: Options) {
       channel = supabase
       .channel(`token-owners:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
-        const rec = payload.payload?.record as TokenOwnerWithProfile | undefined
-        if (!rec || rec.campaign_id !== campaignId) return
-        setOwners((prev) => {
-          if (prev.some((o) => o.token_id === rec.token_id && o.user_id === rec.user_id))
-            return prev
-          return [...prev, rec]
-        })
+        const record = payload.payload?.record as Omit<TokenOwnerWithProfile, 'profile'> | undefined
+        if (!record || record.campaign_id !== campaignId) return
+        void supabase
+          .from('profiles')
+          .select('id, username, display_name')
+          .eq('id', record.user_id)
+          .maybeSingle()
+          .then(({ data: profile }) => {
+            if (!profile || cancelled) return
+            const rec: TokenOwnerWithProfile = { ...record, profile }
+            setOwners((prev) => {
+              if (prev.some((o) => o.token_id === rec.token_id && o.user_id === rec.user_id))
+                return prev
+              return [...prev, rec]
+            })
+          })
       })
       .on('broadcast', { event: 'DELETE' }, (payload) => {
         const rec = payload.payload?.old_record as
