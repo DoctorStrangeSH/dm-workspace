@@ -221,10 +221,10 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
         )}
       </Card>
 
-      <div className="mt-8 flex items-center justify-between gap-3 border-t border-[var(--border-default)] pt-6">
+      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 -mx-3 mt-6 flex items-center justify-between gap-3 border-t border-[var(--border-default)] bg-[var(--bg-app)]/95 px-3 py-3 shadow-[0_-6px_18px_rgb(0_0_0/0.12)] backdrop-blur md:static md:mx-0 md:mt-8 md:bg-transparent md:px-0 md:pt-6 md:pb-0 md:shadow-none md:backdrop-blur-none">
         <Button
           variant="secondary"
-          size="md"
+          size="lg"
           onClick={handleBack}
           disabled={step === 1 || isPending}
           icon={<ChevronLeft size={16} />}
@@ -235,7 +235,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
         {step < 4 ? (
           <Button
             variant="primary"
-            size="md"
+            size="lg"
             onClick={handleNext}
             disabled={!isStepValid || isPending}
             icon={<ChevronRight size={16} />}
@@ -246,7 +246,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
         ) : (
           <Button
             variant="primary"
-            size="md"
+            size="lg"
             onClick={handleCreate}
             disabled={isPending || !characterData}
             loading={isPending}
