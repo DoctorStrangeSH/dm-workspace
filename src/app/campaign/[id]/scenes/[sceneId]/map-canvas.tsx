@@ -48,7 +48,7 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
     >
       {image_url ? (
         <Image
-          src={image_url}
+          src={'/api/scenes/' + scene.id + '/map'}
           alt={scene.name}
           fill
           sizes="(max-width: 768px) 100vw, 80vw"
