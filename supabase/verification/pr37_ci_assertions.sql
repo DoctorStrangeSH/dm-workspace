@@ -14,7 +14,7 @@ BEGIN
 END $$;
 
 -- Internal SECURITY DEFINER trigger functions must not be exposed via RPC.
-DO $
+DO $audit$
 DECLARE fn record;
 BEGIN
   FOR fn IN
@@ -31,7 +31,7 @@ BEGIN
       RAISE EXCEPTION 'Broadcast trigger function % still RPC-executable', fn.proname;
     END IF;
   END LOOP;
-END $;
+END $audit$;
 
 -- Tests below exercise PostgreSQL RLS as an authenticated non-DM campaign-A player.
 SET ROLE authenticated;
