@@ -1,5 +1,17 @@
 # HANDOFF — PR #37 Realtime + private Storage security
 
+## CRITICAL LIVE DEV BUGFIX — 2026-10-27
+
+A **real DEV PostgreSQL RLS impersonation test** found a bug in the fourth migration's scene-map Storage SELECT policy: `storage.foldername(name)` inside a join of `public.scenes s` resolved `name` to `s.name`, NOT to `storage.objects.name`. As a result, an authorized GM could read the scene row but was denied its Storage object (observed count **0**).
+
+**FIXED IN LIVE DEV.** Added `supabase/migrations/20261027000500_fix_private_scene_maps_object_name.sql`, applied successfully to DEV with migration history name `pr37_fix_private_scene_maps_object_name`. New policy explicitly uses `storage.foldername(storage.objects.name)`. Same impersonation query after fix shows GM can see the linked scene-map object (**1**). The fixture schema was updated to include `scenes.name` so the regression is tested in CI; CI workflow now applies the fifth migration.
+
+Read-only role-impersonation test (using `SET LOCAL ROLE authenticated/anon` and transaction `ROLLBACK`; no fixtures or data changed) also confirmed player music access **1**, outsider music/maps/handouts **0**, anonymous private objects **0**. A user without authorization sees nothing. Real Supabase Storage HTTP/signed URLs and WebSocket subscriptions are still NOT tested; do not merge or modify PROD until application compatibility is confirmed.
+
+**Production still has old publicly readable buckets/policies and has not been changed.**
+
+---
+
 ## IMPORTANT LIVE UPDATE — 2026-10-27: DEV migrations APPLIED
 
 **The prior statements below that DEV has public buckets / broad Realtime SELECT / no migrations are HISTORICAL and NO LONGER TRUE.** This update supersedes them. Do not apply PR #37 migrations a second time to DEV.
