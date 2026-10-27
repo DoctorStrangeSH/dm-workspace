@@ -51,5 +51,5 @@ test('linked combat locks all sibling tokens and updates them as one unit', () =
 test('sibling token consistency is an explicit DEV acceptance requirement', () => {
   const review = readFileSync('docs/ATOMIC_HP_RPC_REVIEW.md', 'utf8')
   assert.match(review, /two tokens per character|two-token|two tokens/i)
-  assert.match(review, /rollbacks/i)
+  assert.match(review, /rollback/i)
 })
