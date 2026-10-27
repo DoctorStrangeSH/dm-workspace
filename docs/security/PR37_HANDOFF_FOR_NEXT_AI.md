@@ -1,5 +1,16 @@
 # HANDOFF — PR #37 Realtime + private Storage security
 
+## VERIFIED STATUS — 2026-10-27, after migration #6
+
+- GitHub Actions runs **40561233905** and **40561224414**, commit `f8030e73e8600078c19b3aef3d68f746b5139ec4`: **SUCCESS**, including all six disposable PostgreSQL migrations, SQL RLS assertions, trigger lifecycle, RPC EXECUTE revocation, static/Node tests, lint, typecheck and Next production build. No reason to repeat these same checks without source changes.
+- Real DEV migrations: all six listed in Supabase migration history; no seventh migration required at this checkpoint.
+- Fresh DEV Supabase Security Advisor confirms **0 remaining broadcast_* function findings** in anonymous/authenticated SECURITY DEFINER executable checks after the sixth migration. Other unrelated legacy findings remain; do not scope-creep PR #37 into fixing them.
+- GitHub says PR is mergeable but Draft. The latest Vercel status was `build-rate-limit` (not a successful current Preview verification).
+- **Outstanding release gate**: actual Auth + Storage HTTP/signed-URL + Realtime WebSocket + browser smoke checks against a DEV app deployment that contains this PR's Next.js routes. A green SQL CI alone does not prove those flows. **Do not deploy PROD merely on green CI.**
+- DEV six migrations have already been applied; do not run them again. PROD still unchanged.
+
+---
+
 ## FOLLOW-UP — 2026-10-27: sixth migration applied to DEV
 
 DEV Supabase security advisors found all eight internal `public.broadcast_*` trigger functions `SECURITY DEFINER` and executable by `anon`/`authenticated` via public RPC. These functions are intended for database triggers, **not** client RPC. Added `supabase/migrations/20261027000600_revoke_broadcast_trigger_rpc_execute.sql`; **applied successfully to real DEV** via Supabase migration `pr37_revoke_broadcast_trigger_rpc_execute`. Read-only confirmation using `has_function_privilege` showed all eight functions have `anon_can_execute=false` and `authenticated_can_execute=false`. Trigger executability by Postgres is unaffected by client-role EXECUTE revocations (CI runs handout INSERT/UPDATE/DELETE trigger tests after the sixth migration; verify new HEAD CI once complete). **PROD remains unchanged.**
