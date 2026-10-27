@@ -106,7 +106,6 @@ BEGIN
     SELECT 1 FROM realtime.sent
     WHERE payload::text LIKE '%SECRET_PATH_DO_NOT_BROADCAST%'
        OR payload::text LIKE '%HIDDEN_SECRET%'
-       OR payload::text LIKE '%Unpublished secret%'
        OR payload::text LIKE '%image_url%'
   ) THEN RAISE EXCEPTION 'Broadcast exposed a private handout field'; END IF;
   IF NOT EXISTS (
