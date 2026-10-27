@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getCampaignAccess } from '@/lib/queries/access'
 
-export const dynamic = 'force-dynamic'
-
 const STORAGE_PREFIX = '/storage/v1/object/public/handouts/'
 
 function getStoragePath(imageUrl: string, campaignId: string): string | null {
