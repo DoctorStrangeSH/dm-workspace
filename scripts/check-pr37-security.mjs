@@ -7,6 +7,7 @@ const handouts = read('../supabase/migrations/20261027000200_private_handout_sto
 const music = read('../supabase/migrations/20261027000300_private_music_storage.sql')
 const maps = read('../supabase/migrations/20261027000400_private_scene_maps_storage.sql')
 const handoutHook = read('../src/lib/hooks/use-realtime-handouts.ts')
+const handoutDto = read('../src/lib/realtime/visible-handout.ts')
 const handoutRoute = read('../src/app/api/handouts/[id]/image/route.ts')
 const musicRoute = read('../src/app/api/music/tracks/[id]/audio/route.ts')
 const mapRoute = read('../src/app/api/scenes/[id]/map/route.ts')
@@ -63,11 +64,11 @@ check('Handout client subscribes privately to the DTO topic', () => {
 })
 
 check('Visible handout DTOs are validated rather than cast as full rows', () => {
-  has(handoutHook, /type VisibleHandout = Pick<Handout,/, 'Use the explicitly minimal Broadcast DTO type')
-  has(handoutHook, /function parseVisibleHandout\(value: unknown, campaignId: string\)/, 'Validate unknown Broadcast payloads')
-  has(handoutHook, /record\.campaign_id !== campaignId/, 'Reject events for other campaigns')
-  has(handoutHook, /record\.is_visible !== true/, 'Reject hidden handouts')
-  has(handoutHook, /function parseDeletedHandoutId\(value: unknown\)/, 'Validate deletion payloads')
+  has(handoutDto, /type VisibleHandout = Pick<Handout,/, 'Use the explicitly minimal Broadcast DTO type')
+  has(handoutDto, /function parseVisibleHandout\(value: unknown, campaignId: string\)/, 'Validate unknown Broadcast payloads')
+  has(handoutDto, /record\.campaign_id !== campaignId/, 'Reject events for other campaigns')
+  has(handoutDto, /record\.is_visible !== true/, 'Reject hidden handouts')
+  has(handoutDto, /function parseDeletedHandoutId\(value: unknown\)/, 'Validate deletion payloads')
   assert.doesNotMatch(handoutHook, /payload\.payload\.record as Handout/, 'Do not cast partial Broadcast DTO to a full Handout')
 })
 
