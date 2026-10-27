@@ -39,3 +39,17 @@ test('all SQL drafts remain disabled and never grant callers EXECUTE', () => {
     assert.match(sql, /REVOKE ALL.*FROM authenticated/)
   }
 })
+
+
+test('linked combat locks all sibling tokens and updates them as one unit', () => {
+  assert.match(combat, /PERFORM t\.id[\s\S]*ORDER BY t\.id[\s\S]*FOR UPDATE/)
+  assert.match(combat, /Linked token HP disagree; reconcile before retry/)
+  assert.match(combat, /UPDATE public\.tokens SET hp_current = v_new[\s\S]*WHERE character_id = v_token\.character_id[\s\S]*AND campaign_id = v_token\.campaign_id/)
+  assert.match(combat, /UPDATE public\.characters[\s\S]*jsonb_set\(data_json, '\{hp,current\}', to_jsonb\(v_new\), false\)/)
+})
+
+test('sibling token consistency is an explicit DEV acceptance requirement', () => {
+  const review = readFileSync('docs/ATOMIC_HP_RPC_REVIEW.md', 'utf8')
+  assert.match(review, /two tokens per character|two-token|two tokens/i)
+  assert.match(review, /rollback/i)
+})
