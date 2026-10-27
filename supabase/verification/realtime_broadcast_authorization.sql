@@ -34,3 +34,34 @@ select 'Manual WebSocket test required' as check_name,
 --    topics match exactly. The legacy campaign topic must not be restored as a fallback.
 -- H. Attempt client-originated Broadcast writes; they must be denied unless a
 --    separate, narrowly scoped publish policy explicitly permits the feature.
+
+-- 4) Read-only Storage privacy audit. Run before/after the private handout migration.
+select id as bucket_id, public
+from storage.buckets
+where id in ('handouts', 'music', 'scene-maps')
+order by id;
+
+select policyname, cmd, roles, qual, with_check
+from pg_policies
+where schemaname = 'storage'
+  and tablename = 'objects'
+  and (
+    policyname ilike '%handout%'
+    or policyname ilike '%music%'
+    or policyname ilike '%scene map%'
+  )
+order by policyname;
+
+-- Expected after the handout migration: handouts.public = false, no SELECT policy
+-- grants public access to bucket_id='handouts'. Music and scene-maps intentionally
+-- remain unchanged by that migration and MUST be handled in a separate rollout.
+-- Do not consider Storage fully hardened while music or scene-maps remain public
+-- if those assets can contain campaign-private content.
+
+-- 5) Realtime policy audit. Expected after applying the staged Realtime migration:
+select policyname, roles, cmd, qual
+from pg_policies
+where schemaname = 'realtime'
+  and tablename = 'messages'
+  and cmd = 'SELECT'
+order by policyname;
