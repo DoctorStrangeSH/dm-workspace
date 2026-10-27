@@ -3,38 +3,13 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Handout } from '@/lib/types'
-
-// The Broadcast trigger intentionally omits image_url and created_at.
-// Never treat this player-safe DTO as a full database handout.
-type VisibleHandout = Pick<Handout, 'id' | 'campaign_id' | 'name' | 'is_visible'>
+import { parseVisibleHandout, parseDeletedHandoutId } from '@/lib/realtime/visible-handout'
+import type { VisibleHandout } from '@/lib/realtime/visible-handout'
 
 interface Options {
   campaignId: string
   initialHandouts: Handout[]
   enabled?: boolean
-}
-
-function parseVisibleHandout(value: unknown, campaignId: string): VisibleHandout | null {
-  if (!value || typeof value !== 'object') return null
-  const record = value as Record<string, unknown>
-  if (
-    typeof record.id !== 'string' ||
-    record.campaign_id !== campaignId ||
-    typeof record.name !== 'string' ||
-    record.is_visible !== true
-  ) return null
-  return {
-    id: record.id,
-    campaign_id: campaignId,
-    name: record.name,
-    is_visible: true,
-  }
-}
-
-function parseDeletedHandoutId(value: unknown): string | null {
-  if (!value || typeof value !== 'object') return null
-  const id = (value as Record<string, unknown>).id
-  return typeof id === 'string' ? id : null
 }
 
 export function useRealtimeHandouts({ campaignId, initialHandouts, enabled = true }: Options) {
