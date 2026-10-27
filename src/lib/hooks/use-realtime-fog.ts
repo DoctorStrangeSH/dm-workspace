@@ -24,8 +24,14 @@ export function useRealtimeFog({ sceneId, initialFog, enabled = true }: Options)
     if (!enabled) return
 
     const supabase = createClient()
+    let cancelled = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const channel = supabase
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
+
+      channel = supabase
       .channel(`fog:${sceneId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const newArea = payload.payload.record as FogArea
@@ -41,9 +47,13 @@ export function useRealtimeFog({ sceneId, initialFog, enabled = true }: Options)
         setFog((prev) => prev.filter((f) => f.id !== old.id))
       })
       .subscribe()
+    }
+
+    void setup()
 
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
     }
   }, [sceneId, enabled])
 
