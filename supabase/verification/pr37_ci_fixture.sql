@@ -31,7 +31,7 @@ CREATE FUNCTION realtime.broadcast_changes(
 
 CREATE TABLE public.campaign_members (campaign_id uuid NOT NULL, user_id uuid NOT NULL, role text NOT NULL);
 CREATE TABLE public.scenes (
-  id uuid PRIMARY KEY, campaign_id uuid NOT NULL, image_url text
+  id uuid PRIMARY KEY, campaign_id uuid NOT NULL, name text NOT NULL DEFAULT 'Map scene', image_url text
 );
 CREATE TABLE public.handouts (
   id uuid PRIMARY KEY, campaign_id uuid NOT NULL, name text NOT NULL,
