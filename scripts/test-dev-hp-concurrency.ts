@@ -23,6 +23,19 @@ if (!anonKey || tokens.some((t) => !t) || !tokenId || !sceneId
   throw new Error('Disposable DEV credentials, IDs and valid starting HP required')
 }
 if (tokens[0] === tokens[1]) throw new Error('Two distinct DEV user sessions required')
+// Distinct JWT strings may refer to the same user; verify both identities remotely.
+const getUserId = async (jwt: string): Promise<string> => {
+  const response = await fetch(devUrl + '/auth/v1/user', {
+    headers: { apikey: anonKey!, Authorization: 'Bearer ' + jwt },
+    signal: AbortSignal.timeout(15000),
+  })
+  if (!response.ok) throw new Error('DEV test user authentication failed')
+  const user = await response.json() as { id?: string }
+  if (!user.id) throw new Error('DEV test user missing identity')
+  return user.id
+}
+const userIds = await Promise.all(tokens.map((jwt) => getUserId(jwt!)))
+if (userIds[0] === userIds[1]) throw new Error('Two different authenticated DEV users are required')
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 if (!UUID.test(tokenId) || !UUID.test(sceneId)) throw new Error('Invalid test UUID')
 const readHP = async (jwt: string) => {
