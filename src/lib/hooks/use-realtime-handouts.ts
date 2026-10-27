@@ -24,8 +24,14 @@ export function useRealtimeHandouts({ campaignId, initialHandouts, enabled = tru
     if (!enabled) return
 
     const supabase = createClient()
+    let cancelled = false
+    let channel: ReturnType<typeof supabase.channel> | null = null
 
-    const channel = supabase
+    const setup = async () => {
+      await supabase.realtime.setAuth()
+      if (cancelled) return
+
+      channel = supabase
       .channel(`handouts:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const record = payload.payload.record as Handout
@@ -47,8 +53,13 @@ export function useRealtimeHandouts({ campaignId, initialHandouts, enabled = tru
       })
       .subscribe()
 
+    }
+
+    void setup()
+
     return () => {
-      supabase.removeChannel(channel)
+      cancelled = true
+      if (channel) supabase.removeChannel(channel)
     }
   }, [campaignId, enabled])
 
