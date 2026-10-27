@@ -15,7 +15,7 @@ export function useRealtimeTokenOwners({ campaignId, initialOwners }: Options) {
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase
-      .channel(`token-owners:${campaignId}`)
+      .channel(`token-owners:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const rec = payload.payload?.record as TokenOwnerWithProfile | undefined
         if (!rec || rec.campaign_id !== campaignId) return
