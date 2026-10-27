@@ -88,6 +88,43 @@ check('Authorized file routes verify membership and use signed URLs', () => {
   has(handoutRoute, /!isDm && !handout\.is_visible/, 'Players must not access hidden handouts')
 })
 
+
+const realtimeHooks = [
+  read('../src/lib/hooks/use-realtime-fog.ts'),
+  read('../src/lib/hooks/use-realtime-messages.ts'),
+  read('../src/lib/hooks/use-realtime-music.ts'),
+  read('../src/lib/hooks/use-realtime-summons.ts'),
+  read('../src/lib/hooks/use-realtime-token-owners.ts'),
+  read('../src/lib/hooks/use-realtime-tokens.ts'),
+  read('../src/lib/hooks/use-realtime-walls.ts'),
+]
+
+check('All migrated Realtime hooks use private channels and refresh auth before subscribe', () => {
+  for (const hook of realtimeHooks) {
+    has(hook, /config:\s*\{\s*private:\s*true\s*\}/, 'Every migrated Broadcast subscription must use a private channel')
+    has(hook, /setAuth\(\)/, 'Every migrated Broadcast hook must set Realtime auth before subscribing')
+  }
+})
+
+check('Storage read policies scope objects to the matching campaign and record', () => {
+  has(handouts, /cm\.campaign_id::text = \(storage\.foldername\(name\)\)\[1\]/i, 'Handouts must be scoped to the first path segment')
+  has(handouts, /h\.campaign_id = cm\.campaign_id/i, 'Handout object must belong to the member campaign')
+  has(handouts, /h\.is_visible = true/i, 'Player handout reads must require visibility')
+  has(music, /cm\.campaign_id::text = \(storage\.foldername\(name\)\)\[1\]/i, 'Music must be scoped to the first path segment')
+  has(music, /t\.campaign_id = cm\.campaign_id/i, 'Track object must belong to the member campaign')
+  has(maps, /cm\.campaign_id::text = \(storage\.foldername\(name\)\)\[1\]/i, 'Scene maps must be scoped to the first path segment')
+  has(maps, /s\.campaign_id = cm\.campaign_id/i, 'Scene map must belong to a scene in the member campaign')
+})
+
+check('Realtime migration does not recreate an unrestricted read policy', () => {
+  assert.doesNotMatch(realtime, /create policy[\s\S]{0,300}?on realtime\.messages[\s\S]{0,150}?using\s*\(\s*true\s*\)/i, 'Do not add a universal Broadcast read policy')
+  has(realtime, /extension = 'broadcast'/i, 'Only Broadcast messages should be authorized by this policy')
+  has(realtime, /auth\.uid\(\) is not null/i, 'Anonymous sessions must be denied')
+  has(realtime, /realtime\.topic\(\) = 'walls:' \|\| cm\.campaign_id::text/i, 'Walls topic must be scoped to campaign membership')
+  has(realtime, /realtime\.topic\(\) = 'token-owners:' \|\| cm\.campaign_id::text/i, 'Token-owner topic must be scoped to campaign membership')
+  has(realtime, /realtime\.topic\(\) = 'handouts-visible:' \|\| cm\.campaign_id::text/i, 'Visible handout topic must be scoped to campaign membership')
+})
+
 console.log(`PR #37 static security checks passed: ${checks.length}`)
 for (const name of checks) console.log(`  ✓ ${name}`)
 console.log('Note: these are static source checks, not SQL execution or runtime authorization tests.')
