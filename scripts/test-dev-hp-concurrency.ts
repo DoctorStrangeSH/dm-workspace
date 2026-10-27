@@ -48,9 +48,27 @@ const readHP = async (jwt: string) => {
   return { token: tokenRows[0], charHP: chars[0].data_json.hp }
 }
 const before = await readHP(tokens[0]!)
+const secondUserBefore = await readHP(tokens[1]!)
 if (before.token.hp_current !== start || before.charHP.current !== start ||
   before.token.hp_max !== before.charHP.max) {
   throw new Error('Disposable fixture HP must match expected starting snapshot')
+}
+if (secondUserBefore.token.character_id !== before.token.character_id
+  || secondUserBefore.token.campaign_id !== before.token.campaign_id
+  || secondUserBefore.token.hp_current !== before.token.hp_current
+  || secondUserBefore.token.hp_max !== before.token.hp_max
+  || secondUserBefore.charHP.current !== before.charHP.current
+  || secondUserBefore.charHP.max !== before.charHP.max) {
+  throw new Error('DEV test sessions must see the same token and character HP snapshot')
+}
+if (env.DEV_HP_ALLOW_MUTATION !== 'true') {
+  console.log(JSON.stringify({
+    result: 'dry-run: two sessions can read consistent fixture HP',
+    current: before.token.hp_current,
+    max: before.token.hp_max,
+    mutationPerformed: false,
+  }))
+  process.exit(0)
 }
 const invoke = async (jwt: string, amount: number) => {
   const started = Date.now()
