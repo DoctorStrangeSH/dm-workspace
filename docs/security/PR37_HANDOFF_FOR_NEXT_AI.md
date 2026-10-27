@@ -4,7 +4,7 @@
 
 During app/Storage review, discovered `src/lib/actions/scenes.ts` generates a new `crypto.randomUUID()` Storage filename on each map upload but supplied `{ upsert: true }`. The PR's DM-only Storage policies provide INSERT and DELETE but no UPDATE, so upsert could require a missing UPDATE/SELECT permission. Fixed to `{ upsert: false }` on PR branch (commit `f2fe670`), added a static regression check (commit `817a7a1`). **These application changes must be deployed to DEV before manually testing new map uploads.** No production or cloud database settings changed in this fix. This does **not** establish that a real browser upload has succeeded.
 
-The last confirmed successful CI before this fix was run `40555793243` on SHA `a0676d6`; check latest HEAD CI separately. The DEV database already contains five PR #37 migrations, including the corrected map SELECT policy. Do not apply the same migrations to DEV twice.
+CI run `40556597734` on the map upload fix + documentation HEAD `09a6f1d` completed **SUCCESS**: disposable PostgreSQL (all 5 migrations plus RLS assertions), Node DTO/static checks, lint, typecheck, production build. This is not an actual browser upload test. The DEV database already contains five PR #37 migrations, including the corrected map SELECT policy. Do not apply the same migrations to DEV twice.
 
 ---
 
