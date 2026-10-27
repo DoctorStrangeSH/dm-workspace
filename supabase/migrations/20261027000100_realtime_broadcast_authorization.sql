@@ -70,6 +70,15 @@ begin
 end;
 $function$;
 
+-- Harden every existing SECURITY DEFINER Broadcast trigger function, not only
+-- the three whose topic names are split above. Existing triggers remain attached.
+-- All Broadcast calls in these functions should be schema-qualified.
+alter function public.broadcast_fog_changes() set search_path = pg_catalog;
+alter function public.broadcast_handout_changes() set search_path = pg_catalog;
+alter function public.broadcast_message_changes() set search_path = pg_catalog;
+alter function public.broadcast_music_state() set search_path = pg_catalog;
+alter function public.broadcast_token_changes() set search_path = pg_catalog;
+
 drop policy if exists "Authenticated can receive broadcasts" on realtime.messages;
 
 create policy "Campaign members can receive scoped broadcasts"
