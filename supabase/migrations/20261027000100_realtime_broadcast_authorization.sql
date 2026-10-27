@@ -8,6 +8,63 @@
 begin;
 
 
+-- Publish only a safe DTO to players for visible handouts. Never broadcast raw
+-- handout rows (which may contain hidden material metadata or storage paths).
+create or replace function public.broadcast_handout_changes()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog
+as $function$
+declare
+  topic_name text;
+begin
+  topic_name := 'handouts-visible:' || coalesce(new.campaign_id, old.campaign_id)::text;
+
+  if tg_op = 'INSERT' then
+    if new.is_visible then
+      perform realtime.send(
+        jsonb_build_object('record', jsonb_build_object(
+          'id', new.id,
+          'campaign_id', new.campaign_id,
+          'name', new.name,
+          'is_visible', true
+        )), 'INSERT', topic_name, true
+      );
+    end if;
+    return new;
+  elsif tg_op = 'UPDATE' then
+    if old.is_visible and not new.is_visible then
+      perform realtime.send(
+        jsonb_build_object('old_record', jsonb_build_object('id', old.id)),
+        'DELETE', topic_name, true
+      );
+    elsif new.is_visible then
+      perform realtime.send(
+        jsonb_build_object('record', jsonb_build_object(
+          'id', new.id,
+          'campaign_id', new.campaign_id,
+          'name', new.name,
+          'is_visible', true
+        )), case when old.is_visible then 'UPDATE' else 'INSERT' end,
+        topic_name, true
+      );
+    end if;
+    return new;
+  elsif tg_op = 'DELETE' then
+    if old.is_visible then
+      perform realtime.send(
+        jsonb_build_object('old_record', jsonb_build_object('id', old.id)),
+        'DELETE', topic_name, true
+      );
+    end if;
+    return old;
+  end if;
+
+  return coalesce(new, old);
+end;
+$function$;
+
 -- Split the legacy mixed-audience campaign topic into resource-specific topics.
 -- Fixed search_path and schema-qualified Broadcast function for SECURITY DEFINER.
 create or replace function public.broadcast_scene_walls()
@@ -171,6 +228,17 @@ using (
         where cm.user_id = (select auth.uid())
           and cm.role = 'dm'
           and realtime.topic() = 'handouts:' || cm.campaign_id::text
+      )
+    ),
+    -- Player-safe visible handout DTOs only; the trigger omits hidden rows and
+    -- emits DELETE when a handout is hidden or removed.
+    or (
+      realtime.topic() like 'handouts-visible:%'
+      and exists (
+        select 1
+        from public.campaign_members cm
+        where cm.user_id = (select auth.uid())
+          and realtime.topic() = 'handouts-visible:' || cm.campaign_id::text
       )
     )
   )
