@@ -3,11 +3,8 @@
 -- These checks describe current state; they do not prove per-user authorization.
 select
   b.id as bucket_id,
-  b.public as is_public,
-  exists (
-    select 1 from storage.policies p
-    where p.bucket_id = b.id
-  ) as has_storage_policy_metadata
+  b.name as bucket_name,
+  b.public as is_public
 from storage.buckets b
 where b.id in ('handouts', 'music', 'scene-maps')
 order by b.id;
@@ -54,6 +51,6 @@ where n.nspname = 'public'
   )
 order by p.proname;
 
--- Important: a passing read-only snapshot is not a substitute for tests using
--- real authenticated sessions (DM, same-campaign player, other-campaign user,
--- outsider, anonymous). Never run PR #37 migrations on PROD for this checklist.
+-- A read-only snapshot is not a substitute for tests using real authenticated
+-- sessions (DM, same-campaign player, other-campaign user, outsider, anonymous).
+-- Never run PR #37 migrations on PROD for this checklist.
