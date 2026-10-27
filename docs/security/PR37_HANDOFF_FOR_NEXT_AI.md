@@ -1,5 +1,32 @@
 # HANDOFF — PR #37 Realtime + private Storage security
 
+## IMPORTANT LIVE UPDATE — 2026-10-27: DEV migrations APPLIED
+
+**The prior statements below that DEV has public buckets / broad Realtime SELECT / no migrations are HISTORICAL and NO LONGER TRUE.** This update supersedes them. Do not apply PR #37 migrations a second time to DEV.
+
+The user explicitly authorized overwriting DEV, and all four staged migrations were applied **successfully** using Supabase `apply_migration` to project `yoondivyeueyrtgeldja`, in this order:
+
+1. `pr37_realtime_broadcast_authorization`
+2. `pr37_private_handout_storage`
+3. `pr37_private_music_storage`
+4. `pr37_private_scene_maps_storage`
+
+**Before executing migrations**, the exact pre-change function definitions, relevant policy definitions and bucket public flags were committed to `supabase/verification/pr37_dev_pre_migration_snapshot.json` (commit `23b3fcc`). This is a *metadata-only recovery snapshot, NOT a complete restorable database backup*.
+
+**Read-only verification AFTER the actual DEV migration:**
+- `handouts`, `music`, `scene-maps` in `storage.buckets` are all `public=false`.
+- `realtime.messages` SELECT policy is now `Campaign members can receive scoped broadcasts`; old unrestricted `Authenticated can receive broadcasts` is gone.
+- Broad public Storage SELECT policies on those three buckets are gone; member-scoped SELECT, DM upload and DM delete policies exist.
+- All eight audited `public.broadcast_*` functions show `search_path=pg_catalog`.
+- Migration history contains the four entries above.
+- DEV data counts at verification: 6 campaign membership rows, 0 handouts, 1 track, 4 scenes, 1 music Storage object and 3 scene-map Storage objects. **This limits handout end-to-end verification: no real handouts existed.**
+- **PRODUCTION `klzziumdjpagqquihpks` was not touched.**
+
+**STILL REQUIRED BEFORE PROD/merge:** Test actual DEV browser/API Storage reads and redirects (scene map and music objects available), Realtime WebSocket auth and role isolation using real users, and confirm DEV app deployment matches PR branch; a real recoverable backup is not yet confirmed. The user gave permission to eventually move changes to PROD, but production must remain untouched until these checks pass and application deployment is coordinated. No new paid branch created.
+
+---
+
+
 **Updated 2026-10-27. READ THIS FIRST IN THE NEXT AI SESSION. Do not redo completed stages.**
 
 Repository: `DoctorStrangeSH/dm-workspace`.
