@@ -56,10 +56,10 @@ export default function CombatStats({
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
-          <Card key={stat.label} padding="sm" className="group relative min-h-28 rounded-2xl border-[var(--border-default)] text-center">
-            <Icon size={14} className={cn(stat.color, 'mx-auto mb-2')} />
-            <div className="text-xl font-semibold tabular-nums text-[var(--text-primary)]">{stat.value}</div>
-            <div className="mt-1 text-[10px] font-medium leading-tight text-[var(--text-subtle)] uppercase">{stat.label}</div>
+          <Card key={stat.label} padding="sm" className={cn("group relative min-h-32 rounded-2xl border-[var(--border-default)] text-center", stat.onRoll && "pt-11 sm:pt-10")}>
+            <Icon size={18} className={cn(stat.color, 'mx-auto mb-2')} aria-hidden="true" />
+            <div className="break-words text-xl font-bold leading-tight tabular-nums text-[var(--text-primary)] sm:text-2xl">{stat.value}</div>
+            <div className="mt-2 break-words text-xs font-semibold leading-snug text-[var(--text-secondary)]">{stat.label}</div>
             {stat.onRoll && (
               <IconButton
                 variant="ghost"
