@@ -222,7 +222,7 @@ export async function uploadMap(sceneId: string, campaignId: string, file: File)
 
   const { error: uploadError } = await supabase.storage
     .from('scene-maps')
-    .upload(fileName, file, { upsert: true })
+    .upload(fileName, file, { upsert: false })
 
   if (uploadError) {
     console.error('uploadMap error:', uploadError)
