@@ -54,9 +54,9 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
-        <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center overflow-hidden bg-[var(--bg-overlay)] p-2 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:p-4">
+      <div className="flex min-h-0 w-full max-w-md flex-col overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] sm:max-h-[calc(100dvh-2rem)]">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-default)] p-3 sm:p-4">
           <h2 className="font-semibold text-[var(--text-primary)]">{t('inventory.form.title')}</h2>
           <IconButton
             variant="ghost"
@@ -69,7 +69,7 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
           </IconButton>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 p-4">
+        <form id="add-character-item-form" onSubmit={handleSubmit} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain p-3 sm:p-4">
           <Input
             label={t('common.name')}
             type="text"
@@ -122,21 +122,22 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
             placeholder={t('inventory.form.notesPlaceholder')}
           />
 
-          <div className="flex justify-end gap-3 pt-2">
+
+        </form>
+          <div className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-[var(--border-default)] bg-[var(--bg-surface)] p-3 sm:p-4">
             <Button
               type="button"
               variant="secondary"
-              size="md"
+              size="md" className="min-h-11"
               onClick={onClose}
               disabled={isPending}
             >
               {t('common.cancel')}
             </Button>
-            <Button type="submit" variant="primary" size="md" loading={isPending}>
+            <Button form="add-character-item-form" type="submit" variant="primary" size="md" className="min-h-11" loading={isPending}>
               {isPending ? t('inventory.form.adding') : t('common.add')}
             </Button>
           </div>
-        </form>
       </div>
     </div>
   )
