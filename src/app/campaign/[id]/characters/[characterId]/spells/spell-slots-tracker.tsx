@@ -70,27 +70,27 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
                 ))}
               </div>
 
-              <div className="w-12 text-right text-sm font-semibold text-[var(--text-secondary)] tabular-nums">
+              <div className="w-14 text-right text-base font-semibold text-[var(--text-secondary)] tabular-nums">
                 {slot.current}/{slot.max}
               </div>
 
               {canEdit && (
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-2">
                   <button
                     onClick={() => handleAction(level, 'use')}
                     disabled={isPending || slot.current === 0}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-30" aria-label={`${t('characters.spellSlots.use')} — ${t('characters.spellSlots.level', { level })}`}
+                    className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg border border-[var(--border-default)] transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-30" aria-label={`${t('characters.spellSlots.use')} — ${t('characters.spellSlots.level', { level })}`}
                     title={t('characters.spellSlots.use')}
                   >
-                    <Minus size={12} />
+                    <Minus size={18} />
                   </button>
                   <button
                     onClick={() => handleAction(level, 'restore')}
                     disabled={isPending || slot.current === slot.max}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-30" aria-label={`${t('characters.spellSlots.restore')} — ${t('characters.spellSlots.level', { level })}`}
+                    className="flex h-11 w-11 touch-manipulation items-center justify-center rounded-lg border border-[var(--border-default)] transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-30" aria-label={`${t('characters.spellSlots.restore')} — ${t('characters.spellSlots.level', { level })}`}
                     title={t('characters.spellSlots.restore')}
                   >
-                    <Plus size={12} />
+                    <Plus size={18} />
                   </button>
                 </div>
               )}
