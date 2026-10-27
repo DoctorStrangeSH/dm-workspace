@@ -54,3 +54,20 @@ test('full character updates remain an explicit linked-HP rollout blocker', () =
   }
   assert.match(gate, /Do not enable.*ATOMIC_TOKEN_HP_RPC_ENABLED/)
 })
+
+
+test('legacy direct token HP update is explicitly tracked as a non-atomic writer', () => {
+  const updateTokenHP = actionBody(tokens, 'updateTokenHP')
+  assert.match(updateTokenHP, /\.from\('tokens'\)/)
+  assert.match(updateTokenHP, /\.update\(\{ hp_current:/)
+  // This assertion intentionally documents the blocker; it does not imply safety.
+  assert.doesNotMatch(updateTokenHP, /damageToken\(/)
+})
+
+test('whole-character update remains a potential HP bypass until transactionally guarded', () => {
+  const updateCharacter = actionBody(characters, 'updateCharacter')
+  assert.match(updateCharacter, /safeUpdates\.data_json = value as CharacterData/)
+  assert.match(updateCharacter, /\.update\(safeUpdates\)/)
+  const gate = readFileSync('docs/HP_WRITER_INTEGRATION_GATE.md', 'utf8')
+  assert.match(gate, /Cannot bypass coordinated HP protocol/)
+})
