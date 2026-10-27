@@ -665,7 +665,7 @@ export async function levelUp(
     hpMethod: 'average' | 'roll'
     abilityChanges?: Partial<Record<string, number>>
   }
-): Promise<ErrorResult | { success: true; newLevel: number; hpGain: number }> {
+): Promise<ErrorResult | { success: true; newLevel: number; hpGain: number; linkedTokensNeedSync: boolean }> {
   const access = await checkCharacterAccess(characterId, campaignId)
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
@@ -701,8 +701,19 @@ export async function levelUp(
   const save = await saveCharacterData(characterId, campaignId, newData, access.data)
   if ('error' in save) return save
 
+  // Level-up updates character HP, but does not atomically update linked scene tokens.
+  // Report this explicitly instead of attempting unsafe best-effort dual writes.
+  const supabase = await createClient()
+  const { count: linkedTokenCount, error: linkedTokenError } = await supabase
+    .from('tokens')
+    .select('id', { count: 'exact', head: true })
+    .eq('campaign_id', campaignId)
+    .eq('character_id', characterId)
+  // On a count/query error, fail safe: warn rather than implying tokens were synchronized.
+  const linkedTokensNeedSync = !!linkedTokenError || (linkedTokenCount ?? 0) > 0
+
   await logEvent(campaignId, 'level_up', `${access.name} достиг уровня ${newData.level}`)
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
-  return { success: true, newLevel: newData.level, hpGain }
+  return { success: true, newLevel: newData.level, hpGain, linkedTokensNeedSync }
 }
