@@ -56,17 +56,17 @@ export default function CombatStats({
       {stats.map((stat) => {
         const Icon = stat.icon
         return (
-          <Card key={stat.label} padding="sm" className="group relative text-center">
-            <Icon size={14} className={cn(stat.color, 'mx-auto mb-1')} />
-            <div className="text-lg font-bold text-[var(--text-primary)]">{stat.value}</div>
-            <div className="text-[10px] text-[var(--text-subtle)] uppercase">{stat.label}</div>
+          <Card key={stat.label} padding="sm" className="group relative min-h-28 rounded-2xl border-[var(--border-default)] text-center">
+            <Icon size={14} className={cn(stat.color, 'mx-auto mb-2')} />
+            <div className="text-xl font-semibold tabular-nums text-[var(--text-primary)]">{stat.value}</div>
+            <div className="mt-1 text-[10px] font-medium leading-tight text-[var(--text-subtle)] uppercase">{stat.label}</div>
             {stat.onRoll && (
               <IconButton
                 variant="ghost"
                 size="sm"
                 label={t('characters.rollInitiative')}
                 onClick={stat.onRoll}
-                className="absolute top-1.5 right-1.5 opacity-0 transition group-hover:opacity-100"
+                className="absolute top-1 right-1 opacity-100 transition hover:bg-[var(--bg-hover)] md:opacity-60 md:group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <Dices size={10} />
               </IconButton>
