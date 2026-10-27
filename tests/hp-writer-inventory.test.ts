@@ -56,12 +56,13 @@ test('full character updates remain an explicit linked-HP rollout blocker', () =
 })
 
 
-test('legacy direct token HP update is explicitly tracked as a non-atomic writer', () => {
+test('token HP setter delegates to the shared damage action', () => {
   const updateTokenHP = actionBody(tokens, 'updateTokenHP')
-  assert.match(updateTokenHP, /\.from\('tokens'\)/)
-  assert.match(updateTokenHP, /\.update\(\{ hp_current:/)
-  // This assertion intentionally documents the blocker; it does not imply safety.
-  assert.doesNotMatch(updateTokenHP, /damageToken\(/)
+  assert.match(updateTokenHP, /return damageToken\\(tokenId, sceneId, hp_current, 'set'\\)/)
+  // The shared damageToken implementation remains a rollout blocker until its
+  // writes use the atomic transaction for linked characters.
+  const damageToken = actionBody(combat, 'damageToken')
+  assert.match(damageToken, /\\.from\\('tokens'\\)[\\s\\S]*\\.update\\(\\{ hp_current: newHP \\}\\)/)
 })
 
 test('whole-character update remains a potential HP bypass until transactionally guarded', () => {
