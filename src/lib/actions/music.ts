@@ -89,10 +89,6 @@ export async function addTrack(playlistId: string, campaignId: string, formData:
     return { error: 'Не удалось загрузить' }
   }
 
-  const {
-    data: { publicUrl },
-  } = supabase.storage.from('music').getPublicUrl(fileName)
-
   const { data: lastTrack } = await supabase
     .from('tracks')
     .select('order_index')
@@ -105,7 +101,7 @@ export async function addTrack(playlistId: string, campaignId: string, formData:
     playlist_id: playlistId,
     campaign_id: campaignId,
     name,
-    audio_url: publicUrl,
+    audio_url: fileName,
     order_index: (lastTrack?.order_index ?? -1) + 1,
   })
 
@@ -123,15 +119,29 @@ export async function removeTrack(trackId: string, campaignId: string) {
   if (!isDm) return { error: 'Нет прав' }
 
   const supabase = await createClient()
-  const { data: deleted, error } = await supabase
+  const { data: track, error: lookupError } = await supabase
+    .from('tracks')
+    .select('id, audio_url')
+    .eq('id', trackId)
+    .eq('campaign_id', campaignId)
+    .maybeSingle()
+
+  if (lookupError || !track) return { error: 'Трек не найден или не удалось удалить' }
+
+  const { error } = await supabase
     .from('tracks')
     .delete()
     .eq('id', trackId)
     .eq('campaign_id', campaignId)
-    .select('id')
-    .maybeSingle()
 
-  if (error || !deleted) return { error: 'Трек не найден или не удалось удалить' }
+  if (error) return { error: 'Трек не найден или не удалось удалить' }
+
+  // Clean up only new campaign-scoped object paths; old public URLs are left untouched.
+  const prefix = campaignId + '/'
+  const filename = track.audio_url.startsWith(prefix) ? track.audio_url.slice(prefix.length) : ''
+  if (/^[a-f0-9-]{36}\\.(mp3|wav|ogg|m4a|aac|flac|webm)$/i.test(filename)) {
+    await supabase.storage.from('music').remove([track.audio_url])
+  }
 
   revalidatePath(`/campaign/${campaignId}`)
   return { success: true }
