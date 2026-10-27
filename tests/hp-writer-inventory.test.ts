@@ -54,3 +54,22 @@ test('full character updates remain an explicit linked-HP rollout blocker', () =
   }
   assert.match(gate, /Do not enable.*ATOMIC_TOKEN_HP_RPC_ENABLED/)
 })
+
+
+test('token HP setter delegates to the shared damage action', () => {
+  const updateTokenHP = actionBody(tokens, 'updateTokenHP')
+  assert.ok(updateTokenHP.includes("return damageToken(tokenId, sceneId, hp_current, 'set')"))
+  // The shared damageToken implementation remains a rollout blocker until its
+  // writes use the atomic transaction for linked characters.
+  const damageToken = actionBody(combat, 'damageToken')
+  assert.ok(damageToken.includes(".from('tokens')"))
+  assert.ok(damageToken.includes(".update({ hp_current: newHP })"))
+})
+
+test('whole-character update remains a potential HP bypass until transactionally guarded', () => {
+  const updateCharacter = actionBody(characters, 'updateCharacter')
+  assert.match(updateCharacter, /safeUpdates\.data_json = value as CharacterData/)
+  assert.match(updateCharacter, /\.update\(safeUpdates\)/)
+  const gate = readFileSync('docs/HP_WRITER_INTEGRATION_GATE.md', 'utf8')
+  assert.match(gate, /Cannot bypass coordinated HP protocol/)
+})
