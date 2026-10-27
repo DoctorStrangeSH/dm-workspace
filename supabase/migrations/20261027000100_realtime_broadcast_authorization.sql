@@ -57,18 +57,9 @@ using (
           and realtime.topic() = 'tokens:' || s.id::text
       )
     )
-    -- Walls use the scene UUID topic family; verify the actual hook/topic before
-    -- enabling this branch in rollout if the implementation differs.
-    or (
-      realtime.topic() like 'walls:%'
-      and exists (
-        select 1
-        from public.scenes s
-        join public.campaign_members cm on cm.campaign_id = s.campaign_id
-        where cm.user_id = (select auth.uid())
-          and realtime.topic() = 'walls:' || s.id::text
-      )
-    )
+    -- The legacy campaign:<id> topic is deliberately not authorized: it currently
+    -- multiplexes walls, summons and token ownership with mixed payload audiences.
+    -- Split these senders/topics before restoring wall/summon/token-owner realtime.
     -- Handout broadcasts contain raw rows today. Temporarily DM-only until
     -- the trigger publishes a separate player-safe DTO/topic.
     or (
