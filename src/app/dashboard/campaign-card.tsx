@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Copy, RefreshCw, Trash2, Crown, Users, Check } from 'lucide-react'
+import { Copy, RefreshCw, Trash2, Crown, Users, Check, ArrowUpRight, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Card, Badge, Button, IconButton, Dialog, Tooltip } from '@/components/ui'
 import { useToast } from '@/components/toast/toast-provider'
@@ -67,36 +67,50 @@ export default function CampaignCard({ campaign }: Props) {
 
   return (
     <>
-      <Card padding="md" hoverable className="group relative flex min-h-52 flex-col overflow-hidden rounded-xl shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent)]/50 hover:shadow-[var(--shadow-lg)]">
-        <div className="mb-3 flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <div className="mb-1.5 flex items-center gap-2">
-              {campaign.role === 'dm' && (
-                <Crown size={16} className="shrink-0 text-[var(--warning)]" />
-              )}
-              {campaign.role === 'player' && (
-                <Users size={16} className="shrink-0 text-[var(--info)]" />
-              )}
-              <Link
-                href={`/campaign/${campaign.id}`}
-                className="truncate text-lg font-semibold text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)]"
-              >
-                {campaign.name}
-              </Link>
-            </div>
-            {campaign.genre && (
-              <Badge variant="accent" size="sm">
-                {campaign.genre}
-              </Badge>
-            )}
-          </div>
+      <Card
+        padding="none"
+        hoverable
+        className="group relative flex min-h-64 flex-col overflow-hidden rounded-2xl shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:border-[var(--accent)]/50 hover:shadow-[var(--shadow-lg)]"
+      >
+        {/* Decorative treatment, no image request or layout shift. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-28 overflow-hidden bg-[linear-gradient(115deg,var(--bg-elevated),var(--bg-secondary))]">
+          <div className="absolute -right-8 -top-16 h-52 w-52 rounded-full border border-[var(--accent)]/20" />
+          <div className="absolute right-5 -top-10 h-40 w-40 rounded-full border border-[var(--accent)]/15" />
+          <div className="absolute right-16 top-6 h-20 w-20 rotate-45 border border-[var(--accent)]/10" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,var(--accent),transparent)] opacity-40" />
         </div>
 
-        {campaign.description && (
-          <p className="mb-4 line-clamp-2 text-sm text-[var(--text-muted)]">
-            {campaign.description}
-          </p>
-        )}
+        <div className="relative flex flex-1 flex-col p-4 sm:p-5">
+          <div className="mb-6 flex items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-hover)] bg-[var(--bg-app)]/70 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-[var(--text-secondary)] backdrop-blur-sm">
+              {campaign.role === 'dm' ? <Crown size={13} className="text-[var(--accent-text)]" /> : <Users size={13} className="text-[var(--info)]" />}
+              {t(campaign.role === 'dm' ? 'role.dm' : 'role.player')}
+            </span>
+            <BookOpen size={18} className="text-[var(--accent-text)]/65" aria-hidden="true" />
+          </div>
+
+          <Link
+            href={`/campaign/${campaign.id}`}
+            className="group/title inline-flex items-start justify-between gap-3 rounded-md text-lg font-semibold leading-snug tracking-tight text-[var(--text-primary)] transition-colors hover:text-[var(--accent-text)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          >
+            <span className="line-clamp-2 break-words">{campaign.name}</span>
+            <ArrowUpRight size={19} className="mt-0.5 shrink-0 text-[var(--text-muted)] transition-transform group-hover/title:-translate-y-0.5 group-hover/title:translate-x-0.5" aria-hidden="true" />
+          </Link>
+
+          {campaign.genre && (
+            <div className="mt-3">
+              <Badge variant="accent" size="sm">{campaign.genre}</Badge>
+            </div>
+          )}
+
+          {campaign.description ? (
+            <p className="mb-4 mt-3 line-clamp-2 text-sm leading-relaxed text-[var(--text-muted)]">
+              {campaign.description}
+            </p>
+          ) : (
+            <div className="min-h-4 flex-1" aria-hidden="true" />
+          )}
+
 
         {campaign.role === 'dm' && (
           <div className="mt-auto border-t border-[var(--border-default)] pt-4">
@@ -147,6 +161,7 @@ export default function CampaignCard({ campaign }: Props) {
             </div>
           </div>
         )}
+        </div>
       </Card>
 
       <Dialog
