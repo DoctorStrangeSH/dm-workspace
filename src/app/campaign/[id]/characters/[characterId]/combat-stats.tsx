@@ -66,9 +66,9 @@ export default function CombatStats({
                 size="sm"
                 label={t('characters.rollInitiative')}
                 onClick={stat.onRoll}
-                className="absolute top-1 right-1 opacity-100 transition hover:bg-[var(--bg-hover)] md:opacity-60 md:group-hover:opacity-100 focus-visible:opacity-100"
+                className="absolute top-1 right-1 min-h-11 min-w-11 touch-manipulation opacity-100 transition hover:bg-[var(--bg-hover)] md:opacity-60 md:group-hover:opacity-100 focus-visible:opacity-100"
               >
-                <Dices size={10} />
+                <Dices size={18} />
               </IconButton>
             )}
           </Card>
