@@ -17,7 +17,7 @@ export function useRealtimeSummons({ campaignId, initialRequests }: Options) {
     const supabase = createClient()
 
     const channel = supabase
-      .channel(`summons:${campaignId}`)
+      .channel(`summons:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const req = payload.payload?.record as SummonRequestWithRequester | undefined
         if (!req || req.campaign_id !== campaignId) return
