@@ -1,12 +1,10 @@
 -- Realtime Broadcast authorization hardening (DEV/staging first).
--- Do not apply until the client subscriptions are private and the topic/payload
--- contract in docs/security/realtime-storage-hardening-plan.md is implemented.
--- This migration intentionally DENIES player access to handouts:<campaign_id>
--- until broadcast_handout_changes stops emitting raw rows and a safe member DTO
--- is implemented. It also does not authorize the legacy campaign:<id> catch-all.
+-- Replaces broad authenticated reads with exact campaign/scene membership checks.
+-- Legacy handouts:<campaign_id> remains DM-only because it is a management stream;
+-- players use handouts-visible:<campaign_id>, which emits only a safe DTO.
+-- The legacy campaign:<id> catch-all is intentionally not authorized.
 
 begin;
-
 
 -- Publish only a safe DTO to players for visible handouts. Never broadcast raw
 -- handout rows (which may contain hidden material metadata or storage paths).
