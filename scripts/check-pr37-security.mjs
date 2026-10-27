@@ -62,6 +62,15 @@ check('Handout client subscribes privately to the DTO topic', () => {
   has(handoutHook, /\.on\('broadcast', \{ event: 'DELETE' \}/)
 })
 
+check('Visible handout DTOs are validated rather than cast as full rows', () => {
+  has(handoutHook, /type VisibleHandout = Pick<Handout,/, 'Use the explicitly minimal Broadcast DTO type')
+  has(handoutHook, /function parseVisibleHandout\(value: unknown, campaignId: string\)/, 'Validate unknown Broadcast payloads')
+  has(handoutHook, /record\.campaign_id !== campaignId/, 'Reject events for other campaigns')
+  has(handoutHook, /record\.is_visible !== true/, 'Reject hidden handouts')
+  has(handoutHook, /function parseDeletedHandoutId\(value: unknown\)/, 'Validate deletion payloads')
+  assert.doesNotMatch(handoutHook, /payload\.payload\.record as Handout/, 'Do not cast partial Broadcast DTO to a full Handout')
+})
+
 check('All target Storage migrations make buckets private and drop public reads', () => {
   for (const [name, sql, bucket, publicPolicy] of [
     ['handouts', handouts, 'handouts', 'Anyone can view handouts'],
