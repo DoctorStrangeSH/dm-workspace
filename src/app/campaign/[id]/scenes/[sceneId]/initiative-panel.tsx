@@ -102,17 +102,19 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
             {t('scenes.initiative.now')}
           </div>
           <div className="font-semibold text-[var(--text-primary)]">{currentEntry.token.name}</div>
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleNextTurn}
-            disabled={isPending}
-            icon={<ChevronRight size={14} />}
-            iconPosition="right"
-            className="mt-2 w-full"
-          >
-            {t('scenes.initiative.nextTurn')}
-          </Button>
+          {isDm && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleNextTurn}
+              disabled={isPending}
+              icon={<ChevronRight size={14} />}
+              iconPosition="right"
+              className="mt-2 w-full"
+            >
+              {t('scenes.initiative.nextTurn')}
+            </Button>
+          )}
         </div>
       )}
 
@@ -126,7 +128,11 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
             {entries.map((entry) => {
               const isCurrent = entry.is_current
               const hasHP = entry.token.hp_current !== null && entry.token.hp_max !== null
-              const hpPercent = hasHP ? (entry.token.hp_current! / entry.token.hp_max!) * 100 : null
+              const hpPercent = hasHP
+                ? entry.token.hp_max! > 0
+                  ? Math.min(100, Math.max(0, (entry.token.hp_current! / entry.token.hp_max!) * 100))
+                  : 0
+                : null
               const ac = entry.token.ac ?? null
               const conditions = entry.token.conditions
 
@@ -271,17 +277,19 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
         )}
       </div>
 
-      <div className="border-t border-[var(--border-default)] p-3">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowEndCombatConfirm(true)}
-          disabled={isPending}
-          className="w-full text-[var(--danger-text)]"
-        >
-          {t('scenes.initiative.endCombat')}
-        </Button>
-      </div>
+      {isDm && (
+        <div className="border-t border-[var(--border-default)] p-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowEndCombatConfirm(true)}
+            disabled={isPending}
+            className="w-full text-[var(--danger-text)]"
+          >
+            {t('scenes.initiative.endCombat')}
+          </Button>
+        </div>
+      )}
 
       {selectedEntry && (
         <Dialog
@@ -302,7 +310,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                 <div
                   className="h-full bg-[var(--danger)] transition-all duration-300"
                   style={{
-                    width: `${(selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100}%`,
+                    width: `${selectedEntry.token.hp_max > 0 ? Math.min(100, Math.max(0, (selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100)) : 0}%`,
                   }}
                 />
               </div>
