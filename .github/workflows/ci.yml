@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - security/realtime-storage-hardening-plan
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
