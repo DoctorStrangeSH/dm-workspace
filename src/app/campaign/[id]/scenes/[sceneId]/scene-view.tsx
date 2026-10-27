@@ -17,6 +17,9 @@ import {
   Square,
   Trash2,
   Sparkles,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
 } from 'lucide-react'
 import { setActiveScene, uploadMap } from '@/lib/actions/scenes'
 import { startCombat } from '@/lib/actions/combat'
@@ -88,6 +91,8 @@ export default function SceneView({
   const [isPending, startTransition] = useTransition()
   const [isUploading, setIsUploading] = useState(false)
   const [showGrid, setShowGrid] = useState(true)
+  const [mapZoom, setMapZoom] = useState(1)
+  const mapViewportRef = useRef<HTMLDivElement>(null)
   const [showAddToken, setShowAddToken] = useState(false)
   const [showInitiative, setShowInitiative] = useState(false)
   const [showSummon, setShowSummon] = useState(false)
@@ -116,6 +121,35 @@ export default function SceneView({
     y2: number
   } | null>(null)
   const wallWrapperRef = useRef<HTMLDivElement>(null)
+  const mapWidth = scene.width * scene.grid_size
+  const mapHeight = scene.height * scene.grid_size
+
+  const changeMapZoom = (next: number) => {
+    const zoom = Math.min(2, Math.max(0.5, Math.round(next * 4) / 4))
+    if (zoom === mapZoom) return
+    const viewport = mapViewportRef.current
+    const centerX = viewport ? (viewport.scrollLeft + viewport.clientWidth / 2) / mapZoom : 0
+    const centerY = viewport ? (viewport.scrollTop + viewport.clientHeight / 2) / mapZoom : 0
+    setMapZoom(zoom)
+    requestAnimationFrame(() => {
+      const target = mapViewportRef.current
+      if (target) {
+        target.scrollLeft = centerX * zoom - target.clientWidth / 2
+        target.scrollTop = centerY * zoom - target.clientHeight / 2
+      }
+    })
+  }
+
+  const resetMapView = () => {
+    setMapZoom(1)
+    requestAnimationFrame(() => {
+      const viewport = mapViewportRef.current
+      if (viewport) {
+        viewport.scrollLeft = Math.max(0, (mapWidth - viewport.clientWidth) / 2)
+        viewport.scrollTop = Math.max(0, (mapHeight - viewport.clientHeight) / 2)
+      }
+    })
+  }
 
   const tokensPlural = (n: number) =>
     pluralize(lang, n, {
@@ -252,8 +286,8 @@ export default function SceneView({
   const getGridCoords = (e: React.MouseEvent): { x: number; y: number } | null => {
     if (!wallWrapperRef.current) return null
     const rect = wallWrapperRef.current.getBoundingClientRect()
-    const rawX = (e.clientX - rect.left) / scene.grid_size
-    const rawY = (e.clientY - rect.top) / scene.grid_size
+    const rawX = (e.clientX - rect.left) / (scene.grid_size * mapZoom)
+    const rawY = (e.clientY - rect.top) / (scene.grid_size * mapZoom)
     return {
       x: Math.round(rawX * 2) / 2,
       y: Math.round(rawY * 2) / 2,
@@ -674,9 +708,24 @@ export default function SceneView({
         </div>
       )}
 
+      {/* Масштабирование сохраняет координаты карты и всех её слоёв. */}
+      <div className="mb-2 flex items-center justify-end gap-2" role="group" aria-label="Масштаб карты">
+        <button type="button" aria-label="Уменьшить масштаб карты" title="Уменьшить масштаб" disabled={mapZoom <= 0.5} onClick={() => changeMapZoom(mapZoom - 0.25)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] disabled:opacity-40">
+          <ZoomOut size={17} />
+        </button>
+        <span className="min-w-12 text-center text-sm tabular-nums text-[var(--text-secondary)]" aria-live="polite">{Math.round(mapZoom * 100)}%</span>
+        <button type="button" aria-label="Увеличить масштаб карты" title="Увеличить масштаб" disabled={mapZoom >= 2} onClick={() => changeMapZoom(mapZoom + 0.25)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] disabled:opacity-40">
+          <ZoomIn size={17} />
+        </button>
+        <button type="button" aria-label="Сбросить масштаб и центрировать карту" title="100% и центр карты" onClick={resetMapView} className="flex h-9 items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-2 text-xs text-[var(--text-primary)]">
+          <Maximize size={16} /> 100%
+        </button>
+      </div>
+
       {/* Карта + слои */}
       <div className="flex justify-center">
         <div
+          ref={mapViewportRef}
           className="relative w-full overflow-auto"
           style={{
             maxWidth: '100%',
@@ -685,9 +734,10 @@ export default function SceneView({
             WebkitOverflowScrolling: 'touch',
           }}
         >
+          <div style={{ width: mapWidth * mapZoom, height: mapHeight * mapZoom, position: 'relative' }}>
           <div
             ref={wallWrapperRef}
-            style={{ position: 'relative', display: 'inline-block' }}
+            style={{ position: 'absolute', top: 0, left: 0, width: mapWidth, height: mapHeight, transform: `scale(${mapZoom})`, transformOrigin: 'top left' }}
             onMouseDown={handleWallMouseDown}
             onMouseMove={handleWallMouseMove}
           >
@@ -702,6 +752,7 @@ export default function SceneView({
 
             <TokenLayer
               scene={scene}
+              zoomScale={mapZoom}
               initialTokens={tokens}
               isDm={isDm}
               currentUserId={currentUserId}
@@ -730,6 +781,7 @@ export default function SceneView({
                 onClose={() => setActiveTool('none')}
               />
             )}
+          </div>
           </div>
         </div>
       </div>
