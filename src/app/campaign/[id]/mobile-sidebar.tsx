@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Settings, Crown } from 'lucide-react'
+import { Menu, X, Settings, Crown, Compass } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/ui'
 import { useT } from '@/lib/i18n' // CHANGES
@@ -68,13 +68,14 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
 
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-screen w-64 border-r border-[var(--border-default)] bg-[var(--bg-app)] transition-transform md:hidden',
+          'fixed top-0 left-0 z-50 h-dvh w-[min(19rem,85vw)] border-r border-[var(--border-default)] bg-[var(--bg-primary)] shadow-[var(--shadow-xl)] transition-transform md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
-          <span className="text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-            {t('nav.menu')} {/* CHANGES */}
+          <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-[var(--accent-text)]">
+            <Compass size={17} aria-hidden="true" />
+            {t('nav.menu')}
           </span>
           <IconButton
             variant="ghost"
@@ -86,7 +87,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
           </IconButton>
         </div>
 
-        <nav className="h-[calc(100vh-57px)] space-y-1 overflow-y-auto p-4">
+        <nav className="h-[calc(100dvh-57px)] space-y-1 overflow-y-auto p-3" aria-label={t('nav.mainNavigation')}>
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
@@ -96,16 +97,17 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                  'flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
                   isActive
-                    ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+                    ? 'bg-[var(--accent-subtle)] text-[var(--accent-text)] shadow-[inset_3px_0_0_var(--accent)]'
                     : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
                 )}
               >
-                <Icon size={16} />
-                {t(item.labelKey)} {/* CHANGES */}
+                <Icon size={18} className="shrink-0" aria-hidden="true" />
+                <span className="truncate">{t(item.labelKey)}</span>
               </Link>
             )
           })}
