@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Check, X, TrendingUp } from 'lucide-react'
+import { Pencil, Check, X, TrendingUp, Sword } from 'lucide-react'
 import { updateCharacter } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { Breadcrumbs } from '@/components/breadcrumbs'
@@ -141,10 +141,13 @@ export default function CharacterSheet({
         className="mb-4"
       />
 
-      <Card padding="lg" className="mb-4">
-        <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-3xl">
-            ⚔️
+      <Card padding="lg" className="relative mb-5 overflow-hidden rounded-2xl border-[var(--border-default)] bg-[linear-gradient(115deg,var(--bg-surface),var(--bg-secondary))] shadow-[var(--shadow-sm)]">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-60 w-60 rounded-full border border-[var(--accent)]/15">
+          <div className="absolute inset-10 rounded-full border border-[var(--accent)]/10" />
+        </div>
+        <div className="relative flex flex-wrap items-start gap-4">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent-subtle)] text-[var(--accent-text)]">
+            <Sword size={30} aria-hidden="true" />
           </div>
 
           <div className="min-w-0 flex-1">
@@ -162,7 +165,7 @@ export default function CharacterSheet({
                     }
                   }}
                   autoFocus
-                  className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-xl font-bold text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                  className="min-w-0 max-w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-xl font-bold text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
                 />
                 <IconButton
                   variant="ghost"
@@ -188,7 +191,7 @@ export default function CharacterSheet({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-[var(--text-primary)]">{character.name}</h1>
+                <h1 className="break-words text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">{character.name}</h1>
                 {canEdit && (
                   <IconButton
                     variant="ghost"
