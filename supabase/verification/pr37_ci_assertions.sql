@@ -13,6 +13,26 @@ BEGIN
   END IF;
 END $$;
 
+-- Internal SECURITY DEFINER trigger functions must not be exposed via RPC.
+DO $
+DECLARE fn record;
+BEGIN
+  FOR fn IN
+    SELECT p.oid, p.proname
+    FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE n.nspname='public' AND p.proname IN
+      ('broadcast_fog_changes','broadcast_handout_changes','broadcast_message_changes',
+       'broadcast_music_state','broadcast_scene_walls','broadcast_summon_requests',
+       'broadcast_token_changes','broadcast_token_owners')
+  LOOP
+    IF has_function_privilege('anon', fn.oid, 'EXECUTE')
+      OR has_function_privilege('authenticated', fn.oid, 'EXECUTE')
+    THEN
+      RAISE EXCEPTION 'Broadcast trigger function % still RPC-executable', fn.proname;
+    END IF;
+  END LOOP;
+END $;
+
 -- Tests below exercise PostgreSQL RLS as an authenticated non-DM campaign-A player.
 SET ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',false);
