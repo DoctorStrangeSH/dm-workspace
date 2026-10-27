@@ -286,13 +286,16 @@ async function blockUnsynchronizedLinkedHP(
   campaignId: string
 ): Promise<ErrorResult | null> {
   const supabase = await createClient()
-  const { count, error } = await supabase
-    .from('tokens')
-    .select('id', { count: 'exact', head: true })
-    .eq('campaign_id', campaignId)
-    .eq('character_id', characterId)
-  if (error) return { error: 'Не удалось проверить связанные токены. Повторите позже.' }
-  if ((count ?? 0) > 0) {
+  // RPC is not installed yet; fail closed until reviewed and enabled in DEV.
+  // Its SECURITY DEFINER implementation can see linked tokens hidden by RLS.
+  const { data: hasLinkedTokens, error } = await supabase.rpc('has_linked_character_tokens', {
+    p_character_id: characterId,
+    p_campaign_id: campaignId,
+  })
+  if (error || typeof hasLinkedTokens !== 'boolean') {
+    return { error: 'Не удалось безопасно проверить связанные токены. Изменение HP временно недоступно.' }
+  }
+  if (hasLinkedTokens) {
     return { error: 'HP персонажа связано с токеном на карте. Изменение требует атомарной синхронизации; обратитесь к мастеру.' }
   }
   return null
