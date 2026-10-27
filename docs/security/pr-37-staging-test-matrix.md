@@ -35,7 +35,7 @@ Run each case for `handouts`, `music`, and `scene-maps`.
 - [ ] DM-B/Player-B cannot receive campaign-A topics, and A users cannot receive B topics.
 - [ ] Outsider and Anonymous cannot receive private campaign/scene topics.
 - [ ] `summons:A` is DM-only; Player-A, outsiders, and anonymous clients are denied.
-- [ ] `handouts:A` is currently DM-only while its trigger emits raw rows. This is a known player-facing regression; either explicitly accept/document it for this rollout or implement a player-safe DTO/topic and test visible/hidden handout events before enabling player subscriptions.
+- [ ] `handouts:A` remains DM-only for the legacy management stream. Players use `handouts-visible:A`; verify only the safe DTO is sent, hidden handouts are never broadcast, and hiding/deleting a visible handout emits a removal event. Confirm outsiders and anonymous clients are denied.
 - [ ] Legacy `campaign:<id>` topic is denied; no client silently relies on it.
 - [ ] Client-originated Broadcast writes are denied unless separately and narrowly authorized.
 - [ ] Test INSERT, UPDATE, DELETE for every event source; token-owner trigger currently needs special attention because its live trigger behavior may not cover UPDATE.
