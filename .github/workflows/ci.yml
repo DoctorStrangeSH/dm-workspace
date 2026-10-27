@@ -81,5 +81,6 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000200_private_handout_storage.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000300_private_music_storage.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000400_private_scene_maps_storage.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000500_fix_private_scene_maps_object_name.sql
       - name: Assert role-scoped Storage and Realtime behavior
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/pr37_ci_assertions.sql
