@@ -22,6 +22,10 @@ The user explicitly authorized overwriting DEV, and all four staged migrations w
 - DEV data counts at verification: 6 campaign membership rows, 0 handouts, 1 track, 4 scenes, 1 music Storage object and 3 scene-map Storage objects. **This limits handout end-to-end verification: no real handouts existed.**
 - **PRODUCTION `klzziumdjpagqquihpks` was not touched.**
 
+**Read-only PROD preflight (2026-10-27):** PROD `klzziumdjpagqquihpks` still has all three targeted buckets `public=true`, public Storage SELECT policies, the unrestricted `Authenticated can receive broadcasts` Realtime policy and 4 campaign membership rows. PROD was not modified. Do not apply production SQL before deployment compatibility/runtime validation.
+
+**Post-DEV security advisor:** Supabase reports unrelated mutable-search-path warnings for five legacy functions and SECURITY DEFINER callable-role warnings (including broadcast triggers). No blanket privilege revocation was performed; investigate separately and test trigger behavior before modifying grants.
+
 **STILL REQUIRED BEFORE PROD/merge:** Test actual DEV browser/API Storage reads and redirects (scene map and music objects available), Realtime WebSocket auth and role isolation using real users, and confirm DEV app deployment matches PR branch; a real recoverable backup is not yet confirmed. The user gave permission to eventually move changes to PROD, but production must remain untouched until these checks pass and application deployment is coordinated. No new paid branch created.
 
 ---
