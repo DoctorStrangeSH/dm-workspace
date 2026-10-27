@@ -1,6 +1,7 @@
 -- REVIEW DRAFT ONLY. Not in supabase/migrations; must NOT be applied to production.
 -- Verify actual schema, RLS and migration ownership in isolated DEV before promotion.
 -- This function intentionally fails closed if token & linked character HP disagree.
+-- Linked token lock order: character -> token. Deploy only alongside coordinated HP writers.
 BEGIN;
 CREATE OR REPLACE FUNCTION public.apply_token_hp_atomic(
   p_token_id uuid,
@@ -16,6 +17,7 @@ AS $function$
 DECLARE
   v_user uuid := auth.uid();
   v_token public.tokens%ROWTYPE;
+  v_preflight_token public.tokens%ROWTYPE;
   v_char public.characters%ROWTYPE;
   v_new integer;
   v_char_hp jsonb;
@@ -31,7 +33,27 @@ BEGIN
     RAISE EXCEPTION 'Invalid HP request' USING ERRCODE = '22023';
   END IF;
 
-  -- Hold the token row lock across computation and both writes.
+  -- Preflight is ONLY a lookup; do not trust it for authorization or HP values.
+  SELECT t.* INTO v_preflight_token
+  FROM public.tokens t
+  JOIN public.scenes s ON s.id = t.scene_id AND s.campaign_id = t.campaign_id
+  WHERE t.id = p_token_id AND t.scene_id = p_scene_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Token not found' USING ERRCODE = 'P0002';
+  END IF;
+
+  -- Common order for linked token writers: character -> token.
+  -- Never hold a token lock while waiting for a character lock.
+  IF v_preflight_token.character_id IS NOT NULL THEN
+    SELECT c.* INTO v_char FROM public.characters c
+    WHERE c.id = v_preflight_token.character_id
+      AND c.campaign_id = v_preflight_token.campaign_id
+    FOR UPDATE;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Linked character not found' USING ERRCODE = 'P0002';
+    END IF;
+  END IF;
+
   SELECT t.* INTO v_token
   FROM public.tokens t
   JOIN public.scenes s ON s.id = t.scene_id AND s.campaign_id = t.campaign_id
@@ -39,6 +61,12 @@ BEGIN
   FOR UPDATE OF t;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Token not found' USING ERRCODE = 'P0002';
+  END IF;
+  -- Reject linkage/ownership changes between the preflight read and lock.
+  -- The transaction rolls back all writes and the caller may retry.
+  IF v_token.character_id IS DISTINCT FROM v_preflight_token.character_id
+     OR v_token.campaign_id IS DISTINCT FROM v_preflight_token.campaign_id THEN
+    RAISE EXCEPTION 'Token link changed; retry' USING ERRCODE = '40001';
   END IF;
 
   -- Explicit permissions required under SECURITY DEFINER.
@@ -78,12 +106,7 @@ BEGIN
   END IF;
 
   IF v_token.character_id IS NOT NULL THEN
-    SELECT c.* INTO v_char FROM public.characters c
-      WHERE c.id = v_token.character_id AND c.campaign_id = v_token.campaign_id
-      FOR UPDATE;
-    IF NOT FOUND THEN
-      RAISE EXCEPTION 'Linked character not found' USING ERRCODE = 'P0002';
-    END IF;
+    -- v_char was locked before the token (and link revalidated above).
 
     v_char_hp := v_char.data_json -> 'hp';
     -- Require integral JSON numbers, not coercion of malformed strings.
