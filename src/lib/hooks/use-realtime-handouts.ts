@@ -32,7 +32,7 @@ export function useRealtimeHandouts({ campaignId, initialHandouts, enabled = tru
       if (cancelled) return
 
       channel = supabase
-      .channel(`handouts:${campaignId}`, { config: { private: true } })
+      .channel(`handouts-visible:${campaignId}`, { config: { private: true } })
       .on('broadcast', { event: 'INSERT' }, (payload) => {
         const record = payload.payload.record as Handout
         if (!record) return
