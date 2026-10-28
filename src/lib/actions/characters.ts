@@ -11,6 +11,7 @@ import {
   type CharacterInventoryItem,
 } from '@/lib/types'
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
+import { isSubclassForClass, baseClassSlug } from '@/lib/dnd/srd-class-utils'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
@@ -47,6 +48,9 @@ export async function createCharacter(
   if (trimmed.length > 150) return { error: 'Имя слишком длинное' }
 
   const data: CharacterData = { ...createEmptyCharacterData(), ...initialData }
+  if (data.subclass !== undefined && !isSubclassForClass(data.subclass, baseClassSlug(data.class))) {
+    return { error: 'Подкласс не соответствует классу персонажа' }
+  }
   const ability = getSpellcastingAbility(data.class)
   if (ability) data.spellcastingAbility = ability
 
@@ -120,7 +124,11 @@ export async function updateCharacter(
     if (JSON.stringify(value).length > 200_000) {
       return { error: 'Данные персонажа слишком большие' }
     }
-    safeUpdates.data_json = value as CharacterData
+    const characterData = value as CharacterData
+    if (characterData.subclass !== undefined && !isSubclassForClass(characterData.subclass, baseClassSlug(characterData.class))) {
+      return { error: 'Подкласс не соответствует классу персонажа' }
+    }
+    safeUpdates.data_json = characterData
   }
 
   if (updates.is_active !== undefined) {
