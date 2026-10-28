@@ -19,6 +19,8 @@
 - #226 merged: responsive mobile bottom navigation, combat-stat cards and character tabs; adds keyboard navigation (arrows, Home/End) and ARIA tab/panel relationships. GitHub Actions lint/typecheck/build and PR security test jobs passed. Vercel reported build rate limiting, so deployment/Preview was not verified.
 - #227 merged: initial handoff document.
 - #228 merged: refreshed this handoff after #226; the PR itself was documentation-only.
+- #229 merged: refreshed this handoff after closing obsolete Preview PRs.
+- #231 merged: mobile character controls clean-port from #130–#134. Improves level-up dialog scrolling/safe areas, sticky wizard navigation, class editor touch targets, HP control touch targets and accessible input labels, and ability/save/skill roll affordances. GitHub Actions lint/typecheck/build and PR checks passed after fixing one JSX syntax error. Vercel deployment remains rate-limited, so Preview/device QA is not yet verified.
 - #51 and #52 were closed without merge as obsolete Draft-only integration Preview/smoke-test branches. The later UI implementations are already in main; if old smoke coverage is still needed, port only relevant tests into a current main-based PR.
 - Prior isolated #45–#50 design PRs were **closed without merge**; their refreshed implementations were ported in later merged integration PRs. Avoid merging old stacks again.
 - #51 and #52 are **closed without merge** obsolete Draft integration Preview/smoke-test branches; do not reopen or merge their old branch stacks.
