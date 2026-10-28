@@ -11,7 +11,8 @@ import {
 } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog } from '@/components/ui'
-import { useT } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
+import { ITEM_TYPES, ITEM_RARITIES, itemTypeLabel, itemRarityLabel, itemRarityClass, type ItemType, type ItemRarity } from '@/lib/dnd/inventory-metadata'
 import { cn } from '@/lib/utils'
 import type { CharacterInventoryItem } from '@/lib/types'
 
@@ -23,13 +24,15 @@ interface Props {
 }
 
 export default function InventoryItem({ item, characterId, campaignId, canEdit }: Props) {
-  const t = useT()
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [isEditing, setIsEditing] = useState(false)
   const [editName, setEditName] = useState(item.name)
   const [editQuantity, setEditQuantity] = useState(item.quantity)
+  const [editType, setEditType] = useState<ItemType>(item.itemType ?? 'other')
+  const [editRarity, setEditRarity] = useState<ItemRarity>(item.rarity ?? 'common')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const itemId = item.id
@@ -45,6 +48,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
       const res = await updateInventoryItem(characterId, campaignId, itemId, {
         name: editName.trim(),
         quantity: editQuantity,
+        itemType: editType,
+        rarity: editRarity,
       })
       if ('error' in res) {
         toast.error(res.error)
@@ -131,6 +136,12 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                 min={1}
                 className="w-16 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
               />
+              <select aria-label={lang === 'en' ? 'Item type' : 'Тип предмета'} value={editType} onChange={(e) => setEditType(e.target.value as ItemType)} className="min-h-9 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
+                {ITEM_TYPES.map((value) => <option key={value} value={value}>{itemTypeLabel(value, lang)}</option>)}
+              </select>
+              <select aria-label={lang === 'en' ? 'Rarity' : 'Редкость'} value={editRarity} onChange={(e) => setEditRarity(e.target.value as ItemRarity)} className="min-h-9 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
+                {ITEM_RARITIES.map((value) => <option key={value} value={value}>{itemRarityLabel(value, lang)}</option>)}
+              </select>
               <button
                 onClick={handleSaveEdit}
                 disabled={isPending}
@@ -143,6 +154,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                   setIsEditing(false)
                   setEditName(item.name)
                   setEditQuantity(item.quantity)
+                  setEditType(item.itemType ?? 'other')
+                  setEditRarity(item.rarity ?? 'common')
                 }}
                 className="rounded p-1 hover:bg-[var(--bg-hover)]"
               >
@@ -159,6 +172,16 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                   </span>
                 )}
               </div>
+              {(item.itemType || item.rarity) && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {item.itemType && itemTypeLabel(item.itemType, lang) && (
+                    <span className="rounded-md border border-[var(--border-default)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">{itemTypeLabel(item.itemType, lang)}</span>
+                  )}
+                  {item.rarity && itemRarityLabel(item.rarity, lang) && (
+                    <span className={cn('rounded-md border px-2 py-0.5 text-[11px] font-semibold', itemRarityClass(item.rarity))}>{itemRarityLabel(item.rarity, lang)}</span>
+                  )}
+                </div>
+              )}
               {item.notes && (
                 <p className="truncate text-xs text-[var(--text-muted)]">{item.notes}</p>
               )}
