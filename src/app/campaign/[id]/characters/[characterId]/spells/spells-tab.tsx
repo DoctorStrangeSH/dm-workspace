@@ -97,13 +97,14 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         {canEdit && (
           <>
             <Button
               variant="primary"
-              size="sm"
-              icon={<Plus size={14} />}
+              size="md"
+              className="min-h-12 touch-manipulation"
+              icon={<Plus size={18} />}
               onClick={() => setShowAddDialog(true)}
             >
               {t('spells.add')}
@@ -111,8 +112,9 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
 
             <Button
               variant="secondary"
-              size="sm"
-              icon={<Moon size={14} />}
+              size="md"
+              className="min-h-12 touch-manipulation"
+              icon={<Moon size={18} />}
               onClick={() => setShowRestConfirm(true)}
               disabled={isPending}
             >
