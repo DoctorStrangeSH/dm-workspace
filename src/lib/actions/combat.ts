@@ -367,17 +367,18 @@ export async function damageToken(
       previous && typeof previous === 'object' && !Array.isArray(previous)
         ? (previous as { hp?: { current?: number; max?: number; temp?: number } })
         : {}
-    data.hp = { ...data.hp, current: newHP }
+    // Do not mutate the fetched snapshot: CAS must compare against the
+    // exact JSON value read before computing HP.
+    const nextData = { ...data, hp: { ...data.hp, current: newHP } }
 
-    const { data: updatedCharacter, error: characterUpdateError } = await supabase
-      .from('characters')
-      .update({ data_json: data })
-      .eq('id', token.character_id)
-      .eq('campaign_id', campaignId)
-      .select('id')
-      .maybeSingle()
+    const { data: changed, error: characterUpdateError } = await supabase.rpc('update_character_data_cas', {
+      p_character_id: token.character_id,
+      p_campaign_id: campaignId,
+      p_expected: previous,
+      p_next: nextData,
+    })
 
-    if (characterUpdateError || !updatedCharacter) {
+    if (characterUpdateError || changed !== true) {
       // Best-effort rollback, guarded by the value written above to reduce the chance of overwriting a concurrent change.
       const { data: rolledBack, error: rollbackError } = await supabase
         .from('tokens')
