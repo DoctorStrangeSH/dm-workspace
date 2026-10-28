@@ -21,3 +21,7 @@ Tracking: #207, #208. DEV project: `yoondivyeueyrtgeldja`. PROD: `klzziumdjpagqq
 
 ## Rollout note
 The DEV function has been applied directly through SQL for verification. The SQL migration in #208 is the source-controlled release artifact; do not reapply manually without checking migration state.
+
+## Independent-session concurrency smoke (2026-10-28)
+
+Created disposable DEV-only character, dispatched two `execute_sql` calls via `Promise.allSettled` with independent transactions/`SET LOCAL ROLE authenticated` and simulated owner JWT claim. HP writer updated `data_json.hp.current` to 7, held row lock via `pg_sleep(1.5)` then committed; identity writer called `update_character_identity_atomic` concurrently and committed. Both SQL calls returned successfully. Persisted state after both commits: class `fighter`, subclass `srd-2024_champion`, HP current `7`, inventory JSON intact. Deleted only the disposable fixture by matching both ID and test name; DELETE confirmed. This validates the exercised concurrent **row-level SQL patch** path, but **does not** validate the application’s legacy whole-document `updateCharacter` path or genuine signed JWT authentication. Reverse-order race and stale whole-document writer remain to be tested; do not claim end-to-end lost-update safety.
