@@ -1,6 +1,6 @@
 # HP write-path audit — current main
 
-Checkpoint: 2026-10-28. This is a static source audit, not a claim that live DEV or PROD behavior has been verified.
+Checkpoint: 2026-10-28. Static source audit plus read-only live DEV catalog/migration inspection. No live HP mutation or concurrency test was run.
 
 ## Confirmed write paths
 
@@ -29,7 +29,12 @@ Checkpoint: 2026-10-28. This is a static source audit, not a claim that live DEV
 - **Do not merge the stacked #160–#172 chain as-is**. Review the diffs against current main and extract only reviewed tests/docs into a small main-based PR when useful. Several PRs are stacked on old feature branches and describe uninstalled review SQL.
 - Do not deploy review SQL or mutate Production while any alternate HP writer bypasses the agreed transaction contract.
 
+## Read-only DEV database inspection (2026-10-28)
+
+Supabase MCP confirmed the project named `dm-workspace` with ref `yoondivyeueyrtgeldja` is ACTIVE_HEALTHY. Its recorded migration list contains six migrations from 2026-10-27, none named for atomic HP. A catalog query confirmed `public.apply_token_hp_atomic(uuid,uuid,integer,text,integer)` exists in DEV, is executable by `authenticated`, not executable by `anon`, and has no `REVIEW ONLY` barrier in its installed definition. The installed definition contains no sibling-token propagation logic (`v_sibling` absent). This is **not** proof that the function is correctly deployed via migration history; the migration record and function catalog disagree about its provenance. Treat the existing callable DEV RPC as an unverified live change: do not run it against real player data, do not infer it is safe, and do not assume the repository's disabled review SQL matches the installed definition. Capture and review the complete installed function, ownership, grants, related triggers, and DEV migration drift before any test or alteration. Production project was not queried or changed.
+
 ## Current facts vs unknowns
 
 - Confirmed from current `main`: the direct token setter still exists; combat uses separate token and character writes with best-effort rollback; character HP uses CAS independently.
-- Not established by this source audit: exact deployed DEV/PROD function definitions, current migration drift, real two-user concurrency results, or Vercel deployment/Preview health. Verify these through live read-only inspection and guarded DEV tests before any rollout.
+- DEV: `apply_token_hp_atomic` is owned by `postgres`, `SECURITY DEFINER`, empty search_path, EXECUTE granted to `authenticated` but not `anon`; it is absent from the reported migration list, has no review-only barrier, and lacks sibling-token propagation. This is a high-priority migration-provenance and authorization audit item. It has not been called by this audit.
+- Not established: full function security correctness, DEV/PROD schema parity, real two-user concurrency results, or Vercel deployment/Preview health. Production was not queried. Verify through read-only catalog review and guarded disposable-DEV tests before any rollout.
