@@ -1,6 +1,6 @@
 # Old PR archive and preserved backlog — 2026-10-28
 
-Reviewed against main `36e406442b10324d9cadf70c1c84ae53d7684e5a`. The inventory contained 88 open PRs: 84 older delivery branches listed below, plus #237–#240. This main-based documentation PR preserves unfinished requirements before closing the old branches. Closure means **archived without merge**, never implemented or released. Do not bulk merge, retarget, or delete their branches. A changed head must be reviewed again before closure.
+Reviewed against main `36e406442b10324d9cadf70c1c84ae53d7684e5a`. The archive inventory contained 88 open PRs: 84 older delivery branches listed below, plus #237–#240. This triage preserves unfinished requirements from the archived branches. Closure means **archived without merge**, never implemented or released. Do not bulk merge, retarget, or delete those branches. Follow-up: #237 was closed without merge as its findings are preserved in B05; #238–#240 are now incorporated by ancestry into integration PR #241. See [the integration checkpoint](HP_INTEGRATION_CHECKPOINT.md) and current GitHub states for their delivery status.
 
 ## Evidence and closure procedure
 
@@ -50,7 +50,7 @@ Sources #92/#93/#145. Preserve advisor findings and Realtime trigger/grant revie
 
 ## Archive matrix (84 PRs)
 
-Every row is closed without merge as an obsolete delivery branch; its referenced backlog remains open work. #237–#240 are retained. All original head SHAs and changed-file paths are preserved here.
+Every row is closed without merge as an obsolete delivery branch; its referenced backlog remains open work. The #237–#240 retention decision below describes the original archive checkpoint; follow-up status is recorded above. All original head SHAs and changed-file paths are preserved here.
 
 | PR | Original scope | Reviewed head SHA | Disposition and preserved work |
 | --- | --- | --- | --- |
