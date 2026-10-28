@@ -5,7 +5,7 @@
 ## Baseline
 - Repository: `DoctorStrangeSH/dm-workspace`; default branch `main`.
 - At checkpoint refresh (2026-10-28): main commit `ae71be28d1720cb02235635e44e886673335feca` (PR #226).
-- GitHub PR search: **83 merged, 51 closed without merge, 91 open** (225 total observed), highest PR #229. Counts change as triage continues. Counts will change.
+- GitHub PR search: **84 merged, 53 closed without merge, 90 open** (227 total observed), highest PR #229. Counts change as triage continues. Counts will change.
 - Architecture: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, Supabase Postgres/Auth/RLS/Realtime/Storage, Vercel. Core areas: campaigns, chapters, entities, characters/level-up/inventory/spells, scenes/VTT/initiative/HP, sessions, handouts/music, SRD.
 - Source of truth: current `main`, tracked SQL migrations, live DEV and PROD migration histories, deployment status. Do not rely on stale README roadmap or older PR descriptions as proof of current deployment.
 
@@ -20,6 +20,7 @@
 - #227 merged: initial handoff document.
 - #228 merged: refreshed this handoff after #226; the PR itself was documentation-only.
 - #51 and #52 were closed without merge as obsolete Draft-only integration Preview/smoke-test branches. The later UI implementations are already in main; if old smoke coverage is still needed, port only relevant tests into a current main-based PR.
+- #43 and #44 were closed without merge as superseded: DM quick actions are included by #185, and the VTT interaction work is included by #186.
 - Prior isolated #45–#50 design PRs were **closed without merge**; their refreshed implementations were ported in later merged integration PRs. Avoid merging old stacks again.
 - #51 and #52 are **closed without merge** obsolete Draft integration Preview/smoke-test branches; do not reopen or merge their old branch stacks.
 
@@ -48,10 +49,11 @@
 
 ## Next priority
 1. Vercel is rate-limited (reported retry after 24 hours as of 2026-10-28); confirm deployment/Preview status when builds are available again. GitHub Actions passed for #226 and #228, but Vercel deployment/Preview remains unverified. Do not confuse GitHub Actions success with a verified Vercel deployment.
-2. Inventory remaining open PRs against already-merged #183–#226; close verified superseded branches with rationale, prioritizing old non-HP UI stacks. #129/#135/#136/#137 and #51/#52 are already closed as superseded.
-3. Review #182 carefully: it routes token HP through the shared combat action but explicitly does not guarantee transaction-level or sibling-token atomicity. Do not treat it as the final HP fix.
-4. Separately design a single clean and verifiable path for HP atomicity (all tokens, combat, rest, level-up), preserving database safeguards.
-5. Only after stabilizing backlog proceed to new mechanics and product improvements.
+2. Continue inventory of remaining open PRs against merged #183–#226; close verified superseded branches with rationale. #43/#44, #51/#52, and #129/#135/#136/#137 are closed as superseded.
+3. Review mobile character UX chain #130–#134. These are stacked drafts not merged; compare each diff to current main and clean-port relevant touch-target/dialog changes into a main-based PR only after review. Do not merge their old stack directly; Vercel Preview/manual device QA remains blocked.
+4. Review #182 carefully: it routes token HP through the shared combat action but explicitly does not guarantee transaction-level or sibling-token atomicity. Do not treat it as the final HP fix.
+5. Separately design a single clean and verifiable path for HP atomicity (all tokens, combat, rest, level-up), preserving database safeguards.
+6. Only after stabilizing backlog proceed to new mechanics and product improvements.
 
 ## For the next AI
 Read this file first, then `AGENTS.md`, `package.json`, `docs/security/PR37_HANDOFF_FOR_NEXT_AI.md` (historical; may be stale), `docs/character-identity-rpc-dev-verification.md`, and current open PR descriptions. Distinguish **verified code state**, **DEV verification**, and **PROD verification** in every report. Never assume a closed PR was merged. Avoid repeating already-passed checks unless code/infra changed.
