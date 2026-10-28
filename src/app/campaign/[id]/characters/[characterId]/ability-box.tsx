@@ -55,9 +55,9 @@ export default function AbilityBox({ ability, score, modifier, onRoll, onClick }
             e.stopPropagation()
             onRoll()
           }}
-          className="absolute top-1.5 right-1.5 opacity-0 transition group-hover:opacity-100"
+          className="absolute top-1 right-1 min-h-11 min-w-11 touch-manipulation opacity-100 transition md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
         >
-          <Dices size={12} />
+          <Dices size={18} />
         </IconButton>
       )}
     </Card>
