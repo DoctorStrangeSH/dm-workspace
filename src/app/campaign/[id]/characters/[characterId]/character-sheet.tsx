@@ -30,6 +30,7 @@ import {
   rollDice,
 } from '@/lib/dnd/formulas'
 import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
+import { subclassDisplayName } from '@/lib/dnd/srd-class-utils'
 import type { AbilityKey, SkillKey, Character } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
@@ -204,7 +205,7 @@ export default function CharacterSheet({
             )}
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {characterSpeciesName(data.race)} · {characterClassName(data.class)} · {t('characters.level', { level: data.level })}
+              {characterSpeciesName(data.race)} · {characterClassName(data.class)}{data.subclass ? ` (${subclassDisplayName(data.subclass)})` : ''} · {t('characters.level', { level: data.level })}
             </p>
             <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
               {t('characters.owner')}: {owner.display_name ?? owner.username}
