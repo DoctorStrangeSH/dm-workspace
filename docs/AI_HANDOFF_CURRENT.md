@@ -5,7 +5,7 @@
 ## Baseline
 - Repository: `DoctorStrangeSH/dm-workspace`; default branch `main`.
 - At checkpoint refresh (2026-10-28): main commit `ae71be28d1720cb02235635e44e886673335feca` (PR #226).
-- GitHub PR search: **82 merged, 51 closed without merge, 91 open** (224 total observed), highest PR #228. Counts change as triage continues. Counts will change.
+- GitHub PR search: **83 merged, 51 closed without merge, 91 open** (225 total observed), highest PR #229. Counts change as triage continues. Counts will change.
 - Architecture: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, Supabase Postgres/Auth/RLS/Realtime/Storage, Vercel. Core areas: campaigns, chapters, entities, characters/level-up/inventory/spells, scenes/VTT/initiative/HP, sessions, handouts/music, SRD.
 - Source of truth: current `main`, tracked SQL migrations, live DEV and PROD migration histories, deployment status. Do not rely on stale README roadmap or older PR descriptions as proof of current deployment.
 
