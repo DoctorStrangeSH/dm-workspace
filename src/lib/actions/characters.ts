@@ -73,6 +73,7 @@ export async function updateCharacter(
   updates: {
     name?: string
     data_json?: CharacterData
+    expected_data_json?: CharacterData
     is_active?: boolean
     is_visible_to_party?: boolean
   }
@@ -142,6 +143,30 @@ export async function updateCharacter(
       return { error: 'Некорректная видимость персонажа' }
     }
     safeUpdates.is_visible_to_party = updates.is_visible_to_party
+  }
+
+  if (safeUpdates.data_json !== undefined) {
+    // The caller must provide the version of JSON it actually edited.
+    // Reading fresh JSON here would accept an already-stale client payload.
+    const expected: unknown = updates.expected_data_json
+    if (!expected || typeof expected !== 'object' || Array.isArray(expected)) {
+      return { error: 'Для сохранения данных требуется исходная версия персонажа. Обновите страницу.' }
+    }
+    if (Object.keys(safeUpdates).some((key) => key !== 'data_json')) {
+      return { error: 'Изменения характеристик и остальных полей сохраняйте отдельно' }
+    }
+    const { data: changed, error } = await supabase.rpc('update_character_data_cas', {
+      p_character_id: characterId,
+      p_campaign_id: campaignId,
+      p_expected: expected,
+      p_next: safeUpdates.data_json,
+    })
+    if (error) return { error: 'Не удалось сохранить данные персонажа' }
+    if (changed !== true) {
+      return { error: 'Данные персонажа изменились. Обновите страницу и повторите действие.' }
+    }
+    revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
+    return { success: true }
   }
 
   if (Object.keys(safeUpdates).length === 0) {
