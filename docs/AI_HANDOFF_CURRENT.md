@@ -42,6 +42,7 @@
 - There are two distinct Supabase projects. DEV is disposable test space; PROD contains real data. **No destructive changes or unverified schema writes to PROD.**
 - Preserve the tested security migration order, take an independently restorable PROD backup first, run DEV migration/preflight and real app acceptance, then coordinated production release. Compare deployed app env URLs (without revealing credentials), schemas, RLS, Storage and Realtime. No third Supabase project is required for routine work.
 - Never log or commit service role keys, user credentials or test JWTs.
+- Fresh DEV catalog checkpoint (2026-10-28, 10:16–10:24 UTC): see `docs/HP_DEV_METADATA_RECONCILIATION.md`. All catalog/constant-expression batches were read-only; no application RPC or player rows were queried. The six-entry migration ledger differs from repository versions and its statement texts do not mention the installed HP/CAS/identity routine names. The installed HP RPC still lacks the agreed lock/sibling protocol; missing JSON HP keys can also bypass its NULL-sensitive checks. Do not replay migrations, invoke that RPC or run the manual workflow. Next: isolated local PostgreSQL transaction/authorization tests from captured metadata, then a reviewed reconciliation/migration design. #238 is an unmerged preparation Draft.
 
 ## Release routine
 1. Inspect current main and PR dependency graph; identify whether change is already merged, obsolete, or requires a clean port.

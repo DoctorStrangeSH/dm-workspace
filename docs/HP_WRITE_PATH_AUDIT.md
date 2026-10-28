@@ -38,3 +38,17 @@ Supabase MCP confirmed the project named `dm-workspace` with ref `yoondivyeueyrt
 - Confirmed from current `main`: the direct token setter still exists; combat uses separate token and character writes with best-effort rollback; character HP uses CAS independently.
 - DEV: `apply_token_hp_atomic` is owned by `postgres`, `SECURITY DEFINER`, empty search_path, EXECUTE granted to `authenticated` but not `anon`; it is absent from the reported migration list, has no review-only barrier, and lacks sibling-token propagation. This is a high-priority migration-provenance and authorization audit item. It has not been called by this audit.
 - Not established: full function security correctness, DEV/PROD schema parity, real two-user concurrency results, or Vercel deployment/Preview health. Production was not queried. Verify through read-only catalog review and guarded disposable-DEV tests before any rollout.
+
+## Fresh DEV catalog checkpoint (2026-10-28)
+
+See `docs/HP_DEV_METADATA_RECONCILIATION.md` for the 10:16–10:24 UTC read-only
+checkpoint and exact inspection SQL. The ledger still has six entries with
+versions different from the six corresponding PR37 repository migrations;
+character CAS/identity routines are also installed without matching ledger
+entries. The HP definition/rights, token-first locking, missing sibling updates
+and authorized direct write paths remain confirmed. Constant-only JSON checks
+also confirm a missing-key NULL-validation gap in the installed HP source:
+missing HP/current/max can skip its exception guards. No application RPC or
+player-row query was executed, and no database rows/schema/grants were changed.
+The next step is isolated local transaction testing and a reviewed migration
+reconciliation design, not live HP testing or blind migration replay.
