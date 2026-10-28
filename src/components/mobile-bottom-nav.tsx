@@ -32,15 +32,15 @@ export function MobileBottomNav({ campaignId }: Props) {
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'relative flex min-w-0 min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-medium transition-colors',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
+                'relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-medium transition-colors touch-manipulation active:bg-[var(--bg-active)]',
+                'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
                 isActive
                   ? 'text-[var(--accent-text)]'
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               )}
             >
               {isActive && <span aria-hidden="true" className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-b-full bg-[var(--accent)]" />}
-              <Icon size={19} strokeWidth={isActive ? 2.3 : 1.8} aria-hidden="true" />
+              <Icon size={22} strokeWidth={isActive ? 2.3 : 1.8} aria-hidden="true" />
               <span className="line-clamp-2 max-w-full break-words text-center leading-tight">{t(item.labelKey)}</span>
             </Link>
           )
