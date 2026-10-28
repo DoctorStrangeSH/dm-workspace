@@ -38,8 +38,8 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
 
   const sizePx = gridSize * token.size
   const hpPercent =
-    token.hp_current !== null && token.hp_max !== null && token.hp_max > 0
-      ? (token.hp_current / token.hp_max) * 100
+    token.hp_current !== null && token.hp_max !== null && Number.isFinite(token.hp_current) && Number.isFinite(token.hp_max) && token.hp_current >= 0 && token.hp_max > 0
+      ? Math.max(0, Math.min(100, (token.hp_current / token.hp_max) * 100))
       : null
 
   const tokenRadius = token.size * 0.3
@@ -119,6 +119,8 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
     window.addEventListener('pointercancel', handlePointerCancel)
   }
 
+  const conditions = Array.isArray(token.conditions) ? token.conditions : []
+
   return (
     <div
       className={cn(
@@ -127,6 +129,7 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
         dragging && 'z-50 shadow-[var(--shadow-xl)]',
         token.is_hidden && 'opacity-40',
         blocked && 'ring-2 ring-[var(--danger)]',
+        hpPercent === 0 && !isActiveTurn && 'ring-2 ring-[var(--danger)]/60',
         isActiveTurn && 'z-20 ring-[3px] ring-[var(--accent)]',
         !dragging && 'transition-[left,top] duration-200'
       )}
@@ -160,7 +163,7 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
       )}
 
       {hpPercent !== null && (
-        <div className="pointer-events-none absolute right-0 -bottom-1 left-0 h-1 overflow-hidden rounded bg-[var(--bg-app)]">
+        <div className="pointer-events-none absolute right-0 -bottom-2 left-0 h-1.5 overflow-hidden rounded-full bg-[var(--bg-app)]" role="img" aria-label={`HP ${token.hp_current} / ${token.hp_max}`}>
           <div
             className={cn(
               'h-full transition-all',
@@ -175,13 +178,14 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
         </div>
       )}
 
-      <div className="pointer-events-none absolute -bottom-5 left-1/2 -translate-x-1/2 rounded bg-[var(--bg-app)]/80 px-1.5 py-0.5 text-[10px] whitespace-nowrap text-[var(--text-secondary)]">
-        {token.name}
+      <div className={cn("pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] whitespace-nowrap shadow-[var(--shadow-sm)]", isActiveTurn ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--text-primary)]" : "border-[var(--border-default)] bg-[var(--bg-surface)]/95 text-[var(--text-secondary)]")} data-turn-active={isActiveTurn}>
+        <span className="max-w-24 truncate">{token.name}</span>
+        {hpPercent !== null && <span className="shrink-0 font-semibold tabular-nums text-[var(--text-primary)]">{token.hp_current}/{token.hp_max}</span>}
       </div>
 
-      {token.conditions.length > 0 && (
+      {conditions.length > 0 && (
         <div className="pointer-events-none absolute -top-2 -right-2 flex gap-0.5">
-          {token.conditions.slice(0, 3).map((c, i) => (
+          {conditions.slice(0, 3).map((c, i) => (
             <span
               key={i}
               className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[8px]"
@@ -190,6 +194,7 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
               {c.icon ?? '●'}
             </span>
           ))}
+          {conditions.length > 3 && <span className="flex h-4 min-w-5 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] px-0.5 text-[9px] font-bold" title={conditions.slice(3).map(c => c.name).join(', ')}>+{conditions.length - 3}</span>}
         </div>
       )}
     </div>
