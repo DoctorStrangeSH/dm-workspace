@@ -13,13 +13,14 @@ interface Props {
   token: TokenType
   gridSize: number
   zoomScale?: number
+  isActiveTurn?: boolean
   sceneId: string
   canDrag: boolean
   walls?: SceneWall[]
   onClick: () => void
 }
 
-export default function Token({ token, gridSize, zoomScale = 1, sceneId, canDrag, walls = [], onClick }: Props) {
+export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = false, sceneId, canDrag, walls = [], onClick }: Props) {
   const t = useT()
   const toast = useToast()
   const [dragging, setDragging] = useState(false)
@@ -126,6 +127,7 @@ export default function Token({ token, gridSize, zoomScale = 1, sceneId, canDrag
         dragging && 'z-50 shadow-[var(--shadow-xl)]',
         token.is_hidden && 'opacity-40',
         blocked && 'ring-2 ring-[var(--danger)]',
+        isActiveTurn && 'z-20 ring-[3px] ring-[var(--accent)]',
         !dragging && 'transition-[left,top] duration-200'
       )}
       style={{
@@ -140,6 +142,7 @@ export default function Token({ token, gridSize, zoomScale = 1, sceneId, canDrag
       onPointerDown={handlePointerDown}
       onClick={!canDrag ? onClick : undefined}
     >
+      {isActiveTurn && <div aria-hidden="true" className="pointer-events-none absolute -inset-2 rounded-full border-2 border-[var(--accent)]/65 motion-safe:animate-pulse" />}
       {token.image_url ? (
         <Image
           src={token.image_url}
