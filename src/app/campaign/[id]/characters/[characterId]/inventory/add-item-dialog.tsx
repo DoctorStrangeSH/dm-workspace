@@ -6,7 +6,8 @@ import { X } from 'lucide-react'
 import { addInventoryItem } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { Input, Textarea, Button, IconButton } from '@/components/ui'
-import { useT } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
+import { ITEM_TYPES, ITEM_RARITIES, itemTypeLabel, itemRarityLabel, type ItemType, type ItemRarity } from '@/lib/dnd/inventory-metadata'
 
 interface Props {
   characterId: string
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default function AddItemDialog({ characterId, campaignId, onClose }: Props) {
-  const t = useT()
+  const { t, lang } = useI18n()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -23,6 +24,8 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
   const [quantity, setQuantity] = useState(1)
   const [weight, setWeight] = useState('')
   const [notes, setNotes] = useState('')
+  const [itemType, setItemType] = useState<ItemType>('other')
+  const [rarity, setRarity] = useState<ItemRarity>('common')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +40,8 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
         quantity: Math.max(1, quantity),
         weight: weight ? parseFloat(weight) : undefined,
         notes: notes || undefined,
+        itemType,
+        rarity,
       })
       if ('error' in res) {
         toast.error(res.error)
@@ -92,6 +97,21 @@ export default function AddItemDialog({ characterId, campaignId, onClose }: Prop
               step="0.1"
               placeholder="3"
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1 text-sm text-[var(--text-secondary)]">
+              {lang === 'en' ? 'Item type' : 'Тип предмета'}
+              <select value={itemType} onChange={(e) => setItemType(e.target.value as ItemType)} className="min-h-10 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 text-[var(--text-primary)]">
+                {ITEM_TYPES.map((type) => <option key={type} value={type}>{itemTypeLabel(type, lang)}</option>)}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-sm text-[var(--text-secondary)]">
+              {lang === 'en' ? 'Rarity' : 'Редкость'}
+              <select value={rarity} onChange={(e) => setRarity(e.target.value as ItemRarity)} className="min-h-10 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 text-[var(--text-primary)]">
+                {ITEM_RARITIES.map((value) => <option key={value} value={value}>{itemRarityLabel(value, lang)}</option>)}
+              </select>
+            </label>
           </div>
 
           <Textarea
