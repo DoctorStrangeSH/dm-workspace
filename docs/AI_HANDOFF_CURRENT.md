@@ -4,8 +4,8 @@
 
 ## Baseline
 - Repository: `DoctorStrangeSH/dm-workspace`; default branch `main`.
-- At audit: main commit `4f754cee09c1e39dcc5597200408655783120a5b` (PR #225).
-- GitHub PR search: **80 merged, 45 closed without merge, 98 open** (223 total observed), highest PR #226. Counts will change.
+- At checkpoint refresh (2026-10-28): main commit `ae71be28d1720cb02235635e44e886673335feca` (PR #226).
+- GitHub PR search: **81 merged, 49 closed without merge, 93 open** (223 total observed), highest PR #227. Counts will change.
 - Architecture: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, Supabase Postgres/Auth/RLS/Realtime/Storage, Vercel. Core areas: campaigns, chapters, entities, characters/level-up/inventory/spells, scenes/VTT/initiative/HP, sessions, handouts/music, SRD.
 - Source of truth: current `main`, tracked SQL migrations, live DEV and PROD migration histories, deployment status. Do not rely on stale README roadmap or older PR descriptions as proof of current deployment.
 
@@ -16,11 +16,13 @@
 - #193–#197 inventory/spellbook/mobile UX.
 - #198–#217 SRD class/subclass, character identity atomic RPC, CAS safeguards, UI.
 - #218–#225 database/storage authorization, invite codes, RSVP, entity integrity and security audit documentation.
+- #226 merged: responsive mobile bottom navigation, combat-stat cards and character tabs; adds keyboard navigation (arrows, Home/End) and ARIA tab/panel relationships. GitHub Actions lint/typecheck/build and PR security test jobs passed. Vercel reported build rate limiting, so deployment/Preview was not verified.
+- #227 merged: this handoff document.
 - Prior isolated #45–#50 design PRs were **closed without merge**; their refreshed implementations were ported in later merged integration PRs. Avoid merging old stacks again.
 - #51 is an open **draft** integration Preview based on old UI branches, not an authorized production release.
 
 ## Open PR triage
-- #226 open, non-draft, based on main: clean mobile navigation / combat-stat / character-tabs port of #129/#135–#137. Verify current CI, diff, role/accessibility, mobile visual QA before merge; close predecessors only after checking actual equivalence.
+- #226 is **merged**. Older draft PRs #129, #135, #136, and #137 were closed with explanatory comments as superseded by #226. These are not merged PRs; their required mobile improvements are in #226.
 - #182 open: routes token HP setter through existing combat path, but PR explicitly says this is **not** transaction-level or sibling-token atomicity. Review against current main before merging.
 - Large old stacked HP chain (#72–#172 and related PRs) is largely **draft** with bases pointing to other feature branches. Do not mass-merge, retarget, or close. Classify as superseded vs still needed by comparing diffs against current main.
 - Keep docs-only SQL drafts separate from applied production schema. Check actual dependency graph, current head SHAs, CI, and existing fixes before selecting a clean-port change.
@@ -43,10 +45,11 @@
 7. Update this handoff with latest main SHA, PR counts, gate results and next concrete task.
 
 ## Next priority
-1. Review/QA #226, compare old mobile PRs, merge only if current checks pass.
-2. Inventory remaining open PRs against already-merged #183–#225; close verified superseded branches with rationale.
-3. Separately design a single clean and verifiable path for HP atomicity (all tokens, combat, rest, level-up), preserving database safeguards.
-4. Only after stabilizing backlog proceed to new mechanics and product improvements.
+1. Vercel is rate-limited (reported retry after 24 hours as of 2026-10-28); confirm deployment/Preview status when builds are available again. Do not confuse GitHub Actions success with a verified Vercel deployment.
+2. Inventory remaining open PRs against already-merged #183–#226; close verified superseded branches with rationale, prioritizing old non-HP UI stacks.
+3. Review #182 carefully: it routes token HP through the shared combat action but explicitly does not guarantee transaction-level or sibling-token atomicity. Do not treat it as the final HP fix.
+4. Separately design a single clean and verifiable path for HP atomicity (all tokens, combat, rest, level-up), preserving database safeguards.
+5. Only after stabilizing backlog proceed to new mechanics and product improvements.
 
 ## For the next AI
 Read this file first, then `AGENTS.md`, `package.json`, `docs/security/PR37_HANDOFF_FOR_NEXT_AI.md` (historical; may be stale), `docs/character-identity-rpc-dev-verification.md`, and current open PR descriptions. Distinguish **verified code state**, **DEV verification**, and **PROD verification** in every report. Never assume a closed PR was merged. Avoid repeating already-passed checks unless code/infra changed.
