@@ -77,12 +77,13 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         {canEdit && (
           <Button
             variant="primary"
-            size="sm"
-            icon={<Plus size={14} />}
+            size="md"
+            className="min-h-12 touch-manipulation"
+            icon={<Plus size={18} />}
             onClick={() => setShowAddDialog(true)}
           >
             {t('inventory.add')}
@@ -117,12 +118,12 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
               <span className="sr-only">{lang === 'en' ? 'Search inventory' : 'Поиск по инвентарю'}</span>
               <input type="search" value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder={lang === 'en' ? 'Search items…' : 'Найти предмет…'}
-                className="w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" />
+                className="min-h-12 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] py-2 pl-9 pr-3 text-base text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" />
             </label>
             <label className="min-w-0">
               <span className="sr-only">{lang === 'en' ? 'Filter by type' : 'Фильтр по типу'}</span>
               <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}
-                className="min-h-10 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 text-sm text-[var(--text-primary)] sm:max-w-48">
+                className="min-h-12 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 text-sm text-[var(--text-primary)] sm:max-w-48">
                 <option value="all">{lang === 'en' ? 'All types' : 'Все типы'}</option>
                 {ITEM_TYPES.map((type) => <option key={type} value={type}>{itemTypeLabel(type, lang)}</option>)}
               </select>
@@ -140,7 +141,7 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
             <span role="status" aria-live="polite">{lang === 'en' ? 'Found' : 'Найдено'}: {filteredInventory.length} / {inventory.length}</span>
             {(search || typeFilter !== 'all' || rarityFilter !== 'all') && (
               <button type="button" onClick={() => { setSearch(''); setTypeFilter('all'); setRarityFilter('all') }}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+                className="inline-flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
                 <X size={14} aria-hidden="true" />{lang === 'en' ? 'Clear filters' : 'Сбросить фильтры'}
               </button>
             )}
