@@ -3,7 +3,9 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Check, X, TrendingUp, Sword } from 'lucide-react'
-import { updateCharacter } from '@/lib/actions/characters'
+import { updateCharacter, updateCharacterIdentityAtomic } from '@/lib/actions/characters'
+import { CLASSES } from '@/lib/dnd/constants'
+import { SRD_SUBCLASS_BASE, baseClassSlug, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
 import { useToast } from '@/components/toast/toast-provider'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import AbilityBox from './ability-box'
@@ -60,6 +62,9 @@ export default function CharacterSheet({
   const [isEditingName, setIsEditingName] = useState(false)
   const [editName, setEditName] = useState(character.name)
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [isEditingClass, setIsEditingClass] = useState(false)
+  const [editClass, setEditClass] = useState(baseClassSlug(character.data_json.class))
+  const [editSubclass, setEditSubclass] = useState(character.data_json.subclass ?? '')
 
   const data = character.data_json
   const profBonus = proficiencyBonus(data.level)
@@ -80,6 +85,21 @@ export default function CharacterSheet({
       } else {
         toast.success(t('characters.toast.nameUpdated'))
         setIsEditingName(false)
+        router.refresh()
+      }
+    })
+  }
+
+  const handleSaveClass = () => {
+    startTransition(async () => {
+      const res = await updateCharacterIdentityAtomic(
+        character.id, campaignId, editClass, editSubclass || undefined
+      )
+      if ('error' in res) {
+        toast.error(res.error)
+      } else {
+        toast.success('Класс персонажа обновлён')
+        setIsEditingClass(false)
         router.refresh()
       }
     })
@@ -207,6 +227,43 @@ export default function CharacterSheet({
             <p className="mt-1 text-sm text-[var(--text-muted)]">
               {characterSpeciesName(data.race)} · {characterClassName(data.class)}{data.subclass ? ` (${subclassDisplayName(data.subclass)})` : ''} · {t('characters.level', { level: data.level })}
             </p>
+            {canEdit && (
+              <div className="mt-2">
+                {!isEditingClass ? (
+                  <Button variant="secondary" size="sm" onClick={() => {
+                    setEditClass(baseClassSlug(data.class))
+                    setEditSubclass(data.subclass ?? '')
+                    setIsEditingClass(true)
+                  }}>
+                    Изменить класс
+                  </Button>
+                ) : (
+                  <div className="flex flex-wrap items-end gap-2 rounded-lg border border-[var(--border-default)] p-3">
+                    <label className="min-w-40 flex-1 text-xs text-[var(--text-muted)]">
+                      Класс
+                      <select aria-label="Класс персонажа" value={editClass} onChange={(e) => {
+                        setEditClass(e.target.value)
+                        setEditSubclass('')
+                      }} className="mt-1 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]">
+                        {CLASSES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                      </select>
+                    </label>
+                    <label className="min-w-40 flex-1 text-xs text-[var(--text-muted)]">
+                      Подкласс
+                      <select aria-label="Подкласс персонажа" value={editSubclass} onChange={(e) => setEditSubclass(e.target.value)}
+                        className="mt-1 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]">
+                        <option value="">Без подкласса</option>
+                        {Object.entries(SRD_SUBCLASS_BASE).filter(([, base]) => base === editClass).map(([key]) =>
+                          <option key={key} value={key}>{subclassDisplayName(key)}</option>)}
+                      </select>
+                    </label>
+                    <Button size="sm" onClick={handleSaveClass} disabled={isPending}>Сохранить</Button>
+                    <Button variant="secondary" size="sm" onClick={() => setIsEditingClass(false)} disabled={isPending}>Отмена</Button>
+                    <p className="w-full text-xs text-[var(--text-muted)]">Здоровье, уровень, характеристики и заклинания не пересчитываются автоматически.</p>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
               {t('characters.owner')}: {owner.display_name ?? owner.username}
             </p>
