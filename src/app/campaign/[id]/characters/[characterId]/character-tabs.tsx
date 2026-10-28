@@ -60,7 +60,7 @@ export default function CharacterTabs({
     <div>
       <div
         role="tablist"
-        aria-label={t('characters.tabs.overview')}
+        aria-label={t('nav.mainNavigation')}
         className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap"
       >
         {TABS.map((tab, index) => {
