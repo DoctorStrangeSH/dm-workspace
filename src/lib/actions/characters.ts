@@ -206,6 +206,7 @@ type AccessResult =
   | {
       user: { id: string }
       data: CharacterData
+      originalData: CharacterData
       name: string
       canEdit: boolean
     }
@@ -234,7 +235,8 @@ async function checkCharacterAccess(
 
   return {
     user,
-    data: character.data_json as CharacterData,
+    data: structuredClone(character.data_json as CharacterData),
+    originalData: structuredClone(character.data_json as CharacterData),
     name: character.name as string,
     canEdit: isOwner || isDm,
   }
@@ -243,17 +245,18 @@ async function checkCharacterAccess(
 async function saveCharacterData(
   characterId: string,
   campaignId: string,
-  data: CharacterData
+  data: CharacterData,
+  expected: CharacterData
 ): Promise<SaveResult> {
   const supabase = await createClient()
-  const { error } = await supabase
-    .from('characters')
-    .update({ data_json: data })
-    .eq('id', characterId)
-    .eq('campaign_id', campaignId)
-
-  if (error) return { error: 'Не удалось сохранить' }
-  // CHANGES: {} → { success: true } (типобезопасно)
+  const { data: changed, error } = await supabase.rpc('update_character_data_cas', {
+    p_character_id: characterId,
+    p_campaign_id: campaignId,
+    p_expected: expected,
+    p_next: data,
+  })
+  if (error) return { error: 'Не удалось сохранить персонажа' }
+  if (changed !== true) return { error: 'Персонаж изменился. Обновите страницу и повторите действие.' }
   return { success: true }
 }
 
@@ -277,7 +280,7 @@ export async function updateCharacterHP(
   if (newData.hp.current > newData.hp.max) newData.hp.current = newData.hp.max
   if (newData.hp.current < 0) newData.hp.current = 0
 
-  const save = await saveCharacterData(characterId, campaignId, newData)
+  const save = await saveCharacterData(characterId, campaignId, newData, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -343,7 +346,7 @@ export async function rollDeathSave(
     status = 'dead'
   }
 
-  const save = await saveCharacterData(characterId, campaignId, { ...data, deathSaves })
+  const save = await saveCharacterData(characterId, campaignId, { ...data, deathSaves }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -368,7 +371,7 @@ export async function resetDeathSaves(
   const save = await saveCharacterData(characterId, campaignId, {
     ...access.data,
     deathSaves: { successes: 0, failures: 0, stabilized: false },
-  })
+  }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -397,7 +400,7 @@ export async function addSpell(
     spells: [...(access.data.spells ?? []), newSpell],
   }
 
-  const save = await saveCharacterData(characterId, campaignId, newData)
+  const save = await saveCharacterData(characterId, campaignId, newData, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -417,7 +420,7 @@ export async function updateSpell(
   const spells = (access.data.spells ?? []).map((s) =>
     s.id === spellId ? { ...s, ...updates } : s
   )
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, spells })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, spells }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -434,7 +437,7 @@ export async function removeSpell(
   if (!access.canEdit) return { error: 'Нет прав' }
 
   const spells = (access.data.spells ?? []).filter((s) => s.id !== spellId)
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, spells })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, spells }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -465,7 +468,7 @@ export async function spendSpellSlot(
   const save = await saveCharacterData(characterId, campaignId, {
     ...access.data,
     spellSlots: slots,
-  })
+  }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -490,7 +493,7 @@ export async function longRest(
     hp: { ...access.data.hp, current: access.data.hp.max, temp: 0 },
     spellSlots: newSlots,
     deathSaves: { successes: 0, failures: 0, stabilized: false },
-  })
+  }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -516,7 +519,7 @@ export async function addInventoryItem(
   }
   const inventory = [...(access.data.inventory ?? []), newItem]
 
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -536,7 +539,7 @@ export async function updateInventoryItem(
   const inventory = (access.data.inventory ?? []).map((item) =>
     item.id === itemId ? { ...item, ...updates } : item
   )
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -553,7 +556,7 @@ export async function removeInventoryItem(
   if (!access.canEdit) return { error: 'Нет прав' }
 
   const inventory = (access.data.inventory ?? []).filter((item) => item.id !== itemId)
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -569,7 +572,7 @@ export async function updateCurrency(
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
 
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, currency })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, currency }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -588,7 +591,7 @@ export async function toggleEquipped(
   const inventory = (access.data.inventory ?? []).map((item) =>
     item.id === itemId ? { ...item, equipped: !item.equipped } : item
   )
-  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory })
+  const save = await saveCharacterData(characterId, campaignId, { ...access.data, inventory }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -619,7 +622,7 @@ export async function toggleAttuned(
   const save = await saveCharacterData(characterId, campaignId, {
     ...access.data,
     inventory: updated,
-  })
+  }, access.originalData)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
@@ -656,7 +659,7 @@ export async function levelUp(
     if (ability) newData.spellcastingAbility = ability
   }
 
-  const save = await saveCharacterData(characterId, campaignId, newData)
+  const save = await saveCharacterData(characterId, campaignId, newData, access.originalData)
   if ('error' in save) return save
 
   await logEvent(campaignId, 'level_up', `${access.name} достиг уровня ${newData.level}`)
