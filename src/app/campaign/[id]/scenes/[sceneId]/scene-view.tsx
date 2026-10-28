@@ -753,6 +753,7 @@ export default function SceneView({
             <TokenLayer
               scene={scene}
               zoomScale={mapZoom}
+              activeTokenId={currentTurn?.token_id ?? null}
               initialTokens={tokens}
               isDm={isDm}
               currentUserId={currentUserId}
