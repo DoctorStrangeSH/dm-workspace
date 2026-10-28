@@ -474,6 +474,7 @@ export interface DeathSaves {
 export interface CharacterData {
   level: number
   class: string
+  subclass?: string
   race: string
   background?: string
   alignment?: string
