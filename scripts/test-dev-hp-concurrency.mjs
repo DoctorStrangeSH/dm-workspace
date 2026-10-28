@@ -40,8 +40,17 @@ function validate(env, fixture, allowMutation) {
 }
 
 /** No sign-in, refresh, retry, cleanup, or service-role requests. Importing does no work. */
-export async function runHPCheck({ env, fixture, allowMutation = false, fetchImpl = fetch }) {
+export async function runHPCheck({
+  env,
+  fixture,
+  allowMutation = false,
+  fetchImpl = fetch,
+  checkpoint,
+}) {
   validate(env, fixture, allowMutation)
+  if (allowMutation && typeof checkpoint !== 'function') {
+    fail('Mutation requires a durable checkpoint writer')
+  }
   const sessions = [env.DEV_TEST_JWT_A, env.DEV_TEST_JWT_B]
   const request = async (session, path, body) => {
     let response
@@ -167,10 +176,15 @@ export async function runHPCheck({ env, fixture, allowMutation = false, fetchImp
     passed: false,
     before,
   }
+  // A durable preflight snapshot must exist before an RPC can begin.
+  await checkpoint?.({ ...report, phase: 'preflight-complete' })
   if (!allowMutation)
     return { ...report, passed: true, result: 'Read-only preflight passed; RPC was not called' }
 
   report.mutationAttempted = true
+  // Persist intent first: a crash after this marker means the outcome is
+  // unknown even if no response was received. Failure here prevents POSTs.
+  await checkpoint({ ...report, phase: 'mutation-starting' })
   // A timeout can happen after commit. Always collect both outcomes and attempt
   // final snapshots, even when one call fails. Never retry or auto-restore.
   const outcomes = await Promise.allSettled(
@@ -229,7 +243,7 @@ export async function runHPCheck({ env, fixture, allowMutation = false, fetchImp
 export async function main(args = process.argv.slice(2), env = process.env, fetchImpl = fetch) {
   // Reports may contain full disposable character JSON. Never overwrite a report.
   const usage =
-    'Usage: node scripts/test-dev-hp-concurrency.mjs --fixture <inventory.json> --report <new-report.json> [--allow-mutation]'
+    'Usage: node scripts/test-dev-hp-concurrency.mjs --fixture <inventory.json> --report <new-report.jsonl> [--allow-mutation]'
   const mutation = args.at(-1) === '--allow-mutation'
   if (
     (args.length !== 4 && !(args.length === 5 && mutation)) ||
@@ -242,19 +256,31 @@ export async function main(args = process.argv.slice(2), env = process.env, fetc
   // report path must never lead to an unrecorded mutation.
   const { open } = await import('node:fs/promises')
   const output = await open(args[3], 'wx', 0o600)
+  // Append-only JSONL preserves earlier checkpoints if the process terminates
+  // or a later write fails. sync() must succeed before mutation is permitted.
+  const checkpoint = async (record) => {
+    await output.writeFile(JSON.stringify(record) + '\n')
+    await output.sync()
+  }
   try {
-    const report = await runHPCheck({ env, fixture, allowMutation: mutation, fetchImpl })
-    await output.writeFile(JSON.stringify(report, null, 2) + '\n')
+    const report = await runHPCheck({
+      env,
+      fixture,
+      allowMutation: mutation,
+      fetchImpl,
+      checkpoint,
+    })
+    await checkpoint({ ...report, phase: 'complete' })
     console.log(report.result)
     if (report.cleanup) console.log(report.cleanup)
     if (!report.passed) process.exitCode = 1
   } catch {
-    await output.writeFile(
-      JSON.stringify({
-        passed: false,
-        result: 'Preflight/request failed; inspect disposable fixture before any retry',
-      }) + '\n'
-    )
+    await checkpoint({
+      phase: 'interrupted',
+      passed: false,
+      result:
+        'Preflight, request or journal write failed; mutation outcome may be unknown. Inspect the fixture before any retry.',
+    })
     console.error('HP check failed; details withheld to avoid exposing credentials or private data')
     process.exitCode = 1
   } finally {

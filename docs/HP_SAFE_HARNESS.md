@@ -42,7 +42,7 @@ The harness performs no sign-in or refresh. Expired sessions fail closed.
 
 After separate authorization for read-only DEV access:
 
-`node scripts/test-dev-hp-concurrency.mjs --fixture <local-inventory.json> --report <new-local-report.json>`
+`node scripts/test-dev-hp-concurrency.mjs --fixture <local-inventory.json> --report <new-local-report.jsonl>`
 
 This defaults to GET-only preflight. It checks both auth identities, names,
 campaign/scene/character relationships, complete inventoried linked-token sets,
@@ -62,10 +62,19 @@ RPC return values, final HP `startHP - 7` in character and every token, unchange
 max/temp HP, unrelated character JSON and token relationships.
 
 A local report path is reserved before any network request and cannot overwrite
-an existing report. Reports contain full disposable character JSON: keep them
-outside the repository and do not publish them. A process crash, timeout or
-failed final snapshot can leave the commit outcome unknown. Independently
-inspect all fixture rows before retrying. There is no automatic rollback,
+an existing report. The report is an append-only JSONL journal: each line is one
+JSON record. The original snapshot (`preflight-complete`) and conservative
+intent marker (`mutation-starting`) are written and synced to disk before any
+POST is allowed. Failure to persist either prevents POSTs. A `complete` record
+contains the final result; `interrupted` is never success. Library callers must
+provide their own durable checkpoint callback to enable mutation.
+
+Reports contain full disposable character JSON: keep them outside the repository
+and do not publish them. If the process crashes, retain complete earlier lines;
+a partial last line, missing `complete`, timeout, or failed final snapshot means
+the commit outcome can be unknown. `mutation-starting` is intent, not proof that
+a request reached or committed on the server. Independently inspect all fixture
+rows before retrying. There is no automatic rollback,
 cleanup, user creation, seed, schema write or Production mode.
 
 After any attempted mutation, manually inspect and restore/remove every
@@ -75,3 +84,6 @@ rest/level-up, unrelated concurrent JSON changes, repeated races, rollback and
 Realtime acceptance remain required by the rollout contract. Concurrent HTTP
 attempts alone do not prove the server transactions overlapped; retain server
 timing/lock evidence in the later live verification.
+
+See [DEV reconciliation plan](HP_DEV_RECONCILIATION_PLAN.md) for the metadata,
+authorization, lock-order and writer-coordination evidence still required.

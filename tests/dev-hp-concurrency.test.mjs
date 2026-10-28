@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { DEV_URL, main, runHPCheck } from '../scripts/test-dev-hp-concurrency.mjs'
 
 const id = (n) => '00000000-0000-4000-8000-' + String(n).padStart(12, '0')
@@ -106,7 +107,11 @@ const check = (sim, overrides = {}) =>
     ...overrides,
   })
 const mutate = (sim) =>
-  check(sim, { allowMutation: true, env: { ...environment, DEV_HP_ALLOW_MUTATION: 'true' } })
+  check(sim, {
+    allowMutation: true,
+    checkpoint: async () => {},
+    env: { ...environment, DEV_HP_ALLOW_MUTATION: 'true' },
+  })
 const posts = (sim) => sim.calls.filter((c) => c.config.method === 'POST')
 
 test('default preflight uses only GET, captures every token, and makes no HP claim', async () => {
@@ -257,7 +262,7 @@ test('CLI reserves a new report before network and refuses to overwrite it', asy
   const directory = await mkdtemp(join(tmpdir(), 'hp-harness-offline-'))
   try {
     const inventory = join(directory, 'inventory.json')
-    const reportFile = join(directory, 'report.json')
+    const reportFile = join(directory, 'report.jsonl')
     await writeFile(inventory, JSON.stringify(fixture))
     const sim = simulation()
     await main(['--fixture', inventory, '--report', reportFile], environment, async (...args) => {
@@ -265,7 +270,15 @@ test('CLI reserves a new report before network and refuses to overwrite it', asy
       return sim.fetchImpl(...args)
     })
     const saved = await readFile(reportFile, 'utf8')
-    assert.equal(JSON.parse(saved).mutationAttempted, false)
+    const records = saved
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line))
+    assert.equal(records.at(-1).mutationAttempted, false)
+    assert.deepEqual(
+      records.map((r) => r.phase),
+      ['preflight-complete', 'complete']
+    )
     const second = simulation()
     await assert.rejects(
       main(['--fixture', inventory, '--report', reportFile], environment, second.fetchImpl),
@@ -273,6 +286,92 @@ test('CLI reserves a new report before network and refuses to overwrite it', asy
     )
     assert.equal(second.calls.length, 0)
     assert.equal(await readFile(reportFile, 'utf8'), saved)
+  } finally {
+    await rm(directory, { recursive: true })
+  }
+})
+
+test('mutating library use requires a checkpoint writer before any request', async () => {
+  const sim = simulation()
+  await assert.rejects(
+    check(sim, {
+      allowMutation: true,
+      env: { ...environment, DEV_HP_ALLOW_MUTATION: 'true' },
+    }),
+    /checkpoint writer/
+  )
+  assert.equal(sim.calls.length, 0)
+})
+
+for (const failedPhase of ['preflight-complete', 'mutation-starting']) {
+  test('journal failure prevents POSTs at ' + failedPhase, async () => {
+    const sim = simulation()
+    const saved = []
+    await assert.rejects(
+      check(sim, {
+        allowMutation: true,
+        env: { ...environment, DEV_HP_ALLOW_MUTATION: 'true' },
+        checkpoint: async (record) => {
+          if (record.phase === failedPhase) throw new Error('Simulated storage failure')
+          saved.push(structuredClone(record))
+        },
+      }),
+      /storage failure/
+    )
+    assert.equal(posts(sim).length, 0)
+    if (failedPhase === 'mutation-starting') assert.equal(saved[0].before.tokens.length, 2)
+  })
+}
+
+test('journal retains original snapshots if the process exits during its first POST', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'hp-harness-offline-'))
+  try {
+    const inventory = join(directory, 'inventory.json')
+    const reportFile = join(directory, 'crash-report.jsonl')
+    await writeFile(inventory, JSON.stringify(fixture))
+    // The child has a fake transport and no inherited credentials. Exiting in
+    // the first simulated POST reproduces a hard stop without catch/finally.
+    const source = `
+      import { main } from ${JSON.stringify(new URL('../scripts/test-dev-hp-concurrency.mjs', import.meta.url).href)};
+      const state = ${JSON.stringify(simulation().state)};
+      const fake = async (url, config) => {
+        if (config.method === 'POST') process.exit(42);
+        const path = new URL(url).pathname;
+        let value;
+        if (path === '/auth/v1/user') value = { id: config.headers.Authorization === 'Bearer fake-a' ? ${JSON.stringify(id(10))} : ${JSON.stringify(id(11))} };
+        else if (path.endsWith('/campaigns')) value = [state.campaign];
+        else if (path.endsWith('/characters')) value = [state.character];
+        else if (path.endsWith('/tokens')) value = state.tokens;
+        else throw new Error('Unexpected endpoint');
+        return { ok: true, status: 200, json: async () => structuredClone(value) };
+      };
+      await main(['--fixture', process.argv[1], '--report', process.argv[2], '--allow-mutation'],
+        ${JSON.stringify({ ...environment, DEV_HP_ALLOW_MUTATION: 'true' })}, fake);
+    `
+    const child = spawnSync(
+      process.execPath,
+      ['--input-type=module', '--eval', source, inventory, reportFile],
+      {
+        encoding: 'utf8',
+        timeout: 5000,
+        env: {},
+      }
+    )
+    assert.equal(child.error, undefined)
+    assert.equal(child.status, 42, child.stderr)
+    const records = (await readFile(reportFile, 'utf8'))
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line))
+    assert.deepEqual(
+      records.map((r) => r.phase),
+      ['preflight-complete', 'mutation-starting']
+    )
+    assert.equal(records[0].before.character.data_json.hp.current, 20)
+    assert.ok(records[0].before.tokens.every((t) => t.hp_current === 20))
+    assert.deepEqual(records[0].before.character.data_json.inventory, ['unchanged'])
+    assert.equal(records[1].mutationAttempted, true)
+    assert.equal(records[1].passed, false)
   } finally {
     await rm(directory, { recursive: true })
   }
