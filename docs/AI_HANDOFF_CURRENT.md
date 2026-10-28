@@ -4,8 +4,8 @@
 
 ## Baseline
 - Repository: `DoctorStrangeSH/dm-workspace`; default branch `main`.
-- At checkpoint refresh (2026-10-28): main commit after PR #234 is `54e1ae19e931e8e7467a715ec031d4c3a6bbb7f6`; refresh this SHA after the next merge.
-- GitHub PR search: PR inventory numbers in this file are stale; refresh counts from GitHub search before relying on them. Highest known PR is #234.
+- At checkpoint refresh (2026-10-28): main commit currently includes audit updates through `36e406442b10324d9cadf70c1c84ae53d7684e5a`; refresh this SHA after the next merge.
+- GitHub PR search: PR inventory numbers in this file are stale; refresh counts from GitHub search before relying on them. Highest known PR is #236.
 - Architecture: Next.js 16 App Router, React 19, TypeScript, Tailwind 4, Supabase Postgres/Auth/RLS/Realtime/Storage, Vercel. Core areas: campaigns, chapters, entities, characters/level-up/inventory/spells, scenes/VTT/initiative/HP, sessions, handouts/music, SRD.
 - Source of truth: current `main`, tracked SQL migrations, live DEV and PROD migration histories, deployment status. Do not rely on stale README roadmap or older PR descriptions as proof of current deployment.
 
@@ -56,7 +56,7 @@
 1. Vercel is rate-limited (reported retry after 24 hours as of 2026-10-28); confirm deployment/Preview status when builds are available again. GitHub Actions passed for #226 and #228, but Vercel deployment/Preview remains unverified. Do not confuse GitHub Actions success with a verified Vercel deployment.
 2. Review `docs/HP_WRITE_PATH_AUDIT.md`, then inventory remaining open PRs against current main; close only verified superseded branches with rationale. #129/#135/#136/#137, #130–#134, #43/#44, and #51/#52 are closed as superseded.
 3. Do not merge #182 yet: current main still has direct token HP writes, and `damageToken` is multi-step/best-effort rather than atomic. Use the new audit to define the full writer inventory and transaction contract.
-4. Follow `docs/HP_ATOMIC_ROLLOUT_CONTRACT.md`. Important live DEV finding: a callable `apply_token_hp_atomic` exists outside the six recorded migrations and lacks sibling-token propagation. Inspect installed function ownership/full definition and migration drift read-only before using it. It was not called; no row mutations were performed. Never run it on real player data. Then test only with disposable fixtures and independent authenticated sessions.
+4. Follow `docs/HP_ATOMIC_ROLLOUT_CONTRACT.md`. Important live DEV finding: a callable `apply_token_hp_atomic` exists outside the six recorded migrations and lacks sibling-token propagation. Inspect installed function ownership/full definition and migration drift read-only before using it. It was not called; no row mutations were performed. Never run it on real player data. Then test only with disposable fixtures and independent authenticated sessions. Do not use #172 as-is: it is single-token only and lacks a default dry-run gate; see the latest `docs/HP_WRITE_PATH_AUDIT.md` review section.
 5. Only after stabilizing backlog proceed to new mechanics and product improvements.
 
 ## For the next AI
