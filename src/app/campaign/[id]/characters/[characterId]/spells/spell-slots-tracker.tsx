@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus, Sparkles } from 'lucide-react'
 import { spendSpellSlot } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
@@ -24,7 +24,7 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
 
-  const activeLevels = LEVELS.filter((lvl) => slots[lvl] && slots[lvl].max > 0)
+  const activeLevels = LEVELS.filter((lvl) => slots[lvl] && Number.isInteger(slots[lvl].max) && slots[lvl].max > 0 && slots[lvl].max <= 20)
 
   if (activeLevels.length === 0) return null
 
@@ -40,26 +40,28 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
   }
 
   return (
-    <div className="mb-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
-      <h3 className="mb-3 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
+    <section className="mb-5 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
+      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
+        <Sparkles size={16} className="text-[var(--accent-text)]" aria-hidden="true" />
         {t('characters.spellSlots.title')}
       </h3>
 
-      <div className="space-y-2">
+      <div className="grid gap-3">
         {activeLevels.map((level) => {
           const slot = slots[level]
           return (
-            <div key={level} className="flex items-center gap-3">
-              <div className="w-16 text-sm text-[var(--text-muted)]">
+            <div key={level} className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] p-3 sm:gap-3">
+              <div className="w-16 shrink-0 text-sm font-semibold text-[var(--text-secondary)]">
                 {t('characters.spellSlots.level', { level })}
               </div>
 
-              <div className="flex flex-1 items-center gap-1">
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5" role="img" aria-label={`${t('characters.spellSlots.level', { level })}: ${slot.current}/${slot.max}`}>
                 {Array.from({ length: slot.max }, (_, i) => (
                   <div
                     key={i}
+                    aria-hidden="true"
                     className={cn(
-                      'h-6 w-6 rounded border-2 transition',
+                      'h-5 w-5 rotate-45 rounded-[5px] border-2 transition-colors duration-200 motion-reduce:transition-none sm:h-6 sm:w-6',
                       i < slot.current
                         ? 'border-[var(--accent)] bg-[var(--accent)]'
                         : 'border-[var(--border-default)]'
@@ -68,7 +70,7 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
                 ))}
               </div>
 
-              <div className="w-12 text-right text-sm text-[var(--text-muted)] tabular-nums">
+              <div className="w-12 text-right text-sm font-semibold text-[var(--text-secondary)] tabular-nums">
                 {slot.current}/{slot.max}
               </div>
 
@@ -77,7 +79,7 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
                   <button
                     onClick={() => handleAction(level, 'use')}
                     disabled={isPending || slot.current === 0}
-                    className="rounded p-1 transition hover:bg-[var(--bg-hover)] disabled:opacity-30"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-30" aria-label={`${t('characters.spellSlots.use')} — ${t('characters.spellSlots.level', { level })}`}
                     title={t('characters.spellSlots.use')}
                   >
                     <Minus size={12} />
@@ -85,7 +87,7 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
                   <button
                     onClick={() => handleAction(level, 'restore')}
                     disabled={isPending || slot.current === slot.max}
-                    className="rounded p-1 transition hover:bg-[var(--bg-hover)] disabled:opacity-30"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-30" aria-label={`${t('characters.spellSlots.restore')} — ${t('characters.spellSlots.level', { level })}`}
                     title={t('characters.spellSlots.restore')}
                   >
                     <Plus size={12} />
@@ -96,6 +98,6 @@ export default function SpellSlotsTracker({ characterId, campaignId, slots, canE
           )
         })}
       </div>
-    </div>
+    </section>
   )
 }

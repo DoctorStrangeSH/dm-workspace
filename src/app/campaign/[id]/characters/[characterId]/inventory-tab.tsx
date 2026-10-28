@@ -66,7 +66,7 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         {canEdit && (
           <Button
             variant="primary"
@@ -81,6 +81,22 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
           {t('inventory.itemsCount')}: {inventory.length}
         </div>
       </div>
+
+      {inventory.length > 0 && (
+        <div className="mb-4 grid grid-cols-3 gap-2" aria-label={t('inventory.itemsCount')}>
+          {[
+            { label: t('inventory.group.attuned'), count: attuned.length, icon: Sparkles },
+            { label: t('inventory.group.equipped'), count: equipped.length, icon: Shield },
+            { label: t('inventory.group.other'), count: other.length, icon: Package },
+          ].map(({ label, count, icon: Icon }) => (
+            <div key={label} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 transition-colors hover:border-[var(--accent)]/30">
+              <Icon size={16} className="mb-2 text-[var(--accent-text)]" aria-hidden="true" />
+              <div className="text-xl font-bold tabular-nums text-[var(--text-primary)]">{count}</div>
+              <div className="break-words text-xs text-[var(--text-muted)]">{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <CurrencyTracker
         characterId={character.id}
@@ -102,7 +118,7 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
           dashed={false}
         />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {groups.map((group) => {
             const Icon = group.icon
             return (
