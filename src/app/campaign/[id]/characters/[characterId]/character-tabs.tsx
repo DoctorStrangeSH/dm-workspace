@@ -40,8 +40,6 @@ export default function CharacterTabs({
     features: featuresContent,
   }
 
-  const activeIndex = TABS.findIndex((tab) => tab.key === activeTab)
-
   function handleTabKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
     let nextIndex: number | undefined
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % TABS.length
