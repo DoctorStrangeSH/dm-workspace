@@ -243,9 +243,24 @@ async function checkCharacterAccess(
 async function saveCharacterData(
   characterId: string,
   campaignId: string,
-  data: CharacterData
+  data: CharacterData,
+  expected?: CharacterData
 ): Promise<SaveResult> {
   const supabase = await createClient()
+  if (expected) {
+    const { data: changed, error } = await supabase.rpc('update_character_data_cas', {
+      p_character_id: characterId,
+      p_campaign_id: campaignId,
+      p_expected: expected,
+      p_next: data,
+    })
+    if (error) return { error: 'Не удалось сохранить' }
+    if (changed !== true) return { error: 'Персонаж был изменён. Обновите страницу и повторите действие.' }
+    return { success: true }
+  }
+
+  // Legacy callers still overwrite the whole JSON; migrate each with an
+  // immutable expected snapshot before enabling universal CAS protection.
   const { error } = await supabase
     .from('characters')
     .update({ data_json: data })
@@ -253,7 +268,6 @@ async function saveCharacterData(
     .eq('campaign_id', campaignId)
 
   if (error) return { error: 'Не удалось сохранить' }
-  // CHANGES: {} → { success: true } (типобезопасно)
   return { success: true }
 }
 
@@ -277,7 +291,7 @@ export async function updateCharacterHP(
   if (newData.hp.current > newData.hp.max) newData.hp.current = newData.hp.max
   if (newData.hp.current < 0) newData.hp.current = 0
 
-  const save = await saveCharacterData(characterId, campaignId, newData)
+  const save = await saveCharacterData(characterId, campaignId, newData, access.data)
   if ('error' in save) return save
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
