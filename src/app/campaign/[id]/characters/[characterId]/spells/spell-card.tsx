@@ -72,7 +72,7 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
               aria-label={`${spell.name}: ${spell.prepared ? t('spells.prepared') : t('spells.notPrepared')}`}
               aria-pressed={!!spell.prepared}
               className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-2 transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 spell.prepared
                   ? 'border-[var(--accent)] bg-[var(--accent)]'
                   : 'border-[var(--border-default)] hover:border-[var(--border-hover)]'
@@ -83,12 +83,12 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
             </button>
           )}
 
-          <button type="button" onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-label={`${spell.name}: ${isOpen ? t('common.close') : spell.name}`} className="flex min-w-0 flex-1 items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+          <button type="button" onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-label={`${spell.name}: ${isOpen ? t('common.close') : spell.name}`} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
             <ChevronDown size={14} aria-hidden="true" className={cn('shrink-0 text-[var(--text-subtle)] transition-transform duration-200 motion-reduce:transition-none', isOpen && 'rotate-180')} />
 
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="truncate font-medium text-[var(--text-primary)]">{spell.name}</span>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="min-w-0 break-words font-medium text-[var(--text-primary)]">{spell.name}</span>
               {spell.ritual && (
                 <span className="rounded border border-[var(--accent)]/40 bg-[var(--accent-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--accent-text)]">
                   {t('spells.ritual')}
@@ -109,10 +109,10 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
                 e.stopPropagation()
                 onRoll(spell)
               }}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" aria-label={t('spells.roll')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" aria-label={t('spells.roll')}
               title={t('spells.roll')}
             >
-              <Dices size={14} className="text-[var(--text-muted)]" />
+              <Dices size={18} className="text-[var(--text-muted)]" />
             </button>
           )}
 
@@ -123,10 +123,10 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
                 setShowDeleteConfirm(true)
               }}
               disabled={isPending}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-50" aria-label={t('common.delete')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-50" aria-label={t('common.delete')}
               title={t('common.delete')}
             >
-              <Trash2 size={14} className="text-[var(--danger)]" />
+              <Trash2 size={18} className="text-[var(--danger)]" />
             </button>
           )}
         </div>
