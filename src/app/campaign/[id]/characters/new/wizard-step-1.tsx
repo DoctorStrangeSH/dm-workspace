@@ -3,6 +3,7 @@
 import { Input, Select } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
+import { isSrdBaseClass } from '@/lib/dnd/srd-class-utils'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
 interface Props {
@@ -38,7 +39,7 @@ export default function WizardStep1({
     : RACES.map((r) => ({ value: r.slug, label: r.name }))
 
   const classOptions = useDb
-    ? classes.map((c) => ({ value: c.key, label: c.name_ru ?? c.name }))
+    ? classes.filter((c) => isSrdBaseClass(c.key)).map((c) => ({ value: c.key, label: c.name_ru ?? c.name }))
     : CLASSES.map((c) => ({ value: c.slug, label: c.name }))
 
   return (
