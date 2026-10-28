@@ -1,0 +1,216 @@
+{
+  "captured_baseline_only": true,
+  "runtime": "postgres (PostgreSQL) 17.10",
+  "captured_runtime": "17.11",
+  "fixture_sha256": "1669937fbedb54f5b726720cb8ae2bc0a4f850fb32813900247390bb9b7a12ce",
+  "local_cluster_stopped": true,
+  "passed": 41,
+  "failed": 0,
+  "cases": [
+    {
+      "name": "fixture preserves captured table/policy/custom-trigger counts and HP ACL",
+      "status": "passed",
+      "ms": 62
+    },
+    {
+      "name": "fixture refuses a missing isolation marker before executing its DDL",
+      "status": "passed",
+      "ms": 7
+    },
+    {
+      "name": "authorization: owner can change selected token/character",
+      "status": "passed",
+      "ms": 271
+    },
+    {
+      "name": "authorization: coowner can change selected token/character",
+      "status": "passed",
+      "ms": 328
+    },
+    {
+      "name": "authorization: dm can change selected token/character",
+      "status": "passed",
+      "ms": 334
+    },
+    {
+      "name": "authorization: member is rejected without writes",
+      "status": "passed",
+      "ms": 268
+    },
+    {
+      "name": "authorization: outsider is rejected without writes",
+      "status": "passed",
+      "ms": 298
+    },
+    {
+      "name": "authorization: fakeDm is rejected without writes",
+      "status": "passed",
+      "ms": 306
+    },
+    {
+      "name": "ACL: anon cannot execute the copied HP routine",
+      "status": "passed",
+      "ms": 71
+    },
+    {
+      "name": "ACL: service_role cannot execute the copied HP routine",
+      "status": "passed",
+      "ms": 53
+    },
+    {
+      "name": "authorization: empty local identity is rejected without writes",
+      "status": "passed",
+      "ms": 71
+    },
+    {
+      "name": "reproduces gap: missing hp skips guards and commits incomplete HP",
+      "status": "passed",
+      "ms": 625
+    },
+    {
+      "name": "reproduces gap: missing current skips guards and commits incomplete HP",
+      "status": "passed",
+      "ms": 672
+    },
+    {
+      "name": "reproduces gap: missing max skips guards and commits incomplete HP",
+      "status": "passed",
+      "ms": 554
+    },
+    {
+      "name": "validation: JSON null fails without writes",
+      "status": "passed",
+      "ms": 660
+    },
+    {
+      "name": "validation: null current fails without writes",
+      "status": "passed",
+      "ms": 583
+    },
+    {
+      "name": "validation: string current fails without writes",
+      "status": "passed",
+      "ms": 533
+    },
+    {
+      "name": "validation: fraction fails without writes",
+      "status": "passed",
+      "ms": 367
+    },
+    {
+      "name": "validation: negative fails without writes",
+      "status": "passed",
+      "ms": 423
+    },
+    {
+      "name": "validation: overflow fails without writes",
+      "status": "passed",
+      "ms": 321
+    },
+    {
+      "name": "validation: zero max fails without writes",
+      "status": "passed",
+      "ms": 296
+    },
+    {
+      "name": "validation: drift fails without writes",
+      "status": "passed",
+      "ms": 275
+    },
+    {
+      "name": "request: negative amount fails without writes",
+      "status": "passed",
+      "ms": 40
+    },
+    {
+      "name": "request: oversized amount fails without writes",
+      "status": "passed",
+      "ms": 37
+    },
+    {
+      "name": "request: unknown mode fails without writes",
+      "status": "passed",
+      "ms": 38
+    },
+    {
+      "name": "request: set without expected fails without writes",
+      "status": "passed",
+      "ms": 176
+    },
+    {
+      "name": "request: stale expected fails without writes",
+      "status": "passed",
+      "ms": 178
+    },
+    {
+      "name": "request: fractional input fails without writes",
+      "status": "passed",
+      "ms": 41
+    },
+    {
+      "name": "reproduces gap: an already drifted sibling is neither rejected nor updated",
+      "status": "passed",
+      "ms": 231
+    },
+    {
+      "name": "reproduces gap: foreign-campaign sibling is permitted by FKs and ignored",
+      "status": "passed",
+      "ms": 243
+    },
+    {
+      "name": "validation: selected link to foreign character fails without writes",
+      "status": "passed",
+      "ms": 179
+    },
+    {
+      "name": "rollback: injected character-write failure rolls back token, timestamp and outbox",
+      "status": "passed",
+      "ms": 311
+    },
+    {
+      "name": "reproduces gap: owner direct token UPDATE bypasses character/sibling HP",
+      "status": "passed",
+      "ms": 156
+    },
+    {
+      "name": "reproduces gap: character CAS accepts independent HP and preserves stale-CAS rejection",
+      "status": "passed",
+      "ms": 137
+    },
+    {
+      "name": "RLS: unrelated member direct UPDATE changes zero token/character rows",
+      "status": "passed",
+      "ms": 363
+    },
+    {
+      "name": "RLS: token_owners table UPDATE grant does not supply a missing UPDATE policy",
+      "status": "passed",
+      "ms": 148
+    },
+    {
+      "name": "FK: character owner deletion unlinks all siblings",
+      "status": "passed",
+      "ms": 156
+    },
+    {
+      "name": "concurrency: same-token damages serialize; sibling still remains stale",
+      "status": "passed",
+      "ms": 381
+    },
+    {
+      "name": "concurrency: damage to a sibling waits then fails on stale selected-token HP",
+      "status": "passed",
+      "ms": 401
+    },
+    {
+      "name": "reproduces lock gap: unauthorized member waits on token before permission rejection",
+      "status": "passed",
+      "ms": 299
+    },
+    {
+      "name": "reproduces link race: FK waits for character lock then admits a stale new sibling",
+      "status": "passed",
+      "ms": 424
+    }
+  ]
+}

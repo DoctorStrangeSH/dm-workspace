@@ -1,0 +1,45 @@
+{
+  "captured_at": "2026-10-28T10:16:48.727248+00:00",
+  "source_main": "36e406442b10324d9cadf70c1c84ae53d7684e5a",
+  "source_report_pr": 239,
+  "source_server": "17.11",
+  "evidence": {
+    "functions.json": "1217e3ae60a84aea9145a6eb1b497bcc6d9fe330fe75655960d67c60278634d8",
+    "schema.json": "145e1f17a01c413d3ba305aa5102671ce3dc6f30d0e3023f72dcd076dbce6a2a",
+    "relations.json": "fe51a8d3d51daffaa28a43e6bf8fba2a690ac8c77b339b6085c11a730992cc39"
+  },
+  "fixture_sha256": "1669937fbedb54f5b726720cb8ae2bc0a4f850fb32813900247390bb9b7a12ce",
+  "tables": 6,
+  "policies": 30,
+  "custom_triggers": 7,
+  "routines": [
+    {
+      "captured_signature": "apply_token_hp_atomic(uuid,uuid,integer,text,integer)",
+      "local_signature": "hp_lab.captured_apply_token_hp(uuid,uuid,integer,text,integer)",
+      "definition_sha256": "f8bc352e6ec15aaf77773dea727e087ea160a2726b9ed50c6bea47ee6e349ba3",
+      "normalized_definition_sha256": "130d038f6be1c20572334f1b8f4a77ce37cf25f592407871cd6719981d8d8aed"
+    },
+    {
+      "captured_signature": "update_character_data_cas(uuid,uuid,jsonb,jsonb)",
+      "local_signature": "hp_lab.captured_update_character_data_cas(uuid,uuid,jsonb,jsonb)",
+      "definition_sha256": "e0414376c80cdae18036d5c3123855a18bb4179fcc7e52c57d3b4c6009f3310e",
+      "normalized_definition_sha256": "eeade6870e0fbd9eb085c93b3dd0a7c3f69c4d443cd35b616a831ee4e7ac4b4e"
+    },
+    {
+      "captured_signature": "update_character_identity_atomic(uuid,uuid,text,text)",
+      "local_signature": "hp_lab.captured_update_character_identity_atomic(uuid,uuid,text,text)",
+      "definition_sha256": "f62eb76f21a14da503394187d7ab235d8bda7a543b3102c52e914217a5d7d675",
+      "normalized_definition_sha256": "2b5d5ad27153bca45b3c509224237588abcda2c74530862b93de7565c33457fb"
+    }
+  ],
+  "substitutions": [
+    "Only routine namespace/name and leading/trailing whitespace changed for the three captured routines; body logic is preserved.",
+    "auth.uid() reads a locally assigned UUID; no JWT/Auth verification.",
+    "profiles/entities are id-only FK stubs.",
+    "campaign_role has only the dm/player labels used in these cases; its full live enum was not captured.",
+    "realtime.broadcast_changes writes to a transactional local outbox; no Realtime network delivery.",
+    "Local postgres owner is NOLOGIN NOSUPERUSER BYPASSRLS; live inherited monitoring/platform memberships are omitted.",
+    "Policy helper definitions are captured; helper EXECUTE ACL was not captured and local defaults do not prove live helper ACL parity.",
+    "Only select/insert/update/delete/truncate privileges from the captured table privilege matrix are replayed; unrelated trigger/reference/maintenance grants are not modeled."
+  ]
+}

@@ -2,6 +2,15 @@
 
 > Living checkpoint for the next AI engineer. Verify current GitHub/Supabase/Vercel state before acting. This file describes confirmed repository metadata and code, not a full live production acceptance.
 
+## Latest HP continuation checkpoint
+
+- Active work is on `test/hp-local-postgres-baseline`, based directly on verified main `36e406442b10324d9cadf70c1c84ae53d7684e5a`. Do not infer these tests or open Drafts are merged. This newer checkpoint supersedes the historical HP next-step wording below.
+- Read `docs/HP_LOCAL_POSTGRES_BASELINE.md` and `tests/hp-postgres/README.md`. The suite owns a fresh local PostgreSQL cluster and runs renamed captured routines with synthetic data. Missing HP keys, stale siblings, direct writer bypass, permission-before-lock gaps and a stale token-creation race were reproduced; permission/validation failures and rollback were also tested. Passing baseline tests reproduce known behavior; they do not prove a fix.
+- [Draft #239](https://github.com/DoctorStrangeSH/dm-workspace/pull/239), head `a23d8fb2396a99d92b90d6b6064ff29c726d702a`, records the prior read-only DEV metadata reconciliation; Actions and Vercel passed for that head. Raw metadata remains outside checkout at `../audit-evidence/hp-dev-2026-10-28/`; published fixture/provenance and run instructions are sufficient to rerun the local baseline without it. No ledger replay/repair is authorized.
+- #238 remains a preparation Draft at `586d18c378721dc47b58769c64e6be3df46c0d2d`; its 32 offline tests passed. #237 remains open: Actions passed, Vercel reported deployment-rate limiting. Recheck current heads/statuses before acting. Keep #163–#172 and #182 blocked.
+- Session restrictions: **never invoke the installed HP RPC, dispatch the manual HP workflow, mutate Supabase or change Production. Never write directly to main.** Publish only through an explicit feature-branch Git ref with an expected SHA/absent-branch lease; avoid GitHub file mutation tools because prior branch behavior was unsafe.
+- Next: a separately reviewed test-only coordinated writer design and safe-outcome tests for null validation, authorization/revalidation, character-first locks, every sibling and all link/direct-write paths. This is followed by migration-effect reconciliation, not a live test or rollout. Preserve the local baseline as defect evidence.
+
 ## Baseline
 - Repository: `DoctorStrangeSH/dm-workspace`; default branch `main`.
 - At checkpoint refresh (2026-10-28): main commit after PR #234 is `54e1ae19e931e8e7467a715ec031d4c3a6bbb7f6`; refresh this SHA after the next merge.
