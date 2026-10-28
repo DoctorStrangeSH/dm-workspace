@@ -4,7 +4,7 @@ Read this checkpoint, repository AGENTS.md, then PR_BACKLOG_TRIAGE_2026-10-28.md
 
 ## Verified baseline
 
-- Repository: DoctorStrangeSH/dm-workspace; main: `36e406442b10324d9cadf70c1c84ae53d7684e5a`. This cleanup starts from that main and changes documentation only. Initial inventory: 88 open PRs, including 84 obsolete delivery branches selected for archive. Read docs/verification/pr_archive_results_2026-10-28.json for actual closure receipts once published; do not treat the plan as completed closures.
+- Repository: DoctorStrangeSH/dm-workspace; main: `36e406442b10324d9cadf70c1c84ae53d7684e5a`, unchanged. Documentation cleanup is Draft #241 on docs/pr-backlog-triage. All 84 old PRs were closed without merge, each re-read at its reviewed head. All 84 remote source branches remain unchanged. Final open inventory: #237–#241 (five PRs). Read docs/verification/pr_archive_results_2026-10-28.json for per-PR receipts; unfinished B01–B08 are preserved requirements, not implemented fixes.
 - Current source has character/combat JSON CAS and identity-only validation, but HP writers remain uncoordinated. Token-only UPDATE, separate combat writes, stale siblings and unsafe level-up inputs remain unresolved. See HP_WRITE_PATH_AUDIT.md and HP_ATOMIC_ROLLOUT_CONTRACT.md.
 - #237 (head b0c475219f13fed8a8b88ef398bc31511596e058): documentation of unsafe old harness; Actions success (run 40666735835), Vercel failure from daily deployment limit at this check. Retained; no merge. Its findings are preserved in B05 of the triage.
 - #238 Draft (586d18c378721dc47b58769c64e6be3df46c0d2d): preparation-only safe harness, 32 offline tests/Actions passed at the preceding checkpoint. No live run.
@@ -17,7 +17,7 @@ Never invoke the installed HP RPC, run the manual HP workflow, mutate Supabase, 
 
 ## Next work
 
-1. Finish the archive receipts and verify retained PRs. Do not mark B01–B08 implemented when closing their obsolete branches.
+1. Archive cleanup is complete; finish review/checks for documentation Draft #241. Do not mark B01–B08 implemented or revive old stacks. #241's first head 809f2f709b36642c58ce215d205638ab9e872df6 passed Actions (40679238004) and Vercel; recheck the final receipt commit independently.
 2. Priority safe code work: fresh main-based pure validation/level-up tests and guards (B01/B02), plus a separately reviewed test-only coordinated HP writer design (B05). Include all direct writers, sibling locks, creation/relink races, null-safe validation and authorization/revalidation. Baseline defect evidence must remain available.
 3. Reconcile campaign-owner authority (B04) and migration effects/provenance (B08) under appropriate later scope. Production rollout and real authenticated acceptance require separate authorization and evidence.
 4. Then add rules-aware equipment AC/initiative (B03), identity UX/labels (B07) and further D&D mechanics. Safe recovery B06 is separate from automatic rule changes.

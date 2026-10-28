@@ -6,7 +6,7 @@ Reviewed against main `36e406442b10324d9cadf70c1c84ae53d7684e5a`. The inventory 
 
 All 84 GitHub head SHAs were compared with fetched PR refs. Each incremental diff was computed from its actual merge base, because stacked base branches have advanced. No changed file was byte-identical to main in that comparison; this does not establish whether behavior has been reimplemented. The dispositions combine source review, the original diffs, existing audits and focused pure-function checks.
 
-The local evidence folder `../audit-evidence/pr-triage-2026-10-28/` contains inventory.json, diff-summary.json, patches/<number>.diff and scripts. It is outside the checkout; the SHA-indexed matrix below and GitHub retain durable source pointers. Closing is authorized by the human user. Re-read each current head/state, close only an unchanged open unmerged PR, then read it back. Do not delete branches. Publish a closure-results.json summary in docs/verification after the operation; until then this is a disposition plan, not a closure receipt.
+The local evidence folder `../audit-evidence/pr-triage-2026-10-28/` contains inventory.json, diff-summary.json, patches/<number>.diff and scripts. It is outside the checkout; the SHA-indexed matrix below and GitHub retain durable source pointers. Closing was authorized by the human user. Each current head/state was checked before closure and read back afterwards. All 84 selected PRs are closed without merge at the reviewed SHA. All 84 source branches remain at those SHAs, verified with remote refs. Main is unchanged. The final open inventory is #237–#241 (five PRs, including this documentation PR). Machine-readable receipts: [pr_archive_results_2026-10-28.json](verification/pr_archive_results_2026-10-28.json). No changes were skipped and no branches were deleted.
 
 ## Preserved work and acceptance criteria
 
@@ -50,7 +50,7 @@ Sources #92/#93/#145. Preserve advisor findings and Realtime trigger/grant revie
 
 ## Archive matrix (84 PRs)
 
-Every row is selected for closure of its obsolete delivery branch; its referenced backlog remains open work. #237–#240 are retained. All original head SHAs and changed-file paths are preserved here.
+Every row is closed without merge as an obsolete delivery branch; its referenced backlog remains open work. #237–#240 are retained. All original head SHAs and changed-file paths are preserved here.
 
 | PR | Original scope | Reviewed head SHA | Disposition and preserved work |
 | --- | --- | --- | --- |
