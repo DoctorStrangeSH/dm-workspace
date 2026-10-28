@@ -90,7 +90,7 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
 
       {canEdit && (
         <div className="space-y-2">
-          <div className="grid grid-cols-4 gap-1">
+          <div className="grid grid-cols-4 gap-2">
             <Button
               variant="danger"
               size="sm"
@@ -125,14 +125,14 @@ export default function HPTracker({ characterId, campaignId, hp, canEdit }: Prop
             </Button>
           </div>
 
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             <input
               type="number"
               value={customValue}
               onChange={(e) => setCustomValue(e.target.value)}
               placeholder="N"
               min={1}
-              className="flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
+              className="min-h-12 min-w-0 flex-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 py-2 text-base text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none"
             />
             <Button
               variant="danger"
