@@ -37,6 +37,9 @@ jobs:
       - name: PR #37 security migration static checks
         run: npm run test:security:pr37
 
+      - name: Offline HP harness safety tests (mocked requests only)
+        run: npm run test:hp:harness
+
       - name: Lint
         run: npm run lint
 
