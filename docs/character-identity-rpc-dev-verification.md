@@ -10,10 +10,10 @@ Tracking: #207, #208. DEV project: `yoondivyeueyrtgeldja`. PROD: `klzziumdjpagqq
 - Sequential HP patch (9 -> 7), then identity patch preserved new HP in the same transaction; ROLLBACK.
 - Unknown auth identity and wrong campaign ID returned false.
 - Invalid wizard/champion combination rejected with SQLSTATE 22023.
-- Existing DEV dataset has **zero** characters owned by a player with a distinct DM member in the same campaign. Therefore the DM-path test **has not happened**.
+- Existing DEV dataset has no pre-existing character owned by a player with a distinct DM member, but **two qualifying DM/player membership pairs exist**. Created a disposable character inside a single transaction, switched to `authenticated` role with a simulated DM `request.jwt.claim.sub`, called the RPC, and confirmed class changed while HP and inventory stayed unchanged. Rolled back the transaction. This tests the DB RLS path under a simulated identity, **not** real JWT authentication.
 
 ## Remaining required gates
-1. Create *disposable* DEV-only campaign and two real distinct authenticated test accounts, one DM and one player; use real session JWTs, not an arbitrary simulated identity. Verify the player's character is editable via this RPC by the campaign DM but not by an unrelated participant. Verify read policies and campaign boundaries.
+1. Confirm with **real signed DEV JWTs for two distinct accounts** (DM and player) that an authenticated DM can edit the player's character but an unrelated participant cannot. The simulated-role transaction passed, but is not equivalent to real session verification.
 2. From **two independent authenticated database/API sessions**, race an HP update against the class/subclass RPC (both execution orders, interleaved commits), then assert no HP, inventory, features or subclass changes were lost. A sequential transaction is NOT an adequate concurrency test.
 3. Audit other full-JSON writers such as `updateCharacter`: this RPC alone cannot prevent stale clients from overwriting identity changes with an old whole-document snapshot. Add version/CAS protections or migrate writers before claiming full lost-update protection.
 4. Verify clearing subclass (`p_subclass = NULL`), invalid class, wrong campaign, denied unauthorized identity, and no changes when rejected.
