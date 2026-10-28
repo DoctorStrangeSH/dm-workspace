@@ -36,5 +36,5 @@ Supabase MCP confirmed the project named `dm-workspace` with ref `yoondivyeueyrt
 ## Current facts vs unknowns
 
 - Confirmed from current `main`: the direct token setter still exists; combat uses separate token and character writes with best-effort rollback; character HP uses CAS independently.
-- DEV: `apply_token_hp_atomic` exists and is callable by `authenticated`, but is absent from the reported migration list and lacks sibling-token propagation. This raises migration drift/provenance concerns; it has not been called by this audit.
+- DEV: `apply_token_hp_atomic` is owned by `postgres`, `SECURITY DEFINER`, empty search_path, EXECUTE granted to `authenticated` but not `anon`; it is absent from the reported migration list, has no review-only barrier, and lacks sibling-token propagation. This is a high-priority migration-provenance and authorization audit item. It has not been called by this audit.
 - Not established: full function security correctness, DEV/PROD schema parity, real two-user concurrency results, or Vercel deployment/Preview health. Production was not queried. Verify through read-only catalog review and guarded disposable-DEV tests before any rollout.
