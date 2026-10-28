@@ -41,7 +41,7 @@ export function MobileBottomNav({ campaignId }: Props) {
             >
               {isActive && <span aria-hidden="true" className="absolute top-0 left-1/4 right-1/4 h-0.5 rounded-b-full bg-[var(--accent)]" />}
               <Icon size={19} strokeWidth={isActive ? 2.3 : 1.8} aria-hidden="true" />
-              <span className="max-w-full truncate">{t(item.labelKey)}</span>
+              <span className="line-clamp-2 max-w-full break-words text-center leading-tight">{t(item.labelKey)}</span>
             </Link>
           )
         })}
