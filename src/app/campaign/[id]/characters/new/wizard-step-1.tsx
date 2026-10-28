@@ -3,7 +3,7 @@
 import { Input, Select } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
-import { isSrdBaseClass } from '@/lib/dnd/srd-class-utils'
+import { isSrdBaseClass, baseClassSlug, SRD_SUBCLASS_BASE, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
 interface Props {
@@ -13,6 +13,8 @@ interface Props {
   setRaceSlug: (slug: string) => void
   classSlug: string
   setClassSlug: (slug: string) => void
+  subclassSlug: string
+  setSubclassSlug: (slug: string) => void
   level: number
   setLevel: (level: number) => void
   species: SrdSpecies[]
@@ -26,6 +28,8 @@ export default function WizardStep1({
   setRaceSlug,
   classSlug,
   setClassSlug,
+  subclassSlug,
+  setSubclassSlug,
   level,
   setLevel,
   species,
@@ -41,6 +45,10 @@ export default function WizardStep1({
   const classOptions = useDb
     ? classes.filter((c) => isSrdBaseClass(c.key)).map((c) => ({ value: c.key, label: c.name_ru ?? c.name }))
     : CLASSES.map((c) => ({ value: c.slug, label: c.name }))
+
+  const subclassOptions = Object.entries(SRD_SUBCLASS_BASE)
+    .filter(([, base]) => base === baseClassSlug(classSlug))
+    .map(([key]) => ({ value: key, label: subclassDisplayName(key) }))
 
   return (
     <div className="space-y-6">
@@ -72,6 +80,15 @@ export default function WizardStep1({
           required
         />
       </div>
+
+      {classSlug && subclassOptions.length > 0 && (
+        <Select
+          label="Подкласс (необязательно)"
+          value={subclassSlug}
+          onChange={(e) => setSubclassSlug(e.target.value)}
+          options={[{ value: '', label: 'Без подкласса' }, ...subclassOptions]}
+        />
+      )}
 
       <div>
         <label className="mb-1.5 block text-sm font-medium text-[var(--text-secondary)]">

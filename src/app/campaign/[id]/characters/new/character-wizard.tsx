@@ -39,6 +39,11 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
   const [name, setName] = useState('')
   const [raceSlug, setRaceSlug] = useState('')
   const [classSlug, setClassSlug] = useState('')
+  const [subclassSlug, setSubclassSlug] = useState('')
+  const handleClassChange = (slug: string) => {
+    setClassSlug(slug)
+    setSubclassSlug('')
+  }
   const [level, setLevel] = useState(1)
 
   const [abilities, setAbilities] = useState<Record<AbilityKey, number>>({
@@ -96,7 +101,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
 
   const characterData = useMemo(() => {
     if (!race || !classInfo || !background) return null
-    return buildCharacterData({
+    const built = buildCharacterData({
       name,
       level,
       race,
@@ -105,7 +110,8 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
       baseAbilities: abilities,
       chosenSkills,
     })
-  }, [name, level, race, classInfo, background, abilities, chosenSkills])
+    return subclassSlug ? { ...built, subclass: subclassSlug } : built
+  }, [name, level, race, classInfo, background, abilities, chosenSkills, subclassSlug])
 
   const handleNext = () => {
     if (!isStepValid) return
@@ -179,7 +185,9 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
             raceSlug={raceSlug}
             setRaceSlug={setRaceSlug}
             classSlug={classSlug}
-            setClassSlug={setClassSlug}
+            setClassSlug={handleClassChange}
+            subclassSlug={subclassSlug}
+            setSubclassSlug={setSubclassSlug}
             level={level}
             setLevel={setLevel}
             species={species}
