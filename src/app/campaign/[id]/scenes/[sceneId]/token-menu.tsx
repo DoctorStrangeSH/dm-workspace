@@ -67,6 +67,8 @@ export default function TokenMenu({
     (o) => o.token_id === token.id && o.user_id === currentUserId
   )
   const canEdit = isDm || token.owner_id === currentUserId || isAdditionalOwner
+  const hasValidHP = localHP !== null && Number.isSafeInteger(localHP) && token.hp_max !== null && Number.isSafeInteger(token.hp_max) && token.hp_max > 0 && localHP >= 0
+  const hpPercent = hasValidHP ? Math.min(100, Math.max(0, (localHP! / (token.hp_max ?? 1)) * 100)) : 0
 
   // CHANGES (5.3): владельцы токена
   const owners = tokenOwners.filter((o) => o.token_id === token.id)
@@ -77,7 +79,7 @@ export default function TokenMenu({
 
   const handleHP = (delta: number) => {
     if (localHP === null) return
-    const newHP = Math.max(0, localHP + delta)
+    const newHP = Math.min(token.hp_max ?? 0, Math.max(0, localHP + delta))
     setLocalHP(newHP)
     startTransition(async () => {
       const res = await updateTokenHP(token.id, scene.id, newHP)
@@ -89,8 +91,8 @@ export default function TokenMenu({
   }
 
   const handleCustomHP = (sign: 1 | -1) => {
-    const value = parseInt(hpInput, 10)
-    if (isNaN(value) || value <= 0 || localHP === null) return
+    const value = Number(hpInput)
+    if (!Number.isSafeInteger(value) || value <= 0 || localHP === null) return
     handleHP(sign * value)
     setHpInput('')
   }
@@ -119,6 +121,7 @@ export default function TokenMenu({
 
   // CHANGES (задача 5): используем localConditions + оптимистичное обновление
   const handleToggleCondition = (cond: { name: string; icon: string }) => {
+    if (!canEdit || isPending) return
     const existing = localConditions.find((c) => c.name === cond.name)
     const newConditions: TokenCondition[] = existing
       ? localConditions.filter((c) => c.name !== cond.name)
@@ -163,7 +166,7 @@ export default function TokenMenu({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)]"
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-xl)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
@@ -186,28 +189,28 @@ export default function TokenMenu({
           </IconButton>
         </div>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <div className="flex-1 space-y-5 overflow-y-auto p-4 sm:p-5">
           {/* HP */}
-          {token.hp_max !== null && localHP !== null && (
-            <div>
-              <div className="mb-2 flex items-center gap-2">
+          {hasValidHP && (
+            <section className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
+              <div className="mb-3 flex items-center gap-2">
                 <Heart size={14} className="text-[var(--danger)]" />
                 <span className="text-sm font-medium text-[var(--text-primary)]">HP</span>
                 <span className="text-sm text-[var(--text-muted)]">
                   {localHP} / {token.hp_max}
                 </span>
               </div>
-              <div className="mb-2 h-2 overflow-hidden rounded bg-[var(--bg-app)]">
+              <div className="mb-3 h-3 overflow-hidden rounded-full bg-[var(--bg-app)]" role="progressbar" aria-label="HP" aria-valuemin={0} aria-valuemax={token.hp_max ?? 0} aria-valuenow={localHP ?? 0}>
                 <div
                   className={cn(
                     'h-full transition-all',
-                    (localHP / token.hp_max) * 100 > 50
+                    hpPercent > 50
                       ? 'bg-[var(--success)]'
-                      : (localHP / token.hp_max) * 100 > 25
+                      : hpPercent > 25
                         ? 'bg-[var(--warning)]'
                         : 'bg-[var(--danger)]'
                   )}
-                  style={{ width: `${(localHP / token.hp_max) * 100}%` }}
+                  style={{ width: `${hpPercent}%` }}
                 />
               </div>
               {canEdit && (
@@ -255,7 +258,21 @@ export default function TokenMenu({
                   </div>
                 </div>
               )}
-            </div>
+            </section>
+          )}
+
+          {localConditions.length > 0 && (
+            <section aria-label={t('scenes.token.conditions')} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t('scenes.token.conditions')} · {localConditions.length}</h3>
+              <div className="flex flex-wrap gap-1.5">
+                {localConditions.map((cond, index) => (
+                  <span key={`${cond.name}-${index}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--warning)]/30 bg-[var(--warning-subtle)] px-2.5 py-1 text-xs text-[var(--warning-text)]">
+                    <span aria-hidden="true">{cond.icon ?? '●'}</span>
+                    {t(`condition.${cond.name}`)}
+                  </span>
+                ))}
+              </div>
+            </section>
           )}
 
           {/* Владельцы (только DM) */}
@@ -336,8 +353,9 @@ export default function TokenMenu({
                       key={cond.name}
                       onClick={() => handleToggleCondition(cond)}
                       disabled={isPending}
+                      aria-pressed={active}
                       className={cn(
-                        'flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-xs transition-colors',
+                        'flex min-h-10 items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-xs transition-colors',
                         active
                           ? 'border border-[var(--warning)]/30 bg-[var(--warning-subtle)] text-[var(--warning-text)]'
                           : 'border border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
