@@ -101,7 +101,7 @@ export default async function CampaignLayout({
     <DmScreenProvider>
       <div className="min-h-screen bg-[var(--bg-app)]">
         <header className="sticky top-0 z-30 border-b border-[var(--border-default)] bg-[var(--bg-app)]/95 backdrop-blur">
-          <div className="flex items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
+          <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
             <MobileSidebar campaignId={id} isDm={role === 'dm'} />
 
             <Link
@@ -123,6 +123,7 @@ export default async function CampaignLayout({
               )}
             </div>
 
+            <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
             {user && profile && (
               <PresenceBadge
                 campaignId={id}
@@ -154,6 +155,7 @@ export default async function CampaignLayout({
               chapters={chapters}
               entities={entities}
             />
+            </div>
           </div>
         </header>
 
