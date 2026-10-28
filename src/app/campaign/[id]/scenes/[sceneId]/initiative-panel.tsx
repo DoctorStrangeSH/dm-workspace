@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { Swords, ChevronRight, X, Dices, Shield, Minus, Plus, HeartPulse } from 'lucide-react'
 import { nextTurn, endCombat, rollInitiativeForToken, damageToken } from '@/lib/actions/combat'
 import { useToast } from '@/components/toast/toast-provider'
-import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import { cn } from '@/lib/utils'
 import { Button, IconButton, Dialog, Badge } from '@/components/ui'
 import { useT } from '@/lib/i18n'
@@ -13,23 +12,18 @@ import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
   sceneId: string
-  initialInitiative: InitiativeEntryWithToken[]
+  entries: InitiativeEntryWithToken[]
   isDm: boolean
   onClose: () => void
 }
 
-export default function InitiativePanel({ sceneId, initialInitiative, isDm, onClose }: Props) {
+export default function InitiativePanel({ sceneId, entries, isDm, onClose }: Props) {
   const t = useT()
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [selectedEntry, setSelectedEntry] = useState<InitiativeEntryWithToken | null>(null)
   const [showEndCombatConfirm, setShowEndCombatConfirm] = useState(false)
-
-  const entries = useRealtimeInitiative({
-    sceneId,
-    initialInitiative,
-  })
 
   const currentEntry = entries.find((e) => e.is_current)
 
