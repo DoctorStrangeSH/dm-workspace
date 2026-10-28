@@ -68,11 +68,11 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
 
       <aside
         className={cn(
-          'fixed top-0 left-0 z-50 h-dvh w-[min(19rem,85vw)] border-r border-[var(--border-default)] bg-[var(--bg-primary)] shadow-[var(--shadow-xl)] transition-transform md:hidden',
+          'fixed top-0 left-0 z-50 flex h-dvh w-[min(19rem,85vw)] flex-col overflow-hidden border-r border-[var(--border-default)] bg-[var(--bg-primary)] shadow-[var(--shadow-xl)] transition-transform md:hidden',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex items-center justify-between border-b border-[var(--border-default)] px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border-default)] px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
           <span className="flex items-center gap-2 text-sm font-semibold tracking-wide text-[var(--accent-text)]">
             <Compass size={17} aria-hidden="true" />
             {t('nav.menu')}
@@ -87,7 +87,7 @@ export default function MobileSidebar({ campaignId, isDm }: Props) {
           </IconButton>
         </div>
 
-        <nav className="h-[calc(100dvh-57px)] space-y-1 overflow-y-auto p-3" aria-label={t('nav.mainNavigation')}>
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain p-3 pb-[calc(1rem+env(safe-area-inset-bottom))]" aria-label={t('nav.mainNavigation')}>
           {items.map((item) => {
             const Icon = item.icon
             const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
