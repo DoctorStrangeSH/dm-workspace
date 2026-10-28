@@ -33,12 +33,14 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
   const [editQuantity, setEditQuantity] = useState(item.quantity)
   const [editType, setEditType] = useState<ItemType>(item.itemType ?? 'other')
   const [editRarity, setEditRarity] = useState<ItemRarity>(item.rarity ?? 'common')
+  const [editAcBonus, setEditAcBonus] = useState(item.acBonus ?? 0)
+  const [editInitiativeBonus, setEditInitiativeBonus] = useState(item.initiativeBonus ?? 0)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const itemId = item.id
 
   const handleSaveEdit = () => {
-    if (!editName.trim() || editQuantity < 1) {
+    if (!editName.trim() || !Number.isSafeInteger(editQuantity) || editQuantity < 1 || ![editAcBonus, editInitiativeBonus].every(n => Number.isInteger(n) && n >= -5 && n <= 5)) {
       toast.error(t('inventory.item.invalidValues'))
       return
     }
@@ -50,6 +52,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
         quantity: editQuantity,
         itemType: editType,
         rarity: editRarity,
+        acBonus: editAcBonus,
+        initiativeBonus: editInitiativeBonus,
       })
       if ('error' in res) {
         toast.error(res.error)
@@ -103,7 +107,7 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
               onClick={handleToggleEquipped}
               disabled={isPending}
               className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-lg border-2 transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+                'flex h-11 w-11 items-center justify-center rounded-lg border-2 transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 item.equipped
                   ? 'border-[var(--info)] bg-[var(--info)]'
                   : 'border-[var(--border-default)] hover:border-[var(--border-hover)]'
@@ -127,35 +131,41 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="min-w-28 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                className="min-h-11 min-w-28 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
               />
               <input
                 type="number"
                 value={editQuantity}
                 onChange={(e) => setEditQuantity(Number(e.target.value))}
                 min={1}
-                className="w-16 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                className="min-h-11 w-16 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
               />
-              <select aria-label={lang === 'en' ? 'Item type' : 'Тип предмета'} value={editType} onChange={(e) => setEditType(e.target.value as ItemType)} className="min-h-9 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
+              <select aria-label={lang === 'en' ? 'Item type' : 'Тип предмета'} value={editType} onChange={(e) => setEditType(e.target.value as ItemType)} className="min-h-11 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
                 {ITEM_TYPES.map((value) => <option key={value} value={value}>{itemTypeLabel(value, lang)}</option>)}
               </select>
-              <select aria-label={lang === 'en' ? 'Rarity' : 'Редкость'} value={editRarity} onChange={(e) => setEditRarity(e.target.value as ItemRarity)} className="min-h-9 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
+              <select aria-label={lang === 'en' ? 'Rarity' : 'Редкость'} value={editRarity} onChange={(e) => setEditRarity(e.target.value as ItemRarity)} className="min-h-11 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
                 {ITEM_RARITIES.map((value) => <option key={value} value={value}>{itemRarityLabel(value, lang)}</option>)}
               </select>
+              <label className="flex flex-col gap-1 text-xs text-[var(--text-muted)]">${lang === 'en' ? 'AC bonus' : 'Бонус КД'}<input type="number" min={-5} max={5} step={1} value={editAcBonus} onChange={e => setEditAcBonus(Number(e.target.value))} className="min-h-11 w-20 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-[var(--text-primary)]" /></label>
+              <label className="flex flex-col gap-1 text-xs text-[var(--text-muted)]">${lang === 'en' ? 'Initiative' : 'Инициатива'}<input type="number" min={-5} max={5} step={1} value={editInitiativeBonus} onChange={e => setEditInitiativeBonus(Number(e.target.value))} className="w-20 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-[var(--text-primary)]" /></label>
               <button
                 onClick={handleSaveEdit}
+                aria-label={t('common.save')}
                 disabled={isPending}
-                className="rounded p-1 hover:bg-[var(--bg-hover)]"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-[var(--bg-hover)]"
               >
                 <Check size={14} className="text-[var(--success)]" />
               </button>
               <button
+                aria-label={t('common.cancel')}
                 onClick={() => {
                   setIsEditing(false)
                   setEditName(item.name)
                   setEditQuantity(item.quantity)
                   setEditType(item.itemType ?? 'other')
                   setEditRarity(item.rarity ?? 'common')
+                  setEditAcBonus(item.acBonus ?? 0)
+                  setEditInitiativeBonus(item.initiativeBonus ?? 0)
                 }}
                 className="rounded p-1 hover:bg-[var(--bg-hover)]"
               >
@@ -164,8 +174,8 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-2">
-                <span className="truncate font-medium text-[var(--text-primary)]">{item.name}</span>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="min-w-0 break-words font-medium text-[var(--text-primary)]">{item.name}</span>
                 {item.quantity > 1 && (
                   <span className="rounded bg-[var(--bg-secondary)] px-1.5 py-0.5 text-xs text-[var(--text-muted)]">
                     ×{item.quantity}
@@ -182,8 +192,15 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
                   )}
                 </div>
               )}
+              {(item.acBonus !== undefined && item.acBonus !== 0 || item.initiativeBonus !== undefined && item.initiativeBonus !== 0) && (
+                <div className="mt-1 text-xs text-[var(--accent-text)]">
+                  {lang === 'en' ? 'Bonuses when equipped' : 'Бонусы при экипировке'}:
+                  {item.acBonus ? ` AC ${item.acBonus > 0 ? '+' : ''}${item.acBonus}` : ''}
+                  {item.initiativeBonus ? ` · ${lang === 'en' ? 'Initiative' : 'Инициатива'} ${item.initiativeBonus > 0 ? '+' : ''}${item.initiativeBonus}` : ''}
+                </div>
+              )}
               {item.notes && (
-                <p className="truncate text-xs text-[var(--text-muted)]">{item.notes}</p>
+                <p className="break-words text-xs text-[var(--text-muted)]">{item.notes}</p>
               )}
             </>
           )}
@@ -201,7 +218,7 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
               onClick={handleToggleAttuned}
               disabled={isPending}
               className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+                'flex h-11 w-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 item.attuned
                   ? 'text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]'
                   : 'text-[var(--text-subtle)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)]'
@@ -215,7 +232,7 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
             <button
               onClick={() => setIsEditing(true)}
               disabled={isPending}
-              className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
               title={t('common.edit')}
               aria-label={`${t('common.edit')}: ${item.name}`}
             >
@@ -224,7 +241,7 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
             <button
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isPending}
-              className="flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
               title={t('common.delete')}
               aria-label={`${t('common.delete')}: ${item.name}`}
             >
