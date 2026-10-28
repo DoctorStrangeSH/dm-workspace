@@ -244,7 +244,7 @@ export default function CharacterSheet({
                       <select aria-label="Класс персонажа" value={editClass} onChange={(e) => {
                         setEditClass(e.target.value)
                         setEditSubclass('')
-                      }} className="mt-1 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]">
+                      }} className="mt-1 min-h-11 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]">
                         {CLASSES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
                       </select>
                     </label>
@@ -257,8 +257,8 @@ export default function CharacterSheet({
                           <option key={key} value={key}>{subclassDisplayName(key)}</option>)}
                       </select>
                     </label>
-                    <Button size="sm" onClick={handleSaveClass} disabled={isPending}>Сохранить</Button>
-                    <Button variant="secondary" size="sm" onClick={() => setIsEditingClass(false)} disabled={isPending}>Отмена</Button>
+                    <Button size="md" className="min-h-11" onClick={handleSaveClass> disabled={isPending}>Сохранить</Button>
+                    <Button variant="secondary" size="md" className="min-h-11" onClick={() => setIsEditingClass(false)} disabled={isPending}>Отмена</Button>
                     <p className="w-full text-xs text-[var(--text-muted)]">Здоровье, уровень, характеристики и заклинания не пересчитываются автоматически.</p>
                   </div>
                 )}
