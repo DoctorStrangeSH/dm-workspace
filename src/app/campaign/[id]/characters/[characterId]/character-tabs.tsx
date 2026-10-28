@@ -41,23 +41,26 @@ export default function CharacterTabs({
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-1 overflow-x-auto pb-1">
+      <div role="tablist" aria-label={t('nav.mainNavigation')} className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
         {TABS.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.key
           return (
             <button
               key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition',
+                'flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-medium transition touch-manipulation sm:min-h-11 sm:px-3 sm:text-sm',
                 isActive
                   ? 'bg-[var(--accent)] text-white'
                   : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
               )}
             >
-              <Icon size={14} />
-              {tab.label}
+              <Icon size={18} className="shrink-0" aria-hidden="true" />
+              <span className="min-w-0 break-words text-center">{tab.label}</span>
             </button>
           )
         })}
