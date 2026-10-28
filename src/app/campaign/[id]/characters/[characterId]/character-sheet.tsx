@@ -257,7 +257,7 @@ export default function CharacterSheet({
                           <option key={key} value={key}>{subclassDisplayName(key)}</option>)}
                       </select>
                     </label>
-                    <Button size="md" className="min-h-11" onClick={handleSaveClass> disabled={isPending}>Сохранить</Button>
+                    <Button size="md" className="min-h-11" onClick={handleSaveClass} disabled={isPending}>Сохранить</Button>
                     <Button variant="secondary" size="md" className="min-h-11" onClick={() => setIsEditingClass(false)} disabled={isPending}>Отмена</Button>
                     <p className="w-full text-xs text-[var(--text-muted)]">Здоровье, уровень, характеристики и заклинания не пересчитываются автоматически.</p>
                   </div>
