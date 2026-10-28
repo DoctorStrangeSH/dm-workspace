@@ -11,6 +11,7 @@ import {
   type CharacterInventoryItem,
 } from '@/lib/types'
 import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
+import { characterIdentityPatch } from '@/lib/dnd/character-identity-patch'
 import { isSubclassForClass, baseClassSlug } from '@/lib/dnd/srd-class-utils'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
@@ -254,6 +255,34 @@ async function saveCharacterData(
 
   if (error) return { error: 'Не удалось сохранить' }
   // CHANGES: {} → { success: true } (типобезопасно)
+  return { success: true }
+}
+
+// Class/subclass-only patch. Requires the DEV-verified RPC from PR #208.
+// Do not use the generic data_json overwrite action for identity changes.
+export async function updateCharacterIdentityAtomic(
+  characterId: string,
+  campaignId: string,
+  nextClass: string,
+  nextSubclass?: string
+): Promise<ErrorResult | SuccessResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Не авторизован' }
+  const access = await checkCharacterAccess(characterId, campaignId)
+  if ('error' in access) return access
+  if (!access.canEdit) return { error: 'Нет прав' }
+
+  const patch = characterIdentityPatch(access.data.class, nextClass, nextSubclass)
+  if (!patch) return { error: 'Некорректный класс или подкласс' }
+  const { data: changed, error } = await supabase.rpc('update_character_identity_atomic', {
+    p_character_id: characterId,
+    p_campaign_id: campaignId,
+    p_class: patch.class,
+    p_subclass: patch.subclass ?? null,
+  })
+  if (error || changed !== true) return { error: 'Не удалось изменить класс персонажа' }
+  revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
   return { success: true }
 }
 
