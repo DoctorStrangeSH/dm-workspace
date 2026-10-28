@@ -29,7 +29,7 @@ import {
   parseDice,
   rollDice,
 } from '@/lib/dnd/formulas'
-import { RACES, CLASSES } from '@/lib/dnd/constants'
+import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
 import type { AbilityKey, SkillKey, Character } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
@@ -63,8 +63,6 @@ export default function CharacterSheet({
   const data = character.data_json
   const profBonus = proficiencyBonus(data.level)
 
-  const race = RACES.find((r) => r.slug === data.race)
-  const cls = CLASSES.find((c) => c.slug === data.class)
 
   const handleSaveName = () => {
     if (editName.trim() === character.name) {
@@ -206,7 +204,7 @@ export default function CharacterSheet({
             )}
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {race?.name} · {cls?.name} · {t('characters.level', { level: data.level })}
+              {characterSpeciesName(data.race)} · {characterClassName(data.class)} · {t('characters.level', { level: data.level })}
             </p>
             <p className="mt-0.5 text-xs text-[var(--text-subtle)]">
               {t('characters.owner')}: {owner.display_name ?? owner.username}
