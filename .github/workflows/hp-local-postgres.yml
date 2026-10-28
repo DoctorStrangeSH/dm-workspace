@@ -1,0 +1,39 @@
+name: Isolated HP PostgreSQL baseline
+
+on:
+  pull_request:
+    paths:
+      - tests/hp-postgres/**
+      - .github/workflows/hp-local-postgres.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hp-local-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    name: Captured HP baseline in local PostgreSQL 17
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/hp-postgres/package-lock.json
+      - name: Install isolated test dependencies without lifecycle scripts
+        run: npm ci --prefix tests/hp-postgres --ignore-scripts --no-audit --no-fund
+      - name: Create local cluster, reproduce captured behavior, stop cluster
+        run: npm test --prefix tests/hp-postgres
+      - name: Retain synthetic test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hp-local-postgres-baseline
+          path: tests/hp-postgres/results/latest.json
+          if-no-files-found: warn
+          retention-days: 14
