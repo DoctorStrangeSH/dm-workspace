@@ -68,17 +68,16 @@ export async function addSrdItemToCharacter(
     inventory: [...inventory, newItem],
   }
 
-  const { data, error } = await supabase
-    .from('characters')
-    .update({ data_json: newData })
-    .eq('id', characterId)
-    .eq('campaign_id', campaignId)
-    .select('id')
-    .maybeSingle()
+  const { data: changed, error } = await supabase.rpc('update_character_data_cas', {
+    p_character_id: characterId,
+    p_campaign_id: campaignId,
+    p_expected: character.data_json,
+    p_next: newData,
+  })
 
-  if (error || !data) {
+  if (error || changed !== true) {
     console.error('addSrdItemToCharacter error:', error)
-    return { error: 'Не удалось добавить' }
+    return { error: error ? 'Не удалось добавить' : 'Персонаж изменился. Обновите страницу и повторите действие.' }
   }
 
   revalidatePath(`/campaign/${campaignId}/characters/${characterId}`)
