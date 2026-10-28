@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Swords, ChevronRight, X, Dices, Shield, Minus, Plus } from 'lucide-react'
+import { Swords, ChevronRight, X, Dices, Shield, Minus, Plus, HeartPulse } from 'lucide-react'
 import { nextTurn, endCombat, rollInitiativeForToken, damageToken } from '@/lib/actions/combat'
 import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
@@ -102,19 +102,17 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
             {t('scenes.initiative.now')}
           </div>
           <div className="font-semibold text-[var(--text-primary)]">{currentEntry.token.name}</div>
-          {isDm && (
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={handleNextTurn}
-              disabled={isPending}
-              icon={<ChevronRight size={14} />}
-              iconPosition="right"
-              className="mt-2 w-full"
-            >
-              {t('scenes.initiative.nextTurn')}
-            </Button>
-          )}
+          {isDm && <Button
+            variant="danger"
+            size="sm"
+            onClick={handleNextTurn}
+            disabled={isPending}
+            icon={<ChevronRight size={14} />}
+            iconPosition="right"
+            className="mt-2 w-full"
+          >
+            {t('scenes.initiative.nextTurn')}
+          </Button>}
         </div>
       )}
 
@@ -127,29 +125,23 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
           <div className="space-y-1">
             {entries.map((entry) => {
               const isCurrent = entry.is_current
-              const hasHP = entry.token.hp_current !== null && entry.token.hp_max !== null
-              const hpPercent = hasHP
-                ? entry.token.hp_max! > 0
-                  ? Math.min(100, Math.max(0, (entry.token.hp_current! / entry.token.hp_max!) * 100))
-                  : 0
-                : null
+              const hasHP = entry.token.hp_current !== null && entry.token.hp_max !== null && Number.isFinite(entry.token.hp_current) && Number.isFinite(entry.token.hp_max) && entry.token.hp_max > 0
+              const hpPercent = hasHP ? Math.max(0, Math.min(100, (entry.token.hp_current! / entry.token.hp_max!) * 100)) : null
               const ac = entry.token.ac ?? null
-              const conditions = entry.token.conditions
+              const conditions = Array.isArray(entry.token.conditions) ? entry.token.conditions : []
 
               return (
                 <div
                   key={entry.id}
                   className={cn(
-                    'rounded-lg p-2 transition-colors',
+                    'relative rounded-xl border p-3 transition-colors',
                     isCurrent
-                      ? 'border border-[var(--danger)]/30 bg-[var(--danger-subtle)]'
-                      : 'hover:bg-[var(--bg-hover)]'
+                      ? 'border-[var(--danger)]/50 bg-[var(--danger-subtle)] shadow-[inset_3px_0_0_var(--danger)]'
+                      : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)]'
                   )}
                 >
-                  <div
-                    className="flex cursor-pointer items-center gap-2"
-                    onClick={() => setSelectedEntry(entry)}
-                  >
+                  <div className="flex items-center gap-2">
+                    {isCurrent && <span className="sr-only">{t('scenes.initiative.now')}</span>}
                     <div className="w-5 text-center text-xs font-medium text-[var(--text-muted)]">
                       {entry.initiative}
                     </div>
@@ -162,11 +154,10 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                     >
                       ⚔️
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-sm font-medium text-[var(--text-primary)]">
-                        {entry.token.name}
-                      </div>
-                    </div>
+                    <button type="button" onClick={() => setSelectedEntry(entry)} aria-label={`${entry.token.name}: ${entry.initiative}`} className="min-w-0 flex-1 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+                      <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{entry.token.name}</span>
+                      {isCurrent && <span className="text-[10px] font-semibold text-[var(--danger-text)]">{t('scenes.initiative.now')}</span>}
+                    </button>
                     {ac !== null && (
                       <Badge variant="neutral" size="sm" icon={<Shield size={10} />}>
                         {ac}
@@ -189,8 +180,9 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                   </div>
 
                   {hasHP && (
-                    <div className="mt-1.5 flex items-center gap-2 pl-7">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded bg-[var(--bg-app)]">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 sm:pl-7">
+                      <HeartPulse size={12} aria-hidden="true" className="text-[var(--danger-text)]" />
+                      <div className="h-2 min-w-12 flex-1 overflow-hidden rounded-full bg-[var(--bg-app)]">
                         <div
                           className={cn(
                             'h-full transition-all duration-300',
@@ -214,7 +206,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                               handleDamage(entry, 5, 'damage')
                             }}
                             disabled={isPending}
-                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
+                            className="min-h-8 rounded-md px-2 py-1 text-xs font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
                             title={t('scenes.hp.minus', { n: 5 })}
                           >
                             <Minus size={10} className="inline" />5
@@ -258,11 +250,11 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                   )}
 
                   {conditions.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-0.5 pl-7">
+                    <div className="mt-2 flex flex-wrap gap-1 sm:pl-7">
                       {conditions.map((c, i) => (
                         <span
                           key={i}
-                          className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[8px]"
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[10px]"
                           title={c.name}
                         >
                           {c.icon ?? '●'}
@@ -277,19 +269,17 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
         )}
       </div>
 
-      {isDm && (
-        <div className="border-t border-[var(--border-default)] p-3">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowEndCombatConfirm(true)}
-            disabled={isPending}
-            className="w-full text-[var(--danger-text)]"
-          >
-            {t('scenes.initiative.endCombat')}
-          </Button>
-        </div>
-      )}
+      {isDm && <div className="border-t border-[var(--border-default)] p-3">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setShowEndCombatConfirm(true)}
+          disabled={isPending}
+          className="w-full text-[var(--danger-text)]"
+        >
+          {t('scenes.initiative.endCombat')}
+        </Button>
+      </div>}
 
       {selectedEntry && (
         <Dialog
@@ -298,7 +288,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
           title={selectedEntry.token.name}
           size="sm"
         >
-          {selectedEntry.token.hp_current !== null && selectedEntry.token.hp_max !== null && (
+          {selectedEntry.token.hp_current !== null && selectedEntry.token.hp_max !== null && selectedEntry.token.hp_max > 0 && (
             <div className="mb-3">
               <div className="mb-1 flex items-center justify-between text-sm">
                 <span className="text-[var(--text-muted)]">HP</span>
@@ -310,14 +300,14 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                 <div
                   className="h-full bg-[var(--danger)] transition-all duration-300"
                   style={{
-                    width: `${selectedEntry.token.hp_max > 0 ? Math.min(100, Math.max(0, (selectedEntry.token.hp_current / selectedEntry.token.hp_max) * 100)) : 0}%`,
+                    width: `${Math.min(100, Math.max(0, (selectedEntry.token.hp_current! / (selectedEntry.token.hp_max ?? 1)) * 100))}%`,
                   }}
                 />
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-4 gap-1">
+          {isDm && <div className="grid grid-cols-4 gap-1">
             {[-5, -1, +1, +5].map((delta) => (
               <Button
                 key={delta}
@@ -332,7 +322,7 @@ export default function InitiativePanel({ sceneId, initialInitiative, isDm, onCl
                 {delta}
               </Button>
             ))}
-          </div>
+          </div>}
         </Dialog>
       )}
 
