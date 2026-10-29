@@ -23,3 +23,11 @@ Action tests verify rejected requests produce no INSERT/RPC/log/revalidation, va
 These guards do not coordinate character HP with linked token rows, block authorized direct REST/SQL writers, fix the installed HP RPC or reconcile migration history. Their current defects remain reproduced by the isolated PostgreSQL baseline. B05's coordinated writer design and B04's authority reconciliation remain priorities.
 
 This validation change preserves existing level-up healing/spell-slot behavior and the app's shared ASI schedule. It does not add feats, class-specific extra ASI levels, retroactive HP changes from a CON increase, or safe recovery of legacy character data. Those rules require a separate, explicit progression change with preview and server tests; do not claim full D&D rules conformance from these checks.
+
+## Creation regression — SRD hit dice (2026-10-29)
+
+A reported first-level human sorcerer with CON15 displayed D62 HP. The real SRD adapter asserted that data.hit_die was numeric but left the D6 string unchanged, so the builder concatenated it with the +2 modifier. Parsing existed in srd-class-utils but this adapter did not use it.
+
+The adapter now calls parseSrdHitDie before any arithmetic. Numeric dice, numeric strings and case-insensitive D6/D8/D10/D12 become numbers. Missing/malformed dice use the matching supported base class default (including prefixed SRD keys); the existing generic d8 fallback remains for unrecognized classes. Saved class/race keys, level handling, race bonuses and the builder's existing first-level formula are unchanged. This is not a correction of higher-level creation/progression rules or existing saved rows.
+
+The new character-creation suite covers all 12 classes, both key forms, four valid die encodings, CON modifiers and missing/malformed dice. A recording test of the real create action verifies numeric 8/8 HP reaches INSERT, and that the old D62 payload reaches no write. Two offline browser scenarios drive the actual four-step CharacterWizard at desktop/mobile widths, reproduce the screenshot's point-buy values, assert HP8 on review, submit to an explicit in-memory create boundary and check numeric HP plus navigation. No authenticated live save or real player-data repair is claimed. Database access and game writes remain unchanged.

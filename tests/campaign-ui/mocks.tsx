@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import type { AnchorHTMLAttributes } from 'react'
-import type { MessageWithAuthor } from '../../src/lib/types'
+import type { CharacterData, MessageWithAuthor } from '../../src/lib/types'
 
 // In-memory transport only. No Supabase, sessions, credentials or remote fetches.
 const listeners = new Set<() => void>()
@@ -21,6 +21,8 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  createdCharacters: [] as { campaignId: string; name: string; data: CharacterData }[],
+  navigated: [] as string[],
   chapterSaves: [] as string[],
   chapterSaveFails: false,
   failNext: false,
@@ -29,6 +31,10 @@ export const lab = {
     messages = [...messages, makeMessage(crypto.randomUUID(), 'Новое сообщение группы')]
     emit()
   },
+}
+export async function createCharacter(campaignId: string, name: string, data: CharacterData) {
+  lab.createdCharacters.push({ campaignId, name, data: structuredClone(data) })
+  return { success: true, characterId: 'offline-character' }
 }
 export async function updateChapterContent(_chapter: string, _campaign: string, content: string) {
   lab.chapterSaves.push(content)
@@ -74,7 +80,12 @@ export function usePathname() {
       : '/campaign/test'
 }
 export function useRouter() {
-  return { refresh() {}, push() {} }
+  return {
+    refresh() {},
+    push(url: string) {
+      lab.navigated.push(url)
+    },
+  }
 }
 export async function setTheme() {
   return { success: true }

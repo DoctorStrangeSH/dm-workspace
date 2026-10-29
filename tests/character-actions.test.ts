@@ -8,6 +8,8 @@ import * as hp from '../src/lib/dnd/character-hp'
 import * as identity from '../src/lib/dnd/character-identity-patch'
 import * as classes from '../src/lib/dnd/srd-class-utils'
 import * as constants from '../src/lib/dnd/constants'
+import { srdClassToClassInfo, srdSpeciesToRaceInfo } from '../src/lib/dnd/srd-adapter'
+import { buildCharacterData } from '../src/lib/dnd/character-builder'
 
 // Execute the actual action module with a recording database boundary, not a parallel copy of it.
 const source = ts.transpileModule(
@@ -213,4 +215,36 @@ test('valid level-up uses CAS once, preserves unrelated data, and logs only afte
     'error' in (await denied.actions.levelUp('character', 'campaign', { hpMethod: 'average' }))
   )
   assert.equal(denied.writes.length, 0)
+})
+
+test('SRD sorcerer creation reaches INSERT with numeric 8 HP; former D62 payload is rejected', async () => {
+  const data = buildCharacterData({
+    name: 'Holmes',
+    level: 1,
+    race: srdSpeciesToRaceInfo({ key: 'srd-2024_human', name: 'Human', name_ru: null, data: {} }),
+    class: srdClassToClassInfo({
+      key: 'srd-2024_sorcerer',
+      name: 'Sorcerer',
+      name_ru: null,
+      data: { hit_die: 'D6' },
+    }),
+    background: constants.BACKGROUNDS.find((bg) => bg.slug === 'entertainer')!,
+    baseAbilities: { str: 15, dex: 14, con: 15, int: 8, wis: 10, cha: 8 },
+    chosenSkills: ['arcana', 'nature'],
+  })
+  const r = rig()
+  assert.deepEqual(await r.actions.createCharacter('campaign', 'Holmes', data), {
+    success: true,
+    characterId: 'new',
+  })
+  assert.equal(r.writes.length, 1)
+  const inserted = r.writes[0].args as { data_json: types.CharacterData }
+  assert.deepEqual(inserted.data_json.hp, { current: 8, max: 8, temp: 0 })
+  const broken = rig()
+  const corrupt = {
+    ...data,
+    hp: { current: 'D62', max: 'D62', temp: 0 },
+  } as unknown as types.CharacterData
+  assert.ok('error' in (await broken.actions.createCharacter('campaign', 'Holmes', corrupt)))
+  assert.deepEqual(broken.writes, [])
 })

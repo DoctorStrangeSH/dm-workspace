@@ -1,5 +1,6 @@
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
-import type { RaceInfo, ClassInfo } from '@/lib/dnd/constants'
+import { CLASSES, type RaceInfo, type ClassInfo } from '@/lib/dnd/constants'
+import { baseClassSlug, parseSrdHitDie } from '@/lib/dnd/srd-class-utils'
 import type { AbilityKey, SkillKey } from '@/lib/types'
 
 const ABILITY_MAP: Record<string, AbilityKey> = {
@@ -88,7 +89,11 @@ export function srdClassToClassInfo(cls: SrdClass): ClassInfo {
   return {
     slug: cls.key,
     name: cls.name_ru ?? cls.name,
-    hitDie: (data.hit_die ?? 8) as 6 | 8 | 10 | 12,
+    // SRD dice can be strings such as D6; a type assertion does not convert them.
+    hitDie:
+      parseSrdHitDie(data.hit_die) ??
+      CLASSES.find((base) => base.slug === baseClassSlug(cls.key))?.hitDie ??
+      8,
     primaryAbility: 'str',
     savingThrows,
     skillChoices: {

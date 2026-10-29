@@ -19,6 +19,7 @@ import ChatPanel from '../../src/app/campaign/[id]/chat/chat-panel'
 import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-mode-layout'
 import { SessionChatPanel } from '../../src/app/campaign/[id]/session/session-chat-panel'
 import WizardStep1 from '../../src/app/campaign/[id]/characters/new/wizard-step-1'
+import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
 
@@ -85,7 +86,26 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'overview' ? (
+            {screen === 'character-create' ? (
+              <CharacterWizard
+                campaignId="test"
+                species={[{ key: 'srd-2024_human', name: 'Human', name_ru: null, data: {} }]}
+                classes={[
+                  {
+                    key: 'srd-2024_sorcerer',
+                    name: 'Sorcerer',
+                    name_ru: null,
+                    data: { hit_die: 'D6' },
+                  },
+                  {
+                    key: 'srd-2024_fighter',
+                    name: 'Fighter',
+                    name_ru: null,
+                    data: { hit_die: 'D10' },
+                  },
+                ]}
+              />
+            ) : screen === 'overview' ? (
               <CampaignOverview
                 campaign={{
                   id: 'test',
