@@ -69,7 +69,6 @@ export default function CharacterSheet({
   const data = character.data_json
   const profBonus = proficiencyBonus(data.level)
 
-
   const handleSaveName = () => {
     if (editName.trim() === character.name) {
       setIsEditingName(false)
@@ -93,7 +92,10 @@ export default function CharacterSheet({
   const handleSaveClass = () => {
     startTransition(async () => {
       const res = await updateCharacterIdentityAtomic(
-        character.id, campaignId, editClass, editSubclass || undefined
+        character.id,
+        campaignId,
+        editClass,
+        editSubclass || undefined
       )
       if ('error' in res) {
         toast.error(res.error)
@@ -160,8 +162,14 @@ export default function CharacterSheet({
         className="mb-4"
       />
 
-      <Card padding="lg" className="relative mb-5 overflow-hidden rounded-2xl border-[var(--border-default)] bg-[linear-gradient(115deg,var(--bg-surface),var(--bg-secondary))] shadow-[var(--shadow-sm)]">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-14 -top-20 h-60 w-60 rounded-full border border-[var(--accent)]/15">
+      <Card
+        padding="lg"
+        className="relative mb-5 overflow-hidden rounded-2xl border-[var(--border-default)] bg-[linear-gradient(115deg,var(--bg-surface),var(--bg-secondary))] shadow-[var(--shadow-sm)]"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 -right-14 h-60 w-60 rounded-full border border-[var(--accent)]/15"
+        >
           <div className="absolute inset-10 rounded-full border border-[var(--accent)]/10" />
         </div>
         <div className="relative flex flex-wrap items-start gap-4">
@@ -184,7 +192,7 @@ export default function CharacterSheet({
                     }
                   }}
                   autoFocus
-                  className="min-w-0 max-w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-xl font-bold text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                  className="max-w-full min-w-0 rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-xl font-bold text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
                 />
                 <IconButton
                   variant="ghost"
@@ -210,7 +218,9 @@ export default function CharacterSheet({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h1 className="break-words text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">{character.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight break-words text-[var(--text-primary)] sm:text-3xl">
+                  {character.name}
+                </h1>
                 {canEdit && (
                   <IconButton
                     variant="ghost"
@@ -225,41 +235,83 @@ export default function CharacterSheet({
             )}
 
             <p className="mt-1 text-sm text-[var(--text-muted)]">
-              {characterSpeciesName(data.race)} · {characterClassName(data.class)}{data.subclass ? ` (${subclassDisplayName(data.subclass)})` : ''} · {t('characters.level', { level: data.level })}
+              {characterSpeciesName(data.race, lang)} · {characterClassName(data.class, lang)}
+              {data.subclass ? ` (${subclassDisplayName(data.subclass, lang)})` : ''} ·{' '}
+              {t('characters.level', { level: data.level })}
             </p>
             {canEdit && (
               <div className="mt-2">
                 {!isEditingClass ? (
-                  <Button variant="secondary" size="sm" onClick={() => {
-                    setEditClass(baseClassSlug(data.class))
-                    setEditSubclass(data.subclass ?? '')
-                    setIsEditingClass(true)
-                  }}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setEditClass(baseClassSlug(data.class))
+                      setEditSubclass(data.subclass ?? '')
+                      setIsEditingClass(true)
+                    }}
+                  >
                     Изменить класс
                   </Button>
                 ) : (
                   <div className="flex flex-wrap items-end gap-2 rounded-lg border border-[var(--border-default)] p-3">
                     <label className="min-w-40 flex-1 text-xs text-[var(--text-muted)]">
                       Класс
-                      <select aria-label="Класс персонажа" value={editClass} onChange={(e) => {
-                        setEditClass(e.target.value)
-                        setEditSubclass('')
-                      }} className="mt-1 min-h-11 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]">
-                        {CLASSES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                      <select
+                        aria-label="Класс персонажа"
+                        value={editClass}
+                        onChange={(e) => {
+                          setEditClass(e.target.value)
+                          setEditSubclass('')
+                        }}
+                        className="mt-1 min-h-11 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]"
+                      >
+                        {CLASSES.map((c) => (
+                          <option key={c.slug} value={c.slug}>
+                            {characterClassName(c.slug, lang)}
+                          </option>
+                        ))}
                       </select>
                     </label>
                     <label className="min-w-40 flex-1 text-xs text-[var(--text-muted)]">
                       Подкласс
-                      <select aria-label="Подкласс персонажа" value={editSubclass} onChange={(e) => setEditSubclass(e.target.value)}
-                        className="mt-1 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]">
+                      <select
+                        aria-label="Подкласс персонажа"
+                        value={editSubclass}
+                        onChange={(e) => setEditSubclass(e.target.value)}
+                        className="mt-1 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]"
+                      >
                         <option value="">Без подкласса</option>
-                        {Object.entries(SRD_SUBCLASS_BASE).filter(([, base]) => base === editClass).map(([key]) =>
-                          <option key={key} value={key}>{subclassDisplayName(key)}</option>)}
+                        {Object.entries(SRD_SUBCLASS_BASE)
+                          .filter(([, base]) => base === editClass)
+                          .map(([key]) => (
+                            <option key={key} value={key}>
+                              {subclassDisplayName(key, lang)}
+                            </option>
+                          ))}
                       </select>
                     </label>
-                    <Button size="md" className="min-h-11" onClick={handleSaveClass} disabled={isPending}>Сохранить</Button>
-                    <Button variant="secondary" size="md" className="min-h-11" onClick={() => setIsEditingClass(false)} disabled={isPending}>Отмена</Button>
-                    <p className="w-full text-xs text-[var(--text-muted)]">Здоровье, уровень, характеристики и заклинания не пересчитываются автоматически.</p>
+                    <Button
+                      size="md"
+                      className="min-h-11"
+                      onClick={handleSaveClass}
+                      disabled={isPending}
+                    >
+                      Сохранить
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      className="min-h-11"
+                      onClick={() => setIsEditingClass(false)}
+                      disabled={isPending}
+                    >
+                      Отмена
+                    </Button>
+                    <p className="w-full text-xs text-[var(--text-muted)]">
+                      Здоровье, уровень, характеристики и заклинания не пересчитываются
+                      автоматически.
+                    </p>
                   </div>
                 )}
               </div>

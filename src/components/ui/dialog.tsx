@@ -41,10 +41,12 @@ export function Dialog({
 
     // Запоминаем активный элемент, чтобы вернуть фокус
     previousActiveElement.current = document.activeElement as HTMLElement
+    const previousOverflow = document.body.style.overflow
 
     // Focus trap
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault()
         onClose()
         return
       }
@@ -89,7 +91,7 @@ export function Dialog({
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
+      document.body.style.overflow = previousOverflow
       // Возвращаем фокус
       previousActiveElement.current?.focus()
     }

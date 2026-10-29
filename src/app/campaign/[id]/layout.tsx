@@ -27,6 +27,7 @@ import SessionLogButton from './logs/session-log-button'
 import ThemeToggle from '@/components/theme-toggle'
 import { LangToggle } from '@/components/ui'
 import { SessionModeToggle } from './session-mode-toggle'
+import { CampaignShell, CampaignTools } from './campaign-tools'
 import type { Entity, Chapter } from '@/lib/types'
 
 export default async function CampaignLayout({
@@ -99,7 +100,7 @@ export default async function CampaignLayout({
 
   return (
     <DmScreenProvider>
-      <div className="min-h-screen bg-[var(--bg-app)]">
+      <CampaignShell>
         <header className="sticky top-0 z-30 border-b border-[var(--border-default)] bg-[var(--bg-app)]/95 backdrop-blur">
           <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
             <MobileSidebar campaignId={id} isDm={role === 'dm'} />
@@ -124,44 +125,47 @@ export default async function CampaignLayout({
             </div>
 
             <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
-            {user && profile && (
-              <PresenceBadge
+              <CampaignTools isDm={role === 'dm'} />
+              {user && profile && (
+                <PresenceBadge
+                  campaignId={id}
+                  currentUserId={user.id}
+                  currentUserName={profile.display_name ?? profile.username}
+                />
+              )}
+
+              {role === 'dm' && (
+                <>
+                  <MusicButton campaignId={id} playlists={playlists} playerState={playerState} />
+                  <HandoutButton campaignId={id} handouts={handouts} />
+                  {/* CHANGES (5.4): Session Mode — только DM */}
+                  <SessionModeToggle campaignId={id} />
+                </>
+              )}
+
+              <SessionLogButton campaignId={id} log={sessionLog} isDm={role === 'dm'} />
+
+              <Suspense fallback={null}>
+                <LangToggle />
+              </Suspense>
+
+              <ThemeToggle />
+
+              <CommandPaletteWrapper
                 campaignId={id}
-                currentUserId={user.id}
-                currentUserName={profile.display_name ?? profile.username}
+                campaignName={campaign.name}
+                chapters={chapters}
+                entities={entities}
               />
-            )}
-
-            {role === 'dm' && (
-              <>
-                <MusicButton campaignId={id} playlists={playlists} playerState={playerState} />
-                <HandoutButton campaignId={id} handouts={handouts} />
-                {/* CHANGES (5.4): Session Mode — только DM */}
-                <SessionModeToggle campaignId={id} />
-              </>
-            )}
-
-            <SessionLogButton campaignId={id} log={sessionLog} isDm={role === 'dm'} />
-
-            <Suspense fallback={null}>
-              <LangToggle />
-            </Suspense>
-
-            <ThemeToggle />
-
-            <CommandPaletteWrapper
-              campaignId={id}
-              campaignName={campaign.name}
-              chapters={chapters}
-              entities={entities}
-            />
             </div>
           </div>
         </header>
 
         <div className="flex">
           <CampaignSidebar campaignId={campaign.id} isDm={role === 'dm'} />
-          <main className="min-w-0 flex-1 p-3 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:p-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">{children}</main>
+          <main className="min-w-0 flex-1 p-3 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:p-6 sm:pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6">
+            {children}
+          </main>
         </div>
 
         <MobileBottomNav campaignId={campaign.id} />
@@ -180,7 +184,7 @@ export default async function CampaignLayout({
         <MusicPlayer campaignId={id} initialState={playerState} currentTrack={currentTrack} />
 
         <HandoutViewer campaignId={id} initialHandouts={handouts} />
-      </div>
+      </CampaignShell>
     </DmScreenProvider>
   )
 }

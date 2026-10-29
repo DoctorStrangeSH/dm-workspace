@@ -16,7 +16,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:scale-[0.98]',
+  primary:
+    'border border-transparent bg-[var(--accent)] text-[var(--accent-foreground)] shadow-sm hover:bg-[var(--accent-hover)] hover:shadow-md active:scale-[0.98]',
   secondary:
     'bg-[var(--bg-secondary)] text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-[var(--bg-tertiary)] hover:border-[var(--border-hover)] active:scale-[0.98]',
   ghost:
@@ -25,9 +26,9 @@ const VARIANTS: Record<ButtonVariant, string> = {
 }
 
 const SIZES: Record<ButtonSize, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5 rounded-md',
-  md: 'h-10 px-4 text-sm gap-2 rounded-lg',
-  lg: 'h-12 px-6 text-base gap-2.5 rounded-lg',
+  sm: 'min-h-9 px-3 text-xs gap-1.5 rounded-lg',
+  md: 'min-h-11 px-4 text-sm gap-2 rounded-xl',
+  lg: 'min-h-12 px-6 text-base gap-2.5 rounded-xl',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import { useDmScreenContext } from './dm-screen-context'
-import DmScreenButton from './dm-screen-button'
 import DmScreenPanel from './dm-screen-panel'
 import { useHotkey } from '@/lib/hooks/use-hotkey'
 import type { Entity } from '@/lib/types'
@@ -35,7 +34,6 @@ export default function DmScreen({ entities, campaignId }: Props) {
 
   return (
     <>
-      <DmScreenButton />
       <DmScreenPanel entities={entities} campaignId={campaignId} />
     </>
   )
