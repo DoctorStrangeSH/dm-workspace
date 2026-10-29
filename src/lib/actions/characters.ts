@@ -13,7 +13,7 @@ import {
 import { prepareLevelUp } from '@/lib/dnd/level-up'
 import { characterDataHasValidHP, characterHPPatch, INVALID_HP } from '@/lib/dnd/character-hp'
 import { characterIdentityPatch } from '@/lib/dnd/character-identity-patch'
-import { isSubclassForClass, baseClassSlug } from '@/lib/dnd/srd-class-utils'
+import { isSubclassForClass, baseClassSlug, isCanonicalCharacterClass } from '@/lib/dnd/srd-class-utils'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
 
@@ -50,6 +50,11 @@ export async function createCharacter(
 
   const data: CharacterData = { ...createEmptyCharacterData(), ...initialData }
   if (!characterDataHasValidHP(data)) return { error: INVALID_HP }
+  const canonicalClass = typeof data.class === 'string' ? baseClassSlug(data.class) : null
+  if (!isCanonicalCharacterClass(canonicalClass)) {
+    return { error: 'Выберите допустимый основной класс персонажа' }
+  }
+  data.class = canonicalClass
   if (data.subclass !== undefined && !isSubclassForClass(data.subclass, baseClassSlug(data.class))) {
     return { error: 'Подкласс не соответствует классу персонажа' }
   }

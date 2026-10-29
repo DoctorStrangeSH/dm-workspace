@@ -583,16 +583,22 @@ try {
       expect(await page.evaluate(() => window.__uiLab.chapterSaves)).toEqual([])
     }
   )
-  for (const mobile of [false, true]) {
+  for (const { mobile, fallback } of [
+    { mobile: false, fallback: false },
+    { mobile: true, fallback: false },
+    { mobile: false, fallback: true },
+    { mobile: true, fallback: true },
+  ]) {
     await scenario(
-      'real character wizard normalizes D6 HP through review and submit (' +
+      'real character wizard preserves numeric HP and canonical class through submit (' +
+        (fallback ? 'fallback, ' : 'SRD, ') +
         (mobile ? 'mobile' : 'desktop') +
         ')',
-      { mobile, url: '/?screen=character-create' },
+      { mobile, url: '/?screen=character-create' + (fallback ? '&catalog=fallback' : '') },
       async (page) => {
         await page.getByLabel('Имя персонажа').fill('Holmes')
-        await page.getByLabel(/^Раса/).selectOption('srd-2024_human')
-        await page.getByLabel(/^Класс/).selectOption('srd-2024_sorcerer')
+        await page.getByLabel(/^Раса/).selectOption(fallback ? 'human' : 'srd-2024_human')
+        await page.getByLabel(/^Класс/).selectOption(fallback ? 'sorcerer' : 'srd-2024_sorcerer')
         await page.getByRole('button', { name: 'Далее', exact: true }).click()
         // Point buy: STR15, DEX14, CON15, INT8, WIS10, CHA8 uses all 27 points.
         for (const [ability, count] of [
@@ -607,13 +613,18 @@ try {
         await page.getByRole('button', { name: 'Далее', exact: true }).click()
         await page.getByRole('button', { name: 'Артист', exact: true }).click()
         await page.getByRole('button', { name: 'Магия ИНТ', exact: true }).click()
-        await page.getByRole('button', { name: 'Природа ИНТ', exact: true }).click()
+        await page
+          .getByRole('button', { name: fallback ? 'Религия ИНТ' : 'Природа ИНТ', exact: true })
+          .click()
         await page.getByRole('button', { name: 'Далее', exact: true }).click()
         const hpCard = page.getByText('HP', { exact: true }).locator('..')
-        await expect(hpCard).toHaveText('HP8')
+        await expect(hpCard).toHaveText(fallback ? 'HP9' : 'HP8')
         await expect(page.getByTestId('workspace-main')).not.toContainText('D62')
         await page.screenshot({
-          path: path.join(output, mobile ? 'mobile-character-hp.png' : 'desktop-character-hp.png'),
+          path: path.join(
+            output,
+            (mobile ? 'mobile' : 'desktop') + (fallback ? '-fallback' : '') + '-character-hp.png'
+          ),
         })
         await page.getByRole('button', { name: 'Создать персонажа', exact: true }).click()
         await expect
@@ -621,8 +632,10 @@ try {
           .toBe(1)
         const created = await page.evaluate(() => window.__uiLab.createdCharacters[0])
         expect(created.name).toBe('Holmes')
-        expect(created.data.hp).toEqual({ current: 8, max: 8, temp: 0 })
-        expect(created.data.abilities.con).toBe(15)
+        expect(created.data.class).toBe('sorcerer')
+        const expectedHP = fallback ? 9 : 8
+        expect(created.data.hp).toEqual({ current: expectedHP, max: expectedHP, temp: 0 })
+        expect(created.data.abilities.con).toBe(fallback ? 16 : 15)
         expect(await page.evaluate(() => window.__uiLab.navigated)).toEqual([
           '/campaign/test/characters/offline-character',
         ])

@@ -2,6 +2,12 @@
 
 Read repository AGENTS.md, AI_PROJECT_AUTHORIZATION.md, then CHARACTER_HP_VALIDATION.md and PR_BACKLOG_TRIAGE_2026-10-28.md. Refresh refs, PR states and deployment checks. A closed PR is not necessarily merged; a passing defect reproduction is not a fix.
 
+## Current checkpoint (supersedes historical source checkpoints below)
+
+#246 is delivered: expected head53dca1b94eeb3ed5cf0c8a9c62c75bd69abd5325 merged into main993577e56aac856d27e5cbb4d2e666b0a1668540; PR CI40867178146 and main CI40867410081 succeeded. Production dpl_HvvZeU5ZpFh3kmfXbepZqdXe6i16 and independent dm-workspace.vercel.app lookup were READY at that main SHA. Public root/login requests timed out; live authenticated save acceptance and existing-row repair are unverified. Receipt ../audit-evidence/character-creation-hp-2026-10-29/release.json.
+
+Active branch fix/character-creation-class-contract starts at that main and fixes prefixed SRD class IDs at new-character creation (canonical identity enables progression/spellcasting) plus the already-displayed fallback catalog. Read the creation follow-up in CHARACTER_HP_VALIDATION.md. Local43 character tests,6 navigation/date tests and23 offline Chromium scenarios pass; types pass; lint0 errors/2 existing warnings. Source checkpoint only: inspect final-head CI, Preview, merge and Production before claiming delivery. Existing rows, DB schema, installed HP RPC and manual harness remain untouched. After release refresh ../DM_WORKSPACE_RESUME.md and save the receipt; then prioritize authenticated GM/player/mobile acceptance where sessions are available and remaining product backlog.
+
 ## Latest delivered baseline
 
 - Repository DoctorStrangeSH/dm-workspace; main 303066d8f970944bdb8cc4aed4244d3439e35b26 delivered #238–#241 through #241's expected-head merge. GitHub confirmed all four merged; open PR inventory was zero before the current validation work.

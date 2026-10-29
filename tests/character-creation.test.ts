@@ -4,6 +4,7 @@ import { srdClassToClassInfo, srdSpeciesToRaceInfo } from '../src/lib/dnd/srd-ad
 import { buildCharacterData } from '../src/lib/dnd/character-builder'
 import { BACKGROUNDS, CLASSES } from '../src/lib/dnd/constants'
 import { characterDataHasValidHP } from '../src/lib/dnd/character-hp'
+import { getLevelUpIssue, prepareLevelUp } from '../src/lib/dnd/level-up'
 
 const race = srdSpeciesToRaceInfo({ key: 'srd-2024_human', name: 'Human', name_ru: null, data: {} })
 function creationData(key: string, hitDie: unknown, con = 15) {
@@ -57,5 +58,18 @@ test('missing or malformed SRD dice use the supported class default, never strin
       const data = creationData('srd-2024_' + cls.slug, raw)
       assert.deepEqual(data.hp, { current: cls.hitDie + 2, max: cls.hitDie + 2, temp: 0 })
     }
+  }
+})
+
+test('SRD-created base classes are canonical and can progress without changing identity first', () => {
+  for (const cls of CLASSES) {
+    const data = creationData('srd-2024_' + cls.slug, 'D' + cls.hitDie)
+    assert.equal(data.class, cls.slug)
+    assert.equal(getLevelUpIssue(data), null)
+    const next = prepareLevelUp(data, { hpMethod: 'average' })
+    assert.ok('data' in next)
+    assert.equal(next.data.level, 2)
+    assert.equal(next.data.class, cls.slug)
+    assert.equal(next.data.hp.max, cls.hitDie + 2 + cls.hitDie / 2 + 1 + 2)
   }
 })

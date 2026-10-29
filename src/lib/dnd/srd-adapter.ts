@@ -87,7 +87,7 @@ export function srdClassToClassInfo(cls: SrdClass): ClassInfo {
   ]
 
   return {
-    slug: cls.key,
+    slug: baseClassSlug(cls.key),
     name: cls.name_ru ?? cls.name,
     // SRD dice can be strings such as D6; a type assertion does not convert them.
     hitDie:

@@ -12,13 +12,14 @@ import WizardStep1 from './wizard-step-1'
 import WizardStep2, { type AbilityMode } from './wizard-step-2'
 import WizardStep3 from './wizard-step-3'
 import WizardStep4 from './wizard-step-4'
-import { BACKGROUNDS } from '@/lib/dnd/constants'
+import { BACKGROUNDS, CLASSES, RACES } from '@/lib/dnd/constants'
 import {
   buildCharacterData,
   getPointsRemaining,
   isStandardArrayUsed,
 } from '@/lib/dnd/character-builder'
 import { srdSpeciesToRaceInfo, srdClassToClassInfo } from '@/lib/dnd/srd-adapter'
+import { baseClassSlug } from '@/lib/dnd/srd-class-utils'
 import type { AbilityKey, SkillKey } from '@/lib/types'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
@@ -43,6 +44,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
   const handleClassChange = (slug: string) => {
     setClassSlug(slug)
     setSubclassSlug('')
+    setChosenSkills([])
   }
   const [level, setLevel] = useState(1)
 
@@ -62,19 +64,21 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
 
   const race = useMemo(() => {
     const srd = species.find((s) => s.key === raceSlug)
-    return srd ? srdSpeciesToRaceInfo(srd) : undefined
+    return srd ? srdSpeciesToRaceInfo(srd) : RACES.find((r) => r.slug === raceSlug)
   }, [species, raceSlug])
 
   const classInfo = useMemo(() => {
     const srd = classes.find((c) => c.key === classSlug)
-    return srd ? srdClassToClassInfo(srd) : undefined
+    return srd
+      ? srdClassToClassInfo(srd)
+      : CLASSES.find((c) => c.slug === baseClassSlug(classSlug))
   }, [classes, classSlug])
 
   const background = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
 
   const isStepValid = useMemo(() => {
     if (step === 1) {
-      return name.trim().length >= 2 && !!raceSlug && !!classSlug
+      return name.trim().length >= 2 && !!race && !!classInfo
     }
     if (step === 2) {
       if (abilityMode === 'pointbuy') {
@@ -90,8 +94,7 @@ export default function CharacterWizard({ campaignId, species, classes }: Props)
   }, [
     step,
     name,
-    raceSlug,
-    classSlug,
+    race,
     abilities,
     abilityMode,
     backgroundSlug,
