@@ -1,43 +1,32 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 
-const STORAGE_KEY_OPEN = 'dm-screen-open'
 const STORAGE_KEY_RECENT = 'dm-screen-recent'
 
 const MAX_RECENT = 8
 
 export function useDmScreen() {
-  // CHANGES: убран useEffect для чтения localStorage → lazy initializer.
-  // На SSR возвращаем false / [], на клиенте — из localStorage.
-  const [isOpen, setIsOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    try {
-      return localStorage.getItem(STORAGE_KEY_OPEN) === 'true'
-    } catch {
-      return false
-    }
-  })
+  const [activePanel, setActivePanel] = useState<'chat' | 'dm' | null>(null)
 
   const [recentIds, setRecentIds] = useState<string[]>(() => {
     if (typeof window === 'undefined') return []
     try {
       const recent = localStorage.getItem(STORAGE_KEY_RECENT)
-      return recent ? (JSON.parse(recent) as string[]) : []
+      const value: unknown = recent ? JSON.parse(recent) : []
+      return Array.isArray(value)
+        ? value.filter((id): id is string => typeof id === 'string').slice(0, MAX_RECENT)
+        : []
     } catch {
       return []
     }
   })
 
-  // Сохраняем состояние панели (это side-effect, не setState — допустимо)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    localStorage.setItem(STORAGE_KEY_OPEN, String(isOpen))
-  }, [isOpen])
-
-  const open = useCallback(() => setIsOpen(true), [])
-  const close = useCallback(() => setIsOpen(false), [])
-  const toggle = useCallback(() => setIsOpen((v) => !v), [])
+  const open = useCallback(() => setActivePanel('dm'), [])
+  const close = useCallback(() => setActivePanel(null), [])
+  const toggle = useCallback(() => setActivePanel((v) => (v === 'dm' ? null : 'dm')), [])
+  const openChat = useCallback(() => setActivePanel('chat'), [])
+  const toggleChat = useCallback(() => setActivePanel((v) => (v === 'chat' ? null : 'chat')), [])
 
   const addToRecent = useCallback((entityId: string) => {
     setRecentIds((prev) => {
@@ -52,7 +41,11 @@ export function useDmScreen() {
   }, [])
 
   return {
-    isOpen,
+    activePanel,
+    isOpen: activePanel === 'dm',
+    isChatOpen: activePanel === 'chat',
+    openChat,
+    toggleChat,
     recentIds,
     open,
     close,

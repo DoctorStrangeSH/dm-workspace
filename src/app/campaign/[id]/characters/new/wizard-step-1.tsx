@@ -1,9 +1,15 @@
 'use client'
 
 import { Input, Select } from '@/components/ui'
-import { useT } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
+import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
 import { RACES, CLASSES } from '@/lib/dnd/constants'
-import { isSrdBaseClass, baseClassSlug, SRD_SUBCLASS_BASE, subclassDisplayName } from '@/lib/dnd/srd-class-utils'
+import {
+  isSrdBaseClass,
+  baseClassSlug,
+  SRD_SUBCLASS_BASE,
+  subclassDisplayName,
+} from '@/lib/dnd/srd-class-utils'
 import type { SrdSpecies, SrdClass } from '@/lib/queries/srd'
 
 interface Props {
@@ -35,20 +41,28 @@ export default function WizardStep1({
   species,
   classes,
 }: Props) {
-  const t = useT()
-  const useDb = species.length > 0 && classes.length > 0
+  const { t, lang } = useI18n()
 
-  const raceOptions = useDb
-    ? species.map((s) => ({ value: s.key, label: s.name_ru ?? s.name }))
-    : RACES.map((r) => ({ value: r.slug, label: r.name }))
+  const raceOptions =
+    species.length > 0
+      ? species.map((s) => ({
+          value: s.key,
+          label: characterSpeciesName(s.key, lang, lang === 'ru' ? s.name_ru || s.name : s.name),
+        }))
+      : RACES.map((r) => ({ value: r.slug, label: characterSpeciesName(r.slug, lang) }))
 
-  const classOptions = useDb
-    ? classes.filter((c) => isSrdBaseClass(c.key)).map((c) => ({ value: c.key, label: c.name_ru ?? c.name }))
-    : CLASSES.map((c) => ({ value: c.slug, label: c.name }))
+  const baseClasses = classes.filter((c) => isSrdBaseClass(c.key))
+  const classOptions =
+    baseClasses.length > 0
+      ? baseClasses.map((c) => ({
+          value: c.key,
+          label: characterClassName(c.key, lang, lang === 'ru' ? c.name_ru || c.name : c.name),
+        }))
+      : CLASSES.map((c) => ({ value: c.slug, label: characterClassName(c.slug, lang) }))
 
   const subclassOptions = Object.entries(SRD_SUBCLASS_BASE)
     .filter(([, base]) => base === baseClassSlug(classSlug))
-    .map(([key]) => ({ value: key, label: subclassDisplayName(key) }))
+    .map(([key]) => ({ value: key, label: subclassDisplayName(key, lang) }))
 
   return (
     <div className="space-y-6">
@@ -83,10 +97,10 @@ export default function WizardStep1({
 
       {classSlug && subclassOptions.length > 0 && (
         <Select
-          label="Подкласс (необязательно)"
+          label={t('characters.subclass')}
           value={subclassSlug}
           onChange={(e) => setSubclassSlug(e.target.value)}
-          options={[{ value: '', label: 'Без подкласса' }, ...subclassOptions]}
+          options={[{ value: '', label: t('characters.noSubclass') }, ...subclassOptions]}
         />
       )}
 

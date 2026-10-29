@@ -1,7 +1,17 @@
 /** Base classes in the SRD 2024 class table (subclasses share that table). */
 export const SRD_BASE_CLASSES = new Set([
-  'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
-  'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard',
+  'barbarian',
+  'bard',
+  'cleric',
+  'druid',
+  'fighter',
+  'monk',
+  'paladin',
+  'ranger',
+  'rogue',
+  'sorcerer',
+  'warlock',
+  'wizard',
 ])
 
 export function baseClassSlug(key: string): string {
@@ -13,10 +23,12 @@ export function isSrdBaseClass(key: string): boolean {
 }
 
 export function parseSrdHitDie(value: unknown): 6 | 8 | 10 | 12 | null {
-  const n = typeof value === 'number' ? value :
-    typeof value === 'string' && /^(?:d)?(?:6|8|10|12)$/i.test(value.trim())
-      ? Number(value.trim().replace(/^d/i, ''))
-      : NaN
+  const n =
+    typeof value === 'number'
+      ? value
+      : typeof value === 'string' && /^(?:d)?(?:6|8|10|12)$/i.test(value.trim())
+        ? Number(value.trim().replace(/^d/i, ''))
+        : NaN
   return n === 6 || n === 8 || n === 10 || n === 12 ? n : null
 }
 
@@ -42,8 +54,11 @@ export const SRD_SUBCLASS_BASE: Record<string, string> = {
 }
 
 export function isSubclassForClass(subclass: unknown, baseClass: unknown): boolean {
-  return typeof subclass === 'string' && typeof baseClass === 'string' &&
+  return (
+    typeof subclass === 'string' &&
+    typeof baseClass === 'string' &&
     SRD_SUBCLASS_BASE[subclass] === baseClass
+  )
 }
 
 /** Russian display names for supported SRD 2024 subclasses. Stored keys remain unchanged. */
@@ -62,6 +77,9 @@ export const SRD_SUBCLASS_NAMES_RU: Record<string, string> = {
   'srd-2024_evoker': 'Школа воплощения',
 }
 
-export function subclassDisplayName(key: string): string {
-  return SRD_SUBCLASS_NAMES_RU[key] ?? key.replace(/^srd-2024_/, '').replaceAll('-', ' ')
+export function subclassDisplayName(key: string, lang: 'ru' | 'en' = 'ru'): string {
+  const readable = key.replace(/^srd-2024_/, '').replaceAll('-', ' ')
+  return lang === 'ru'
+    ? (SRD_SUBCLASS_NAMES_RU[key] ?? readable)
+    : readable.replace(/\b\w/g, (letter) => letter.toUpperCase())
 }

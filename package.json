@@ -19,6 +19,7 @@
     "seed:test": "tsx scripts/seed-test-user.ts",
     "test:security:pr37": "node scripts/check-pr37-security.mjs && node --import tsx --test tests/visible-handout.test.ts",
     "test:hp:harness": "node --test tests/dev-hp-concurrency.test.mjs",
+    "test:campaign-ui": "node tests/campaign-ui/run.mjs",
     "test:characters": "node --import tsx --test tests/character-hp-level-up.test.ts tests/character-actions.test.ts tests/level-up-dialog.test.ts tests/character-identity-patch.test.ts tests/character-display-names.test.ts tests/srd-class-utils.test.ts"
   },
   "dependencies": {
@@ -45,11 +46,14 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@tailwindcss/node": "4.3.3",
+    "@tailwindcss/oxide": "4.3.3",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^18.0.8",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
     "husky": "^9.1.7",

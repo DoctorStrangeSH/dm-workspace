@@ -1,7 +1,8 @@
 'use client'
 
 import { abilityModifier, formatModifier, getSaveBonus } from '@/lib/dnd/formulas'
-import { BACKGROUNDS, CLASSES, RACES } from '@/lib/dnd/constants'
+import { BACKGROUNDS } from '@/lib/dnd/constants'
+import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
 import type { AbilityKey, CharacterData, SkillKey } from '@/lib/types'
 import { useI18n } from '@/lib/i18n'
 import { abilityLabel, abilityShort, skillLabel } from '@/lib/i18n/labels'
@@ -17,8 +18,6 @@ const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 export default function WizardStep4({ name, data }: Props) {
   const { t, lang } = useI18n()
 
-  const race = RACES.find((r) => r.slug === data.race)
-  const cls = CLASSES.find((c) => c.slug === data.class)
   const background = BACKGROUNDS.find((b) => b.slug === data.background)
 
   return (
@@ -31,7 +30,8 @@ export default function WizardStep4({ name, data }: Props) {
           <div>
             <h2 className="text-2xl font-bold text-[var(--text-primary)]">{name}</h2>
             <p className="text-sm text-[var(--text-muted)]">
-              {race?.name} · {cls?.name} · {t('characters.level', { level: data.level })}
+              {characterSpeciesName(data.race, lang)} · {characterClassName(data.class, lang)} ·{' '}
+              {t('characters.level', { level: data.level })}
             </p>
             <p className="text-xs text-[var(--text-subtle)]">
               {t('characters.wizard.background')}: {background?.name}
