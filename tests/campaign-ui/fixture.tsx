@@ -19,6 +19,8 @@ import ChatPanel from '../../src/app/campaign/[id]/chat/chat-panel'
 import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-mode-layout'
 import { SessionChatPanel } from '../../src/app/campaign/[id]/session/session-chat-panel'
 import WizardStep1 from '../../src/app/campaign/[id]/characters/new/wizard-step-1'
+import CharacterSheet from '../../src/app/campaign/[id]/characters/[characterId]/character-sheet'
+import { createEmptyCharacterData, type Character } from '../../src/lib/types'
 import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
@@ -26,6 +28,34 @@ import './mocks'
 const query = new URLSearchParams(location.search)
 document.cookie = `dm-lang=${query.get('lang') === 'en' ? 'en' : 'ru'}; path=/`
 document.documentElement.dataset.theme = query.get('theme') === 'light' ? 'light' : 'dark'
+
+const hpFixtures: Record<string, unknown> = {
+  missing: undefined,
+  null: null,
+  empty: {},
+  string: { current: 'D62', max: 'D62', temp: 0 },
+  object: { current: {}, max: 8 },
+  partial: { current: 0 },
+  over: { current: 9, max: 8 },
+  temp: { current: 0, max: 8, temp: -1 },
+  valid: { current: 4, max: 8, temp: 2 },
+  legacy: { current: 4, max: 8 },
+  zero: { current: 0, max: 8 },
+}
+const fixtureCharacter = {
+  id: 'offline-character',
+  campaign_id: 'test',
+  user_id: 'self',
+  name: 'Holmes',
+  data_json: {
+    ...createEmptyCharacterData(),
+    class: 'sorcerer',
+    race: 'human',
+    notes: 'keep this note',
+    hp: hpFixtures[query.get('hp') ?? 'string'],
+  },
+} as Character
+Object.assign(window, { __characterFixture: fixtureCharacter })
 
 function Fixture() {
   const { lang } = useI18n()
@@ -86,7 +116,16 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'character-create' ? (
+            {screen === 'character-sheet' ? (
+              <CharacterSheet
+                character={fixtureCharacter}
+                campaignId="test"
+                campaignName="Пепел и звёзды"
+                owner={{ display_name: 'Мира', username: 'Mira' }}
+                canEdit={query.get('readonly') !== 'true'}
+                isDm={isDm}
+              />
+            ) : screen === 'character-create' ? (
               <CharacterWizard
                 campaignId="test"
                 species={

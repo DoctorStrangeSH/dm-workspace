@@ -20,7 +20,7 @@
     "test:security:pr37": "node scripts/check-pr37-security.mjs && node --import tsx --test tests/visible-handout.test.ts",
     "test:hp:harness": "node --test tests/dev-hp-concurrency.test.mjs",
     "test:campaign-ui": "node --import tsx --test tests/campaign-nav-items.test.ts tests/campaign-overview-time.test.ts && node tests/campaign-ui/run.mjs",
-    "test:characters": "node --import tsx --test tests/character-hp-level-up.test.ts tests/character-actions.test.ts tests/level-up-dialog.test.ts tests/character-identity-patch.test.ts tests/character-display-names.test.ts tests/srd-class-utils.test.ts tests/character-creation.test.ts"
+    "test:characters": "node --import tsx --test tests/character-hp-level-up.test.ts tests/character-actions.test.ts tests/level-up-dialog.test.ts tests/character-identity-patch.test.ts tests/character-display-names.test.ts tests/srd-class-utils.test.ts tests/character-creation.test.ts tests/character-hp-display.test.ts"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",

@@ -12,6 +12,7 @@ import { Sword, ArrowUpRight, Shield, Heart, Sparkles, Users } from 'lucide-reac
 import { getLang } from '@/lib/i18n/get-lang'
 import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 import { pluralize } from '@/lib/i18n/plural'
+import { readCharacterHP } from '@/lib/dnd/character-hp'
 import { characterClassName, characterSpeciesName } from '@/lib/dnd/character-display-names'
 
 export default async function CharactersPage({ params }: { params: Promise<{ id: string }> }) {
@@ -79,7 +80,7 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {characters.map((char) => {
-            const hp = char.data_json.hp
+            const hp = readCharacterHP(char.data_json.hp)
             const hpPercent =
               hp && hp.max > 0 ? Math.min(100, Math.max(0, (hp.current / hp.max) * 100)) : 0
             return (
@@ -149,12 +150,18 @@ export default async function CharactersPage({ params }: { params: Promise<{ id:
                             className="shrink-0 text-[var(--danger-text)]"
                             aria-hidden="true"
                           />
-                          <span className="truncate">{hp ? `${hp.current} / ${hp.max}` : '—'}</span>
+                          <span className="truncate">
+                            {hp ? `${hp.current} / ${hp.max}` : t('characters.hp.check')}
+                          </span>
                         </div>
                       </div>
                       <div
                         className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bg-tertiary)]"
-                        aria-label={hp ? `HP ${hp.current} из ${hp.max}` : undefined}
+                        aria-label={
+                          hp
+                            ? t('characters.hp.summary', { current: hp.current, max: hp.max })
+                            : undefined
+                        }
                         role={hp ? 'img' : undefined}
                       >
                         {hp && (

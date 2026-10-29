@@ -11,6 +11,8 @@ import { Breadcrumbs } from '@/components/breadcrumbs'
 import AbilityBox from './ability-box'
 import CombatStats from './combat-stats'
 import HPTracker from './hp-tracker'
+import HPValidationNotice from './hp-validation-notice'
+import { readCharacterHP } from '@/lib/dnd/character-hp'
 import DeathSavesTracker from './death-saves-tracker'
 import SkillsList from './skills-list'
 import SavesList from './saves-list'
@@ -67,6 +69,8 @@ export default function CharacterSheet({
   const [editSubclass, setEditSubclass] = useState(character.data_json.subclass ?? '')
 
   const data = character.data_json
+  const hp = readCharacterHP(data.hp)
+  const canEditData = canEdit && hp !== null
   const profBonus = proficiencyBonus(data.level)
 
   const handleSaveName = () => {
@@ -326,6 +330,8 @@ export default function CharacterSheet({
                 size="sm"
                 icon={<TrendingUp size={12} />}
                 onClick={() => setShowLevelUp(true)}
+                disabled={!hp}
+                aria-describedby={!hp ? 'character-hp-notice-title' : undefined}
                 className="mt-3 border-[var(--success)]/30 bg-[var(--success-subtle)] text-[var(--success-text)]"
               >
                 {t('characters.levelUpFrom', { from: data.level, to: data.level + 1 })}
@@ -334,6 +340,8 @@ export default function CharacterSheet({
           </div>
         </div>
       </Card>
+
+      {!hp && <HPValidationNotice character={character} />}
 
       <CharacterTabs
         overviewContent={
@@ -369,7 +377,7 @@ export default function CharacterSheet({
               />
             </div>
 
-            {data.hp.current === 0 && (
+            {hp?.current === 0 && (
               <div className="mb-4">
                 <DeathSavesTracker
                   characterId={character.id}
@@ -402,15 +410,15 @@ export default function CharacterSheet({
           </>
         }
         spellsContent={
-          <SpellsTab character={character} campaignId={campaignId} canEdit={canEdit} />
+          <SpellsTab character={character} campaignId={campaignId} canEdit={canEditData} />
         }
         inventoryContent={
-          <InventoryTab character={character} campaignId={campaignId} canEdit={canEdit} />
+          <InventoryTab character={character} campaignId={campaignId} canEdit={canEditData} />
         }
         featuresContent={<FeaturesTab />}
       />
 
-      {showLevelUp && (
+      {showLevelUp && hp && (
         <LevelUpDialog
           character={character}
           campaignId={campaignId}

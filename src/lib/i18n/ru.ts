@@ -359,6 +359,25 @@ export const ru: Dictionary = {
   'characters.levelUpFrom': 'Level {from} → {to}',
   'characters.proficient': 'Владение',
   'characters.notProficient': 'Без владения',
+  'characters.hp.invalidTitle': 'HP требуют проверки',
+  'characters.hp.invalidDescription':
+    'Сохранённые HP некорректны. Изменение здоровья, повышение уровня, отдых и сохранение заклинаний и инвентаря приостановлены.',
+  'characters.hp.recoveryHint':
+    'Скачайте копию персонажа и сверьте текущие, максимальные и временные HP с владельцем и ГМ. Данные не изменены. После исправления обновите лист.',
+  'characters.hp.savedValues': 'Посмотреть сохранённые HP',
+  'characters.hp.current': 'Текущие HP',
+  'characters.hp.max': 'Максимальные HP',
+  'characters.hp.temp': 'Временные HP',
+  'characters.hp.missing': 'Не задано',
+  'characters.hp.invalidFormat': 'Неверный формат',
+  'characters.hp.legacyTemp': 'Не задано — считается 0',
+  'characters.hp.downloadBackup': 'Скачать копию персонажа',
+  'characters.hp.refresh': 'Обновить лист',
+  'characters.hp.backupFailed': 'Не удалось скачать копию персонажа',
+  'characters.hp.unavailable': 'HP недоступны до проверки сохранённых значений',
+  'characters.hp.check': 'Проверьте HP',
+  'characters.hp.summary': 'HP {current} из {max}',
+
   'characters.deathSavesHint': 'Спасброски от смерти: 3 успеха / 3 провала',
 
   // ─── Character tabs ───

@@ -302,3 +302,57 @@ test('creation refuses missing/unknown/subclass-only class identities and incomp
   assert.equal(saved.class, 'sorcerer')
   assert.equal(saved.subclass, 'srd-2024_draconic-sorcery')
 })
+
+test('long rest rejects corrupt original HP before resetting current/temp or writing', async () => {
+  for (const invalid of [
+    undefined,
+    null,
+    {},
+    { current: 'D62', max: 8 },
+    { max: 8 },
+    { current: 0, max: 8, temp: -1 },
+    { current: 0, max: 0 },
+  ]) {
+    const data = { ...types.createEmptyCharacterData(), class: 'sorcerer', hp: invalid }
+    const before = structuredClone(data)
+    const r = rig(data)
+    assert.deepEqual(await r.actions.longRest('character', 'campaign'), { error: hp.INVALID_HP })
+    assert.deepEqual(r.writes, [])
+    assert.deepEqual(r.events, [])
+    assert.deepEqual(data, before)
+  }
+})
+
+test('valid long rest retains original CAS expectation and refuses a stale write', async () => {
+  const data = {
+    ...types.createEmptyCharacterData(),
+    class: 'sorcerer',
+    hp: { current: 1, max: 8 },
+    spellSlots: { 1: { current: 0, max: 2 } },
+    notes: 'keep',
+  }
+  const r = rig(data)
+  assert.deepEqual(await r.actions.longRest('character', 'campaign'), { success: true })
+  assert.deepEqual(r.writes, [
+    {
+      kind: 'update_character_data_cas',
+      args: {
+        p_character_id: 'character',
+        p_campaign_id: 'campaign',
+        p_expected: data,
+        p_next: {
+          ...data,
+          hp: { current: 8, max: 8, temp: 0 },
+          spellSlots: { 1: { current: 2, max: 2 } },
+          deathSaves: { successes: 0, failures: 0, stabilized: false },
+        },
+      },
+    },
+  ])
+  const stale = rig(data, true, false)
+  assert.ok('error' in (await stale.actions.longRest('character', 'campaign')))
+  assert.deepEqual(stale.events, [])
+  const unauthorized = rig(data, false)
+  assert.ok('error' in (await unauthorized.actions.longRest('character', 'campaign')))
+  assert.deepEqual(unauthorized.writes, [])
+})

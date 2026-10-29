@@ -642,6 +642,95 @@ try {
       }
     )
   }
+
+  for (const mobile of [false, true]) {
+    await scenario(
+      'legacy HP diagnosis keeps the actual sheet readable and write controls paused (' +
+        (mobile ? 'mobile' : 'desktop') +
+        ')',
+      { mobile, url: '/?screen=character-sheet&hp=string' },
+      async (page) => {
+        for (const kind of [
+          'string',
+          'missing',
+          'null',
+          'empty',
+          'object',
+          'partial',
+          'over',
+          'temp',
+        ]) {
+          await page.goto(origin + '/?screen=character-sheet&hp=' + kind)
+          await expect(page.getByRole('heading', { name: 'Holmes', exact: true })).toBeVisible()
+          const notice = page.getByRole('region', { name: 'HP требуют проверки' })
+          await expect(notice).toBeVisible()
+          await expect(page.getByRole('button', { name: /^Level 1/ })).toBeDisabled()
+          await expect(page.getByRole('button', { name: '+1', exact: true })).toHaveCount(0)
+          await expect(page.getByText('Спасброски от смерти', { exact: true })).toHaveCount(0)
+          await expect(page.getByTestId('workspace-main')).not.toContainText('NaN')
+          await notice.getByText('Посмотреть сохранённые HP', { exact: true }).click()
+          if (kind === 'string') await expect(notice).toContainText('«D62»')
+          await page.getByRole('tab', { name: 'Заклинания', exact: true }).click()
+          await expect(notice).toBeVisible()
+          await expect(
+            page.getByRole('button', { name: 'Длительный отдых', exact: true })
+          ).toHaveCount(0)
+          await page.getByRole('tab', { name: 'Инвентарь', exact: true }).click()
+          await expect(notice).toBeVisible()
+          expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        }
+        await page.goto(origin + '/?screen=character-sheet&hp=string')
+        const before = await page.evaluate(() => window.__characterFixture)
+        const downloadPromise = page.waitForEvent('download')
+        await page.getByRole('button', { name: 'Скачать копию персонажа', exact: true }).click()
+        const download = await downloadPromise
+        expect(download.suggestedFilename()).toBe('character-offline-character-backup.json')
+        const backup = JSON.parse(await readFile(await download.path(), 'utf8'))
+        expect(backup.character).toEqual(before)
+        expect(backup.character.data_json.hp).toEqual({ current: 'D62', max: 'D62', temp: 0 })
+        expect(await page.evaluate(() => window.__characterFixture)).toEqual(before)
+        await page.getByRole('button', { name: 'Обновить лист', exact: true }).click()
+        expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(1)
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        await page.getByRole('region', { name: 'HP требуют проверки' }).evaluate((el) => {
+          const bottom = document.querySelector('header')?.getBoundingClientRect().bottom ?? 0
+          window.scrollBy({ top: el.getBoundingClientRect().top - bottom - 12, behavior: 'instant' })
+        })
+        await page.screenshot({
+          path: path.join(output, (mobile ? 'mobile' : 'desktop') + '-hp-diagnosis.png'),
+        })
+      }
+    )
+  }
+  await scenario(
+    'valid and legacy HP keep actual sheet controls; invalid English read-only view remains safe',
+    { url: '/?screen=character-sheet&hp=legacy' },
+    async (page) => {
+      for (const kind of ['legacy', 'valid']) {
+        await page.goto(origin + '/?screen=character-sheet&hp=' + kind)
+        await expect(page.getByRole('region', { name: 'HP требуют проверки' })).toHaveCount(0)
+        await expect(page.getByText('4 / 8', { exact: true })).toBeVisible()
+        await expect(page.getByRole('button', { name: /^Level 1/ })).toBeEnabled()
+        await page.getByRole('button', { name: '+1', exact: true }).click()
+        await expect.poll(() => page.evaluate(() => window.__uiLab.characterActions.length)).toBe(1)
+        expect(await page.evaluate(() => window.__uiLab.characterActions[0])).toEqual({
+          name: 'updateCharacterHP',
+          args: ['offline-character', 'test', { current: 5 }],
+        })
+      }
+      await page.goto(origin + '/?screen=character-sheet&hp=zero')
+      await expect(page.getByText('Спасброски от смерти', { exact: true })).toBeVisible()
+      await page.goto(origin + '/?screen=character-sheet&hp=null&lang=en&readonly=true&role=player')
+      await expect(page.getByRole('heading', { name: 'HP need checking' })).toBeVisible()
+      await expect(page.getByRole('button', { name: /^Level 1/ })).toHaveCount(0)
+      await expect(
+        page.getByRole('button', { name: 'Download character backup', exact: true })
+      ).toBeVisible()
+      await page.getByText('View saved HP', { exact: true }).click()
+      await expect(page.getByRole('region', { name: 'HP need checking' })).toContainText('Not set')
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+    }
+  )
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))

@@ -541,6 +541,7 @@ export async function longRest(
   const access = await checkCharacterAccess(characterId, campaignId)
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
+  if (!characterDataHasValidHP(access.data)) return { error: INVALID_HP }
 
   const newSlots: SpellSlots = {}
   for (const [level, slot] of Object.entries(access.data.spellSlots ?? {})) {
