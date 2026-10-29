@@ -10,6 +10,7 @@ import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { customTheme, customHighlighting } from './markdown-theme'
 import type { EntitySuggestion } from '@/lib/codemirror/wikilink-completion'
+import { useT } from '@/lib/i18n'
 
 interface Props {
   value: string
@@ -24,6 +25,7 @@ const CMEditor = forwardRef<ReactCodeMirrorRef, Props>(function CMEditor(
   { value, onChange, readOnly = false, onSave, onUpdate },
   ref
 ) {
+  const t = useT()
   const saveKeymap = Prec.highest(
     keymap.of([
       {
@@ -74,9 +76,7 @@ const CMEditor = forwardRef<ReactCodeMirrorRef, Props>(function CMEditor(
           indentOnInput: true,
           syntaxHighlighting: false,
         }}
-        placeholder="Начни писать своё приключение...
-
-Поддерживается Markdown, [[ссылки]] на сущности и многое другое."
+        placeholder={t('chapters.editorPlaceholder')}
       />
     </div>
   )

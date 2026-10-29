@@ -11,6 +11,9 @@ import { LangToggle } from '../../src/components/ui/lang-toggle'
 import ThemeToggle from '../../src/components/theme-toggle'
 import { ThemeProvider } from '../../src/lib/hooks/use-theme'
 import { SessionModeToggle } from '../../src/app/campaign/[id]/session-mode-toggle'
+import CampaignOverview from '../../src/app/campaign/[id]/campaign-overview'
+import ChapterEditor from '../../src/app/campaign/[id]/chapters/[chapterId]/chapter-editor'
+import { overviewStats } from './overview-data'
 import DmScreen from '../../src/app/campaign/[id]/dm-screen/dm-screen'
 import ChatPanel from '../../src/app/campaign/[id]/chat/chat-panel'
 import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-mode-layout'
@@ -30,6 +33,7 @@ function Fixture() {
   const [subclass, setSubclass] = useState('')
   const isDm = query.get('role') !== 'player'
   const session = location.pathname.includes('session')
+  const screen = query.get('screen')
   return (
     <DmScreenProvider>
       <CampaignShell>
@@ -81,7 +85,31 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {session ? (
+            {screen === 'overview' ? (
+              <CampaignOverview
+                campaign={{
+                  id: 'test',
+                  name: 'Пепел и звёзды — приключения в забытых королевствах',
+                  genre: 'Dungeons & Dragons',
+                  description: query.has('long') ? 'Adventure'.repeat(30) : null,
+                }}
+                isDm={isDm}
+                stats={
+                  query.get('stats') === 'unavailable' ? null : overviewStats(query.get('stats'))
+                }
+                activeScene={{ id: 'active', name: 'The abandoned observatory' }}
+                lang={lang}
+                now={Date.parse('2026-10-29T08:00:00Z')}
+              />
+            ) : screen === 'editor' ? (
+              <ChapterEditor
+                campaignId="test"
+                chapterId="chapter"
+                chapterTitle="The observatory"
+                initialContent="The observatory"
+                readOnly={query.get('readonly') === 'true'}
+              />
+            ) : session ? (
               <SessionModeLayout campaignId="test" campaignName="Пепел и звёзды">
                 <div className="flex min-h-0 flex-col p-4" data-testid="chapter">
                   Chapter content

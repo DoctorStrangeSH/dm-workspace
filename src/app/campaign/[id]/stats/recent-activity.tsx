@@ -1,43 +1,38 @@
 import Link from 'next/link'
-import { BookOpen, Users } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Clock, Users } from 'lucide-react'
 import { Card } from '@/components/ui'
 import type { CampaignStats } from '@/lib/types'
+import type { Lang } from '@/lib/i18n/types'
+import { createT, getDictionary } from '@/lib/i18n/dictionaries'
+import { campaignRelativeTime } from '@/lib/campaign-overview-time'
 
 interface Props {
   campaignId: string
   recent: CampaignStats['recent']
+  lang: Lang
+  now: number
 }
 
-function formatRelativeTime(iso: string): string {
-  const date = new Date(iso)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  const diffHour = Math.floor(diffMin / 60)
-  const diffDay = Math.floor(diffHour / 24)
-
-  if (diffMin < 1) return 'только что'
-  if (diffMin < 60) return `${diffMin} мин назад`
-  if (diffHour < 24) return `${diffHour} ч назад`
-  if (diffDay < 7) return `${diffDay} дн назад`
-
-  return date.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-  })
-}
-
-export default function RecentActivity({ campaignId, recent }: Props) {
-  if (!recent || recent.length === 0) return null
+export default function RecentActivity({ campaignId, recent, lang, now }: Props) {
+  const t = createT(getDictionary(lang))
+  const entries = recent ?? []
 
   return (
-    <Card padding="md" className="mb-8">
+    <Card padding="md" className="h-full min-w-0 rounded-2xl">
       <h2 className="mb-4 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
-        Недавняя активность
+        <Clock
+          size={16}
+          className="mr-2 inline-block text-[var(--accent-text)]"
+          aria-hidden="true"
+        />
+        {t('overview.recent')}
       </h2>
 
+      {entries.length === 0 && (
+        <p className="text-sm leading-6 text-[var(--text-muted)]">{t('overview.noRecent')}</p>
+      )}
       <div className="space-y-1">
-        {recent.map((item) => {
+        {entries.map((item) => {
           const isChapter = item.type === 'chapter'
           const Icon = isChapter ? BookOpen : Users
           const href = isChapter
@@ -48,10 +43,11 @@ export default function RecentActivity({ campaignId, recent }: Props) {
             <Link
               key={`${item.type}-${item.id}`}
               href={href}
-              className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[var(--bg-hover)]"
+              className="group flex min-h-16 flex-wrap items-center gap-x-3 gap-y-1 rounded-xl px-3 py-3 transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
             >
               <Icon
-                size={16}
+                aria-hidden="true"
+                size={18}
                 className={`shrink-0 ${
                   isChapter ? 'text-[var(--accent-text)]' : 'text-[var(--success-text)]'
                 }`}
@@ -59,12 +55,17 @@ export default function RecentActivity({ campaignId, recent }: Props) {
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm text-[var(--text-primary)]">{item.name}</div>
                 <div className="text-xs text-[var(--text-subtle)]">
-                  {isChapter ? 'Глава' : 'Сущность'}
+                  {t(isChapter ? 'overview.chapter' : 'overview.entity')}
                 </div>
               </div>
-              <span className="shrink-0 text-xs text-[var(--text-subtle)]">
-                {formatRelativeTime(item.updated_at)}
+              <span className="ml-7 text-xs text-[var(--text-subtle)] sm:ml-0">
+                {campaignRelativeTime(item.updated_at, lang, now)}
               </span>
+              <ArrowUpRight
+                size={14}
+                className="hidden shrink-0 text-[var(--text-subtle)] sm:block"
+                aria-hidden="true"
+              />
             </Link>
           )
         })}

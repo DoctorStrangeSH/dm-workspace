@@ -213,20 +213,22 @@ export default function ChapterEditor({
       {isMobile && !readOnly && (
         <div className="mb-3 flex items-center gap-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
           <button
+            aria-pressed={mobileView === 'edit'}
             onClick={() => setMobileView('edit')}
-            className={`min-h-10 flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+            className={`min-h-11 flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] ${
               mobileView === 'edit'
-                ? 'bg-[var(--accent)] text-white'
+                ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             {t('chapters.editor')}
           </button>
           <button
+            aria-pressed={mobileView === 'preview'}
             onClick={() => setMobileView('preview')}
-            className={`flex-1 rounded px-3 py-1.5 text-xs transition-colors ${
+            className={`min-h-11 flex-1 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] ${
               mobileView === 'preview'
-                ? 'bg-[var(--accent)] text-white'
+                ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
@@ -236,7 +238,7 @@ export default function ChapterEditor({
       )}
 
       <EditorToolbar
-        view={view}
+        view={isMobile ? mobileView : view}
         onViewChange={setUserView}
         status={status}
         lastSaved={lastSaved}
@@ -273,7 +275,7 @@ export default function ChapterEditor({
               value={content}
               onChange={setContent}
               readOnly={readOnly}
-              onSave={saveNow}
+              onSave={readOnly ? undefined : saveNow}
               entities={entities}
               onUpdate={handleEditorUpdate}
             />

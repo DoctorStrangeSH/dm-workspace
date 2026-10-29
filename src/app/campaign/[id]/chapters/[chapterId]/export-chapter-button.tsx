@@ -44,7 +44,7 @@ export default function ExportChapterButton({ chapterId, campaignId, chapterTitl
   return (
     <Button
       variant="ghost"
-      size="sm"
+      size="md"
       onClick={handleExport}
       loading={isPending}
       icon={done ? <Check size={14} /> : <Download size={14} />}

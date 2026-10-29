@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -416,6 +416,171 @@ try {
       }
       await page.setViewportSize({ width: 320, height: 844 })
       await page.screenshot({ path: path.join(output, 'narrow-workspace.png') })
+    }
+  )
+  await scenario(
+    'overview DM actions, translated statistics and preparation links',
+    { url: '/?screen=overview' },
+    async (page) => {
+      const overview = page.getByTestId('campaign-overview')
+      await expect(overview.getByRole('link', { name: 'Открыть игровой стол' })).toHaveAttribute(
+        'href',
+        '/campaign/test/session'
+      )
+      await expect(overview.locator('a[href="/campaign/test/scenes/active"]')).toContainText(
+        'The abandoned observatory'
+      )
+      await expect(overview.getByText('Видимых: 9 · скрытых: 3')).toBeVisible()
+      await expect(overview.getByRole('heading', { name: 'Подготовка к игре' })).toBeVisible()
+      await expect(
+        overview.getByRole('link', { name: 'Монстры без КД/ОЗ: 1', exact: true })
+      ).toHaveAttribute('href', '/campaign/test/entities?type=monster')
+      await expect(overview.locator('a[href="/campaign/test/entities?type=note"]')).toBeVisible()
+      await expect(overview.getByText('2 минуты назад')).toBeVisible()
+      await page.screenshot({ path: path.join(output, 'desktop-overview.png'), fullPage: true })
+    }
+  )
+  await scenario(
+    'English player overview has useful shortcuts without GM actions or checklist',
+    { mobile: true, url: '/?screen=overview&lang=en&role=player&theme=light&long' },
+    async (page) => {
+      const overview = page.getByTestId('campaign-overview')
+      await expect(
+        overview.getByRole('link', { name: 'Open characters', exact: true })
+      ).toHaveAttribute('href', '/campaign/test/characters')
+      await expect(
+        overview.locator('a[href="/campaign/test/session"], a[href="/campaign/test/scenes/active"]')
+      ).toHaveCount(0)
+      await expect(overview.getByRole('heading', { name: 'Preparation checklist' })).toHaveCount(0)
+      await expect(
+        overview.getByRole('region', { name: 'Campaign statistics' }).getByText(/hidden/)
+      ).toHaveCount(0)
+      await expect(
+        overview.getByRole('navigation', { name: 'Continue your adventure' }).getByRole('link')
+      ).toHaveCount(4)
+      await expect(overview.getByText('2 minutes ago')).toBeVisible()
+      for (const width of [320, 390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 844 })
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width
+        )
+      }
+      await page.setViewportSize({ width: 390, height: 844 })
+      await page.goto(origin + '/?screen=overview&lang=en&role=player&theme=light')
+      await page.screenshot({
+        path: path.join(output, 'mobile-player-overview.png'),
+      })
+      const main = page.getByTestId('workspace-main')
+      expect(
+        await main.evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom))
+      ).toBeGreaterThanOrEqual(80)
+      await overview
+        .getByRole('link', { name: /The keeper of forgotten stars/ })
+        .scrollIntoViewIfNeeded()
+      const last = await overview
+        .getByRole('link', { name: /The keeper of forgotten stars/ })
+        .boundingBox()
+      const bottom = await page.getByRole('navigation', { name: 'Quick navigation' }).boundingBox()
+      expect(last.y + last.height).toBeLessThanOrEqual(bottom.y)
+      await page.screenshot({ path: path.join(output, 'mobile-overview-activity.png') })
+    }
+  )
+  await scenario(
+    'overview distinguishes empty materials, unavailable statistics and passing preparation checks',
+    { mobile: true, url: '/?screen=overview&stats=empty&lang=en' },
+    async (page) => {
+      await expect(page.getByRole('heading', { name: 'Build your campaign world' })).toBeVisible()
+      await expect(page.getByText('Updated chapters and entities will appear here.')).toBeVisible()
+      await page.goto(origin + '/?screen=overview&stats=unavailable&lang=en')
+      await expect(page.getByRole('status')).toContainText('Statistics are unavailable')
+      await expect(page.getByRole('heading', { name: 'Build your campaign world' })).toHaveCount(0)
+      await expect(
+        page.getByRole('navigation', { name: 'Continue your adventure' }).getByRole('link')
+      ).toHaveCount(4)
+      await page.goto(origin + '/?screen=overview&stats=ready&lang=en')
+      await expect(
+        page.getByText('No missing content or combat statistics were found by these checks.')
+      ).toBeVisible()
+    }
+  )
+  await scenario(
+    'mobile real editor exposes labelled touch targets and hides formatting in preview',
+    { mobile: true, url: '/?screen=editor&lang=en' },
+    async (page) => {
+      const formatting = page.getByRole('group', { name: 'Text formatting' })
+      await expect(formatting.getByRole('button')).toHaveCount(6)
+      for (const button of await formatting.getByRole('button').all()) {
+        expect(await button.getAttribute('aria-label')).toBeTruthy()
+        const box = await button.boundingBox()
+        expect(box.width).toBeGreaterThanOrEqual(44)
+        expect(box.height).toBeGreaterThanOrEqual(44)
+      }
+      await page.locator('.cm-content').click()
+      await page.keyboard.press('Control+a')
+      await page.getByRole('button', { name: 'Bold (Ctrl+B)', exact: true }).click()
+      await expect(page.locator('.cm-content')).toContainText('**The observatory**')
+      await page.getByRole('button', { name: 'Preview', exact: true }).click()
+      await expect(formatting).toHaveCount(0)
+      await expect(page.locator('.cm-content')).toHaveCount(0)
+      await expect(page.locator('.prose')).toContainText('The observatory')
+      await expect(page.getByRole('button', { name: 'Preview', exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+      await page.screenshot({ path: path.join(output, 'mobile-chapter-preview.png') })
+      await page.getByRole('button', { name: 'Editor', exact: true }).click()
+      await expect(formatting).toBeVisible()
+      await expect(page.locator('.cm-content')).toContainText('**The observatory**')
+      await page.keyboard.press('Control+s')
+      await expect
+        .poll(() =>
+          page.evaluate(() =>
+            window.__uiLab.chapterSaves.some((value) => value.includes('**The observatory**'))
+          )
+        )
+        .toBe(true)
+      for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 })
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width
+        )
+      }
+    }
+  )
+  await scenario(
+    'desktop real editor preserves content across view modes and exposes save failure',
+    { url: '/?screen=editor&lang=en' },
+    async (page) => {
+      const group = page.getByRole('group', { name: 'Editor view' })
+      await expect(group.getByRole('button', { name: 'Split', exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      )
+      await group.getByRole('button', { name: 'Preview', exact: true }).click()
+      await expect(page.getByRole('group', { name: 'Text formatting' })).toHaveCount(0)
+      await expect(page.locator('.prose')).toContainText('The observatory')
+      await group.getByRole('button', { name: 'Editor', exact: true }).click()
+      await page.evaluate(() => {
+        window.__uiLab.chapterSaveFails = true
+      })
+      await page.locator('.cm-content').fill('A new chapter draft')
+      await page.keyboard.press('Control+s')
+      await expect(page.getByRole('alert')).toContainText('Offline save failure')
+      await expect(page.locator('.cm-content')).toContainText('A new chapter draft')
+      await page.screenshot({ path: path.join(output, 'desktop-chapter-editor.png') })
+    }
+  )
+  await scenario(
+    'read-only chapter has no formatting and cannot autosave',
+    { mobile: true, url: '/?screen=editor&lang=en&readonly=true' },
+    async (page) => {
+      await expect(page.getByRole('group', { name: 'Text formatting' })).toHaveCount(0)
+      await expect(page.locator('.cm-content')).toHaveAttribute('aria-readonly', 'true')
+      await page.locator('.cm-content').click()
+      await page.keyboard.type('This must not change the chapter')
+      await expect(page.locator('.cm-content')).toHaveText('The observatory')
+      await page.keyboard.press('Control+s')
+      expect(await page.evaluate(() => window.__uiLab.chapterSaves)).toEqual([])
     }
   )
 } finally {
