@@ -13,6 +13,8 @@ export interface DialogProps {
   children: React.ReactNode
   size?: 'sm' | 'md' | 'lg'
   footer?: React.ReactNode
+  closeLabel?: string
+  closeDisabled?: boolean
 }
 
 const SIZES = {
@@ -29,6 +31,8 @@ export function Dialog({
   children,
   size = 'md',
   footer,
+  closeLabel = 'Закрыть',
+  closeDisabled = false,
 }: DialogProps) {
   const titleId = useId()
   const descriptionId = useId()
@@ -58,6 +62,11 @@ export function Dialog({
         const focusable = dialog.querySelectorAll<HTMLElement>(
           'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         )
+        if (!focusable.length) {
+          e.preventDefault()
+          dialog.focus()
+          return
+        }
         const first = focusable[0]
         const last = focusable[focusable.length - 1]
 
@@ -79,17 +88,18 @@ export function Dialog({
     document.body.style.overflow = 'hidden'
 
     // Фокусируемся на диалоге
-    setTimeout(() => {
+    const focusTimeout = setTimeout(() => {
       const dialog = dialogRef.current
       if (dialog) {
         const focusable = dialog.querySelector<HTMLElement>(
           'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
         )
-        focusable?.focus()
+        ;(focusable ?? dialog).focus()
       }
     }, 50)
 
     return () => {
+      clearTimeout(focusTimeout)
       window.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = previousOverflow
       // Возвращаем фокус
@@ -107,6 +117,7 @@ export function Dialog({
       <div
         ref={dialogRef}
         role="dialog"
+        tabIndex={-1}
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-describedby={description ? descriptionId : undefined}
@@ -130,7 +141,7 @@ export function Dialog({
                 </p>
               )}
             </div>
-            <IconButton label="Закрыть" size="sm" onClick={onClose}>
+            <IconButton label={closeLabel} size="sm" onClick={onClose} disabled={closeDisabled}>
               <X size={16} />
             </IconButton>
           </div>

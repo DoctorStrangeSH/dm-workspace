@@ -49,7 +49,8 @@ const fixtureCharacter = {
   name: 'Holmes',
   data_json: {
     ...createEmptyCharacterData(),
-    class: 'sorcerer',
+    class: query.has('prefixed') ? 'srd-2024_sorcerer' : 'sorcerer',
+    ...(query.has('subclass') ? { subclass: 'srd-2024_draconic-sorcery' } : {}),
     race: 'human',
     notes: 'keep this note',
     hp: hpFixtures[query.get('hp') ?? 'string'],

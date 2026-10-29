@@ -356,3 +356,89 @@ test('valid long rest retains original CAS expectation and refuses a stale write
   assert.ok('error' in (await unauthorized.actions.longRest('character', 'campaign')))
   assert.deepEqual(unauthorized.writes, [])
 })
+
+test('identity action sends only canonical class/subclass, preserving caller HP and every other field', async () => {
+  const data = {
+    ...types.createEmptyCharacterData(),
+    class: 'sorcerer',
+    subclass: 'srd-2024_draconic-sorcery',
+    notes: 'keep',
+    hp: { current: 'D62', max: 'D62', temp: 0 },
+    inventory: [{ id: 'kept' }],
+    spells: [{ id: 'kept-spell' }],
+  }
+  const before = structuredClone(data)
+  const r = rig(data)
+  assert.deepEqual(
+    await r.actions.updateCharacterIdentityAtomic(
+      'character',
+      'campaign',
+      'srd-2024_fighter',
+      'srd-2024_champion'
+    ),
+    { success: true }
+  )
+  assert.deepEqual(r.writes, [
+    {
+      kind: 'update_character_identity_atomic',
+      args: {
+        p_character_id: 'character',
+        p_campaign_id: 'campaign',
+        p_class: 'fighter',
+        p_subclass: 'srd-2024_champion',
+      },
+    },
+  ])
+  assert.deepEqual(data, before)
+  assert.deepEqual(r.events, ['revalidate'])
+  const removal = rig(data)
+  assert.deepEqual(
+    await removal.actions.updateCharacterIdentityAtomic('character', 'campaign', 'sorcerer'),
+    { success: true }
+  )
+  assert.deepEqual(removal.writes, [
+    {
+      kind: 'update_character_identity_atomic',
+      args: {
+        p_character_id: 'character',
+        p_campaign_id: 'campaign',
+        p_class: 'sorcerer',
+        p_subclass: null,
+      },
+    },
+  ])
+})
+
+test('identity action denies incompatible pairs and unauthenticated callers, and does not report a failed write as success', async () => {
+  for (const [nextClass, subclass] of [
+    ['wizard', 'srd-2024_champion'],
+    ['srd-2024_champion', undefined],
+    ['', undefined],
+  ]) {
+    const r = rig()
+    assert.ok(
+      'error' in
+        (await r.actions.updateCharacterIdentityAtomic(
+          'character',
+          'campaign',
+          nextClass!,
+          subclass
+        ))
+    )
+    assert.deepEqual(r.writes, [])
+    assert.deepEqual(r.events, [])
+  }
+  const denied = rig(undefined, false)
+  assert.ok(
+    'error' in
+      (await denied.actions.updateCharacterIdentityAtomic('character', 'campaign', 'wizard'))
+  )
+  assert.deepEqual(denied.writes, [])
+  const failed = rig(undefined, true, false)
+  assert.ok(
+    'error' in
+      (await failed.actions.updateCharacterIdentityAtomic('character', 'campaign', 'wizard'))
+  )
+  assert.equal(failed.writes.length, 1)
+  assert.deepEqual(failed.events, [])
+})
