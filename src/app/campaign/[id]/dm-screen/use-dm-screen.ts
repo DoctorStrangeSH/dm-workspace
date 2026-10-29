@@ -7,7 +7,7 @@ const STORAGE_KEY_RECENT = 'dm-screen-recent'
 const MAX_RECENT = 8
 
 export function useDmScreen() {
-  const [activePanel, setActivePanel] = useState<'chat' | 'dm' | null>(null)
+  const [activePanel, setActivePanel] = useState<'chat' | 'dm' | 'navigation' | null>(null)
 
   const [recentIds, setRecentIds] = useState<string[]>(() => {
     if (typeof window === 'undefined') return []
@@ -26,6 +26,7 @@ export function useDmScreen() {
   const close = useCallback(() => setActivePanel(null), [])
   const toggle = useCallback(() => setActivePanel((v) => (v === 'dm' ? null : 'dm')), [])
   const openChat = useCallback(() => setActivePanel('chat'), [])
+  const openNavigation = useCallback(() => setActivePanel('navigation'), [])
   const toggleChat = useCallback(() => setActivePanel((v) => (v === 'chat' ? null : 'chat')), [])
 
   const addToRecent = useCallback((entityId: string) => {
@@ -45,6 +46,8 @@ export function useDmScreen() {
     isOpen: activePanel === 'dm',
     isChatOpen: activePanel === 'chat',
     openChat,
+    openNavigation,
+    isNavigationOpen: activePanel === 'navigation',
     toggleChat,
     recentIds,
     open,

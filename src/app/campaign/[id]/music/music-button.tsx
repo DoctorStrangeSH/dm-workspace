@@ -21,10 +21,12 @@ export default function MusicButton({ campaignId, playlists, playerState }: Prop
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg p-2 transition hover:bg-[var(--bg-hover)]"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-3 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+        aria-label={t('music.open')}
         title={t('music.open')}
       >
-        <Music size={16} />
+        <Music size={17} aria-hidden="true" />
+        <span className="hidden xl:inline">{t('music.open')}</span>
       </button>
       {open && (
         <MusicPanel

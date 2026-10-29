@@ -49,6 +49,18 @@ export const ru: Dictionary = {
   'nav.dashboard': 'Дашборд',
   'nav.logout': 'Выйти',
   'nav.menu': 'Меню',
+  'nav.more': 'Ещё',
+  'nav.quickNavigation': 'Быстрая навигация',
+  'nav.group.play': 'За игровым столом',
+  'nav.group.world': 'Мир кампании',
+  'nav.group.reference': 'Справочники',
+  'nav.allCampaigns': 'Все кампании',
+  'nav.campaign': 'Кампания',
+  'nav.workspace': 'Рабочее пространство',
+  'nav.appearance': 'Язык и оформление',
+  'nav.dmDescription': 'Всё для подготовки и проведения игры.',
+  'nav.playerDescription': 'Ваша группа, истории и справочники.',
+  'language.label': 'Язык интерфейса',
   'nav.mainNavigation': 'Основная навигация',
 
   // ─── Roles ───
@@ -1239,9 +1251,9 @@ export const ru: Dictionary = {
   'scenes.owners.toast.removed': 'Владелец убран',
 
   // ─── Session Mode (5.4) ───
-  'session.badge': 'Session',
-  'session.enter': 'Session Mode — глава + VTT + чат',
-  'session.enterShort': 'Session Mode',
+  'session.badge': 'Игра',
+  'session.enter': 'Режим игры — глава, карта и чат',
+  'session.enterShort': 'Режим игры',
   'session.exit': 'Выйти',
   'session.backToCampaign': 'Назад к кампании',
   'session.showChat': 'Показать чат',

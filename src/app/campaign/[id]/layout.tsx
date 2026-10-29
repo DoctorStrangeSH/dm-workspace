@@ -3,8 +3,6 @@ export const instant = false
 import { Suspense } from 'react'
 import { connection } from 'next/server'
 import { redirect, notFound } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { createClient } from '@/lib/supabase/server'
 import { getCampaignMessages } from '@/lib/queries/messages'
@@ -12,7 +10,6 @@ import { getPlaylists, getMusicState, getCurrentTrack } from '@/lib/queries/musi
 import { getHandouts } from '@/lib/queries/handouts'
 import { getSessionLog } from '@/lib/queries/logs'
 import CampaignSidebar from './campaign-sidebar'
-import MobileSidebar from './mobile-sidebar'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { DmScreenProvider } from './dm-screen/dm-screen-context'
 import DmScreen from './dm-screen/dm-screen'
@@ -27,7 +24,8 @@ import SessionLogButton from './logs/session-log-button'
 import ThemeToggle from '@/components/theme-toggle'
 import { LangToggle } from '@/components/ui'
 import { SessionModeToggle } from './session-mode-toggle'
-import { CampaignShell, CampaignTools } from './campaign-tools'
+import { CampaignShell } from './campaign-tools'
+import { CampaignHeader } from './campaign-header'
 import type { Entity, Chapter } from '@/lib/types'
 
 export default async function CampaignLayout({
@@ -101,65 +99,49 @@ export default async function CampaignLayout({
   return (
     <DmScreenProvider>
       <CampaignShell>
-        <header className="sticky top-0 z-30 border-b border-[var(--border-default)] bg-[var(--bg-app)]/95 backdrop-blur">
-          <div className="flex flex-wrap items-center gap-2 px-3 py-3 sm:gap-4 sm:px-6">
-            <MobileSidebar campaignId={id} isDm={role === 'dm'} />
-
-            <Link
-              href="/dashboard"
-              aria-label="Назад к кампаниям"
-              className="hidden h-10 w-10 items-center justify-center rounded-lg text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)] md:inline-flex"
-            >
-              <ArrowLeft size={18} />
-            </Link>
-
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-base font-bold text-[var(--text-primary)] sm:text-lg">
-                {campaign.name}
-              </h1>
-              {campaign.genre && (
-                <p className="truncate text-xs text-[var(--text-muted)]">
-                  {campaign.genre} · {role === 'dm' ? 'ГМ' : 'Игрок'}
-                </p>
-              )}
-            </div>
-
-            <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-2 md:w-auto md:flex-nowrap">
-              <CampaignTools isDm={role === 'dm'} />
-              {user && profile && (
-                <PresenceBadge
-                  campaignId={id}
-                  currentUserId={user.id}
-                  currentUserName={profile.display_name ?? profile.username}
-                />
-              )}
-
+        <CampaignHeader
+          campaignId={id}
+          name={campaign.name}
+          genre={campaign.genre}
+          isDm={role === 'dm'}
+          preferences={
+            <>
+              <Suspense fallback={null}>
+                <LangToggle />
+              </Suspense>
+              <ThemeToggle />
+            </>
+          }
+          search={
+            <CommandPaletteWrapper
+              campaignId={id}
+              campaignName={campaign.name}
+              chapters={chapters}
+              entities={entities}
+            />
+          }
+          actions={
+            <>
               {role === 'dm' && (
                 <>
                   <MusicButton campaignId={id} playlists={playlists} playerState={playerState} />
                   <HandoutButton campaignId={id} handouts={handouts} />
-                  {/* CHANGES (5.4): Session Mode — только DM */}
                   <SessionModeToggle campaignId={id} />
                 </>
               )}
-
               <SessionLogButton campaignId={id} log={sessionLog} isDm={role === 'dm'} />
-
-              <Suspense fallback={null}>
-                <LangToggle />
-              </Suspense>
-
-              <ThemeToggle />
-
-              <CommandPaletteWrapper
+            </>
+          }
+          presence={
+            user && profile ? (
+              <PresenceBadge
                 campaignId={id}
-                campaignName={campaign.name}
-                chapters={chapters}
-                entities={entities}
+                currentUserId={user.id}
+                currentUserName={profile.display_name ?? profile.username}
               />
-            </div>
-          </div>
-        </header>
+            ) : null
+          }
+        />
 
         <div className="flex">
           <CampaignSidebar campaignId={campaign.id} isDm={role === 'dm'} />

@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/messages|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -299,6 +299,123 @@ try {
       await expect(page.getByRole('log')).not.toBeVisible()
       await expect(page.getByTestId('scene')).toBeVisible()
       await expect(page.getByTestId('chapter')).toBeVisible()
+    }
+  )
+  await scenario(
+    'mobile navigation shares triggers, hides closed links and restores focus',
+    { mobile: true },
+    async (page) => {
+      const drawer = page.locator('#campaign-navigation')
+      const more = page.getByRole('button', { name: 'Ещё', exact: true })
+      const menu = page.locator('button[aria-controls="campaign-navigation"]').first()
+      await expect(drawer).not.toBeVisible()
+      for (let i = 0; i < 25; i++) {
+        await page.keyboard.press('Tab')
+        expect(await drawer.evaluate((el) => el.contains(document.activeElement))).toBe(false)
+      }
+      await more.click()
+      expect(await drawer.evaluate((el) => el.matches(':modal'))).toBe(true)
+      await expect(menu).toHaveAttribute('aria-expanded', 'true')
+      await expect(drawer.getByRole('link')).toHaveCount(12)
+      expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden')
+      for (let i = 0; i < 18; i++) {
+        await page.keyboard.press('Tab')
+        expect(await drawer.evaluate((el) => el.contains(document.activeElement))).toBe(true)
+      }
+      await page.screenshot({ path: path.join(output, 'mobile-navigation.png') })
+      await page.keyboard.press('Escape')
+      await expect(drawer).not.toBeVisible()
+      await expect(more).toBeFocused()
+      expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
+      await menu.click()
+      await expect(more).toHaveAttribute('aria-expanded', 'true')
+      await page.mouse.click(365, 400)
+      await expect(drawer).not.toBeVisible()
+      await expect(menu).toBeFocused()
+      await more.click()
+      await page.setViewportSize({ width: 768, height: 844 })
+      await expect(drawer).not.toBeVisible()
+      expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
+    }
+  )
+  await scenario(
+    'player menu filters GM routes; route selection and active descendants',
+    { mobile: true, url: '/campaign/test/spells/acid?lang=en&role=player' },
+    async (page) => {
+      const more = page.getByRole('button', { name: 'More', exact: true })
+      expect(await more.evaluate((el) => getComputedStyle(el).color)).not.toBe(
+        await page
+          .locator('[aria-label="Quick navigation"] a')
+          .first()
+          .evaluate((el) => getComputedStyle(el).color)
+      )
+      await more.click()
+      const drawer = page.locator('#campaign-navigation')
+      await expect(drawer.locator('a[aria-current="page"]')).toHaveAttribute(
+        'href',
+        '/campaign/test/spells'
+      )
+      await expect(drawer.locator('a[href$="/settings"], a[href$="/generators"]')).toHaveCount(0)
+      await expect(drawer.getByRole('link')).toHaveCount(10)
+      await drawer.locator('a[href$="/entities"]').click()
+      await expect(drawer).not.toBeVisible()
+      await expect(page).toHaveURL(/\/campaign\/test\/entities$/)
+    }
+  )
+  await scenario(
+    'measured header and sidebar remain aligned as workspace width changes',
+    {},
+    async (page) => {
+      const header = page.locator('[data-campaign-shell] > header')
+      const sidebar = page.locator('aside').first()
+      const aligned = async () => {
+        // ResizeObserver and viewport CSS settle on the next animation frame.
+        await expect
+          .poll(() =>
+            header.evaluate((el) => {
+              const bounds = el.parentElement.querySelector('aside').getBoundingClientRect()
+              return Math.max(
+                Math.abs(el.getBoundingClientRect().bottom - bounds.top),
+                Math.abs(bounds.bottom - innerHeight)
+              )
+            })
+          )
+          .toBeLessThan(2)
+        await expect(sidebar).toBeVisible()
+      }
+      await aligned()
+      await openChat(page)
+      await aligned()
+      await page.keyboard.press('Escape')
+      await page.screenshot({ path: path.join(output, 'desktop-navigation.png') })
+      await page.setViewportSize({ width: 768, height: 844 })
+      await aligned()
+    }
+  )
+  await scenario(
+    'appearance disclosure supports keyboard and outside closure; narrow layouts fit',
+    { mobile: true },
+    async (page) => {
+      const summary = page.locator('summary')
+      const details = page.locator('details')
+      await summary.focus()
+      await page.keyboard.press('Enter')
+      await expect(details).toHaveAttribute('open', '')
+      await page.getByRole('button', { name: 'EN', exact: true }).focus()
+      await page.keyboard.press('Escape')
+      await expect(details).not.toHaveAttribute('open')
+      await expect(summary).toBeFocused()
+      await summary.click()
+      await page.getByRole('heading', { level: 1 }).click()
+      await expect(details).not.toHaveAttribute('open')
+      for (const width of [320, 390, 768, 1440]) {
+        await page.setViewportSize({ width, height: 844 })
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width
+        )
+      }
+      await page.setViewportSize({ width: 320, height: 844 })
+      await page.screenshot({ path: path.join(output, 'narrow-workspace.png') })
     }
   )
 } finally {

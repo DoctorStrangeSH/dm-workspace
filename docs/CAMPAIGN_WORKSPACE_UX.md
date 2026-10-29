@@ -12,6 +12,14 @@ Session mode uses the same chat composer/history and shared chat-open state. On 
 
 The shared primary button now uses an accent-foreground color appropriate to dark/light themes; ordinary buttons have clearer shape and larger default targets. The existing obsidian/gold visual direction is preserved. This is a workspace interaction pass, not a redesign of every editor and dialog.
 
+## Navigation follow-up
+
+The campaign header separates identity/search/appearance from Chat/GM and secondary tools. Language and theme controls share a labelled native disclosure with outside-click and Escape closure. Tool targets are at least 44px. Session-mode labels are translated in Russian.
+
+Desktop navigation groups every existing route into table, world and reference sections, with role-filtered GM entries and an all-campaigns link. The sidebar uses a ResizeObserver-measured header height for its sticky offset and available scroll height, including when an adjacent workspace panel changes the header width.
+
+Mobile quick navigation keeps four shortcuts and adds More. More and the header menu open the same native modal drawer, with complete grouped routes, focus cycling/return, Escape, backdrop closure, body scroll restoration and closure on the desktop breakpoint. Closed links are absent from the tab order. Active states match slash-delimited routes; nested pages activate their parent without matching similarly named sibling routes. Navigation shares the existing exclusive tool-panel state.
+
 ## Character names
 
 Known classes, subclasses and species display in the selected language in creation, the confirmation step, character cards and the sheet/class selector. SRD IDs are preserved; missing or empty database translations fall back to the local known-name catalogue. Orc, Goliath and Aasimar cover SRD 2024 species absent from the legacy mechanical race list. Unknown entries retain their supplied display name/key and do not acquire invented rules. No reference-table or saved-character rewrite occurs.

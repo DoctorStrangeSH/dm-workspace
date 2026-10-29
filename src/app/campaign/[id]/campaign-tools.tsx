@@ -63,9 +63,13 @@ export function CampaignShell({ children }: { children: React.ReactNode }) {
   const inSession = /\/session(?:\/|$)/.test(usePathname())
   return (
     <div
+      data-campaign-shell
       className={cn(
         'min-h-screen bg-[var(--bg-app)] transition-[padding] duration-200 motion-reduce:transition-none',
-        activePanel && !(inSession && activePanel === 'chat') && 'xl:pr-[26rem]'
+        activePanel &&
+          activePanel !== 'navigation' &&
+          !(inSession && activePanel === 'chat') &&
+          'xl:pr-[26rem]'
       )}
     >
       {children}
