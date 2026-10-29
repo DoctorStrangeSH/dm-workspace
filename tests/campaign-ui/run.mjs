@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export|characters)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -583,6 +583,52 @@ try {
       expect(await page.evaluate(() => window.__uiLab.chapterSaves)).toEqual([])
     }
   )
+  for (const mobile of [false, true]) {
+    await scenario(
+      'real character wizard normalizes D6 HP through review and submit (' +
+        (mobile ? 'mobile' : 'desktop') +
+        ')',
+      { mobile, url: '/?screen=character-create' },
+      async (page) => {
+        await page.getByLabel('Имя персонажа').fill('Holmes')
+        await page.getByLabel(/^Раса/).selectOption('srd-2024_human')
+        await page.getByLabel(/^Класс/).selectOption('srd-2024_sorcerer')
+        await page.getByRole('button', { name: 'Далее', exact: true }).click()
+        // Point buy: STR15, DEX14, CON15, INT8, WIS10, CHA8 uses all 27 points.
+        for (const [ability, count] of [
+          ['Сила', 7],
+          ['Ловкость', 6],
+          ['Телосложение', 7],
+          ['Мудрость', 2],
+        ]) {
+          for (let n = 0; n < count; n++)
+            await page.getByRole('button', { name: 'Увеличить ' + ability, exact: true }).click()
+        }
+        await page.getByRole('button', { name: 'Далее', exact: true }).click()
+        await page.getByRole('button', { name: 'Артист', exact: true }).click()
+        await page.getByRole('button', { name: 'Магия ИНТ', exact: true }).click()
+        await page.getByRole('button', { name: 'Природа ИНТ', exact: true }).click()
+        await page.getByRole('button', { name: 'Далее', exact: true }).click()
+        const hpCard = page.getByText('HP', { exact: true }).locator('..')
+        await expect(hpCard).toHaveText('HP8')
+        await expect(page.getByTestId('workspace-main')).not.toContainText('D62')
+        await page.screenshot({
+          path: path.join(output, mobile ? 'mobile-character-hp.png' : 'desktop-character-hp.png'),
+        })
+        await page.getByRole('button', { name: 'Создать персонажа', exact: true }).click()
+        await expect
+          .poll(() => page.evaluate(() => window.__uiLab.createdCharacters.length))
+          .toBe(1)
+        const created = await page.evaluate(() => window.__uiLab.createdCharacters[0])
+        expect(created.name).toBe('Holmes')
+        expect(created.data.hp).toEqual({ current: 8, max: 8, temp: 0 })
+        expect(created.data.abilities.con).toBe(15)
+        expect(await page.evaluate(() => window.__uiLab.navigated)).toEqual([
+          '/campaign/test/characters/offline-character',
+        ])
+      }
+    )
+  }
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))
