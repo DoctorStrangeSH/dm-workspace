@@ -10,10 +10,10 @@ import {
   type SpellSlots,
   type CharacterInventoryItem,
 } from '@/lib/types'
-import { getAverageHP, rollHP, applyLevelUp } from '@/lib/dnd/level-up'
+import { prepareLevelUp } from '@/lib/dnd/level-up'
+import { characterDataHasValidHP, characterHPPatch, INVALID_HP } from '@/lib/dnd/character-hp'
 import { characterIdentityPatch } from '@/lib/dnd/character-identity-patch'
 import { isSubclassForClass, baseClassSlug } from '@/lib/dnd/srd-class-utils'
-import { abilityModifier } from '@/lib/dnd/formulas'
 import { getSpellcastingAbility } from '@/lib/dnd/constants'
 import { logEvent } from './logs'
 
@@ -49,6 +49,7 @@ export async function createCharacter(
   if (trimmed.length > 150) return { error: 'Имя слишком длинное' }
 
   const data: CharacterData = { ...createEmptyCharacterData(), ...initialData }
+  if (!characterDataHasValidHP(data)) return { error: INVALID_HP }
   if (data.subclass !== undefined && !isSubclassForClass(data.subclass, baseClassSlug(data.class))) {
     return { error: 'Подкласс не соответствует классу персонажа' }
   }
@@ -127,6 +128,7 @@ export async function updateCharacter(
       return { error: 'Данные персонажа слишком большие' }
     }
     const characterData = value as CharacterData
+    if (!characterDataHasValidHP(characterData)) return { error: INVALID_HP }
     if (characterData.subclass !== undefined && !isSubclassForClass(characterData.subclass, baseClassSlug(characterData.class))) {
       return { error: 'Подкласс не соответствует классу персонажа' }
     }
@@ -274,6 +276,7 @@ async function saveCharacterData(
   data: CharacterData,
   expected: CharacterData
 ): Promise<SaveResult> {
+  if (!characterDataHasValidHP(data)) return { error: INVALID_HP }
   const supabase = await createClient()
   const { data: changed, error } = await supabase.rpc('update_character_data_cas', {
     p_character_id: characterId,
@@ -327,12 +330,9 @@ export async function updateCharacterHP(
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
 
-  const newData: CharacterData = {
-    ...access.data,
-    hp: { ...access.data.hp, ...newHP },
-  }
-  if (newData.hp.current > newData.hp.max) newData.hp.current = newData.hp.max
-  if (newData.hp.current < 0) newData.hp.current = 0
+  const hp = characterHPPatch(access.data?.hp, newHP)
+  if (!hp) return { error: INVALID_HP }
+  const newData: CharacterData = { ...access.data, hp }
 
   const save = await saveCharacterData(characterId, campaignId, newData, access.originalData)
   if ('error' in save) return save
@@ -698,15 +698,9 @@ export async function levelUp(
   const access = await checkCharacterAccess(characterId, campaignId)
   if ('error' in access) return access
   if (!access.canEdit) return { error: 'Нет прав' }
-  if (access.data.level >= 20) return { error: 'Максимальный уровень — 20' }
-
-  const conMod = abilityModifier(access.data.abilities.con)
-  const hpGain =
-    options.hpMethod === 'roll'
-      ? rollHP(access.data.class, conMod)
-      : getAverageHP(access.data.class, conMod)
-
-  const newData = applyLevelUp(access.data, hpGain, options.abilityChanges)
+  const prepared = prepareLevelUp(access.data, options)
+  if ('error' in prepared) return prepared
+  const { data: newData, hpGain } = prepared
 
   if (!newData.spellcastingAbility) {
     const ability = getSpellcastingAbility(newData.class)

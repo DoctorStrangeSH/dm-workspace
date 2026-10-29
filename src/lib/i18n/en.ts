@@ -483,6 +483,13 @@ export const en: Dictionary = {
 
   // ─── Level Up ───
   'levelUp.maxLevelReached': 'Maximum level reached',
+  'levelUp.error.maxLevel': 'Maximum level reached',
+  'levelUp.error.level': 'Check the character level: it must be an integer from 1 to 20.',
+  'levelUp.error.class': 'Choose a base class and compatible subclass on the character sheet.',
+  'levelUp.error.hp': 'Check character HP: current and maximum HP must be integers within valid bounds.',
+  'levelUp.error.abilities': 'Check character abilities: scores must be integers from 1 to 30.',
+  'levelUp.rollHint': 'This is a range. The server rolls when you confirm.',
+  'levelUp.hpOverflow': 'Maximum HP after leveling up would be too large.',
   'levelUp.title': 'Level {from} → {to}',
   'levelUp.hpChoice': 'HP (choose method)',
   'levelUp.hpAverage': 'Average',

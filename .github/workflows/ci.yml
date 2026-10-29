@@ -40,6 +40,9 @@ jobs:
       - name: Offline HP harness safety tests (mocked requests only)
         run: npm run test:hp:harness
 
+      - name: Character HP, level-up and action boundary regression tests
+        run: npm run test:characters
+
       - name: Lint
         run: npm run lint
 

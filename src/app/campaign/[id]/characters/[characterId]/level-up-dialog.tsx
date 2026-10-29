@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { X, TrendingUp, Dices, Sparkles } from 'lucide-react'
 import { levelUp } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
-import { getAverageHP, rollHP, canLevelUp } from '@/lib/dnd/level-up'
+import { getAverageHP, getHPGainRange, getLevelUpIssue, abilityChangesError } from '@/lib/dnd/level-up'
+import { MAX_CHARACTER_HP } from '@/lib/dnd/character-hp'
 import { abilityModifier } from '@/lib/dnd/formulas'
 import { hasASI } from '@/lib/dnd/constants'
 import { useI18n } from '@/lib/i18n'
@@ -31,23 +32,18 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
   const [isPending, startTransition] = useTransition()
 
   const data = character.data_json
-  const newLevel = data.level + 1
-  const showASI = hasASI(newLevel)
-  const conMod = abilityModifier(data.abilities.con)
 
   const [hpChoice, setHpChoice] = useState<HPChoice>('average')
   const [asiMode, setAsiMode] = useState<ASIMode>('plus2')
   const [asiAbility1, setAsiAbility1] = useState<AbilityKey | null>(null)
   const [asiAbility2, setAsiAbility2] = useState<AbilityKey | null>(null)
 
-  const averageHP = getAverageHP(data.class, conMod)
-  const rolledHP = rollHP(data.class, conMod)
-
-  if (!canLevelUp(data)) {
+  const issue = getLevelUpIssue(data)
+  if (issue) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--bg-overlay)] p-4 backdrop-blur-sm">
         <div className="w-full max-w-md rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 text-center">
-          <p className="mb-4 text-[var(--text-secondary)]">{t('levelUp.maxLevelReached')}</p>
+          <p role="alert" className="mb-4 text-[var(--text-secondary)]">{t(`levelUp.error.${issue}`)}</p>
           <button
             onClick={onClose}
             className="rounded-lg bg-[var(--bg-secondary)] px-4 py-2 text-[var(--text-primary)] transition hover:bg-[var(--bg-tertiary)]"
@@ -59,26 +55,26 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
     )
   }
 
-  const canSubmit = () => {
-    if (!showASI) return true
-    if (asiMode === 'plus2') return !!asiAbility1
-    return !!asiAbility1 && !!asiAbility2 && asiAbility1 !== asiAbility2
+  const newLevel = data.level + 1
+  const showASI = hasASI(newLevel)
+  const conMod = abilityModifier(data.abilities.con)
+  const averageHP = getAverageHP(data.class, conMod)
+  const range = getHPGainRange(data.class, conMod)!
+  const hpOverflow = data.hp.max > MAX_CHARACTER_HP - (hpChoice === 'average' ? averageHP : range.max)
+  const abilityChanges: Partial<Record<string, number>> = {}
+  if (showASI) {
+    if (asiMode === 'plus2' && asiAbility1) abilityChanges[asiAbility1] = 2
+    else if (asiMode === 'plus1plus1') {
+      if (asiAbility1) abilityChanges[asiAbility1] = 1
+      if (asiAbility2) abilityChanges[asiAbility2] = 1
+    }
   }
+  const canSubmit = () => !hpOverflow && abilityChangesError(data, abilityChanges) === null
 
   const handleSubmit = () => {
     if (!canSubmit()) {
       toast.error(t('levelUp.asiRequired'))
       return
-    }
-
-    const abilityChanges: Partial<Record<string, number>> = {}
-    if (showASI) {
-      if (asiMode === 'plus2' && asiAbility1) {
-        abilityChanges[asiAbility1] = 2
-      } else if (asiMode === 'plus1plus1' && asiAbility1 && asiAbility2) {
-        abilityChanges[asiAbility1] = 1
-        abilityChanges[asiAbility2] = 1
-      }
     }
 
     startTransition(async () => {
@@ -169,10 +165,12 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 />
                 <span className="mt-1 text-xs text-[var(--text-muted)]">{t('levelUp.hpRoll')}</span>
                 <span className="mt-1 text-lg font-bold text-[var(--warning-text)]">
-                  ~{rolledHP}
+                  +{range.min}–{range.max}
                 </span>
               </button>
             </div>
+            {hpChoice === 'roll' && <p className="mt-2 text-xs text-[var(--text-muted)]">{t('levelUp.rollHint')}</p>}
+            {hpOverflow && <p role="alert" className="mt-2 text-sm text-[var(--danger-text)]">{t('levelUp.hpOverflow')}</p>}
           </div>
 
           {/* ASI */}
@@ -190,6 +188,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   type="button"
                   onClick={() => {
                     setAsiMode('plus2')
+                    setAsiAbility1(null)
                     setAsiAbility2(null)
                   }}
                   className={cn(
@@ -203,7 +202,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAsiMode('plus1plus1')}
+                  onClick={() => { setAsiMode('plus1plus1'); setAsiAbility1(null); setAsiAbility2(null) }}
                   className={cn(
                     'flex-1 rounded border px-2 py-1 text-xs transition',
                     asiMode === 'plus1plus1'
@@ -220,7 +219,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                   const score = data.abilities[ability]
                   const isSelected1 = asiAbility1 === ability
                   const isSelected2 = asiAbility2 === ability
-                  const canSelect = score < 20
+                  const canSelect = score + (asiMode === 'plus2' ? 2 : 1) <= 20
 
                   return (
                     <button
@@ -250,7 +249,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
                         <span className="text-[var(--text-subtle)]">{score}</span>
                         {(isSelected1 || isSelected2) && (
                           <span className="text-xs text-[var(--success-text)]">
-                            +{asiMode === 'plus2' ? 2 : 1}
+                            → {score + (asiMode === 'plus2' ? 2 : 1)}
                           </span>
                         )}
                       </span>
@@ -266,7 +265,7 @@ export default function LevelUpDialog({ character, campaignId, onClose }: Props)
             <div className="mb-1 flex justify-between">
               <span className="text-[var(--text-subtle)]">HP</span>
               <span className="text-[var(--text-secondary)]">
-                {data.hp.max} → {data.hp.max + (hpChoice === 'average' ? averageHP : 0)}+
+                {data.hp.max} → {hpChoice === 'average' ? data.hp.max + averageHP : `${data.hp.max + range.min}–${data.hp.max + range.max}`}
               </span>
             </div>
             <div className="flex justify-between">
