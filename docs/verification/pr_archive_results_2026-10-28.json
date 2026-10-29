@@ -1,0 +1,695 @@
+{
+  "repository": "DoctorStrangeSH/dm-workspace",
+  "verified_at": "2026-10-28T11:29:49.483Z",
+  "main": "36e406442b10324d9cadf70c1c84ae53d7684e5a",
+  "initial_open_count": 88,
+  "documentation_pr": 241,
+  "closed_without_merge": 84,
+  "final_open_prs": [
+    237,
+    238,
+    239,
+    240,
+    241
+  ],
+  "branches_verified": {
+    "preserved": 84,
+    "missing": [],
+    "mismatched": []
+  },
+  "note": "Closure archives obsolete delivery branches; B01-B08 remain unfinished requirements. No branch deletion, main write, Supabase mutation, installed HP RPC, manual HP workflow or Production change.",
+  "results": [
+    {
+      "n": 53,
+      "result": "closed_without_merge",
+      "sha": "033bac18f0e65d57ba4d9d61480ea398004a74a2",
+      "branch": "fix/character-hp-display-validation",
+      "closed_at": "2026-10-28T11:21:24Z",
+      "verified_at": "2026-10-28T11:21:26.873Z"
+    },
+    {
+      "n": 54,
+      "result": "closed_without_merge",
+      "sha": "f8735102416f1229f4664d35e7e034093751e974",
+      "branch": "fix/validate-character-hp-writes",
+      "closed_at": "2026-10-28T11:21:29Z",
+      "verified_at": "2026-10-28T11:21:33.580Z"
+    },
+    {
+      "n": 55,
+      "result": "closed_without_merge",
+      "sha": "0262a9a72e223fe85d94eb98ae659b90b0964276",
+      "branch": "test/hp-classes-and-recovery-guide",
+      "closed_at": "2026-10-28T11:21:35Z",
+      "verified_at": "2026-10-28T11:21:38.713Z"
+    },
+    {
+      "n": 56,
+      "result": "closed_without_merge",
+      "sha": "3eb387514232fc3728bac3dcd8ab5bc0c26173cb",
+      "branch": "fix/token-character-hp-guard",
+      "closed_at": "2026-10-28T11:21:40Z",
+      "verified_at": "2026-10-28T11:21:43.647Z"
+    },
+    {
+      "n": 57,
+      "result": "closed_without_merge",
+      "sha": "83dc69eacf80ccf78f11d36a0062f3069e88e466",
+      "branch": "ux/level-up-hp-preview",
+      "closed_at": "2026-10-28T11:21:46Z",
+      "verified_at": "2026-10-28T11:21:49.325Z"
+    },
+    {
+      "n": 62,
+      "result": "closed_without_merge",
+      "sha": "ea8e5b1785d6973149b188e6f1963faa705b4b32",
+      "branch": "feat/equipment-combat-bonuses",
+      "closed_at": "2026-10-28T11:21:51Z",
+      "verified_at": "2026-10-28T11:21:53.851Z"
+    },
+    {
+      "n": 63,
+      "result": "closed_without_merge",
+      "sha": "091ddf2a8115fa6951a57c5c645645c549a7d80e",
+      "branch": "feat/vtt-equipment-initiative",
+      "closed_at": "2026-10-28T11:21:56Z",
+      "verified_at": "2026-10-28T11:21:58.613Z"
+    },
+    {
+      "n": 72,
+      "result": "closed_without_merge",
+      "sha": "066b6f0b9d8736f66c4f48e623dca43fc33a75b4",
+      "branch": "fix/vtt-hp-concurrent-writes",
+      "closed_at": "2026-10-28T11:22:00Z",
+      "verified_at": "2026-10-28T11:22:04.002Z"
+    },
+    {
+      "n": 73,
+      "result": "closed_without_merge",
+      "sha": "3a98c4b147540617ea7d55bf910291e1318f0a8e",
+      "branch": "feat/atomic-token-hp-rpc-draft",
+      "closed_at": "2026-10-28T11:22:06Z",
+      "verified_at": "2026-10-28T11:22:09.232Z"
+    },
+    {
+      "n": 74,
+      "result": "closed_without_merge",
+      "sha": "b1d38d12dc8a57ac474b6cf1474a0855bee472ab",
+      "branch": "docs/supabase-hp-schema-audit",
+      "closed_at": "2026-10-28T11:22:11Z",
+      "verified_at": "2026-10-28T11:22:13.982Z"
+    },
+    {
+      "n": 75,
+      "result": "closed_without_merge",
+      "sha": "a5ac809551494d50f711a679fbb699113e6dc0fe",
+      "branch": "feat/dev-atomic-hp-validation",
+      "closed_at": "2026-10-28T11:22:24Z",
+      "verified_at": "2026-10-28T11:22:27.160Z"
+    },
+    {
+      "n": 76,
+      "result": "closed_without_merge",
+      "sha": "04a4129198add62a49525fe6ceb8dfd712e72b13",
+      "branch": "security/atomic-hp-rpc-review",
+      "closed_at": "2026-10-28T11:22:29Z",
+      "verified_at": "2026-10-28T11:22:32.596Z"
+    },
+    {
+      "n": 77,
+      "result": "closed_without_merge",
+      "sha": "e8b4840b60f68dada5e34392d11a36d5796a4c62",
+      "branch": "audit/atomic-hp-write-paths",
+      "closed_at": "2026-10-28T11:22:36Z",
+      "verified_at": "2026-10-28T11:22:38.983Z"
+    },
+    {
+      "n": 78,
+      "result": "closed_without_merge",
+      "sha": "afc26144380d7881d187df3dbf826a55e22df1b9",
+      "branch": "fix/character-hp-optimistic-guard",
+      "closed_at": "2026-10-28T11:22:40Z",
+      "verified_at": "2026-10-28T11:22:46.121Z"
+    },
+    {
+      "n": 79,
+      "result": "closed_without_merge",
+      "sha": "75687024d538239b9a339878b2d1261de1062909",
+      "branch": "fix/character-data-cas-all-actions",
+      "closed_at": "2026-10-28T11:22:48Z",
+      "verified_at": "2026-10-28T11:22:51.431Z"
+    },
+    {
+      "n": 80,
+      "result": "closed_without_merge",
+      "sha": "a331fa5e95541c84fe2597556b4776af49d50572",
+      "branch": "fix/align-campaign-dm-authorization",
+      "closed_at": "2026-10-28T11:22:53Z",
+      "verified_at": "2026-10-28T11:22:57.347Z"
+    },
+    {
+      "n": 81,
+      "result": "closed_without_merge",
+      "sha": "fab4396278cec66a3e4ac89cdbbb618d6b1abbfa",
+      "branch": "fix/atomic-hp-dm-rule-draft",
+      "closed_at": "2026-10-28T11:22:59Z",
+      "verified_at": "2026-10-28T11:23:04.234Z"
+    },
+    {
+      "n": 82,
+      "result": "closed_without_merge",
+      "sha": "f55d10b2fefeae18bd5322f13601c92b2095422e",
+      "branch": "test/atomic-hp-dev-harness",
+      "closed_at": "2026-10-28T11:23:06Z",
+      "verified_at": "2026-10-28T11:23:09.570Z"
+    },
+    {
+      "n": 83,
+      "result": "closed_without_merge",
+      "sha": "64d4cabba98c6929c5a7e12232531f6324561554",
+      "branch": "fix/atomic-hp-sql-overflow-review",
+      "closed_at": "2026-10-28T11:23:12Z",
+      "verified_at": "2026-10-28T11:23:14.888Z"
+    },
+    {
+      "n": 84,
+      "result": "closed_without_merge",
+      "sha": "b5db07abdc1b672604399554e893e40197251969",
+      "branch": "fix/unify-token-hp-action",
+      "closed_at": "2026-10-28T11:23:17Z",
+      "verified_at": "2026-10-28T11:23:21.478Z"
+    },
+    {
+      "n": 85,
+      "result": "closed_without_merge",
+      "sha": "761df88b19dda5ca410433174e8b0f2b25a1f478",
+      "branch": "feat/atomic-hp-rpc-integration-gated",
+      "closed_at": "2026-10-28T11:23:34Z",
+      "verified_at": "2026-10-28T11:23:36.582Z"
+    },
+    {
+      "n": 86,
+      "result": "closed_without_merge",
+      "sha": "c0efc324e4edfd1069c83f99428903c3e89c4139",
+      "branch": "fix/atomic-hp-dev-environment-gate",
+      "closed_at": "2026-10-28T11:23:36Z",
+      "verified_at": "2026-10-28T11:23:40.076Z"
+    },
+    {
+      "n": 87,
+      "result": "closed_without_merge",
+      "sha": "352708ceedd7607a657c43e560f71b2dbe92a745",
+      "branch": "fix/atomic-hp-owner-scope",
+      "closed_at": "2026-10-28T11:23:40Z",
+      "verified_at": "2026-10-28T11:23:43.019Z"
+    },
+    {
+      "n": 88,
+      "result": "closed_without_merge",
+      "sha": "cbc0df22885871de840ea3b39b99d2eb15a9ffb8",
+      "branch": "fix/atomic-hp-character-json-guard",
+      "closed_at": "2026-10-28T11:23:43Z",
+      "verified_at": "2026-10-28T11:23:48.958Z"
+    },
+    {
+      "n": 89,
+      "result": "closed_without_merge",
+      "sha": "976d884ff11321992d6d0de7d92abdb0870d3c11",
+      "branch": "fix/combat-linked-character-cas",
+      "closed_at": "2026-10-28T11:23:49Z",
+      "verified_at": "2026-10-28T11:23:52.283Z"
+    },
+    {
+      "n": 90,
+      "result": "closed_without_merge",
+      "sha": "2dc5e0d684d4df18616f369781fd8da954609e32",
+      "branch": "fix/combat-character-cas-snapshot",
+      "closed_at": "2026-10-28T11:23:52Z",
+      "verified_at": "2026-10-28T11:23:55.612Z"
+    },
+    {
+      "n": 91,
+      "result": "closed_without_merge",
+      "sha": "077bfbffd08090cbfd3973a5727a72316e89eef3",
+      "branch": "test/atomic-hp-dev-verification-matrix",
+      "closed_at": "2026-10-28T11:23:56Z",
+      "verified_at": "2026-10-28T11:23:59.219Z"
+    },
+    {
+      "n": 92,
+      "result": "closed_without_merge",
+      "sha": "479309c9a55d0260fb5b70e6458d6921ad8d394d",
+      "branch": "test/atomic-hp-security-preflight",
+      "closed_at": "2026-10-28T11:23:59Z",
+      "verified_at": "2026-10-28T11:24:02.988Z"
+    },
+    {
+      "n": 93,
+      "result": "closed_without_merge",
+      "sha": "06601396030cd589124ee67b150c88db16059a90",
+      "branch": "security/dev-trigger-function-acl-review",
+      "closed_at": "2026-10-28T11:24:03Z",
+      "verified_at": "2026-10-28T11:24:06.186Z"
+    },
+    {
+      "n": 94,
+      "result": "closed_without_merge",
+      "sha": "0e09a7a15253ee20d65cea1a86e12d8441aaab33",
+      "branch": "fix/atomic-hp-rpc-rls-preflight",
+      "closed_at": "2026-10-28T11:24:06Z",
+      "verified_at": "2026-10-28T11:24:09.792Z"
+    },
+    {
+      "n": 95,
+      "result": "closed_without_merge",
+      "sha": "e5a125b420ca0e01c2aae6698366c1aed2e5eaaf",
+      "branch": "test/atomic-hp-concurrency-runner",
+      "closed_at": "2026-10-28T11:24:10Z",
+      "verified_at": "2026-10-28T11:24:15.360Z"
+    },
+    {
+      "n": 96,
+      "result": "closed_without_merge",
+      "sha": "e5df8b23f7982dd164f80712cfa6eb3f263dcdef",
+      "branch": "fix/atomic-hp-test-fixture-safety",
+      "closed_at": "2026-10-28T11:24:15Z",
+      "verified_at": "2026-10-28T11:24:18.756Z"
+    },
+    {
+      "n": 97,
+      "result": "closed_without_merge",
+      "sha": "6368ae762af74322ee8a3220998d2ffd256d6212",
+      "branch": "docs/atomic-hp-dev-manual-deployment",
+      "closed_at": "2026-10-28T11:24:39Z",
+      "verified_at": "2026-10-28T11:24:45.757Z"
+    },
+    {
+      "n": 98,
+      "result": "closed_without_merge",
+      "sha": "ab1aa7371bf4b6b2787a82cbdf34fc47a5067451",
+      "branch": "test/atomic-hp-real-fixture-10hp",
+      "closed_at": "2026-10-28T11:24:46Z",
+      "verified_at": "2026-10-28T11:24:49.023Z"
+    },
+    {
+      "n": 99,
+      "result": "closed_without_merge",
+      "sha": "aea3f8496bba1b7c57256257533ab025560d3cfb",
+      "branch": "test/atomic-hp-current-fixture",
+      "closed_at": "2026-10-28T11:24:49Z",
+      "verified_at": "2026-10-28T11:24:52.217Z"
+    },
+    {
+      "n": 100,
+      "result": "closed_without_merge",
+      "sha": "f331beff3440152b04cf54db8f1fd9649dfc836e",
+      "branch": "feat/dev-hp-mobile-test",
+      "closed_at": "2026-10-28T11:24:52Z",
+      "verified_at": "2026-10-28T11:24:55.524Z"
+    },
+    {
+      "n": 101,
+      "result": "closed_without_merge",
+      "sha": "98063aca45ebf4112551ed961e529c1a5ae43c01",
+      "branch": "fix/dev-hp-page-404",
+      "closed_at": "2026-10-28T11:24:55Z",
+      "verified_at": "2026-10-28T11:24:58.918Z"
+    },
+    {
+      "n": 102,
+      "result": "closed_without_merge",
+      "sha": "084fe757d19c033b97592b7bc8bcf90b7e634856",
+      "branch": "fix/level-up-class-diagnostics-handoff",
+      "closed_at": "2026-10-28T11:24:59Z",
+      "verified_at": "2026-10-28T11:25:02.229Z"
+    },
+    {
+      "n": 105,
+      "result": "closed_without_merge",
+      "sha": "880ebb772f7178fab559ac79f7cabf39573773b9",
+      "branch": "docs/srd-character-class-repair-audit",
+      "closed_at": "2026-10-28T11:25:02Z",
+      "verified_at": "2026-10-28T11:25:06.072Z"
+    },
+    {
+      "n": 106,
+      "result": "closed_without_merge",
+      "sha": "7394795afa8daa5d7b78a80bf2f8aba3892ce422",
+      "branch": "fix/dev-test-fighter-class-only",
+      "closed_at": "2026-10-28T11:25:06Z",
+      "verified_at": "2026-10-28T11:25:09.258Z"
+    },
+    {
+      "n": 110,
+      "result": "closed_without_merge",
+      "sha": "dcd08aac5b35fee472894670f5678104575e4429",
+      "branch": "fix/class-change-review-confirmation",
+      "closed_at": "2026-10-28T11:25:09Z",
+      "verified_at": "2026-10-28T11:25:12.684Z"
+    },
+    {
+      "n": 111,
+      "result": "closed_without_merge",
+      "sha": "04221e40393cbd40e088116a4687e530ba3772e8",
+      "branch": "test/class-change-preservation",
+      "closed_at": "2026-10-28T11:25:13Z",
+      "verified_at": "2026-10-28T11:25:15.849Z"
+    },
+    {
+      "n": 112,
+      "result": "closed_without_merge",
+      "sha": "7c6a3ab6f004b019cff49d1aa0357d3addcadf1c",
+      "branch": "fix/class-subclass-consistency-write",
+      "closed_at": "2026-10-28T11:25:16Z",
+      "verified_at": "2026-10-28T11:25:19.539Z"
+    },
+    {
+      "n": 115,
+      "result": "closed_without_merge",
+      "sha": "61c6a2b61922733e44c38692168523e6cd8d87d5",
+      "branch": "feat/russian-character-wizard-names",
+      "closed_at": "2026-10-28T11:25:20Z",
+      "verified_at": "2026-10-28T11:25:22.550Z"
+    },
+    {
+      "n": 116,
+      "result": "closed_without_merge",
+      "sha": "9d7a414b5e1cb42b93900455e30d48e08e089baf",
+      "branch": "fix/level-up-specific-validation-feedback",
+      "closed_at": "2026-10-28T11:25:34Z",
+      "verified_at": "2026-10-28T11:25:37.442Z"
+    },
+    {
+      "n": 117,
+      "result": "closed_without_merge",
+      "sha": "2c9aefc07fe613d6917b0a242f4a0eb509ff9868",
+      "branch": "feat/level-up-hp-preview",
+      "closed_at": "2026-10-28T11:25:37Z",
+      "verified_at": "2026-10-28T11:25:40.586Z"
+    },
+    {
+      "n": 118,
+      "result": "closed_without_merge",
+      "sha": "ca0440f832955cfea464cf03a4eb0d38d31a4c86",
+      "branch": "test/level-up-hp-regressions",
+      "closed_at": "2026-10-28T11:25:40Z",
+      "verified_at": "2026-10-28T11:25:43.450Z"
+    },
+    {
+      "n": 119,
+      "result": "closed_without_merge",
+      "sha": "33dcd495cbc77450c181cabf9b3b2014486fe9b6",
+      "branch": "fix/level-up-asi-validation",
+      "closed_at": "2026-10-28T11:25:43Z",
+      "verified_at": "2026-10-28T11:25:49.492Z"
+    },
+    {
+      "n": 120,
+      "result": "closed_without_merge",
+      "sha": "e206cb149b2e5a876032ce60a87e67f58bfa8598",
+      "branch": "fix/level-up-asi-ability-cap",
+      "closed_at": "2026-10-28T11:25:49Z",
+      "verified_at": "2026-10-28T11:25:55.556Z"
+    },
+    {
+      "n": 121,
+      "result": "closed_without_merge",
+      "sha": "fd01f048c438ab20bc1eaf999bed8a00bcb3bcb9",
+      "branch": "fix/level-up-asi-ui-cap",
+      "closed_at": "2026-10-28T11:25:56Z",
+      "verified_at": "2026-10-28T11:25:58.791Z"
+    },
+    {
+      "n": 122,
+      "result": "closed_without_merge",
+      "sha": "4a538a9804e056b002a7584e555b9a8a047a9c28",
+      "branch": "fix/asi-preview-and-disabled-options",
+      "closed_at": "2026-10-28T11:25:59Z",
+      "verified_at": "2026-10-28T11:26:01.809Z"
+    },
+    {
+      "n": 123,
+      "result": "closed_without_merge",
+      "sha": "bfd22c9a10f216b882e1938c09412ae2a6fad809",
+      "branch": "ci/run-character-unit-tests",
+      "closed_at": "2026-10-28T11:26:02Z",
+      "verified_at": "2026-10-28T11:26:05.420Z"
+    },
+    {
+      "n": 124,
+      "result": "closed_without_merge",
+      "sha": "3a74c323b169d7972ca509b9a14e736c6b73050d",
+      "branch": "test/character-level-up-boundaries",
+      "closed_at": "2026-10-28T11:26:05Z",
+      "verified_at": "2026-10-28T11:26:08.956Z"
+    },
+    {
+      "n": 125,
+      "result": "closed_without_merge",
+      "sha": "9cb429aea3d70c1ae45f538964c5d8adc1308575",
+      "branch": "fix/level-up-invalid-level-guard",
+      "closed_at": "2026-10-28T11:26:09Z",
+      "verified_at": "2026-10-28T11:26:12.301Z"
+    },
+    {
+      "n": 126,
+      "result": "closed_without_merge",
+      "sha": "51bb72bb06fbc88c9010268cb0e0c0158ad177a8",
+      "branch": "fix/level-up-invalid-con-modifier",
+      "closed_at": "2026-10-28T11:26:12Z",
+      "verified_at": "2026-10-28T11:26:15.715Z"
+    },
+    {
+      "n": 127,
+      "result": "closed_without_merge",
+      "sha": "774aaab6f6bcfb8388995e724283b5cb9a535a35",
+      "branch": "fix/level-up-hp-overflow-guard",
+      "closed_at": "2026-10-28T11:26:16Z",
+      "verified_at": "2026-10-28T11:26:18.821Z"
+    },
+    {
+      "n": 145,
+      "result": "closed_without_merge",
+      "sha": "f399667e20ed209a51b21ab10af53c459c2357b9",
+      "branch": "docs/integration-release-gates",
+      "closed_at": "2026-10-28T11:26:36Z",
+      "verified_at": "2026-10-28T11:26:38.966Z"
+    },
+    {
+      "n": 147,
+      "result": "closed_without_merge",
+      "sha": "74bd739e48111ae56d7c48910d6aeaf85d90e8b0",
+      "branch": "fix/level-up-linked-token-hp-warning",
+      "closed_at": "2026-10-28T11:26:39Z",
+      "verified_at": "2026-10-28T11:26:42.333Z"
+    },
+    {
+      "n": 148,
+      "result": "closed_without_merge",
+      "sha": "d32c9e3b00e435acf53561d43d2de89ddf0d9b9b",
+      "branch": "test/linked-character-token-hp-audit",
+      "closed_at": "2026-10-28T11:26:42Z",
+      "verified_at": "2026-10-28T11:26:46.323Z"
+    },
+    {
+      "n": 149,
+      "result": "closed_without_merge",
+      "sha": "9efb2329a9303aa0d5bc947c21f1df95392cb3e8",
+      "branch": "fix/linked-hp-audit-null-classification",
+      "closed_at": "2026-10-28T11:26:46Z",
+      "verified_at": "2026-10-28T11:26:49.608Z"
+    },
+    {
+      "n": 150,
+      "result": "closed_without_merge",
+      "sha": "df59c34605449c762a3279d56d944eb885f7629b",
+      "branch": "docs/atomic-level-up-hp-sync-design",
+      "closed_at": "2026-10-28T11:26:50Z",
+      "verified_at": "2026-10-28T11:26:52.770Z"
+    },
+    {
+      "n": 151,
+      "result": "closed_without_merge",
+      "sha": "4280e0ce1821d98c294d6571592434132787fbc8",
+      "branch": "fix/review-hp-rpc-lock-order",
+      "closed_at": "2026-10-28T11:26:53Z",
+      "verified_at": "2026-10-28T11:26:55.699Z"
+    },
+    {
+      "n": 152,
+      "result": "closed_without_merge",
+      "sha": "390cae8c702fbaf830d2789f5e1140cf256490e7",
+      "branch": "test/atomic-level-up-hp-contract",
+      "closed_at": "2026-10-28T11:26:56Z",
+      "verified_at": "2026-10-28T11:27:00.085Z"
+    },
+    {
+      "n": 153,
+      "result": "closed_without_merge",
+      "sha": "9b8363b0ea279f0d122055b7501eff525e2eee49",
+      "branch": "docs/atomic-level-up-rpc-review-draft",
+      "closed_at": "2026-10-28T11:27:00Z",
+      "verified_at": "2026-10-28T11:27:03.593Z"
+    },
+    {
+      "n": 154,
+      "result": "closed_without_merge",
+      "sha": "e00cc23e0c23d07d4eeb9884da29c00c095b1810",
+      "branch": "test/atomic-level-up-transition-guard",
+      "closed_at": "2026-10-28T11:27:04Z",
+      "verified_at": "2026-10-28T11:27:06.787Z"
+    },
+    {
+      "n": 155,
+      "result": "closed_without_merge",
+      "sha": "c3dfc48f8bcc1abf4cc2c942692b42a26e1704b5",
+      "branch": "fix/level-up-server-transition-enforcement",
+      "closed_at": "2026-10-28T11:27:07Z",
+      "verified_at": "2026-10-28T11:27:09.841Z"
+    },
+    {
+      "n": 156,
+      "result": "closed_without_merge",
+      "sha": "e2dde990dcb571b13a4f59d65a4ff13c7fc9ef09",
+      "branch": "test/hp-writer-inventory-gate",
+      "closed_at": "2026-10-28T11:27:10Z",
+      "verified_at": "2026-10-28T11:27:13.360Z"
+    },
+    {
+      "n": 157,
+      "result": "closed_without_merge",
+      "sha": "32267963a6d67231ba3b64250ffe881a1a239777",
+      "branch": "fix/block-uncoordinated-linked-character-hp",
+      "closed_at": "2026-10-28T11:27:13Z",
+      "verified_at": "2026-10-28T11:27:16.565Z"
+    },
+    {
+      "n": 158,
+      "result": "closed_without_merge",
+      "sha": "becda9a2a1487a93682c32d9195e7880949ad240",
+      "branch": "fix/review-linked-token-hp-presence-rpc",
+      "closed_at": "2026-10-28T11:27:27Z",
+      "verified_at": "2026-10-28T11:27:30.509Z"
+    },
+    {
+      "n": 159,
+      "result": "closed_without_merge",
+      "sha": "af689bb9a764a6d1b8ac4a891b619ffea333207e",
+      "branch": "fix/linked-token-hp-source-validation",
+      "closed_at": "2026-10-28T11:27:30Z",
+      "verified_at": "2026-10-28T11:27:33.596Z"
+    },
+    {
+      "n": 160,
+      "result": "closed_without_merge",
+      "sha": "fc06ee6c72e164b70eeac88dce3fc902b8e553ad",
+      "branch": "docs/transactional-linked-token-create-review",
+      "closed_at": "2026-10-28T11:27:34Z",
+      "verified_at": "2026-10-28T11:27:36.759Z"
+    },
+    {
+      "n": 161,
+      "result": "closed_without_merge",
+      "sha": "df77075b4512e878288b7bddfa279ad4b3982b8b",
+      "branch": "docs/sql-atomic-linked-token-create",
+      "closed_at": "2026-10-28T11:27:37Z",
+      "verified_at": "2026-10-28T11:27:40.206Z"
+    },
+    {
+      "n": 162,
+      "result": "closed_without_merge",
+      "sha": "d4e52f243a6b000a419856cbe7fb6b6047791f8b",
+      "branch": "test/atomic-hp-sql-lock-order-gate",
+      "closed_at": "2026-10-28T11:27:40Z",
+      "verified_at": "2026-10-28T11:27:43.475Z"
+    },
+    {
+      "n": 163,
+      "result": "closed_without_merge",
+      "sha": "239c12f8dd6acfb911d8470fd54cc79bee1487fc",
+      "branch": "test/dev-hp-concurrency-runbook",
+      "closed_at": "2026-10-28T11:27:43Z",
+      "verified_at": "2026-10-28T11:27:46.534Z"
+    },
+    {
+      "n": 164,
+      "result": "closed_without_merge",
+      "sha": "dd89b98415735a47e6974dee83fc4ca10f90eceb",
+      "branch": "fix/review-atomic-hp-all-linked-tokens",
+      "closed_at": "2026-10-28T11:27:46Z",
+      "verified_at": "2026-10-28T11:27:49.720Z"
+    },
+    {
+      "n": 165,
+      "result": "closed_without_merge",
+      "sha": "6e55740f672af521932c8676da8ba14dcad6d3dc",
+      "branch": "test/all-linked-token-hp-rpc-regression",
+      "closed_at": "2026-10-28T11:27:50Z",
+      "verified_at": "2026-10-28T11:27:53.011Z"
+    },
+    {
+      "n": 166,
+      "result": "closed_without_merge",
+      "sha": "1902c53a4a35ad5f677981477a19b38876e2a66b",
+      "branch": "test/dev-hp-parallel-rpc-harness",
+      "closed_at": "2026-10-28T11:27:53Z",
+      "verified_at": "2026-10-28T11:27:56.074Z"
+    },
+    {
+      "n": 167,
+      "result": "closed_without_merge",
+      "sha": "92f2d57280eb7b3221e20c870995a8053ec3b43a",
+      "branch": "test/dev-hp-harness-fixture-safety",
+      "closed_at": "2026-10-28T11:27:56Z",
+      "verified_at": "2026-10-28T11:27:59.172Z"
+    },
+    {
+      "n": 168,
+      "result": "closed_without_merge",
+      "sha": "6149bb23693776d477370a6abceb42c577f75af5",
+      "branch": "test/dev-hp-two-session-preflight",
+      "closed_at": "2026-10-28T11:27:59Z",
+      "verified_at": "2026-10-28T11:28:02.254Z"
+    },
+    {
+      "n": 169,
+      "result": "closed_without_merge",
+      "sha": "4ae5c2a692d5636691c077e694eb940498042e0f",
+      "branch": "test/dev-hp-independent-identities",
+      "closed_at": "2026-10-28T11:28:02Z",
+      "verified_at": "2026-10-28T11:28:05.578Z"
+    },
+    {
+      "n": 170,
+      "result": "closed_without_merge",
+      "sha": "cc9cc9e9f74a21644c331404ff67c10c6f788977",
+      "branch": "test/dev-hp-disposable-fixture-identity-gate",
+      "closed_at": "2026-10-28T11:28:15Z",
+      "verified_at": "2026-10-28T11:28:28.843Z"
+    },
+    {
+      "n": 171,
+      "result": "closed_without_merge",
+      "sha": "13fba3ec443be6750062030ad137a33ab631f4a8",
+      "branch": "test/dev-hp-manual-action-runner",
+      "closed_at": "2026-10-28T11:28:29Z",
+      "verified_at": "2026-10-28T11:28:32.189Z"
+    },
+    {
+      "n": 172,
+      "result": "closed_without_merge",
+      "sha": "8f24dda26eaaba90bd952a548da1bff0f50ac131",
+      "branch": "test/dev-hp-action-fresh-auth",
+      "closed_at": "2026-10-28T11:28:32Z",
+      "verified_at": "2026-10-28T11:28:35.416Z"
+    },
+    {
+      "n": 182,
+      "result": "closed_without_merge",
+      "sha": "2c983545377fd2eb9b7e881ee07e9d42ccd8bc84",
+      "branch": "fix/update-token-hp-use-shared-action",
+      "closed_at": "2026-10-28T11:28:35Z",
+      "verified_at": "2026-10-28T11:28:38.726Z"
+    }
+  ]
+}
