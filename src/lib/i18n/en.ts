@@ -358,6 +358,25 @@ export const en: Dictionary = {
   'characters.levelUpFrom': 'Level {from} → {to}',
   'characters.proficient': 'Proficient',
   'characters.notProficient': 'Not proficient',
+  'characters.hp.invalidTitle': 'HP need checking',
+  'characters.hp.invalidDescription':
+    'Saved HP are invalid. Health changes, leveling up, rests, and spell and inventory saves are paused.',
+  'characters.hp.recoveryHint':
+    'Download a character backup and confirm current, maximum and temporary HP with the owner and GM. Saved data have not changed. Refresh the sheet after correction.',
+  'characters.hp.savedValues': 'View saved HP',
+  'characters.hp.current': 'Current HP',
+  'characters.hp.max': 'Maximum HP',
+  'characters.hp.temp': 'Temporary HP',
+  'characters.hp.missing': 'Not set',
+  'characters.hp.invalidFormat': 'Invalid format',
+  'characters.hp.legacyTemp': 'Not set — treated as 0',
+  'characters.hp.downloadBackup': 'Download character backup',
+  'characters.hp.refresh': 'Refresh sheet',
+  'characters.hp.backupFailed': 'Could not download the character backup',
+  'characters.hp.unavailable': 'HP are unavailable until saved values are checked',
+  'characters.hp.check': 'Check HP',
+  'characters.hp.summary': 'HP {current} of {max}',
+
   'characters.deathSavesHint': 'Death saves: 3 successes / 3 failures',
 
   // ─── Character tabs ───

@@ -21,6 +21,8 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  characterActions: [] as { name: string; args: unknown[] }[],
+  refreshes: 0,
   createdCharacters: [] as { campaignId: string; name: string; data: CharacterData }[],
   navigated: [] as string[],
   chapterSaves: [] as string[],
@@ -81,7 +83,9 @@ export function usePathname() {
 }
 export function useRouter() {
   return {
-    refresh() {},
+    refresh() {
+      lab.refreshes++
+    },
     push(url: string) {
       lab.navigated.push(url)
     },
@@ -92,4 +96,74 @@ export async function setTheme() {
 }
 export default function Link(props: AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <a {...props} />
+}
+
+// Record any real character control invoked by the offline sheet. Never call a backend.
+export async function updateCharacter(...args: unknown[]) {
+  lab.characterActions.push({ name: 'updateCharacter', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function updateCharacterIdentityAtomic(...args: unknown[]) {
+  lab.characterActions.push({ name: 'updateCharacterIdentityAtomic', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function rollDeathSave(...args: unknown[]) {
+  lab.characterActions.push({ name: 'rollDeathSave', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function resetDeathSaves(...args: unknown[]) {
+  lab.characterActions.push({ name: 'resetDeathSaves', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function levelUp(...args: unknown[]) {
+  lab.characterActions.push({ name: 'levelUp', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function spendSpellSlot(...args: unknown[]) {
+  lab.characterActions.push({ name: 'spendSpellSlot', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function updateSpell(...args: unknown[]) {
+  lab.characterActions.push({ name: 'updateSpell', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function removeSpell(...args: unknown[]) {
+  lab.characterActions.push({ name: 'removeSpell', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function addInventoryItem(...args: unknown[]) {
+  lab.characterActions.push({ name: 'addInventoryItem', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function addSpell(...args: unknown[]) {
+  lab.characterActions.push({ name: 'addSpell', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function updateCurrency(...args: unknown[]) {
+  lab.characterActions.push({ name: 'updateCurrency', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function updateInventoryItem(...args: unknown[]) {
+  lab.characterActions.push({ name: 'updateInventoryItem', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function removeInventoryItem(...args: unknown[]) {
+  lab.characterActions.push({ name: 'removeInventoryItem', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function toggleEquipped(...args: unknown[]) {
+  lab.characterActions.push({ name: 'toggleEquipped', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function toggleAttuned(...args: unknown[]) {
+  lab.characterActions.push({ name: 'toggleAttuned', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function longRest(...args: unknown[]) {
+  lab.characterActions.push({ name: 'longRest', args })
+  return { error: 'Offline character action boundary' }
+}
+export async function updateCharacterHP(...args: unknown[]) {
+  lab.characterActions.push({ name: 'updateCharacterHP', args })
+  return { error: 'Offline character action boundary' }
 }

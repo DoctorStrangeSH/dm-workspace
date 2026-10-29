@@ -7,20 +7,29 @@ import { useToast } from '@/components/toast/toast-provider'
 import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
 import { Card, Button } from '@/components/ui'
-import type { CharacterHP } from '@/lib/types'
+import { readCharacterHP } from '@/lib/dnd/character-hp'
 
 interface Props {
   characterId: string
   campaignId: string
-  hp: CharacterHP
+  hp: unknown
   canEdit: boolean
 }
 
-export default function HPTracker({ characterId, campaignId, hp, canEdit }: Props) {
+export default function HPTracker({ characterId, campaignId, hp: rawHP, canEdit }: Props) {
   const t = useT()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [customValue, setCustomValue] = useState('')
+
+  const hp = readCharacterHP(rawHP)
+  if (!hp) {
+    return (
+      <Card padding="md">
+        <p className="text-sm text-[var(--warning-text)]">{t('characters.hp.unavailable')}</p>
+      </Card>
+    )
+  }
 
   const percent = hp.max > 0 ? (hp.current / hp.max) * 100 : 0
   const isLow = percent <= 25 && hp.current > 0
