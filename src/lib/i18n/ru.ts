@@ -359,6 +359,26 @@ export const ru: Dictionary = {
   'characters.levelUpFrom': 'Level {from} → {to}',
   'characters.proficient': 'Владение',
   'characters.notProficient': 'Без владения',
+  'characters.identity.edit': 'Изменить класс',
+  'characters.identity.class': 'Класс',
+  'characters.identity.classLabel': 'Класс персонажа',
+  'characters.identity.subclass': 'Подкласс',
+  'characters.identity.subclassLabel': 'Подкласс персонажа',
+  'characters.identity.noSubclass': 'Без подкласса',
+  'characters.identity.hint':
+    'Перед сохранением вы увидите изменения. Характеристики персонажа не пересчитываются.',
+  'characters.identity.invalid': 'Выберите допустимый класс и совместимый подкласс',
+  'characters.identity.updated': 'Класс персонажа обновлён',
+  'characters.identity.confirmTitle': 'Подтвердить изменение класса',
+  'characters.identity.confirmDescription': 'Проверьте класс и подкласс перед сохранением.',
+  'characters.identity.before': 'Сейчас',
+  'characters.identity.after': 'После изменения',
+  'characters.identity.preserved':
+    'HP, уровень, характеристики, владения, заклинания и снаряжение сохранятся.',
+  'characters.identity.rulesHint':
+    'Способности и расчёты нового класса не добавляются автоматически. Согласуйте необходимые изменения с ГМ.',
+  'characters.identity.confirm': 'Подтвердить изменение',
+
   'characters.hp.invalidTitle': 'HP требуют проверки',
   'characters.hp.invalidDescription':
     'Сохранённые HP некорректны. Изменение здоровья, повышение уровня, отдых и сохранение заклинаний и инвентаря приостановлены.',

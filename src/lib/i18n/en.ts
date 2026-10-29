@@ -358,6 +358,26 @@ export const en: Dictionary = {
   'characters.levelUpFrom': 'Level {from} → {to}',
   'characters.proficient': 'Proficient',
   'characters.notProficient': 'Not proficient',
+  'characters.identity.edit': 'Change class',
+  'characters.identity.class': 'Class',
+  'characters.identity.classLabel': 'Character class',
+  'characters.identity.subclass': 'Subclass',
+  'characters.identity.subclassLabel': 'Character subclass',
+  'characters.identity.noSubclass': 'No subclass',
+  'characters.identity.hint':
+    'Review the changes before saving. Character stats are not recalculated.',
+  'characters.identity.invalid': 'Choose a valid class and a compatible subclass',
+  'characters.identity.updated': 'Character class updated',
+  'characters.identity.confirmTitle': 'Confirm class change',
+  'characters.identity.confirmDescription': 'Review the class and subclass before saving.',
+  'characters.identity.before': 'Current',
+  'characters.identity.after': 'After change',
+  'characters.identity.preserved':
+    'HP, level, ability scores, proficiencies, spells and equipment will stay unchanged.',
+  'characters.identity.rulesHint':
+    'Features and calculations for the new class are not added automatically. Agree any further changes with your GM.',
+  'characters.identity.confirm': 'Confirm change',
+
   'characters.hp.invalidTitle': 'HP need checking',
   'characters.hp.invalidDescription':
     'Saved HP are invalid. Health changes, leveling up, rests, and spell and inventory saves are paused.',

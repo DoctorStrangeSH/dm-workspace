@@ -23,6 +23,8 @@ export const lab = {
   sent: [] as string[],
   characterActions: [] as { name: string; args: unknown[] }[],
   refreshes: 0,
+  identityOutcome: 'error' as 'error' | 'success' | 'throw',
+  identityDelay: 0,
   createdCharacters: [] as { campaignId: string; name: string; data: CharacterData }[],
   navigated: [] as string[],
   chapterSaves: [] as string[],
@@ -105,7 +107,11 @@ export async function updateCharacter(...args: unknown[]) {
 }
 export async function updateCharacterIdentityAtomic(...args: unknown[]) {
   lab.characterActions.push({ name: 'updateCharacterIdentityAtomic', args })
-  return { error: 'Offline character action boundary' }
+  await new Promise((resolve) => setTimeout(resolve, lab.identityDelay))
+  if (lab.identityOutcome === 'throw') throw Error('Offline identity transport failure')
+  return lab.identityOutcome === 'success'
+    ? { success: true }
+    : { error: 'Offline character action boundary' }
 }
 export async function rollDeathSave(...args: unknown[]) {
   lab.characterActions.push({ name: 'rollDeathSave', args })

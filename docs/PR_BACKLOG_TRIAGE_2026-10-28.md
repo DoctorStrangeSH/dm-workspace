@@ -44,6 +44,8 @@ Sources #55/#105/#106. A class name or old fixed fixture ID is not proof of inte
 
 Sources #102/#110–#112/#115. Main has identity-only validation/atomic RPC and character-display-names helpers; 7 existing pure identity/display/SRD tests passed. Main wizard still uses name_ru ?? name rather than the old localized fallback, and the old confirmingClassChange flow is absent. Preserve confirmation for base-class changes with an explicit explanation that HP, proficiencies and other stats are unchanged, subclass compatibility checks and focused data-preservation tests. Port only missing behavior after reviewing current components; do not restore a whole stale character sheet.
 
+Follow-up checkpoint2026-10-29: #243 delivered localized display labels and #247 delivered canonical creation IDs/fallback catalog completion. Current main-based fix/character-class-change-confirmation adds the missing class/subclass review with stat-preservation copy and action/browser regressions; see CHARACTER_CLASS_CHANGE_UX.md and current release receipts. This source checkpoint does not establish live authenticated acceptance or a complete class rebuild/rules engine.
+
 ### B08 — security/provenance and release evidence (priority 1)
 
 Sources #92/#93/#145. Preserve advisor findings and Realtime trigger/grant review as historical evidence; revalidate before any release. DEV's installed callable HP routine differs from the repository review drafts and migration ledger. #239 records a read-only reconciliation; do not blindly replay migrations or repair ledger rows. Production deployment, real JWT/API/Realtime acceptance and device QA remain distinct from CI. Never log credentials or assume historical hardcoded fixture state still holds.

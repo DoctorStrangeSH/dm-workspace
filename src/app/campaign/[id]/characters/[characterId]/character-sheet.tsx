@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Pencil, Check, X, TrendingUp, Sword } from 'lucide-react'
 import { updateCharacter, updateCharacterIdentityAtomic } from '@/lib/actions/characters'
+import { characterIdentityPatch } from '@/lib/dnd/character-identity-patch'
 import { CLASSES } from '@/lib/dnd/constants'
 import { SRD_SUBCLASS_BASE, baseClassSlug } from '@/lib/dnd/srd-class-utils'
 import { useToast } from '@/components/toast/toast-provider'
@@ -21,7 +22,7 @@ import SpellsTab from './spells/spells-tab'
 import InventoryTab from './inventory-tab'
 import FeaturesTab from './features-tab'
 import LevelUpDialog from './level-up-dialog'
-import { Card, Button, IconButton } from '@/components/ui'
+import { Card, Button, IconButton, Dialog } from '@/components/ui'
 import {
   abilityModifier,
   formatModifier,
@@ -67,10 +68,16 @@ export default function CharacterSheet({
   const [isEditingClass, setIsEditingClass] = useState(false)
   const [editClass, setEditClass] = useState(baseClassSlug(character.data_json.class))
   const [editSubclass, setEditSubclass] = useState(character.data_json.subclass ?? '')
+  const [classChange, setClassChange] = useState<{ class: string; subclass?: string } | null>(null)
+  const classSaveInFlight = useRef(false)
+  const closeClassConfirmation = useCallback(() => {
+    if (!classSaveInFlight.current) setClassChange(null)
+  }, [])
 
   const data = character.data_json
   const hp = readCharacterHP(data.hp)
   const canEditData = canEdit && hp !== null
+  const hasIdentityChanges = editClass !== data.class || editSubclass !== (data.subclass ?? '')
   const profBonus = proficiencyBonus(data.level)
 
   const handleSaveName = () => {
@@ -93,20 +100,40 @@ export default function CharacterSheet({
     })
   }
 
+  const requestClassChange = () => {
+    if (!hasIdentityChanges || isPending || !canEdit) return
+    const patch = characterIdentityPatch(data.class, editClass, editSubclass || undefined)
+    if (!patch) {
+      toast.error(t('characters.identity.invalid'))
+      return
+    }
+    setClassChange(patch)
+  }
+
   const handleSaveClass = () => {
+    if (!classChange || classSaveInFlight.current || isPending || !canEdit) return
+    classSaveInFlight.current = true
+    const change = classChange
     startTransition(async () => {
-      const res = await updateCharacterIdentityAtomic(
-        character.id,
-        campaignId,
-        editClass,
-        editSubclass || undefined
-      )
-      if ('error' in res) {
-        toast.error(res.error)
-      } else {
-        toast.success('Класс персонажа обновлён')
-        setIsEditingClass(false)
-        router.refresh()
+      try {
+        const res = await updateCharacterIdentityAtomic(
+          character.id,
+          campaignId,
+          change.class,
+          change.subclass
+        )
+        if ('error' in res) {
+          toast.error(res.error)
+        } else {
+          toast.success(t('characters.identity.updated'))
+          setClassChange(null)
+          setIsEditingClass(false)
+          router.refresh()
+        }
+      } catch {
+        toast.error(t('common.error'))
+      } finally {
+        classSaveInFlight.current = false
       }
     })
   }
@@ -255,14 +282,14 @@ export default function CharacterSheet({
                       setIsEditingClass(true)
                     }}
                   >
-                    Изменить класс
+                    {t('characters.identity.edit')}
                   </Button>
                 ) : (
                   <div className="flex flex-wrap items-end gap-2 rounded-lg border border-[var(--border-default)] p-3">
                     <label className="min-w-40 flex-1 text-xs text-[var(--text-muted)]">
-                      Класс
+                      {t('characters.identity.class')}
                       <select
-                        aria-label="Класс персонажа"
+                        aria-label={t('characters.identity.classLabel')}
                         value={editClass}
                         onChange={(e) => {
                           setEditClass(e.target.value)
@@ -278,14 +305,14 @@ export default function CharacterSheet({
                       </select>
                     </label>
                     <label className="min-w-40 flex-1 text-xs text-[var(--text-muted)]">
-                      Подкласс
+                      {t('characters.identity.subclass')}
                       <select
-                        aria-label="Подкласс персонажа"
+                        aria-label={t('characters.identity.subclassLabel')}
                         value={editSubclass}
                         onChange={(e) => setEditSubclass(e.target.value)}
-                        className="mt-1 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]"
+                        className="mt-1 min-h-11 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-primary)] p-2 text-sm text-[var(--text-primary)]"
                       >
-                        <option value="">Без подкласса</option>
+                        <option value="">{t('characters.identity.noSubclass')}</option>
                         {Object.entries(SRD_SUBCLASS_BASE)
                           .filter(([, base]) => base === editClass)
                           .map(([key]) => (
@@ -298,10 +325,10 @@ export default function CharacterSheet({
                     <Button
                       size="md"
                       className="min-h-11"
-                      onClick={handleSaveClass}
-                      disabled={isPending}
+                      onClick={requestClassChange}
+                      disabled={isPending || !hasIdentityChanges}
                     >
-                      Сохранить
+                      {t('common.save')}
                     </Button>
                     <Button
                       variant="secondary"
@@ -310,11 +337,10 @@ export default function CharacterSheet({
                       onClick={() => setIsEditingClass(false)}
                       disabled={isPending}
                     >
-                      Отмена
+                      {t('common.cancel')}
                     </Button>
                     <p className="w-full text-xs text-[var(--text-muted)]">
-                      Здоровье, уровень, характеристики и заклинания не пересчитываются
-                      автоматически.
+                      {t('characters.identity.hint')}
                     </p>
                   </div>
                 )}
@@ -417,6 +443,66 @@ export default function CharacterSheet({
         }
         featuresContent={<FeaturesTab />}
       />
+
+      <Dialog
+        open={classChange !== null}
+        onClose={closeClassConfirmation}
+        title={t('characters.identity.confirmTitle')}
+        description={t('characters.identity.confirmDescription')}
+        closeLabel={t('common.close')}
+        closeDisabled={isPending}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={closeClassConfirmation}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button size="md" onClick={handleSaveClass} loading={isPending}>
+              {t('characters.identity.confirm')}
+            </Button>
+          </>
+        }
+      >
+        {classChange && (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  label: t('characters.identity.before'),
+                  class: data.class,
+                  subclass: data.subclass,
+                },
+                { label: t('characters.identity.after'), ...classChange },
+              ].map((identity) => (
+                <div
+                  key={identity.label}
+                  className="min-w-0 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-3"
+                >
+                  <p className="text-xs text-[var(--text-muted)]">{identity.label}</p>
+                  <p className="mt-1 font-semibold text-[var(--text-primary)]">
+                    {characterClassName(identity.class, lang)}
+                  </p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                    {identity.subclass
+                      ? subclassDisplayName(identity.subclass, lang)
+                      : t('characters.identity.noSubclass')}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-[var(--text-secondary)]">
+              {t('characters.identity.preserved')}
+            </p>
+            <p className="text-sm text-[var(--warning-text)]">
+              {t('characters.identity.rulesHint')}
+            </p>
+          </div>
+        )}
+      </Dialog>
 
       {showLevelUp && hp && (
         <LevelUpDialog

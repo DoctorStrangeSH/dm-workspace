@@ -694,7 +694,10 @@ try {
         expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
         await page.getByRole('region', { name: 'HP требуют проверки' }).evaluate((el) => {
           const bottom = document.querySelector('header')?.getBoundingClientRect().bottom ?? 0
-          window.scrollBy({ top: el.getBoundingClientRect().top - bottom - 12, behavior: 'instant' })
+          window.scrollBy({
+            top: el.getBoundingClientRect().top - bottom - 12,
+            behavior: 'instant',
+          })
         })
         await page.screenshot({
           path: path.join(output, (mobile ? 'mobile' : 'desktop') + '-hp-diagnosis.png'),
@@ -728,6 +731,152 @@ try {
       ).toBeVisible()
       await page.getByText('View saved HP', { exact: true }).click()
       await expect(page.getByRole('region', { name: 'HP need checking' })).toContainText('Not set')
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+    }
+  )
+
+  for (const mobile of [false, true]) {
+    await scenario(
+      'class changes require review, preserve the draft on cancel and submit once (' +
+        (mobile ? 'mobile' : 'desktop') +
+        ')',
+      { mobile, url: '/?screen=character-sheet&hp=valid&subclass=1' },
+      async (page) => {
+        const before = await page.evaluate(() => window.__characterFixture)
+        await page.getByRole('button', { name: 'Изменить класс', exact: true }).click()
+        const save = page.getByRole('button', { name: 'Сохранить', exact: true })
+        await expect(save).toBeDisabled()
+        await page.getByLabel('Класс персонажа', { exact: true }).selectOption('fighter')
+        await expect(page.getByLabel('Подкласс персонажа', { exact: true })).toHaveValue('')
+        await expect(
+          page
+            .getByLabel('Подкласс персонажа', { exact: true })
+            .locator('option[value="srd-2024_draconic-sorcery"]')
+        ).toHaveCount(0)
+        await page
+          .getByLabel('Подкласс персонажа', { exact: true })
+          .selectOption('srd-2024_champion')
+        await save.click()
+        const dialog = page.getByRole('dialog', { name: 'Подтвердить изменение класса' })
+        await expect(dialog).toBeVisible()
+        for (const text of ['Сейчас', 'После изменения', 'Чародей', 'Воин', 'Чемпион'])
+          await expect(dialog.getByText(text, { exact: true })).toBeVisible()
+        await expect(dialog).toContainText(
+          'HP, уровень, характеристики, владения, заклинания и снаряжение сохранятся.'
+        )
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        const close = dialog.getByRole('button', { name: 'Закрыть', exact: true })
+        const confirm = dialog.getByRole('button', { name: 'Подтвердить изменение', exact: true })
+        await expect(close).toBeFocused()
+        await page.keyboard.press('Shift+Tab')
+        await expect(confirm).toBeFocused()
+        await page.keyboard.press('Tab')
+        await expect(close).toBeFocused()
+        await page.screenshot({
+          path: path.join(output, (mobile ? 'mobile' : 'desktop') + '-class-confirmation.png'),
+        })
+        await page.keyboard.press('Escape')
+        await expect(dialog).toHaveCount(0)
+        await expect(save).toBeFocused()
+        await expect(page.getByLabel('Класс персонажа', { exact: true })).toHaveValue('fighter')
+        await save.click()
+        await dialog.getByRole('button', { name: 'Отмена', exact: true }).click()
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        await save.click()
+        await page.evaluate(() => {
+          window.__uiLab.identityOutcome = 'success'
+          window.__uiLab.identityDelay = 1200
+        })
+        await confirm.evaluate((el) => {
+          el.click()
+          el.click()
+        })
+        await expect.poll(() => page.evaluate(() => window.__uiLab.characterActions.length)).toBe(1)
+        await expect(close).toBeDisabled()
+        await page.keyboard.press('Escape')
+        await expect(dialog).toBeVisible()
+        await page.keyboard.press('Tab')
+        await expect(dialog).toBeFocused()
+        await expect.poll(() => page.evaluate(() => window.__uiLab.refreshes)).toBe(1)
+        await expect(dialog).toHaveCount(0)
+        await expect(
+          page.getByRole('button', { name: 'Изменить класс', exact: true })
+        ).toBeVisible()
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([
+          {
+            name: 'updateCharacterIdentityAtomic',
+            args: ['offline-character', 'test', 'fighter', 'srd-2024_champion'],
+          },
+        ])
+        expect(await page.evaluate(() => window.__characterFixture)).toEqual(before)
+      }
+    )
+  }
+  await scenario(
+    'subclass removal stays reviewable after server and transport errors, then retries without data replacement',
+    { url: '/?screen=character-sheet&hp=valid&subclass=1' },
+    async (page) => {
+      const before = await page.evaluate(() => window.__characterFixture)
+      await page.getByRole('button', { name: 'Изменить класс', exact: true }).click()
+      await page.getByLabel('Подкласс персонажа', { exact: true }).selectOption('')
+      await page.getByRole('button', { name: 'Сохранить', exact: true }).click()
+      const dialog = page.getByRole('dialog', { name: 'Подтвердить изменение класса' })
+      await expect(dialog.getByText('Без подкласса', { exact: true })).toBeVisible()
+      const confirm = dialog.getByRole('button', { name: 'Подтвердить изменение', exact: true })
+      await confirm.click()
+      await expect(
+        page.getByText('Offline character action boundary', { exact: true })
+      ).toBeVisible()
+      await expect(confirm).toBeEnabled()
+      await expect(dialog).toBeVisible()
+      expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(0)
+      await page.evaluate(() => {
+        window.__uiLab.identityOutcome = 'throw'
+      })
+      await confirm.click()
+      await expect.poll(() => page.evaluate(() => window.__uiLab.characterActions.length)).toBe(2)
+      await expect(confirm).toBeEnabled()
+      await expect(dialog).toBeVisible()
+      expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(0)
+      await page.evaluate(() => {
+        window.__uiLab.identityOutcome = 'success'
+      })
+      await confirm.click()
+      await expect.poll(() => page.evaluate(() => window.__uiLab.refreshes)).toBe(1)
+      await expect(dialog).toHaveCount(0)
+      const calls = await page.evaluate(() => window.__uiLab.characterActions)
+      expect(calls).toHaveLength(3)
+      for (const call of calls) {
+        expect(call.name).toBe('updateCharacterIdentityAtomic')
+        expect(call.args.slice(0, 3)).toEqual(['offline-character', 'test', 'sorcerer'])
+        expect(call.args[3]).toBeUndefined()
+      }
+      expect(await page.evaluate(() => window.__characterFixture)).toEqual(before)
+    }
+  )
+  await scenario(
+    'English class review supports prefixed legacy identity and read-only viewers have no edit control',
+    { url: '/?screen=character-sheet&hp=valid&lang=en&prefixed=1' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Change class', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeEnabled()
+      await page.getByRole('button', { name: 'Save', exact: true }).click()
+      const dialog = page.getByRole('dialog', { name: 'Confirm class change' })
+      await expect(dialog.getByText('Sorcerer', { exact: true })).toHaveCount(2)
+      await expect(dialog).toContainText('proficiencies, spells and equipment will stay unchanged')
+      await expect(dialog.getByRole('button', { name: 'Close', exact: true })).toBeVisible()
+      await expect(dialog).not.toContainText('srd-2024')
+      await page.keyboard.press('Escape')
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      await page.getByLabel('Character class', { exact: true }).selectOption('wizard')
+      await page.getByRole('button', { name: 'Save', exact: true }).click()
+      await expect(dialog.getByText('Wizard', { exact: true })).toBeVisible()
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click()
+      await page.goto(
+        origin + '/?screen=character-sheet&hp=valid&lang=en&readonly=true&role=player'
+      )
+      await expect(page.getByRole('button', { name: 'Change class', exact: true })).toHaveCount(0)
+      await expect(page.getByRole('dialog')).toHaveCount(0)
       expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
     }
   )
