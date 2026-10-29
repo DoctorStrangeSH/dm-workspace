@@ -248,3 +248,57 @@ test('SRD sorcerer creation reaches INSERT with numeric 8 HP; former D62 payload
   assert.ok('error' in (await broken.actions.createCharacter('campaign', 'Holmes', corrupt)))
   assert.deepEqual(broken.writes, [])
 })
+
+test('creation canonicalizes supported SRD classes before spellcasting setup without mutating caller data', async () => {
+  for (const cls of constants.CLASSES) {
+    const data = {
+      ...types.createEmptyCharacterData(),
+      class: 'srd-2024_' + cls.slug,
+      notes: 'keep',
+    }
+    const before = structuredClone(data)
+    const r = rig()
+    assert.deepEqual(await r.actions.createCharacter('campaign', 'Name', data), {
+      success: true,
+      characterId: 'new',
+    })
+    const inserted = (r.writes[0].args as { data_json: types.CharacterData }).data_json
+    assert.equal(inserted.class, cls.slug)
+    assert.equal(inserted.spellcastingAbility, constants.getSpellcastingAbility(cls.slug))
+    assert.deepEqual(inserted.hp, data.hp)
+    assert.equal(inserted.notes, 'keep')
+    assert.deepEqual(data, before)
+  }
+})
+
+test('creation refuses missing/unknown/subclass-only class identities and incompatible subclasses', async () => {
+  for (const cls of ['', 'srd-2024_champion', 'unknown', null, 12]) {
+    const data = { ...types.createEmptyCharacterData(), class: cls } as types.CharacterData
+    const r = rig()
+    assert.ok('error' in (await r.actions.createCharacter('campaign', 'Name', data)))
+    assert.deepEqual(r.writes, [])
+    assert.deepEqual(r.events, [])
+  }
+  const bad = rig()
+  assert.ok(
+    'error' in
+      (await bad.actions.createCharacter('campaign', 'Name', {
+        ...types.createEmptyCharacterData(),
+        class: 'srd-2024_sorcerer',
+        subclass: 'srd-2024_champion',
+      }))
+  )
+  assert.deepEqual(bad.writes, [])
+  const good = rig()
+  assert.deepEqual(
+    await good.actions.createCharacter('campaign', 'Name', {
+      ...types.createEmptyCharacterData(),
+      class: 'srd-2024_sorcerer',
+      subclass: 'srd-2024_draconic-sorcery',
+    }),
+    { success: true, characterId: 'new' }
+  )
+  const saved = (good.writes[0].args as { data_json: types.CharacterData }).data_json
+  assert.equal(saved.class, 'sorcerer')
+  assert.equal(saved.subclass, 'srd-2024_draconic-sorcery')
+})

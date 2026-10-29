@@ -89,21 +89,29 @@ function Fixture() {
             {screen === 'character-create' ? (
               <CharacterWizard
                 campaignId="test"
-                species={[{ key: 'srd-2024_human', name: 'Human', name_ru: null, data: {} }]}
-                classes={[
-                  {
-                    key: 'srd-2024_sorcerer',
-                    name: 'Sorcerer',
-                    name_ru: null,
-                    data: { hit_die: 'D6' },
-                  },
-                  {
-                    key: 'srd-2024_fighter',
-                    name: 'Fighter',
-                    name_ru: null,
-                    data: { hit_die: 'D10' },
-                  },
-                ]}
+                species={
+                  query.get('catalog') === 'fallback'
+                    ? []
+                    : [{ key: 'srd-2024_human', name: 'Human', name_ru: null, data: {} }]
+                }
+                classes={
+                  query.get('catalog') === 'fallback'
+                    ? []
+                    : [
+                        {
+                          key: 'srd-2024_sorcerer',
+                          name: 'Sorcerer',
+                          name_ru: null,
+                          data: { hit_die: 'D6' },
+                        },
+                        {
+                          key: 'srd-2024_fighter',
+                          name: 'Fighter',
+                          name_ru: null,
+                          data: { hit_die: 'D10' },
+                        },
+                      ]
+                }
               />
             ) : screen === 'overview' ? (
               <CampaignOverview
