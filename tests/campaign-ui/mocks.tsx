@@ -57,10 +57,17 @@ export function useRealtimeMessages() {
   )
 }
 export function usePathname() {
-  return location.pathname.includes('session') ? '/campaign/test/session' : '/campaign/test'
+  return location.pathname.startsWith('/campaign/')
+    ? location.pathname
+    : location.pathname === '/session'
+      ? '/campaign/test/session'
+      : '/campaign/test'
 }
 export function useRouter() {
   return { refresh() {}, push() {} }
+}
+export async function setTheme() {
+  return { success: true }
 }
 export default function Link(props: AnchorHTMLAttributes<HTMLAnchorElement>) {
   return <a {...props} />

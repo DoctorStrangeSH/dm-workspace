@@ -28,11 +28,11 @@ export default function CommandPaletteWrapper({
       <Tooltip content={t('commands.hint')}>
         <button
           onClick={open}
-          className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-muted)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+          className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-muted)] transition-colors hover:border-[var(--border-hover)] hover:text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
           aria-label={t('commands.open')}
         >
-          <Search size={14} />
-          <span className="hidden sm:inline">{t('commands.searchPlaceholder')}</span>
+          <Search size={17} aria-hidden="true" />
+          <span className="hidden xl:inline">{t('commands.searchPlaceholder')}</span>
           <kbd className="hidden items-center gap-0.5 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[10px] md:inline-flex">
             <span>⌘</span>
             <span>K</span>

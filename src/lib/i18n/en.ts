@@ -49,6 +49,18 @@ export const en: Dictionary = {
   'nav.dashboard': 'Dashboard',
   'nav.logout': 'Log out',
   'nav.menu': 'Menu',
+  'nav.more': 'More',
+  'nav.quickNavigation': 'Quick navigation',
+  'nav.group.play': 'At the table',
+  'nav.group.world': 'Campaign world',
+  'nav.group.reference': 'Reference',
+  'nav.allCampaigns': 'All campaigns',
+  'nav.campaign': 'Campaign',
+  'nav.workspace': 'Workspace',
+  'nav.appearance': 'Language and appearance',
+  'nav.dmDescription': 'Everything to prepare and run your game.',
+  'nav.playerDescription': 'Your party, stories and reference books.',
+  'language.label': 'Interface language',
   'nav.mainNavigation': 'Main navigation',
 
   // ─── Roles ───

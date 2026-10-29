@@ -19,10 +19,12 @@ export default function HandoutButton({ campaignId, handouts }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg p-2 transition hover:bg-[var(--bg-hover)]"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-3 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+        aria-label={t('handouts.open')}
         title={t('handouts.open')}
       >
-        <ImageIcon size={16} />
+        <ImageIcon size={17} aria-hidden="true" />
+        <span className="hidden xl:inline">{t('handouts.open')}</span>
       </button>
       {open && (
         <HandoutPanel campaignId={campaignId} handouts={handouts} onClose={() => setOpen(false)} />

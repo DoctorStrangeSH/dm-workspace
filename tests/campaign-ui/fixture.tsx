@@ -3,7 +3,14 @@ import { useState } from 'react'
 import { I18nProvider, useI18n } from '../../src/lib/i18n'
 import { ToastProvider } from '../../src/components/toast/toast-provider'
 import { DmScreenProvider } from '../../src/app/campaign/[id]/dm-screen/dm-screen-context'
-import { CampaignShell, CampaignTools } from '../../src/app/campaign/[id]/campaign-tools'
+import { CampaignShell } from '../../src/app/campaign/[id]/campaign-tools'
+import { CampaignHeader } from '../../src/app/campaign/[id]/campaign-header'
+import CampaignSidebar from '../../src/app/campaign/[id]/campaign-sidebar'
+import { MobileBottomNav } from '../../src/components/mobile-bottom-nav'
+import { LangToggle } from '../../src/components/ui/lang-toggle'
+import ThemeToggle from '../../src/components/theme-toggle'
+import { ThemeProvider } from '../../src/lib/hooks/use-theme'
+import { SessionModeToggle } from '../../src/app/campaign/[id]/session-mode-toggle'
 import DmScreen from '../../src/app/campaign/[id]/dm-screen/dm-screen'
 import ChatPanel from '../../src/app/campaign/[id]/chat/chat-panel'
 import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-mode-layout'
@@ -26,73 +33,113 @@ function Fixture() {
   return (
     <DmScreenProvider>
       <CampaignShell>
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
-          <div>
-            <p className="text-xs tracking-widest text-[var(--accent-text)] uppercase">
-              DM Workspace
-            </p>
-            <h1 className="mt-1 text-xl font-bold">Пепел и звёзды</h1>
-          </div>
-          <CampaignTools isDm={isDm} />
-        </header>
-        <main data-testid="workspace-main" className="p-4 sm:p-8">
-          {session ? (
-            <SessionModeLayout campaignId="test" campaignName="Пепел и звёзды">
-              <div className="flex min-h-0 flex-col p-4" data-testid="chapter">
-                Chapter content
-              </div>
-              <div className="flex min-h-0 flex-col p-4" data-testid="scene">
-                Scene content
-              </div>
-              <SessionChatPanel
-                campaignId="test"
-                initialMessages={[]}
-                currentUserId="self"
-                isDm={isDm}
-              />
-            </SessionModeLayout>
-          ) : (
-            <div className="mx-auto max-w-3xl space-y-6">
-              <div>
-                <p className="text-xs font-semibold tracking-widest text-[var(--accent-text)] uppercase">
-                  Ваша группа
-                </p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight">
-                  История начинается с героя
-                </h2>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">
-                  {characterSpeciesName(race, lang)} · {characterClassName(cls, lang)}
-                </p>
-              </div>
-              <section className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
-                <WizardStep1
-                  name="Элиан"
-                  setName={() => {}}
-                  raceSlug={race}
-                  setRaceSlug={setRace}
-                  classSlug={cls}
-                  setClassSlug={setClass}
-                  subclassSlug={subclass}
-                  setSubclassSlug={setSubclass}
-                  level={1}
-                  setLevel={() => {}}
-                  species={['human', 'elf', 'orc', 'goliath'].map((key) => ({
-                    key: `srd-2024_${key}`,
-                    name: key,
-                    name_ru: null,
-                    data: {},
-                  }))}
-                  classes={['fighter', 'wizard', 'paladin'].map((key) => ({
-                    key: `srd-2024_${key}`,
-                    name: key,
-                    name_ru: '',
-                    data: {},
-                  }))}
+        <CampaignHeader
+          campaignId="test"
+          name="Пепел и звёзды — приключения в забытых королевствах"
+          genre="Фэнтези · Dungeons & Dragons"
+          isDm={isDm}
+          preferences={
+            <>
+              <LangToggle />
+              <ThemeToggle />
+            </>
+          }
+          search={
+            <button type="button" aria-label="Search" className="h-11 w-11">
+              ⌕
+            </button>
+          }
+          actions={
+            <>
+              {isDm && (
+                <>
+                  {['Music', 'Handouts'].map((label) => (
+                    <button
+                      key={label}
+                      aria-label={label}
+                      className="h-11 w-11 rounded-xl border border-[var(--border-default)]"
+                    >
+                      ◇
+                    </button>
+                  ))}
+                  <SessionModeToggle campaignId="test" />
+                </>
+              )}
+              <button
+                aria-label="Session log"
+                className="h-11 w-11 rounded-xl border border-[var(--border-default)]"
+              >
+                ≡
+              </button>
+            </>
+          }
+          presence={<span className="px-2 text-xs">1 online</span>}
+        />
+        <div className="flex">
+          <CampaignSidebar campaignId="test" isDm={isDm} />
+          <main
+            data-testid="workspace-main"
+            className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
+          >
+            {session ? (
+              <SessionModeLayout campaignId="test" campaignName="Пепел и звёзды">
+                <div className="flex min-h-0 flex-col p-4" data-testid="chapter">
+                  Chapter content
+                </div>
+                <div className="flex min-h-0 flex-col p-4" data-testid="scene">
+                  Scene content
+                </div>
+                <SessionChatPanel
+                  campaignId="test"
+                  initialMessages={[]}
+                  currentUserId="self"
+                  isDm={isDm}
                 />
-              </section>
-            </div>
-          )}
-        </main>
+              </SessionModeLayout>
+            ) : (
+              <div className="mx-auto max-w-3xl space-y-6">
+                <div>
+                  <p className="text-xs font-semibold tracking-widest text-[var(--accent-text)] uppercase">
+                    Ваша группа
+                  </p>
+                  <h2 className="mt-2 text-3xl font-bold tracking-tight">
+                    История начинается с героя
+                  </h2>
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">
+                    {characterSpeciesName(race, lang)} · {characterClassName(cls, lang)}
+                  </p>
+                </div>
+                <section className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
+                  <WizardStep1
+                    name="Элиан"
+                    setName={() => {}}
+                    raceSlug={race}
+                    setRaceSlug={setRace}
+                    classSlug={cls}
+                    setClassSlug={setClass}
+                    subclassSlug={subclass}
+                    setSubclassSlug={setSubclass}
+                    level={1}
+                    setLevel={() => {}}
+                    species={['human', 'elf', 'orc', 'goliath'].map((key) => ({
+                      key: `srd-2024_${key}`,
+                      name: key,
+                      name_ru: null,
+                      data: {},
+                    }))}
+                    classes={['fighter', 'wizard', 'paladin'].map((key) => ({
+                      key: `srd-2024_${key}`,
+                      name: key,
+                      name_ru: '',
+                      data: {},
+                    }))}
+                  />
+                </section>
+              </div>
+            )}
+          </main>
+        </div>
+        <MobileBottomNav campaignId="test" />
         <ChatPanel campaignId="test" initialMessages={[]} currentUserId="self" isDm={isDm} />
         {isDm && <DmScreen entities={[]} campaignId="test" />}
       </CampaignShell>
@@ -101,8 +148,10 @@ function Fixture() {
 }
 createRoot(document.getElementById('root')!).render(
   <I18nProvider>
-    <ToastProvider>
-      <Fixture />
-    </ToastProvider>
+    <ThemeProvider initialTheme={query.get('theme') === 'light' ? 'light' : 'dark'}>
+      <ToastProvider>
+        <Fixture />
+      </ToastProvider>
+    </ThemeProvider>
   </I18nProvider>
 )

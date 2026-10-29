@@ -20,10 +20,12 @@ export default function SessionLogButton({ campaignId, log, isDm }: Props) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="rounded-lg p-2 transition hover:bg-[var(--bg-hover)]"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl px-3 text-sm text-[var(--text-secondary)] transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+        aria-label={t('logs.open')}
         title={t('logs.open')}
       >
-        <ScrollText size={16} />
+        <ScrollText size={17} aria-hidden="true" />
+        <span className="hidden xl:inline">{t('logs.open')}</span>
       </button>
       {open && (
         <SessionLogPanel

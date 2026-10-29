@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useLang, LANG_COOKIE } from '@/lib/i18n'
+import { useLang, useT, LANG_COOKIE } from '@/lib/i18n'
 import type { Lang } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -19,6 +19,7 @@ interface Props {
  */
 export function LangToggle({ className }: Props) {
   const router = useRouter()
+  const t = useT()
   const current = useLang()
   const [isPending, startTransition] = useTransition()
 
@@ -39,7 +40,7 @@ export function LangToggle({ className }: Props) {
         className
       )}
       role="group"
-      aria-label="Language"
+      aria-label={t('language.label')}
     >
       <button
         type="button"
@@ -47,9 +48,9 @@ export function LangToggle({ className }: Props) {
         disabled={isPending}
         aria-pressed={current === 'ru'}
         className={cn(
-          'rounded px-2.5 py-1 text-xs font-medium transition-colors',
+          'min-h-11 min-w-11 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
           current === 'ru'
-            ? 'bg-[var(--accent)] text-white'
+            ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
             : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
         )}
       >
@@ -61,9 +62,9 @@ export function LangToggle({ className }: Props) {
         disabled={isPending}
         aria-pressed={current === 'en'}
         className={cn(
-          'rounded px-2.5 py-1 text-xs font-medium transition-colors',
+          'min-h-11 min-w-11 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
           current === 'en'
-            ? 'bg-[var(--accent)] text-white'
+            ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
             : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
         )}
       >
