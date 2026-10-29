@@ -12,7 +12,7 @@ interface Props {
   stats: CampaignStats['entities']
 }
 
-const ORDER: EntityType[] = ['npc', 'location', 'monster', 'item', 'faction', 'quest']
+const ORDER: EntityType[] = ['npc', 'location', 'monster', 'item', 'faction', 'quest', 'note']
 
 export default function EntitiesBreakdown({ campaignId, stats }: Props) {
   const t = useT()
@@ -25,12 +25,12 @@ export default function EntitiesBreakdown({ campaignId, stats }: Props) {
   if (items.length === 0) return null
 
   return (
-    <Card padding="md" className="mb-8">
+    <Card padding="md" className="rounded-2xl">
       <h2 className="mb-4 text-sm font-semibold tracking-wider text-[var(--text-muted)] uppercase">
         {t('entities.breakdownTitle')}
       </h2>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 2xl:grid-cols-4">
         {items.map((item) => {
           const style = ENTITY_STYLES[item.type]
           return (
@@ -38,17 +38,19 @@ export default function EntitiesBreakdown({ campaignId, stats }: Props) {
               key={item.type}
               href={`/campaign/${campaignId}/entities?type=${item.type}`}
               className={cn(
-                'flex items-center gap-2 rounded-lg border px-3 py-2 transition-opacity hover:opacity-80',
+                'flex min-h-16 items-center gap-3 rounded-xl border px-3 py-3 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
                 style.bg,
                 style.border
               )}
             >
-              <span className="text-lg">{style.icon}</span>
+              <span aria-hidden="true" className="text-lg">
+                {style.icon}
+              </span>
               <div className="min-w-0">
                 <div className="text-base leading-tight font-bold text-[var(--text-primary)]">
                   {item.count}
                 </div>
-                <div className={cn('truncate text-[10px]', style.color)}>{t(style.labelKey)}</div>
+                <div className={cn('text-xs break-words', style.color)}>{t(style.labelKey)}</div>
               </div>
             </Link>
           )

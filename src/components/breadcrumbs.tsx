@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ChevronRight, Home, MoreHorizontal } from 'lucide-react'
 import { Fragment } from 'react'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 
 export interface BreadcrumbItem {
   label: string
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function Breadcrumbs({ items, collapseOnMobile = true, className }: Props) {
+  const t = useT()
   if (items.length === 0) return null
 
   const visible = (() => {
@@ -29,7 +31,7 @@ export function Breadcrumbs({ items, collapseOnMobile = true, className }: Props
 
   return (
     <nav
-      aria-label="Хлебные крошки"
+      aria-label={t('nav.breadcrumbs')}
       className={cn('flex min-w-0 items-center gap-1 text-sm', className)}
     >
       {visible.map((item, i) => {

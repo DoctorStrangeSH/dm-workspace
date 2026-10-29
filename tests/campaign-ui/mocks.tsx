@@ -21,12 +21,22 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  chapterSaves: [] as string[],
+  chapterSaveFails: false,
   failNext: false,
   delay: 0,
   incoming() {
     messages = [...messages, makeMessage(crypto.randomUUID(), 'Новое сообщение группы')]
     emit()
   },
+}
+export async function updateChapterContent(_chapter: string, _campaign: string, content: string) {
+  lab.chapterSaves.push(content)
+  if (lab.chapterSaveFails) return { error: 'Offline save failure' }
+  return { success: true }
+}
+export async function getChapterForExport() {
+  return { error: 'Offline export boundary', data: null }
 }
 Object.assign(window, { __uiLab: lab })
 export async function sendMessage(_campaign: string, content: string) {

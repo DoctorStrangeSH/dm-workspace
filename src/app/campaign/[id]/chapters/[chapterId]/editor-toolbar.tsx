@@ -36,7 +36,11 @@ export default function EditorToolbar({
   return (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] pb-3">
       {!hideViewModes && (
-        <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
+        <div
+          role="group"
+          aria-label={t('chapters.toolbar.viewMode')}
+          className="flex flex-wrap items-center gap-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-1"
+        >
           <ViewButton
             active={view === 'edit'}
             onClick={() => onViewChange('edit')}
@@ -59,47 +63,50 @@ export default function EditorToolbar({
       )}
 
       {!readOnly && view !== 'preview' && onInsert && (
-        <div className="flex items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
-          <Tooltip content={t('chapters.toolbar.boldHint')}>
-            <ToolButton
-              onClick={() => onInsert(`**${t('chapters.toolbar.boldSample')}**`, true)}
-              icon={<Bold size={14} />}
-            />
-          </Tooltip>
-          <Tooltip content={t('chapters.toolbar.italicHint')}>
-            <ToolButton
-              onClick={() => onInsert(`*${t('chapters.toolbar.italicSample')}*`, true)}
-              icon={<Italic size={14} />}
-            />
-          </Tooltip>
-          <Tooltip content={t('chapters.toolbar.listHint')}>
-            <ToolButton
-              onClick={() => onInsert(`\n- ${t('chapters.toolbar.listSample')}`)}
-              icon={<List size={14} />}
-            />
-          </Tooltip>
-          <Tooltip content={t('chapters.toolbar.linkHint')}>
-            <ToolButton
-              onClick={() => onInsert(`[${t('chapters.toolbar.linkTextSample')}](url)`)}
-              icon={<Link2 size={14} />}
-            />
-          </Tooltip>
-          <Tooltip content={t('chapters.toolbar.quoteHint')}>
-            <ToolButton
-              onClick={() => onInsert(`\n> ${t('chapters.toolbar.quoteSample')}\n`)}
-              icon={<Quote size={14} />}
-            />
-          </Tooltip>
-          <Tooltip content={t('chapters.toolbar.codeHint')}>
-            <ToolButton
-              onClick={() => onInsert(`\`${t('chapters.toolbar.codeSample')}\``, true)}
-              icon={<Code2 size={14} />}
-            />
-          </Tooltip>
+        <div
+          role="group"
+          aria-label={t('chapters.toolbar.formatting')}
+          className="flex max-w-full flex-wrap items-center gap-1 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-1"
+        >
+          {[
+            {
+              icon: Bold,
+              key: 'bold',
+              snippet: `**${t('chapters.toolbar.boldSample')}**`,
+              wrap: true,
+            },
+            {
+              icon: Italic,
+              key: 'italic',
+              snippet: `*${t('chapters.toolbar.italicSample')}*`,
+              wrap: true,
+            },
+            { icon: List, key: 'list', snippet: `\n- ${t('chapters.toolbar.listSample')}` },
+            { icon: Link2, key: 'link', snippet: `[${t('chapters.toolbar.linkTextSample')}](url)` },
+            { icon: Quote, key: 'quote', snippet: `\n> ${t('chapters.toolbar.quoteSample')}\n` },
+            {
+              icon: Code2,
+              key: 'code',
+              snippet: `\`${t('chapters.toolbar.codeSample')}\``,
+              wrap: true,
+            },
+          ].map(({ icon: Icon, key, snippet, wrap }) => (
+            <Tooltip key={key} content={t(`chapters.toolbar.${key}Hint`)}>
+              <IconButton
+                variant="ghost"
+                size="md"
+                className="h-11 w-11 rounded-lg"
+                label={t(`chapters.toolbar.${key}Hint`)}
+                onClick={() => onInsert(snippet, wrap)}
+              >
+                <Icon size={17} aria-hidden="true" />
+              </IconButton>
+            </Tooltip>
+          ))}
         </div>
       )}
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
         {exportButton}
         {!readOnly && <SaveStatus status={status} lastSaved={lastSaved} error={error} />}
       </div>
@@ -122,23 +129,18 @@ function ViewButton({
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors',
+        'flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
         active
-          ? 'bg-[var(--accent)] text-white'
+          ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
           : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
       )}
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
       title={label}
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
     </button>
-  )
-}
-
-function ToolButton({ onClick, icon }: { onClick: () => void; icon: React.ReactNode }) {
-  return (
-    <IconButton variant="ghost" size="sm" label="" onClick={onClick}>
-      {icon}
-    </IconButton>
   )
 }
