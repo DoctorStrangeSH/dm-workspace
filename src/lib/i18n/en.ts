@@ -1,6 +1,27 @@
 import type { Dictionary } from './types'
 
 export const en: Dictionary = {
+  'inventory.library.title': 'Hero’s equipment',
+  'inventory.library.description':
+    'Items, attunement and carrying weight in one place. Browse the catalog or add your own item.',
+  'inventory.library.catalog': 'Item catalog',
+  'spells.library.title': 'Spellbook',
+  'spells.library.description':
+    'Find spells, check preparation and track remaining slots. Browse the catalog to expand your spellbook.',
+  'spells.library.catalog': 'Spell catalog',
+  'spells.library.preparedCount': 'Prepared',
+  'spells.library.summary': 'Spellbook summary',
+  'spells.library.prepared': 'Prepared',
+  'spells.library.unprepared': 'Unprepared',
+  'spells.library.search': 'Search spellbook',
+  'spells.library.searchHint': 'Name or description…',
+  'spells.library.level': 'Spell level',
+  'spells.library.allLevels': 'All levels',
+  'spells.library.preparation': 'Preparation',
+  'spells.library.filters': 'Spellbook filters',
+  'spells.library.found': 'Found: {found} / {total}',
+  'spells.library.clear': 'Clear filters',
+  'spells.library.noResults': 'No spells match. Change your search or clear the filters.',
   // ─── Common ───
   'common.save': 'Save',
   'common.saving': 'Saving…',
