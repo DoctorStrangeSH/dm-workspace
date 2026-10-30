@@ -47,6 +47,7 @@ jobs:
         run: |
           node --test tests/magic-item-catalog.test.mjs
           node --import tsx --test tests/item-catalog-filters.test.ts
+          node --import tsx --test tests/spell-bestiary-search.test.ts
 
       - name: Install browser for offline campaign UI tests
         run: npx playwright install --with-deps chromium

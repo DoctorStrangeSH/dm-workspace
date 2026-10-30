@@ -24,7 +24,9 @@ import { createEmptyCharacterData, type Character } from '../../src/lib/types'
 import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
-import { catalogPage } from './mocks'
+import { catalogPage, referencePage } from './mocks'
+import SpellsClient from '../../src/app/campaign/[id]/spells/spells-client'
+import BestiaryClient from '../../src/app/campaign/[id]/bestiary/bestiary-client'
 import ItemsClient from '../../src/app/campaign/[id]/items/items-client'
 
 const query = new URLSearchParams(location.search)
@@ -195,7 +197,29 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'items' ? (
+            {screen === 'spells' ? (
+              <SpellsClient
+                campaignId="test"
+                initialPage={query.has('initialError') ? { ok: false } : referencePage('spells')}
+                characters={[]}
+                canEdit={false}
+                lang={lang}
+              />
+            ) : screen === 'bestiary' ? (
+              <BestiaryClient
+                campaignId="test"
+                initialPage={query.has('initialError') ? { ok: false } : referencePage('bestiary')}
+                availableCRs={[
+                  '0',
+                  '1/8',
+                  '1/4',
+                  '1/2',
+                  ...Array.from({ length: 30 }, (_, i) => String(i + 1)),
+                ]}
+                canEdit={false}
+                lang={lang}
+              />
+            ) : screen === 'items' ? (
               <ItemsClient
                 campaignId="test"
                 initialPage={query.has('initialError') ? { ok: false } : catalogPage()}

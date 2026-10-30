@@ -6,11 +6,13 @@ import { cn } from '@/lib/utils'
 import { useT } from '@/lib/i18n'
 
 interface Props {
+  query: string
+  selectedCRs: string[]
+  selectedTypes: string[]
   onSearch: (query: string) => void
   onFilterCR: (crs: string[]) => void
   onFilterType: (types: string[]) => void
   availableCRs: string[]
-  isPending?: boolean
 }
 
 const MONSTER_TYPES = [
@@ -31,23 +33,21 @@ const MONSTER_TYPES = [
 ]
 
 export default function BestiarySearch({
+  query,
+  selectedCRs,
+  selectedTypes,
   onSearch,
   onFilterCR,
   onFilterType,
   availableCRs,
-  isPending,
 }: Props) {
   const t = useT()
-  const [query, setQuery] = useState('')
-  const [selectedCRs, setSelectedCRs] = useState<string[]>([])
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
 
   const toggleCR = (cr: string) => {
     const next = selectedCRs.includes(cr)
       ? selectedCRs.filter((c) => c !== cr)
       : [...selectedCRs, cr]
-    setSelectedCRs(next)
     onFilterCR(next)
   }
 
@@ -55,7 +55,6 @@ export default function BestiarySearch({
     const next = selectedTypes.includes(type)
       ? selectedTypes.filter((tp) => tp !== type)
       : [...selectedTypes, type]
-    setSelectedTypes(next)
     onFilterType(next)
   }
 
@@ -75,20 +74,17 @@ export default function BestiarySearch({
             aria-label={t('bestiary.searchPlaceholder')}
             value={query}
             onChange={(e) => {
-              setQuery(e.target.value)
               onSearch(e.target.value)
             }}
             placeholder={t('bestiary.searchPlaceholder')}
-            disabled={isPending}
-            className="w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] py-3 pr-9 pl-10 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="min-h-12 w-full rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] py-3 pr-12 pl-10 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-subtle)] focus:border-[var(--border-focus)] focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button
               onClick={() => {
-                setQuery('')
                 onSearch('')
               }}
-              className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 transition hover:bg-[var(--bg-hover)]"
+              className="absolute top-1/2 right-0 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded hover:bg-[var(--bg-hover)]"
               aria-label={t('common.clear')}
             >
               <X size={14} className="text-[var(--text-subtle)]" />
@@ -100,9 +96,10 @@ export default function BestiarySearch({
           type="button"
           aria-expanded={showFilters}
           aria-label={t('bestiary.filters')}
+          aria-controls="monster-catalog-filters"
           onClick={() => setShowFilters(!showFilters)}
           className={cn(
-            'flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2.5 transition',
+            'flex min-h-12 min-w-12 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 transition',
             showFilters || filtersCount > 0
               ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
               : 'border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
@@ -120,18 +117,22 @@ export default function BestiarySearch({
 
       {/* Фильтры */}
       {showFilters && (
-        <div className="mt-3 space-y-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] p-3 sm:p-4">
+        <div
+          id="monster-catalog-filters"
+          className="mt-3 space-y-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-primary)] p-3 sm:p-4"
+        >
           <div>
             <div className="mb-2 text-xs tracking-wider text-[var(--text-subtle)] uppercase">
               {t('bestiary.filter.cr')}
             </div>
             <div className="flex flex-wrap gap-1">
-              {availableCRs.slice(0, 30).map((cr) => (
+              {availableCRs.map((cr) => (
                 <button
                   key={cr}
+                  aria-pressed={selectedCRs.includes(cr)}
                   onClick={() => toggleCR(cr)}
                   className={cn(
-                    'rounded border px-2 py-1 text-xs transition',
+                    'min-h-11 min-w-11 rounded border px-3 py-2 text-xs transition',
                     selectedCRs.includes(cr)
                       ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
                       : 'border-[var(--border-default)] bg-[var(--bg-app)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
@@ -151,9 +152,10 @@ export default function BestiarySearch({
               {MONSTER_TYPES.map((type) => (
                 <button
                   key={type}
+                  aria-pressed={selectedTypes.includes(type)}
                   onClick={() => toggleType(type)}
                   className={cn(
-                    'rounded border px-2 py-1 text-xs transition',
+                    'min-h-11 min-w-11 rounded border px-3 py-2 text-xs transition',
                     selectedTypes.includes(type)
                       ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
                       : 'border-[var(--border-default)] bg-[var(--bg-app)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
@@ -168,12 +170,10 @@ export default function BestiarySearch({
           {filtersCount > 0 && (
             <button
               onClick={() => {
-                setSelectedCRs([])
-                setSelectedTypes([])
                 onFilterCR([])
                 onFilterType([])
               }}
-              className="text-xs text-[var(--text-subtle)] transition hover:text-[var(--text-primary)]"
+              className="min-h-11 text-sm text-[var(--text-muted)] transition hover:text-[var(--text-primary)]"
             >
               {t('bestiary.resetFilters')}
             </button>

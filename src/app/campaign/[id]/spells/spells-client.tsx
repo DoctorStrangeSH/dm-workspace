@@ -1,92 +1,75 @@
 'use client'
-
-import { useState, useEffect, useTransition } from 'react'
+import { useState } from 'react'
 import SpellsSearch from './spells-search'
 import SrdSpellCard from './srd-spell-card'
 import SrdSpellDetailDialog from './srd-spell-detail-dialog'
-import { EmptyState } from '@/components/ui'
-import { searchSrdSpellsAction, type SrdSpell } from '@/lib/actions/spells-search'
+import { searchSrdSpellsPageAction, type SrdSpell } from '@/lib/actions/spells-search'
+import { useCatalogSearch } from '@/lib/hooks/use-catalog-search'
+import { CatalogResults } from '@/components/catalog-results'
+import type { CatalogPage } from '@/lib/srd/catalog-page'
 import { useT } from '@/lib/i18n'
 import type { SrdLang } from '@/lib/types'
-
 interface Props {
   campaignId: string
-  initialSpells: SrdSpell[]
+  initialPage: CatalogPage<SrdSpell>
   characters: Array<{ id: string; name: string }>
   canEdit: boolean
   lang: SrdLang
 }
-
 export default function SpellsClient({
   campaignId,
-  initialSpells,
+  initialPage,
   characters,
   canEdit,
   lang,
 }: Props) {
   const t = useT()
-  const [spells, setSpells] = useState(initialSpells)
-  const [query, setQuery] = useState('')
-  const [levels, setLevels] = useState<number[]>([])
-  const [schools, setSchools] = useState<string[]>([])
-  const [isPending, startTransition] = useTransition()
-  const [selectedSpell, setSelectedSpell] = useState<SrdSpell | null>(null)
-
-  const hasFilters = query || levels.length > 0 || schools.length > 0
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTransition(async () => {
-        const results = await searchSrdSpellsAction({
-          query,
-          level: levels,
-          school: schools,
-          limit: 100,
-        })
-        setSpells(results)
-      })
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [query, levels, schools])
-
+  const catalog = useCatalogSearch<{ query: string; level: number[]; school: string[] }, SrdSpell>(
+    { query: '', level: [], school: [] },
+    initialPage,
+    searchSrdSpellsPageAction
+  )
+  const [selected, setSelected] = useState<SrdSpell | null>(null)
+  const hasFilters = Object.values(catalog.filters).some((value) =>
+    typeof value === 'string' ? value.trim().length > 0 : value.length > 0
+  )
   return (
     <>
       <SpellsSearch
-        onSearch={setQuery}
-        onFilterLevel={setLevels}
-        onFilterSchool={setSchools}
-        isPending={isPending}
+        query={catalog.filters.query}
+        levels={catalog.filters.level}
+        schools={catalog.filters.school}
+        onSearch={(query) => catalog.updateFilters({ query }, 300)}
+        onFilterLevel={(level) => catalog.updateFilters({ level })}
+        onFilterSchool={(school) => catalog.updateFilters({ school })}
       />
-
-      {spells.length === 0 ? (
-        <EmptyState
-          icon="✨"
-          title={hasFilters ? t('spells.empty.titleFiltered') : t('spells.empty.title')}
-          description={t('spells.empty.description')}
-          size="md"
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {spells.map((spell) => (
-            <SrdSpellCard
-              key={spell.key}
-              spell={spell}
-              canAdd={canEdit}
-              lang={lang}
-              onAdd={() => setSelectedSpell(spell)}
-              onView={() => setSelectedSpell(spell)}
-            />
-          ))}
-        </div>
-      )}
-
-      {selectedSpell && (
+      <CatalogResults<SrdSpell>
+        {...catalog}
+        icon="✨"
+        emptyTitle={t(hasFilters ? 'spells.empty.titleFiltered' : 'spells.empty.title')}
+        emptyDescription={t('spells.empty.description')}
+      >
+        {(items) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((spell) => (
+              <SrdSpellCard
+                key={spell.key}
+                spell={spell}
+                canAdd={canEdit}
+                lang={lang}
+                onAdd={() => setSelected(spell)}
+                onView={() => setSelected(spell)}
+              />
+            ))}
+          </div>
+        )}
+      </CatalogResults>
+      {selected && (
         <SrdSpellDetailDialog
-          spell={selectedSpell}
+          spell={selected}
           campaignId={campaignId}
           characters={characters}
-          onClose={() => setSelectedSpell(null)}
+          onClose={() => setSelected(null)}
         />
       )}
     </>

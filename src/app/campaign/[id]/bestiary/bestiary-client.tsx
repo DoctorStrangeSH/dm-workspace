@@ -1,98 +1,76 @@
 'use client'
-
-import { useState, useTransition, useEffect } from 'react'
+import { useState } from 'react'
 import BestiarySearch from './bestiary-search'
 import MonsterCard from './monster-card'
 import MonsterDetailDialog from './monster-detail-dialog'
-import { EmptyState } from '@/components/ui'
-import { searchSrdMonstersAction, type SrdMonster } from '@/lib/actions/bestiary-search'
+import { searchSrdMonstersPageAction, type SrdMonster } from '@/lib/actions/bestiary-search'
+import { useCatalogSearch } from '@/lib/hooks/use-catalog-search'
+import { CatalogResults } from '@/components/catalog-results'
+import type { CatalogPage } from '@/lib/srd/catalog-page'
 import { useT } from '@/lib/i18n'
 import type { SrdLang } from '@/lib/types'
-
 interface Props {
   campaignId: string
-  initialMonsters: SrdMonster[]
+  initialPage: CatalogPage<SrdMonster>
   availableCRs: string[]
   canEdit: boolean
   lang: SrdLang
 }
-
 export default function BestiaryClient({
   campaignId,
-  initialMonsters,
+  initialPage,
   availableCRs,
   canEdit,
   lang,
 }: Props) {
   const t = useT()
-  const [monsters, setMonsters] = useState(initialMonsters)
-  const [query, setQuery] = useState('')
-  const [selectedCRs, setSelectedCRs] = useState<string[]>([])
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([])
-  const [isPending, startTransition] = useTransition()
-  const [selectedMonster, setSelectedMonster] = useState<SrdMonster | null>(null)
-
-  const hasFilters = query || selectedCRs.length > 0 || selectedTypes.length > 0
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      startTransition(async () => {
-        const results = await searchSrdMonstersAction({
-          query,
-          cr: selectedCRs,
-          type: selectedTypes,
-          limit: 100,
-        })
-        setMonsters(results)
-      })
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [query, selectedCRs, selectedTypes])
-
+  const catalog = useCatalogSearch<{ query: string; cr: string[]; type: string[] }, SrdMonster>(
+    { query: '', cr: [], type: [] },
+    initialPage,
+    searchSrdMonstersPageAction
+  )
+  const [selected, setSelected] = useState<SrdMonster | null>(null)
+  const hasFilters = Object.values(catalog.filters).some((value) =>
+    typeof value === 'string' ? value.trim().length > 0 : value.length > 0
+  )
   return (
     <>
       <BestiarySearch
-        onSearch={setQuery}
-        onFilterCR={setSelectedCRs}
-        onFilterType={setSelectedTypes}
+        query={catalog.filters.query}
+        selectedCRs={catalog.filters.cr}
+        selectedTypes={catalog.filters.type}
         availableCRs={availableCRs}
-        isPending={isPending}
+        onSearch={(query) => catalog.updateFilters({ query }, 300)}
+        onFilterCR={(cr) => catalog.updateFilters({ cr })}
+        onFilterType={(type) => catalog.updateFilters({ type })}
       />
-
-      <div className="mb-4 flex items-center justify-between gap-2 px-1 text-xs text-[var(--text-muted)]" role="status" aria-live="polite">
-        <span>{lang === 'en' ? 'Creatures found' : 'Найдено существ'}: <strong className="font-semibold tabular-nums text-[var(--text-primary)]">{monsters.length}</strong></span>
-        {isPending && <span>{lang === 'en' ? 'Searching…' : 'Поиск…'}</span>}
-      </div>
-
-      {monsters.length === 0 ? (
-        <EmptyState
-          icon="🐉"
-          title={hasFilters ? t('bestiary.empty.titleFiltered') : t('bestiary.empty.title')}
-          description={t('bestiary.empty.description')}
-          size="md"
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {monsters.map((monster) => (
-            <MonsterCard
-              key={monster.key}
-              monster={monster}
-              canEdit={canEdit}
-              lang={lang}
-              onAdd={() => setSelectedMonster(monster)}
-              onView={() => setSelectedMonster(monster)}
-            />
-          ))}
-        </div>
-      )}
-
-      {selectedMonster && (
+      <CatalogResults<SrdMonster>
+        {...catalog}
+        icon="🐉"
+        emptyTitle={t(hasFilters ? 'bestiary.empty.titleFiltered' : 'bestiary.empty.title')}
+        emptyDescription={t('bestiary.empty.description')}
+      >
+        {(items) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {items.map((monster) => (
+              <MonsterCard
+                key={monster.key}
+                monster={monster}
+                canEdit={canEdit}
+                lang={lang}
+                onAdd={() => setSelected(monster)}
+                onView={() => setSelected(monster)}
+              />
+            ))}
+          </div>
+        )}
+      </CatalogResults>
+      {selected && (
         <MonsterDetailDialog
-          monster={selectedMonster}
+          monster={selected}
           campaignId={campaignId}
           canEdit={canEdit}
-          onClose={() => setSelectedMonster(null)}
+          onClose={() => setSelected(null)}
         />
       )}
     </>

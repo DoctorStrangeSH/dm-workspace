@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -1178,6 +1178,208 @@ try {
       await expect(page.getByRole('heading', { name: 'Item 001', exact: true })).toBeVisible()
     }
   )
+
+  for (const kind of ['spells', 'bestiary']) {
+    await scenario(
+      kind + ' ignores late responses and failures without blocking input',
+      { url: '/?screen=' + kind },
+      async (page) => {
+        const search = page.getByRole('searchbox')
+        expect(await page.evaluate(() => window.__uiLab.referenceRequests)).toEqual([])
+        await page.evaluate(() => {
+          window.__uiLab.catalogMode = 'deferred'
+        })
+        await search.fill('amber')
+        await expect.poll(() => page.evaluate(() => window.__uiLab.referencePending.length)).toBe(1)
+        await expect(search).toBeEnabled()
+        await search.fill('azure')
+        await expect.poll(() => page.evaluate(() => window.__uiLab.referencePending.length)).toBe(2)
+        await page.evaluate(() => {
+          const p = window.__uiLab.referencePending[1]
+          p.resolve(window.__referencePage(p.kind, p.filters, p.offset))
+        })
+        await expect(page.getByRole('heading', { name: 'azure 001', exact: true })).toBeVisible()
+        await page.evaluate(() => {
+          const p = window.__uiLab.referencePending[0]
+          p.resolve(window.__referencePage(p.kind, p.filters, p.offset))
+        })
+        await expect(page.getByRole('heading', { name: 'amber 001', exact: true })).toHaveCount(0)
+        await search.fill('slow')
+        await expect.poll(() => page.evaluate(() => window.__uiLab.referencePending.length)).toBe(3)
+        await search.fill('fresh')
+        await expect.poll(() => page.evaluate(() => window.__uiLab.referencePending.length)).toBe(4)
+        await page.evaluate(() => {
+          const p = window.__uiLab.referencePending[3]
+          p.resolve(window.__referencePage(p.kind, p.filters, p.offset))
+        })
+        await expect(page.getByRole('heading', { name: 'fresh 001', exact: true })).toBeVisible()
+        await page.evaluate(() =>
+          window.__uiLab.referencePending[2].reject(new Error('late failure'))
+        )
+        await expect(page.getByRole('alert')).toHaveCount(0)
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      }
+    )
+
+    await scenario(
+      kind + ' pages, empty state and retry preserve criteria',
+      { url: '/?screen=' + kind },
+      async (page) => {
+        const prefix = kind === 'spells' ? 'Spell' : 'Monster'
+        await page.getByRole('button', { name: 'Далее', exact: true }).click()
+        await expect(
+          page.getByRole('heading', { name: prefix + ' 025', exact: true })
+        ).toBeVisible()
+        await expect(page.getByRole('status')).toContainText('25–48')
+        await page.getByRole('button', { name: 'Далее', exact: true }).click()
+        await expect(
+          page.getByRole('heading', { name: prefix + ' 049', exact: true })
+        ).toBeVisible()
+        await expect(page.getByRole('button', { name: 'Далее', exact: true })).toBeDisabled()
+        await page.getByRole('button', { name: 'Назад', exact: true }).click()
+        await expect(
+          page.getByRole('heading', { name: prefix + ' 025', exact: true })
+        ).toBeVisible()
+        await page.evaluate(() => {
+          window.__uiLab.catalogMode = 'error'
+        })
+        await page.getByRole('searchbox').fill('moon')
+        await expect(page.getByRole('alert')).toContainText('Не удалось загрузить')
+        await expect(page.getByRole('searchbox')).toHaveValue('moon')
+        await page.evaluate(() => {
+          window.__uiLab.catalogMode = 'normal'
+        })
+        await page.getByRole('button', { name: 'Повторить', exact: true }).click()
+        await expect(page.getByRole('heading', { name: 'moon 001', exact: true })).toBeVisible()
+        expect(await page.evaluate(() => window.__uiLab.referenceRequests.at(-1).offset)).toBe(0)
+        await page.getByRole('searchbox').fill('none')
+        await expect(
+          page.getByRole('heading', { name: 'Ничего не найдено', exact: true })
+        ).toBeVisible()
+        await page.evaluate(() => {
+          window.__uiLab.catalogMode = 'throw'
+        })
+        await page.getByRole('searchbox').fill('again')
+        await expect(page.getByRole('alert')).toBeVisible()
+        await page.evaluate(() => {
+          window.__uiLab.catalogMode = 'normal'
+        })
+        await page.getByRole('button', { name: 'Повторить', exact: true }).click()
+        await expect(page.getByRole('heading', { name: 'again 001', exact: true })).toBeVisible()
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      }
+    )
+
+    for (const lang of ['ru', 'en']) {
+      await scenario(
+        kind + ' mobile filters, reset and details in ' + lang,
+        { mobile: true, url: '/?screen=' + kind + '&lang=' + lang },
+        async (page) => {
+          const next = page.getByRole('button', {
+            name: lang === 'ru' ? 'Далее' : 'Next',
+            exact: true,
+          })
+          await next.click()
+          const prefix = kind === 'spells' ? 'Spell' : 'Monster'
+          await expect(
+            page.getByRole('heading', { name: prefix + ' 025', exact: true })
+          ).toBeVisible()
+          const toggle = page.getByRole('button', {
+            name: lang === 'ru' ? 'Фильтры' : 'Filters',
+            exact: true,
+          })
+          await toggle.click()
+          const first = page.getByRole('button', {
+            name: kind === 'spells' ? (lang === 'ru' ? 'Заговор' : 'Cantrip') : '1/8',
+            exact: true,
+          })
+          await first.click()
+          await expect(first).toHaveAttribute('aria-pressed', 'true')
+          await expect(page.getByRole('status')).toContainText('1–10')
+          const second = page.getByRole('button', {
+            name:
+              kind === 'spells'
+                ? lang === 'ru'
+                  ? 'Воплощение'
+                  : 'Evocation'
+                : lang === 'ru'
+                  ? 'Дракон'
+                  : 'Dragon',
+            exact: true,
+          })
+          await second.click()
+          await expect(second).toHaveAttribute('aria-pressed', 'true')
+          await page.getByRole('searchbox').fill('moon')
+          await expect(page.getByRole('heading', { name: 'moon 001', exact: true })).toBeVisible()
+          const request = await page.evaluate(() => window.__uiLab.referenceRequests.at(-1))
+          expect(request.offset).toBe(0)
+          expect(kind === 'spells' ? request.filters.level : request.filters.cr).toEqual(
+            kind === 'spells' ? [0] : ['1/8']
+          )
+          expect(kind === 'spells' ? request.filters.school : request.filters.type).toEqual(
+            kind === 'spells' ? ['evocation'] : ['dragon']
+          )
+          expect((await first.boundingBox()).height).toBeGreaterThanOrEqual(44)
+          if (kind === 'bestiary')
+            await expect(page.getByRole('button', { name: '30', exact: true })).toBeVisible()
+          await page
+            .getByRole('button', {
+              name:
+                kind === 'bestiary'
+                  ? lang === 'ru'
+                    ? 'Сбросить фильтры'
+                    : 'Reset filters'
+                  : lang === 'ru'
+                    ? 'Сбросить'
+                    : 'Reset',
+              exact: true,
+            })
+            .click()
+          await expect(first).toHaveAttribute('aria-pressed', 'false')
+          await expect(second).toHaveAttribute('aria-pressed', 'false')
+          await expect(page.getByRole('searchbox')).toHaveValue('moon')
+          await expect(page.getByRole('heading', { name: 'moon 001', exact: true })).toBeVisible()
+          const resetRequest = await page.evaluate(() => window.__uiLab.referenceRequests.at(-1))
+          expect(kind === 'spells' ? resetRequest.filters.level : resetRequest.filters.cr).toEqual(
+            []
+          )
+          expect(
+            kind === 'spells' ? resetRequest.filters.school : resetRequest.filters.type
+          ).toEqual([])
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await page.screenshot({
+            path: path.join(output, 'mobile-' + kind + '-' + lang + '.png'),
+            fullPage: false,
+          })
+          await toggle.click()
+          await page
+            .getByRole('button', { name: lang === 'ru' ? 'Подробнее' : 'Details', exact: true })
+            .first()
+            .click()
+          await expect(page.getByRole('dialog')).toBeVisible()
+          expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        }
+      )
+    }
+
+    await scenario(
+      kind + ' SSR failure waits for explicit retry',
+      { url: '/?screen=' + kind + '&initialError' },
+      async (page) => {
+        await expect(page.getByRole('alert')).toBeVisible()
+        expect(await page.evaluate(() => window.__uiLab.referenceRequests)).toEqual([])
+        await page.getByRole('button', { name: 'Повторить', exact: true }).click()
+        await expect(
+          page.getByRole('heading', {
+            name: (kind === 'spells' ? 'Spell' : 'Monster') + ' 001',
+            exact: true,
+          })
+        ).toBeVisible()
+      }
+    )
+  }
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))

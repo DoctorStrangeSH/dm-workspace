@@ -3,6 +3,7 @@
 import { unstable_cache } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createSrdClient } from '@/lib/supabase/srd'
+import { CATALOG_PAGE_SIZE, validCatalogOffset, type CatalogPage } from '@/lib/srd/catalog-page'
 
 export interface MonsterFilters {
   query?: string
@@ -25,7 +26,11 @@ export interface SrdMonster {
  */
 function sanitizeSearchQuery(query: unknown): string {
   if (typeof query !== 'string') return ''
-  return query.trim().slice(0, 100).replace(/[,%().*\\_]/g, ' ').replace(/\s+/g, ' ')
+  return query
+    .trim()
+    .slice(0, 100)
+    .replace(/[,%().*\\_]/g, ' ')
+    .replace(/\s+/g, ' ')
 }
 
 function normalizeLimit(limit: unknown): number {
@@ -36,7 +41,10 @@ function normalizeLimit(limit: unknown): number {
 function sanitizeStringFilters(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value
-    .filter((entry): entry is string => typeof entry === 'string' && entry.length > 0 && entry.length <= 80)
+    .filter(
+      (entry): entry is string =>
+        typeof entry === 'string' && entry.length > 0 && entry.length <= 80
+    )
     .slice(0, 30)
 }
 
@@ -133,3 +141,42 @@ export const getAvailableCRs = unstable_cache(
   ['srd-available-crs'],
   { revalidate: 3600, tags: ['srd'] }
 )
+
+/** Paged search always uses the request client; cached legacy arrays cannot hide failures. */
+export async function searchSrdMonstersPageAction(
+  filters: MonsterFilters = {},
+  offset = 0
+): Promise<CatalogPage<SrdMonster>> {
+  if (
+    !validCatalogOffset(offset) ||
+    !filters ||
+    typeof filters !== 'object' ||
+    Array.isArray(filters)
+  )
+    return { ok: false }
+  try {
+    const supabase = await createClient()
+    const query = sanitizeSearchQuery(filters.query)
+    const cr = sanitizeStringFilters(filters.cr)
+    const types = sanitizeStringFilters(filters.type)
+    const sizes = sanitizeStringFilters(filters.size)
+    let q = supabase.from('srd_monsters').select('*')
+    if (query) q = q.or(`name.ilike.%${query}%,name_ru.ilike.%${query}%`)
+    if (cr.length) q = q.in('data->>cr', cr)
+    if (types.length) q = q.in('data->>type', types)
+    if (sizes.length) q = q.in('data->>size', sizes)
+    const { data, error } = await q
+      .order('name')
+      .order('key')
+      .range(offset, offset + CATALOG_PAGE_SIZE)
+    if (error) return { ok: false }
+    const rows = data ?? []
+    return {
+      ok: true,
+      items: rows.slice(0, CATALOG_PAGE_SIZE),
+      hasNext: rows.length > CATALOG_PAGE_SIZE,
+    }
+  } catch {
+    return { ok: false }
+  }
+}
