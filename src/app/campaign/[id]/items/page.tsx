@@ -3,7 +3,7 @@ export const instant = false
 import { connection } from 'next/server'
 import { notFound, redirect } from 'next/navigation'
 import { getCampaignAccess } from '@/lib/queries/access'
-import { searchSrdItemsAction, getAvailableItemFilters } from '@/lib/actions/items-search'
+import { searchSrdItemsPageAction, getAvailableItemFilters } from '@/lib/actions/items-search'
 import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import ItemsClient from './items-client'
@@ -29,7 +29,7 @@ export default async function ItemsPage({ params }: { params: Promise<{ id: stri
     .eq('is_active', true)
 
   const [items, filters] = await Promise.all([
-    searchSrdItemsAction({ limit: 100 }),
+    searchSrdItemsPageAction(),
     getAvailableItemFilters(),
   ])
 
@@ -51,7 +51,7 @@ export default async function ItemsPage({ params }: { params: Promise<{ id: stri
 
       <ItemsClient
         campaignId={campaignId}
-        initialItems={items}
+        initialPage={items}
         characters={characters ?? []}
         availableTypes={filters.types}
         availableRarities={filters.rarities}

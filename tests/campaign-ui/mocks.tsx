@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { AnchorHTMLAttributes } from 'react'
 import type { CharacterData, MessageWithAuthor } from '../../src/lib/types'
+import type { ItemFilters, SrdItemsPageResult } from '../../src/lib/actions/items-search'
 
 // In-memory transport only. No Supabase, sessions, credentials or remote fetches.
 const listeners = new Set<() => void>()
@@ -31,10 +32,56 @@ export const lab = {
   chapterSaveFails: false,
   failNext: false,
   delay: 0,
+  catalogMode: 'normal' as 'normal' | 'deferred' | 'error' | 'throw',
+  catalogRequests: [] as { filters: ItemFilters; offset: number }[],
+  catalogPending: [] as {
+    resolve: (result: SrdItemsPageResult) => void
+    reject: (error: Error) => void
+    filters: ItemFilters
+    offset: number
+  }[],
   incoming() {
     messages = [...messages, makeMessage(crypto.randomUUID(), 'Новое сообщение группы')]
     emit()
   },
+}
+export function catalogPage(filters: ItemFilters = {}, offset = 0): SrdItemsPageResult {
+  const count = filters.query === 'none' ? 0 : filters.query ? 3 : filters.rarity?.length ? 10 : 55
+  const items = Array.from({ length: count }, (_, i) => ({
+    key: `srd-2024_offline-${i}`,
+    name: `${filters.query || 'Item'} ${String(i + 1).padStart(3, '0')}`,
+    name_ru: null,
+    data: {
+      item_type: 'Wand',
+      rarity: filters.rarity?.[0] ?? 'rare',
+      description: 'Synthetic catalog description',
+      weight: '1',
+      attunement: true,
+    },
+  }))
+  return { ok: true, items: items.slice(offset, offset + 24), hasNext: count > offset + 24 }
+}
+export async function searchSrdItemsPageAction(
+  filters: ItemFilters = {},
+  offset = 0
+): Promise<SrdItemsPageResult> {
+  lab.catalogRequests.push({ filters: structuredClone(filters), offset })
+  if (lab.catalogMode === 'error') return { ok: false }
+  if (lab.catalogMode === 'throw') throw new Error('Offline catalog transport failure')
+  if (lab.catalogMode === 'deferred')
+    return new Promise((resolve, reject) =>
+      lab.catalogPending.push({ resolve, reject, filters, offset })
+    )
+  return catalogPage(filters, offset)
+}
+Object.assign(window, { __catalogPage: catalogPage })
+export async function addSrdItemToCharacter(...args: unknown[]) {
+  lab.characterActions.push({ name: 'addSrdItemToCharacter', args })
+  return { error: 'Offline catalog write boundary' }
+}
+export async function addSrdItemToCampaign(...args: unknown[]) {
+  lab.characterActions.push({ name: 'addSrdItemToCampaign', args })
+  return { error: 'Offline catalog write boundary' }
 }
 export async function createCharacter(campaignId: string, name: string, data: CharacterData) {
   lab.createdCharacters.push({ campaignId, name, data: structuredClone(data) })
