@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import { addSrdSpellToCharacter } from '@/lib/actions/add-spell-to-character'
 import { parseSpellForDisplay } from '@/lib/srd/parse-spell'
+import { spellSchoolLabel } from '@/lib/srd/spell-display'
+import { characterClassName } from '@/lib/dnd/character-display-names'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
@@ -26,12 +28,11 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
   const [selectedChar, setSelectedChar] = useState<string | null>(characters[0]?.id ?? null)
 
   const parsed = parseSpellForDisplay(spell.data)
-  const schoolKey = parsed.school.toLowerCase()
 
   const levelLabel =
     parsed.level === 0 ? t('spells.cantrip') : t('spells.levelFull', { level: parsed.level })
 
-  const descriptionParts = [levelLabel, t(`school.${schoolKey}`)]
+  const descriptionParts = [levelLabel, spellSchoolLabel(parsed.school, t)]
   if (parsed.ritual) descriptionParts.push(t('spells.ritual'))
   if (parsed.concentration) descriptionParts.push(t('spells.concentration'))
 
@@ -60,14 +61,16 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
       title={srdName(spell, lang)}
       description={descriptionParts.join(', ')}
       size="lg"
+      closeLabel={t('common.close')}
       footer={
         characters.length > 0 ? (
-          <div className="flex w-full items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
             <Select
               value={selectedChar ?? ''}
+              aria-label={t('spells.selectCharacter')}
               onChange={(e) => setSelectedChar(e.target.value)}
               options={characters.map((c) => ({ value: c.id, label: c.name }))}
-              className="flex-1"
+              className="min-h-11"
             />
             <Button
               variant="primary"
@@ -82,7 +85,7 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
         ) : undefined
       }
     >
-      <div className="space-y-3 text-sm">
+      <div className="space-y-3 text-sm [overflow-wrap:anywhere]">
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-[var(--bg-app)] p-3">
           <div>
             <span className="text-[var(--text-muted)]">{t('spells.castingTime')}:</span>{' '}
@@ -122,7 +125,11 @@ export default function SrdSpellDetailDialog({ spell, campaignId, characters, on
             <h3 className="mb-1 font-semibold text-[var(--text-secondary)]">
               {t('spells.classes')}
             </h3>
-            <div className="text-[var(--text-muted)]">{parsed.classes.join(', ')}</div>
+            <div className="text-[var(--text-muted)]">
+              {parsed.classes
+                .map((name) => characterClassName(name.trim().toLowerCase(), lang, name))
+                .join(', ')}
+            </div>
           </div>
         )}
       </div>
