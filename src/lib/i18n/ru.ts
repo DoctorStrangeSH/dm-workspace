@@ -1,6 +1,28 @@
 import type { Dictionary } from './types'
 
 export const ru: Dictionary = {
+  'inventory.library.title': 'Снаряжение героя',
+  'inventory.library.description':
+    'Все вещи, настройка и нагрузка — в одном месте. Найди предмет в справочнике или добавь свой.',
+  'inventory.library.catalog': 'Справочник предметов',
+  'spells.library.title': 'Книга заклинаний',
+  'spells.library.description':
+    'Быстро находи нужное заклинание, проверяй подготовку и оставшиеся ячейки. Справочник поможет пополнить книгу.',
+  'spells.library.catalog': 'Справочник заклинаний',
+  'spells.library.preparedCount': 'Подготовлено',
+  'spells.library.summary': 'Сводка книги заклинаний',
+  'spells.library.prepared': 'Подготовленные',
+  'spells.library.unprepared': 'Неподготовленные',
+  'spells.library.search': 'Поиск по книге',
+  'spells.library.searchHint': 'Название или описание…',
+  'spells.library.level': 'Уровень заклинания',
+  'spells.library.allLevels': 'Все уровни',
+  'spells.library.preparation': 'Подготовка',
+  'spells.library.filters': 'Фильтры книги заклинаний',
+  'spells.library.found': 'Найдено: {found} / {total}',
+  'spells.library.clear': 'Сбросить фильтры',
+  'spells.library.noResults':
+    'По заданным фильтрам ничего не найдено. Измени запрос или сбрось фильтры.',
   // ─── Common ───
   'common.save': 'Сохранить',
   'common.saving': 'Сохраняем…',

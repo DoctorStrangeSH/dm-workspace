@@ -2,10 +2,11 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Sparkles, Moon } from 'lucide-react'
+import { Plus, Sparkles, Moon, Search, X } from 'lucide-react'
 import { longRest } from '@/lib/actions/characters'
 import { useToast } from '@/components/toast/toast-provider'
 import { EmptyState, Button, Dialog } from '@/components/ui'
+import CharacterLibraryHeader from '../character-library-header'
 import SpellCard from './spell-card'
 import SpellSlotsTracker from './spell-slots-tracker'
 import AddSpellDialog from './add-spell-dialog'
@@ -28,14 +29,33 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   const [showAddDialog, setShowAddDialog] = useState(false)
   const [showRestConfirm, setShowRestConfirm] = useState(false)
 
+  const [search, setSearch] = useState('')
+  const [levelFilter, setLevelFilter] = useState('all')
+  const [preparedFilter, setPreparedFilter] = useState('all')
+
   const data: CharacterData = character.data_json
 
   const spells = useMemo(() => character.data_json.spells ?? [], [character.data_json.spells])
   const slots = data.spellSlots ?? {}
 
+  const filteredSpells = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase(lang)
+    return spells.filter(
+      (spell) =>
+        (!term ||
+          spell.name.toLocaleLowerCase(lang).includes(term) ||
+          (spell.description ?? '').toLocaleLowerCase(lang).includes(term)) &&
+        (levelFilter === 'all' || String(spell.level) === levelFilter) &&
+        (preparedFilter === 'all' || Boolean(spell.prepared) === (preparedFilter === 'prepared'))
+    )
+  }, [spells, search, levelFilter, preparedFilter, lang])
+  const availableLevels = [...new Set(spells.map((spell) => spell.level))].sort((a, b) => a - b)
+  const preparedCount = spells.filter((spell) => spell.prepared).length
+  const ritualCount = spells.filter((spell) => spell.ritual).length
+
   const spellsByLevel = useMemo(() => {
     const groups: Record<number, CharacterSpell[]> = {}
-    for (const s of spells) {
+    for (const s of filteredSpells) {
       if (!groups[s.level]) groups[s.level] = []
       groups[s.level].push(s)
     }
@@ -43,7 +63,7 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
       groups[level].sort((a, b) => a.name.localeCompare(b.name))
     }
     return groups
-  }, [spells])
+  }, [filteredSpells])
 
   const doLongRest = () => {
     startTransition(async () => {
@@ -97,7 +117,12 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <CharacterLibraryHeader
+        title={t('spells.library.title')}
+        description={t('spells.library.description')}
+        catalogHref={`/campaign/${campaignId}/spells`}
+        catalogLabel={t('spells.library.catalog')}
+      >
         {canEdit && (
           <>
             <Button
@@ -109,7 +134,6 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
             >
               {t('spells.add')}
             </Button>
-
             <Button
               variant="secondary"
               size="md"
@@ -122,11 +146,101 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
             </Button>
           </>
         )}
+      </CharacterLibraryHeader>
 
-        <div className="ml-auto text-sm text-[var(--text-muted)]">
-          {t('common.total')}: {spells.length}
+      <dl aria-label={t('spells.library.summary')} className="mb-4 grid grid-cols-3 gap-2">
+        {[
+          { label: t('common.total'), count: spells.length },
+          { label: t('spells.library.preparedCount'), count: preparedCount },
+          { label: t('spells.ritual'), count: ritualCount },
+        ].map(({ label, count }) => (
+          <div
+            key={label}
+            className="min-w-0 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3"
+          >
+            <dt className="text-xs break-words text-[var(--text-muted)]">{label}</dt>
+            <dd className="mt-1 text-xl font-bold text-[var(--text-primary)] tabular-nums">
+              {count}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <section
+        aria-label={t('spells.library.filters')}
+        className="mb-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 sm:p-4"
+      >
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <label className="min-w-0 text-xs text-[var(--text-muted)]">
+            {t('spells.library.search')}
+            <span className="relative mt-1 block">
+              <Search
+                size={18}
+                aria-hidden="true"
+                className="pointer-events-none absolute top-4 left-3"
+              />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                disabled={spells.length === 0}
+                placeholder={t('spells.library.searchHint')}
+                className="min-h-12 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] py-2 pr-3 pl-10 text-base text-[var(--text-primary)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+              />
+            </span>
+          </label>
+          <label className="min-w-0 text-xs text-[var(--text-muted)]">
+            {t('spells.library.level')}
+            <select
+              aria-label={t('spells.library.level')}
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
+              disabled={spells.length === 0}
+              className="mt-1 min-h-12 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 text-base text-[var(--text-primary)]"
+            >
+              <option value="all">{t('spells.library.allLevels')}</option>
+              {availableLevels.map((level) => (
+                <option key={level} value={level}>
+                  {levelLabel(level)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="min-w-0 text-xs text-[var(--text-muted)]">
+            {t('spells.library.preparation')}
+            <select
+              aria-label={t('spells.library.preparation')}
+              value={preparedFilter}
+              onChange={(e) => setPreparedFilter(e.target.value)}
+              disabled={spells.length === 0}
+              className="mt-1 min-h-12 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-primary)] px-3 text-base text-[var(--text-primary)]"
+            >
+              <option value="all">{t('common.all')}</option>
+              <option value="prepared">{t('spells.library.prepared')}</option>
+              <option value="unprepared">{t('spells.library.unprepared')}</option>
+            </select>
+          </label>
         </div>
-      </div>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+          <span role="status">
+            {t('spells.library.found', { found: filteredSpells.length, total: spells.length })}
+          </span>
+          {(search || levelFilter !== 'all' || preparedFilter !== 'all') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch('')
+                setLevelFilter('all')
+                setPreparedFilter('all')
+              }}
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+            >
+              <X size={16} aria-hidden="true" />
+              {t('spells.library.clear')}
+            </button>
+          )}
+        </div>
+      </section>
 
       <SpellSlotsTracker
         characterId={character.id}
@@ -145,6 +259,13 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
           size="md"
           dashed={false}
         />
+      ) : filteredSpells.length === 0 ? (
+        <div
+          role="status"
+          className="rounded-xl border border-dashed border-[var(--border-default)] p-6 text-center text-sm text-[var(--text-muted)]"
+        >
+          {t('spells.library.noResults')}
+        </div>
       ) : (
         <div className="space-y-4">
           {levelKeys.map((level) => (

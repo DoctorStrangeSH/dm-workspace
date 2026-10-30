@@ -880,6 +880,165 @@ try {
       expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
     }
   )
+  await scenario(
+    'inventory search, rarity and type preserve totals and make no writes',
+    { url: '/?screen=character-sheet&hp=valid&library=populated' },
+    async (page) => {
+      await page.getByRole('tab', { name: 'Инвентарь', exact: true }).click()
+      const panel = page.getByRole('tabpanel')
+      const before = await page.evaluate(() => window.__characterFixture)
+      await expect(panel.getByRole('heading', { name: 'Снаряжение героя' })).toBeVisible()
+      await expect(
+        panel.getByRole('link', { name: 'Справочник предметов', exact: true })
+      ).toHaveAttribute('href', '/campaign/test/items')
+      await expect(panel.locator('span').getByText('Редкий', { exact: true })).toBeVisible()
+      const filters = panel.getByRole('region', { name: 'Фильтры инвентаря' })
+      await filters.getByRole('searchbox').fill('  СВЕТИТСЯ  ')
+      await expect(filters.getByRole('status')).toContainText('1 / 4')
+      await expect(panel.getByText('Лунный клинок Moonblade', { exact: true })).toBeVisible()
+      await expect(panel.getByText('Лечебное зелье Healing potion', { exact: true })).toHaveCount(0)
+      await filters.getByRole('button', { name: 'Сбросить фильтры' }).click()
+      await filters.getByLabel('Фильтр по типу').selectOption('other')
+      await expect(panel.getByText('Верёвка Rope', { exact: true })).toBeVisible()
+      await expect(filters.getByRole('status')).toContainText('1 / 4')
+      await filters.getByLabel('Фильтр по редкости').selectOption('rare')
+      await expect(panel).toContainText('По заданным фильтрам ничего не найдено.')
+      await filters.getByRole('button', { name: 'Сбросить фильтры' }).click()
+      await expect(filters.getByRole('status')).toContainText('4 / 4')
+      expect(await page.evaluate(() => window.__characterFixture)).toEqual(before)
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(0)
+      await page.screenshot({ path: path.join(output, 'desktop-inventory.png'), fullPage: true })
+    }
+  )
+  await scenario(
+    'spellbook combines search, levels and preparation without changing slots or data',
+    { url: '/?screen=character-sheet&hp=valid&library=populated' },
+    async (page) => {
+      await page.getByRole('tab', { name: 'Заклинания', exact: true }).click()
+      const panel = page.getByRole('tabpanel')
+      const before = await page.evaluate(() => window.__characterFixture)
+      await expect(
+        panel.getByRole('link', { name: 'Справочник заклинаний', exact: true })
+      ).toHaveAttribute('href', '/campaign/test/spells')
+      const summary = panel.getByLabel('Сводка книги заклинаний')
+      await expect(
+        summary.locator('div').filter({ hasText: 'Подготовлено' }).locator('dd')
+      ).toHaveText('3')
+      const filters = panel.getByRole('region', { name: 'Фильтры книги заклинаний' })
+      await filters.getByRole('searchbox').fill('  ЗАЩИТНЫЙ  ')
+      await expect(filters.getByRole('status')).toHaveText('Найдено: 1 / 4')
+      await expect(panel.getByText('Щит Shield', { exact: true })).toBeVisible()
+      await filters.getByRole('button', { name: 'Сбросить фильтры' }).click()
+      await filters.getByLabel('Уровень заклинания').selectOption('1')
+      await filters.getByLabel('Подготовка', { exact: true }).selectOption('unprepared')
+      await expect(filters.getByRole('status')).toHaveText('Найдено: 1 / 4')
+      await expect(panel.getByText('Опознание Identify', { exact: true })).toBeVisible()
+      await expect(panel.getByText('Щит Shield', { exact: true })).toHaveCount(0)
+      await filters.getByRole('searchbox').fill('ничего')
+      await expect(panel).toContainText('Измени запрос или сбрось фильтры.')
+      await expect(panel.getByRole('img', { name: /0\/4/ })).toBeVisible()
+      await expect(summary.locator('div').filter({ hasText: 'Всего' }).locator('dd')).toHaveText(
+        '4'
+      )
+      await filters.getByRole('button', { name: 'Сбросить фильтры' }).click()
+      await expect(filters.getByRole('status')).toHaveText('Найдено: 4 / 4')
+      expect(await page.evaluate(() => window.__characterFixture)).toEqual(before)
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(0)
+      await page.screenshot({ path: path.join(output, 'desktop-spellbook.png'), fullPage: true })
+    }
+  )
+  await scenario(
+    'empty libraries expose catalog links and disabled search',
+    { mobile: true, url: '/?screen=character-sheet&hp=valid' },
+    async (page) => {
+      await page.getByRole('tab', { name: 'Инвентарь', exact: true }).click()
+      const panel = page.getByRole('tabpanel')
+      await expect(panel.getByRole('heading', { name: 'Снаряжение героя' })).toBeVisible()
+      await expect(
+        panel.getByRole('link', { name: 'Справочник предметов', exact: true })
+      ).toBeVisible()
+      await expect(panel.getByRole('searchbox')).toBeDisabled()
+      await expect(
+        panel.getByRole('button', { name: 'Добавить предмет', exact: true })
+      ).toBeVisible()
+      await page.getByRole('tab', { name: 'Заклинания', exact: true }).click()
+      await expect(panel.getByRole('heading', { name: 'Книга заклинаний' })).toBeVisible()
+      await expect(
+        panel.getByRole('link', { name: 'Справочник заклинаний', exact: true })
+      ).toBeVisible()
+      await expect(panel.getByRole('searchbox')).toBeDisabled()
+      await expect(
+        panel.getByRole('button', { name: 'Добавить заклинание', exact: true })
+      ).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true
+      )
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+    }
+  )
+  for (const lang of ['ru', 'en']) {
+    await scenario(
+      `mobile ${lang} libraries fit 390px and allow read-only filtering`,
+      {
+        mobile: true,
+        url: `/?screen=character-sheet&hp=valid&library=populated&readonly=true&role=player&lang=${lang}&theme=light`,
+      },
+      async (page) => {
+        const panel = page.getByRole('tabpanel')
+        await page
+          .getByRole('tab', { name: lang === 'ru' ? 'Инвентарь' : 'Inventory', exact: true })
+          .click()
+        await expect(
+          panel.getByRole('button', {
+            name: lang === 'ru' ? 'Добавить предмет' : 'Add item',
+            exact: true,
+          })
+        ).toHaveCount(0)
+        await expect(
+          panel.getByRole('link', {
+            name: lang === 'ru' ? 'Справочник предметов' : 'Item catalog',
+            exact: true,
+          })
+        ).toBeVisible()
+        await panel.getByRole('searchbox').fill('Moonblade')
+        await expect(panel.getByText('Лунный клинок Moonblade', { exact: true })).toBeVisible()
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true
+        )
+        await page.screenshot({
+          path: path.join(output, `mobile-inventory-${lang}.png`),
+          fullPage: true,
+        })
+        await page
+          .getByRole('tab', { name: lang === 'ru' ? 'Заклинания' : 'Spells', exact: true })
+          .click()
+        const filters = panel.getByRole('region', {
+          name: lang === 'ru' ? 'Фильтры книги заклинаний' : 'Spellbook filters',
+        })
+        for (const control of await filters.locator('input,select').all()) {
+          expect((await control.boundingBox()).height).toBeGreaterThanOrEqual(48)
+        }
+        await filters.getByRole('searchbox').fill('SHIELD')
+        await expect(panel.getByText('Щит Shield', { exact: true })).toBeVisible()
+        await expect(
+          panel.getByRole('button', {
+            name: lang === 'ru' ? 'Добавить заклинание' : 'Add spell',
+            exact: true,
+          })
+        ).toHaveCount(0)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true
+        )
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        await page.screenshot({
+          path: path.join(output, `mobile-spellbook-${lang}.png`),
+          fullPage: true,
+        })
+      }
+    )
+  }
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))
