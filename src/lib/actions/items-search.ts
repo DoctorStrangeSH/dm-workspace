@@ -18,7 +18,11 @@ export interface SrdItem {
 
 function sanitizeSearchQuery(query: unknown): string {
   if (typeof query !== 'string') return ''
-  return query.trim().slice(0, 100).replace(/[,%().*\\_]/g, ' ').replace(/\s+/g, ' ')
+  return query
+    .trim()
+    .slice(0, 100)
+    .replace(/[,%().*\\_]/g, ' ')
+    .replace(/\s+/g, ' ')
 }
 
 function normalizeLimit(limit: unknown): number {
@@ -29,7 +33,10 @@ function normalizeLimit(limit: unknown): number {
 function sanitizeStringFilters(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value
-    .filter((entry): entry is string => typeof entry === 'string' && entry.length > 0 && entry.length <= 80)
+    .filter(
+      (entry): entry is string =>
+        typeof entry === 'string' && entry.length > 0 && entry.length <= 80
+    )
     .slice(0, 30)
 }
 
@@ -89,4 +96,28 @@ export async function getAvailableRarities(): Promise<string[]> {
   })
 
   return Array.from(rarities).sort()
+}
+
+/** Read every catalog page; the Data API can cap each response at 1000 rows. */
+export async function getAvailableItemFilters(): Promise<{ types: string[]; rarities: string[] }> {
+  const supabase = await createClient()
+  const types = new Set<string>()
+  const rarities = new Set<string>()
+  for (let start = 0; start < 10000; start += 500) {
+    const { data, error } = await supabase
+      .from('srd_items')
+      .select('key, data->>item_type, data->>rarity')
+      .order('key')
+      .range(start, start + 499)
+    if (error) {
+      console.error('getAvailableItemFilters error:', error)
+      return { types: [], rarities: [] }
+    }
+    for (const row of data ?? []) {
+      if (typeof row.item_type === 'string' && row.item_type) types.add(row.item_type)
+      if (typeof row.rarity === 'string' && row.rarity) rarities.add(row.rarity)
+    }
+    if (!data || data.length < 500) break
+  }
+  return { types: Array.from(types).sort(), rarities: Array.from(rarities).sort() }
 }
