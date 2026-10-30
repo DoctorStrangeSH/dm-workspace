@@ -1050,6 +1050,15 @@ export const en: Dictionary = {
 
   // ─── Items SRD ───
   'items.subtitle': 'SRD 2024 (Open5e)',
+  'items.loading': 'Searching items…',
+  'items.range': 'Showing items {from}–{to}',
+  'items.loadError': 'Could not load items',
+  'items.loadErrorHint': 'Your search and filters are saved. Try again.',
+  'items.retry': 'Retry',
+  'items.pagination': 'Item catalog pages',
+  'items.page': 'Page {page}',
+  'items.previous': 'Previous',
+  'items.next': 'Next',
   'items.searchPlaceholder': 'Search items…',
   'items.filters': 'Filters',
   'items.filter.rarity': 'Rarity',

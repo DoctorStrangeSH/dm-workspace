@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export|characters)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -1041,6 +1041,143 @@ try {
       }
     )
   }
+
+  await scenario(
+    'catalog ignores late successes and late failures; input stays editable',
+    { url: '/?screen=items' },
+    async (page) => {
+      const search = page.getByRole('searchbox')
+      expect(await page.evaluate(() => window.__uiLab.catalogRequests)).toEqual([])
+      await page.evaluate(() => {
+        window.__uiLab.catalogMode = 'deferred'
+      })
+      await search.fill('amber')
+      await expect.poll(() => page.evaluate(() => window.__uiLab.catalogPending.length)).toBe(1)
+      await expect(search).toBeEnabled()
+      await search.fill('azure')
+      await expect.poll(() => page.evaluate(() => window.__uiLab.catalogPending.length)).toBe(2)
+      await page.evaluate(() => {
+        const p = window.__uiLab.catalogPending[1]
+        p.resolve(window.__catalogPage(p.filters, p.offset))
+      })
+      await expect(page.getByRole('heading', { name: 'azure 001', exact: true })).toBeVisible()
+      await page.evaluate(() => {
+        const p = window.__uiLab.catalogPending[0]
+        p.resolve(window.__catalogPage(p.filters, p.offset))
+      })
+      await expect(page.getByRole('heading', { name: 'amber 001', exact: true })).toHaveCount(0)
+      await search.fill('slow')
+      await expect.poll(() => page.evaluate(() => window.__uiLab.catalogPending.length)).toBe(3)
+      await search.fill('fresh')
+      await expect.poll(() => page.evaluate(() => window.__uiLab.catalogPending.length)).toBe(4)
+      await page.evaluate(() => {
+        const p = window.__uiLab.catalogPending[3]
+        p.resolve(window.__catalogPage(p.filters, p.offset))
+      })
+      await expect(page.getByRole('heading', { name: 'fresh 001', exact: true })).toBeVisible()
+      await page.evaluate(() => window.__uiLab.catalogPending[2].reject(new Error('late failure')))
+      await expect(page.getByRole('alert')).toHaveCount(0)
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+    }
+  )
+
+  await scenario(
+    'catalog failure, retry, empty result and page reset keep the search state',
+    { url: '/?screen=items' },
+    async (page) => {
+      const search = page.getByRole('searchbox')
+      await page.getByRole('button', { name: 'Далее', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'Item 025', exact: true })).toBeVisible()
+      await expect(page.getByRole('status')).toContainText('25–48')
+      await page.getByRole('button', { name: 'Далее', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'Item 049', exact: true })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Далее', exact: true })).toBeDisabled()
+      await page.getByRole('button', { name: 'Назад', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'Item 025', exact: true })).toBeVisible()
+      await page.evaluate(() => {
+        window.__uiLab.catalogMode = 'error'
+      })
+      await search.fill('moon')
+      await expect(page.getByRole('alert')).toContainText('Не удалось загрузить')
+      await expect(search).toHaveValue('moon')
+      await expect(page.getByText('Ничего не найдено', { exact: true })).toHaveCount(0)
+      await page.evaluate(() => {
+        window.__uiLab.catalogMode = 'normal'
+      })
+      await page.getByRole('button', { name: 'Повторить', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'moon 001', exact: true })).toBeVisible()
+      expect(await page.evaluate(() => window.__uiLab.catalogRequests.at(-1).offset)).toBe(0)
+      await search.fill('none')
+      await expect(page.getByRole('status')).toHaveText('')
+      await expect(
+        page.getByRole('heading', { name: 'Ничего не найдено', exact: true })
+      ).toBeVisible()
+      await page.evaluate(() => {
+        window.__uiLab.catalogMode = 'throw'
+      })
+      await search.fill('retry-me')
+      await expect(page.getByRole('alert')).toBeVisible()
+      await page.evaluate(() => {
+        window.__uiLab.catalogMode = 'normal'
+      })
+      await page.getByRole('button', { name: 'Повторить', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'retry-me 001', exact: true })).toBeVisible()
+      expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+    }
+  )
+
+  for (const lang of ['ru', 'en']) {
+    await scenario(
+      'mobile catalog filters and pages are usable in ' + lang,
+      { mobile: true, url: '/?screen=items&lang=' + lang },
+      async (page) => {
+        const search = page.getByRole('searchbox')
+        await page
+          .getByRole('button', { name: lang === 'ru' ? 'Далее' : 'Next', exact: true })
+          .click()
+        await expect(page.getByRole('heading', { name: 'Item 025', exact: true })).toBeVisible()
+        const filters = page.getByRole('button', {
+          name: lang === 'ru' ? 'Фильтры' : 'Filters',
+          exact: true,
+        })
+        await filters.click()
+        const rarity = page.getByRole('button', {
+          name: lang === 'ru' ? 'Легендарный (Legendary)' : 'Legendary',
+          exact: true,
+        })
+        await rarity.click()
+        await expect(rarity).toHaveAttribute('aria-pressed', 'true')
+        await expect(page.getByRole('status')).toContainText('1–10')
+        expect(await page.evaluate(() => window.__uiLab.catalogRequests.at(-1).offset)).toBe(0)
+        await search.fill('moon')
+        await expect(page.getByRole('heading', { name: 'moon 001', exact: true })).toBeVisible()
+        expect(
+          await page.evaluate(() => window.__uiLab.catalogRequests.at(-1).filters.rarity)
+        ).toEqual(['legendary'])
+        const box = await filters.boundingBox()
+        expect(box.height).toBeGreaterThanOrEqual(44)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true
+        )
+        await page.screenshot({
+          path: path.join(output, 'mobile-catalog-' + lang + '.png'),
+          fullPage: false,
+        })
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      }
+    )
+  }
+
+  await scenario(
+    'initial catalog error can be retried without losing the SSR boundary',
+    { url: '/?screen=items&initialError' },
+    async (page) => {
+      await expect(page.getByRole('alert')).toBeVisible()
+      expect(await page.evaluate(() => window.__uiLab.catalogRequests)).toEqual([])
+      await page.getByRole('button', { name: 'Повторить', exact: true }).click()
+      await expect(page.getByRole('heading', { name: 'Item 001', exact: true })).toBeVisible()
+    }
+  )
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))

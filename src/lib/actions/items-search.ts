@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { ITEM_PAGE_SIZE } from '@/lib/item-catalog'
 
 export interface ItemFilters {
   query?: string
@@ -15,6 +16,8 @@ export interface SrdItem {
   name_ru: string | null
   data: any
 }
+
+export type SrdItemsPageResult = { ok: true; items: SrdItem[]; hasNext: boolean } | { ok: false }
 
 function sanitizeSearchQuery(query: unknown): string {
   if (typeof query !== 'string') return ''
@@ -72,6 +75,41 @@ export async function searchSrdItemsAction(filters: ItemFilters = {}): Promise<S
   }
 
   return (data ?? []) as SrdItem[]
+}
+
+/** A stable ordered page with one lookahead row; errors are distinct from no matches. */
+export async function searchSrdItemsPageAction(
+  filters: ItemFilters = {},
+  offset = 0
+): Promise<SrdItemsPageResult> {
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) return { ok: false }
+  if (!filters || typeof filters !== 'object' || Array.isArray(filters)) return { ok: false }
+  try {
+    const supabase = await createClient()
+    const query = sanitizeSearchQuery(filters.query)
+    const types = sanitizeStringFilters(filters.type)
+    const rarities = sanitizeStringFilters(filters.rarity)
+    let q = supabase.from('srd_items').select('*')
+    if (query) q = q.or(`name.ilike.%${query}%,name_ru.ilike.%${query}%`)
+    if (types.length > 0) q = q.in('data->>item_type', types)
+    if (rarities.length > 0) q = q.in('data->>rarity', rarities)
+    const { data, error } = await q
+      .order('name')
+      .order('key')
+      .range(offset, offset + ITEM_PAGE_SIZE)
+    if (error) {
+      console.error('searchSrdItemsPageAction error:', error)
+      return { ok: false }
+    }
+    const rows = data ?? []
+    return {
+      ok: true,
+      items: rows.slice(0, ITEM_PAGE_SIZE) as SrdItem[],
+      hasNext: rows.length > ITEM_PAGE_SIZE,
+    }
+  } catch {
+    return { ok: false }
+  }
 }
 
 export async function getAvailableItemTypes(): Promise<string[]> {

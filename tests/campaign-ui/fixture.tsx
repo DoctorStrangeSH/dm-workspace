@@ -24,6 +24,8 @@ import { createEmptyCharacterData, type Character } from '../../src/lib/types'
 import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
+import { catalogPage } from './mocks'
+import ItemsClient from '../../src/app/campaign/[id]/items/items-client'
 
 const query = new URLSearchParams(location.search)
 document.cookie = `dm-lang=${query.get('lang') === 'en' ? 'en' : 'ru'}; path=/`
@@ -193,7 +195,17 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'character-sheet' ? (
+            {screen === 'items' ? (
+              <ItemsClient
+                campaignId="test"
+                initialPage={query.has('initialError') ? { ok: false } : catalogPage()}
+                characters={[]}
+                availableTypes={['Armor', 'Wand', 'Weapon']}
+                availableRarities={['common', 'rare', 'legendary']}
+                canEditCampaign={false}
+                lang={lang}
+              />
+            ) : screen === 'character-sheet' ? (
               <CharacterSheet
                 character={fixtureCharacter}
                 campaignId="test"

@@ -1055,6 +1055,15 @@ export const ru: Dictionary = {
 
   // ─── Items SRD ───
   'items.subtitle': 'SRD 2024 (Open5e)',
+  'items.loading': 'Ищем предметы…',
+  'items.range': 'Показаны предметы {from}–{to}',
+  'items.loadError': 'Не удалось загрузить предметы',
+  'items.loadErrorHint': 'Поиск и фильтры сохранены. Попробуйте ещё раз.',
+  'items.retry': 'Повторить',
+  'items.pagination': 'Страницы справочника предметов',
+  'items.page': 'Страница {page}',
+  'items.previous': 'Назад',
+  'items.next': 'Далее',
   'items.searchPlaceholder': 'Поиск предметов…',
   'items.filters': 'Фильтры',
   'items.filter.rarity': 'Редкость',
