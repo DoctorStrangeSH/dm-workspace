@@ -1002,6 +1002,7 @@ try {
             exact: true,
           })
         ).toBeVisible()
+        await panel.getByRole('searchbox').click()
         await panel.getByRole('searchbox').fill('Moonblade')
         await expect(panel.getByText('Лунный клинок Moonblade', { exact: true })).toBeVisible()
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -1009,7 +1010,7 @@ try {
         )
         await page.screenshot({
           path: path.join(output, `mobile-inventory-${lang}.png`),
-          fullPage: true,
+          fullPage: false,
         })
         await page
           .getByRole('tab', { name: lang === 'ru' ? 'Заклинания' : 'Spells', exact: true })
@@ -1020,6 +1021,7 @@ try {
         for (const control of await filters.locator('input,select').all()) {
           expect((await control.boundingBox()).height).toBeGreaterThanOrEqual(48)
         }
+        await filters.getByRole('searchbox').click()
         await filters.getByRole('searchbox').fill('SHIELD')
         await expect(panel.getByText('Щит Shield', { exact: true })).toBeVisible()
         await expect(
@@ -1034,7 +1036,7 @@ try {
         expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
         await page.screenshot({
           path: path.join(output, `mobile-spellbook-${lang}.png`),
-          fullPage: true,
+          fullPage: false,
         })
       }
     )
