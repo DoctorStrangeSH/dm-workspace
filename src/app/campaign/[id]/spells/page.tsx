@@ -3,7 +3,7 @@ export const instant = false
 import { connection } from 'next/server'
 import { notFound, redirect } from 'next/navigation'
 import { getCampaignAccess } from '@/lib/queries/access'
-import { searchSrdSpellsAction } from '@/lib/actions/spells-search'
+import { searchSrdSpellsPageAction } from '@/lib/actions/spells-search'
 import { createClient } from '@/lib/supabase/server'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import SpellsClient from './spells-client'
@@ -28,7 +28,7 @@ export default async function SpellsPage({ params }: { params: Promise<{ id: str
     .eq('campaign_id', campaignId)
     .eq('is_active', true)
 
-  const spells = await searchSrdSpellsAction({ limit: 100 })
+  const spells = await searchSrdSpellsPageAction()
 
   return (
     <div className="max-w-6xl">
@@ -48,7 +48,7 @@ export default async function SpellsPage({ params }: { params: Promise<{ id: str
 
       <SpellsClient
         campaignId={campaignId}
-        initialSpells={spells}
+        initialPage={spells}
         characters={characters ?? []}
         canEdit={isDm}
         lang={lang}

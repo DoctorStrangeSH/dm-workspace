@@ -3,7 +3,7 @@ export const instant = false
 import { connection } from 'next/server'
 import { notFound, redirect } from 'next/navigation'
 import { getCampaignAccess } from '@/lib/queries/access'
-import { searchSrdMonstersAction, getAvailableCRs } from '@/lib/actions/bestiary-search'
+import { searchSrdMonstersPageAction, getAvailableCRs } from '@/lib/actions/bestiary-search'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import BestiaryClient from './bestiary-client'
 import { BookOpen, Sparkles } from 'lucide-react'
@@ -22,7 +22,7 @@ export default async function BestiaryPage({ params }: { params: Promise<{ id: s
   if (!isMember) redirect('/dashboard')
 
   const [monsters, availableCRs] = await Promise.all([
-    searchSrdMonstersAction({ limit: 100 }),
+    searchSrdMonstersPageAction(),
     getAvailableCRs(),
   ])
 
@@ -38,7 +38,10 @@ export default async function BestiaryPage({ params }: { params: Promise<{ id: s
       />
 
       <section className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[linear-gradient(120deg,var(--bg-primary),var(--bg-secondary))] p-5 shadow-[var(--shadow-sm)] sm:p-8">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-20 h-64 w-64 rounded-full border border-[var(--accent)]/20">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 -right-12 h-64 w-64 rounded-full border border-[var(--accent)]/20"
+        >
           <div className="absolute inset-9 rounded-full border border-[var(--accent)]/15" />
           <Sparkles size={22} className="absolute bottom-10 left-8 text-[var(--accent)]/35" />
         </div>
@@ -47,14 +50,18 @@ export default async function BestiaryPage({ params }: { params: Promise<{ id: s
             <BookOpen size={14} aria-hidden="true" />
             {lang === 'en' ? 'Creature compendium' : 'Энциклопедия существ'}
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">{t('nav.bestiary')}</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-secondary)] sm:text-base">{t('bestiary.subtitle')}</p>
+          <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">
+            {t('nav.bestiary')}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
+            {t('bestiary.subtitle')}
+          </p>
         </div>
       </section>
 
       <BestiaryClient
         campaignId={campaignId}
-        initialMonsters={monsters}
+        initialPage={monsters}
         availableCRs={availableCRs}
         canEdit={isDm}
         lang={lang}

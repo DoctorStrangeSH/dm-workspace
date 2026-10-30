@@ -2,6 +2,9 @@ import { useSyncExternalStore } from 'react'
 import type { AnchorHTMLAttributes } from 'react'
 import type { CharacterData, MessageWithAuthor } from '../../src/lib/types'
 import type { ItemFilters, SrdItemsPageResult } from '../../src/lib/actions/items-search'
+import type { SpellFilters } from '../../src/lib/actions/spells-search'
+import type { MonsterFilters } from '../../src/lib/actions/bestiary-search'
+type ReferenceFilters = SpellFilters & MonsterFilters
 
 // In-memory transport only. No Supabase, sessions, credentials or remote fetches.
 const listeners = new Set<() => void>()
@@ -33,6 +36,18 @@ export const lab = {
   failNext: false,
   delay: 0,
   catalogMode: 'normal' as 'normal' | 'deferred' | 'error' | 'throw',
+  referenceRequests: [] as {
+    kind: 'spells' | 'bestiary'
+    filters: ReferenceFilters
+    offset: number
+  }[],
+  referencePending: [] as {
+    kind: 'spells' | 'bestiary'
+    filters: ReferenceFilters
+    offset: number
+    resolve: (value: SrdItemsPageResult) => void
+    reject: (error: Error) => void
+  }[],
   catalogRequests: [] as { filters: ItemFilters; offset: number }[],
   catalogPending: [] as {
     resolve: (result: SrdItemsPageResult) => void
@@ -75,6 +90,70 @@ export async function searchSrdItemsPageAction(
   return catalogPage(filters, offset)
 }
 Object.assign(window, { __catalogPage: catalogPage })
+export function referencePage(
+  kind: 'spells' | 'bestiary',
+  filters: ReferenceFilters = {},
+  offset = 0
+): SrdItemsPageResult {
+  const filtered =
+    filters.level?.length || filters.school?.length || filters.cr?.length || filters.type?.length
+  const count = filters.query === 'none' ? 0 : filters.query ? 3 : filtered ? 10 : 55
+  const items = Array.from({ length: count }, (_, i) => ({
+    key: `offline-${kind}-${i}`,
+    name: `${filters.query || (kind === 'spells' ? 'Spell' : 'Monster')} ${String(i + 1).padStart(3, '0')}`,
+    name_ru: null,
+    data:
+      kind === 'spells'
+        ? {
+            level: filters.level?.[0] ?? 0,
+            school: 'Evocation',
+            description: 'Offline spell description',
+            classes: [],
+            components: 'V',
+            castingTime: '1 action',
+            range: '60 feet',
+            duration: 'Instantaneous',
+          }
+        : {
+            cr: filters.cr?.[0] ?? '1/8',
+            type: filters.type?.[0] ?? 'dragon',
+            size: 'large',
+            hp: 10,
+            ac: 12,
+            abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+          },
+  }))
+  return { ok: true, items: items.slice(offset, offset + 24), hasNext: count > offset + 24 }
+}
+Object.assign(window, { __referencePage: referencePage })
+async function loadReference(
+  kind: 'spells' | 'bestiary',
+  filters: ReferenceFilters,
+  offset: number
+): Promise<SrdItemsPageResult> {
+  lab.referenceRequests.push({ kind, filters: structuredClone(filters), offset })
+  if (lab.catalogMode === 'error') return { ok: false }
+  if (lab.catalogMode === 'throw') throw new Error('Offline reference failure')
+  if (lab.catalogMode === 'deferred')
+    return new Promise((resolve, reject) =>
+      lab.referencePending.push({ kind, filters, offset, resolve, reject })
+    )
+  return referencePage(kind, filters, offset)
+}
+export async function searchSrdSpellsPageAction(filters: SpellFilters = {}, offset = 0) {
+  return loadReference('spells', filters, offset)
+}
+export async function searchSrdMonstersPageAction(filters: MonsterFilters = {}, offset = 0) {
+  return loadReference('bestiary', filters, offset)
+}
+export async function addSrdSpellToCharacter(...args: unknown[]) {
+  lab.characterActions.push({ name: 'addSrdSpellToCharacter', args })
+  return { error: 'Offline write boundary' }
+}
+export async function addMonsterToCampaign(...args: unknown[]) {
+  lab.characterActions.push({ name: 'addMonsterToCampaign', args })
+  return { error: 'Offline write boundary' }
+}
 export async function addSrdItemToCharacter(...args: unknown[]) {
   lab.characterActions.push({ name: 'addSrdItemToCharacter', args })
   return { error: 'Offline catalog write boundary' }
