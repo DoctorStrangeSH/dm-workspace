@@ -1252,6 +1252,107 @@ try {
     }
   }
 
+  for (const lang of ['ru', 'en']) {
+    for (const view of ['mobile-reader', 'mobile-editor', 'desktop-reader']) {
+      const editor = view === 'mobile-editor'
+      await scenario(
+        'spell cards expose parameters, preserve unknown values and open details in ' +
+          lang +
+          ' ' +
+          view,
+        {
+          mobile: view.startsWith('mobile'),
+          url: '/?screen=spells&spellAppearance&lang=' + lang + (editor ? '&spellEditor' : ''),
+        },
+        async (page) => {
+          const original = await page.evaluate(() => window.__referencePage('spells'))
+          const title = page.getByRole('heading', {
+            name: 'Ancient Constellation of the Everlasting Celestial Guardian',
+            exact: true,
+          })
+          await expect(title).toBeVisible()
+          expect(
+            await title.evaluate(
+              (el) =>
+                el.scrollWidth <= el.clientWidth && getComputedStyle(el).whiteSpace !== 'nowrap'
+            )
+          ).toBe(true)
+          const card = title.locator('..').locator('..')
+          await expect(card).toContainText(lang === 'ru' ? '3 ур.' : 'Lvl 3')
+          await expect(card).toContainText(lang === 'ru' ? 'Воплощение' : 'Evocation')
+          await expect(card).toContainText(lang === 'ru' ? 'Ритуал' : 'Ritual')
+          await expect(card).toContainText(lang === 'ru' ? 'концентрация' : 'concentration')
+          expect(await card.locator('dd').allTextContents()).toEqual([
+            '1 action',
+            '60 feet',
+            'Up to 1 minute',
+            'V, S, M (a silver star)',
+          ])
+          const missing = page
+            .getByRole('heading', { name: 'Unbroken'.repeat(12), exact: true })
+            .locator('..')
+            .locator('..')
+          await expect(missing).toContainText(lang === 'ru' ? 'Заговор' : 'Cantrip')
+          expect(await missing.locator('dd').allTextContents()).toEqual(['—', '—', '—', '—'])
+          expect(
+            await missing.getByRole('heading').evaluate((el) => el.scrollWidth <= el.clientWidth)
+          ).toBe(true)
+          await expect(page.getByText('Custom Arcanum', { exact: true })).toBeVisible()
+          await expect(page.locator('body')).not.toContainText('school.')
+          const details = page.getByRole('button', {
+            name: lang === 'ru' ? 'Подробнее' : 'Details',
+            exact: true,
+          })
+          expect((await details.first().boundingBox()).height).toBeGreaterThanOrEqual(44)
+          const add = page.getByRole('button', {
+            name: lang === 'ru' ? 'Добавить персонажу' : 'Add to character',
+            exact: true,
+          })
+          await expect(add).toHaveCount(editor ? 3 : 0)
+          if (editor) {
+            expect((await add.first().boundingBox()).height).toBeGreaterThanOrEqual(44)
+            await expect(add.first()).toContainText(lang === 'ru' ? 'Добавить' : 'Add')
+          }
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await card.screenshot({
+            path: path.join(output, 'spell-card-' + lang + '-' + view + '.png'),
+          })
+          if (editor) await add.first().click()
+          else await details.first().click()
+          const dialog = page.getByRole('dialog')
+          await expect(dialog).toBeVisible()
+          await expect(dialog).toContainText(
+            lang === 'ru' ? 'Волшебник, Жрец, Mystic Sage' : 'Wizard, Cleric, Mystic Sage'
+          )
+          await expect(dialog).toContainText('Synthetic higher-level description')
+          await expect(dialog.getByRole('combobox')).toHaveCount(editor ? 1 : 0)
+          if (editor) {
+            await expect(dialog.getByRole('combobox')).toHaveAttribute('aria-label', /.+/)
+            await dialog.getByRole('combobox').selectOption('offline-other')
+            await expect(dialog.getByRole('combobox')).toHaveValue('offline-other')
+            expect(
+              (await dialog.getByRole('combobox').boundingBox()).height
+            ).toBeGreaterThanOrEqual(44)
+          }
+          expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          await dialog.screenshot({
+            path: path.join(output, 'spell-detail-' + lang + '-' + view + '.png'),
+          })
+          await dialog
+            .getByRole('button', { name: lang === 'ru' ? 'Закрыть' : 'Close', exact: true })
+            .click()
+          await details.nth(2).click()
+          await expect(page.getByRole('dialog')).toContainText('Custom Arcanum')
+          await page.keyboard.press('Escape')
+          expect(await page.evaluate(() => window.__referencePage('spells'))).toEqual(original)
+          expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        }
+      )
+    }
+  }
+
   await scenario(
     'initial catalog error can be retried without losing the SSR boundary',
     { url: '/?screen=items&initialError' },

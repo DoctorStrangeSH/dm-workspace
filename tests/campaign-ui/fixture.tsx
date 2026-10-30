@@ -201,8 +201,15 @@ function Fixture() {
               <SpellsClient
                 campaignId="test"
                 initialPage={query.has('initialError') ? { ok: false } : referencePage('spells')}
-                characters={[]}
-                canEdit={false}
+                characters={
+                  query.has('spellEditor')
+                    ? [
+                        { id: 'offline-hero', name: 'Offline Hero' },
+                        { id: 'offline-other', name: 'Another Hero with a long character name' },
+                      ]
+                    : []
+                }
+                canEdit={query.has('spellEditor')}
                 lang={lang}
               />
             ) : screen === 'bestiary' ? (

@@ -123,6 +123,46 @@ export function referencePage(
   filters: ReferenceFilters = {},
   offset = 0
 ): SrdItemsPageResult {
+  if (kind === 'spells' && new URLSearchParams(location.search).has('spellAppearance')) {
+    const items = [
+      {
+        key: 'offline-long-spell',
+        name: 'Ancient Constellation of the Everlasting Celestial Guardian',
+        name_ru: null,
+        data: {
+          level: 3,
+          school: 'Evocation',
+          castingTime: '1 action',
+          range: '60 feet',
+          components: 'V, S, M (a silver star)',
+          duration: 'Up to 1 minute',
+          ritual: true,
+          concentration: true,
+          description: 'Synthetic spell description',
+          higherLevel: 'Synthetic higher-level description',
+          classes: ['Wizard', 'srd-2024_cleric', 'Mystic Sage'],
+        },
+      },
+      {
+        key: 'offline-missing-spell',
+        name: 'Unbroken'.repeat(12),
+        name_ru: null,
+        data: { level: 0, school: '', classes: [], ritual: false, concentration: false },
+      },
+      {
+        key: 'offline-unknown-school',
+        name: 'Unknown-school spell',
+        name_ru: null,
+        data: {
+          level: 1,
+          school: 'Custom Arcanum',
+          castingTime: 'A custom casting condition that remains unchanged',
+          classes: ['Mystic Sage'],
+        },
+      },
+    ]
+    return { ok: true, items: items.slice(offset, offset + 24), hasNext: false }
+  }
   const filtered =
     filters.level?.length || filters.school?.length || filters.cr?.length || filters.type?.length
   const count = filters.query === 'none' ? 0 : filters.query ? 3 : filtered ? 10 : 55
