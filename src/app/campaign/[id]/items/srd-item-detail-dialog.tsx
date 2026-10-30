@@ -10,6 +10,7 @@ import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog, Select } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { srdName } from '@/lib/types'
+import { srdItemTypeLabel } from '@/lib/srd/item-display'
 import type { SrdItem } from '@/lib/actions/items-search'
 
 interface Props {
@@ -41,7 +42,7 @@ export default function SrdItemDetailDialog({
   const rarity = (data.rarity ?? 'common').toLowerCase()
 
   const descriptionParts = [t(`itemRarity.${rarityI18nKey(rarity)}`)]
-  if (data.item_type) descriptionParts.push(data.item_type)
+  if (data.item_type) descriptionParts.push(srdItemTypeLabel(data.item_type, lang))
   if (data.attunement) descriptionParts.push(t('items.attunement.requires'))
 
   const handleAddToCharacter = () => {
@@ -82,6 +83,7 @@ export default function SrdItemDetailDialog({
       title={srdName(item, lang)}
       description={descriptionParts.join(' · ')}
       size="lg"
+      closeLabel={t('common.close')}
       footer={
         <div className="flex w-full flex-col gap-2">
           {characters.length > 0 && (
@@ -118,7 +120,7 @@ export default function SrdItemDetailDialog({
         </div>
       }
     >
-      <div className="space-y-3 text-sm">
+      <div className="space-y-3 text-sm [overflow-wrap:anywhere]">
         <div className="grid grid-cols-2 gap-2 rounded-lg bg-[var(--bg-app)] p-3">
           {data.cost && (
             <div>

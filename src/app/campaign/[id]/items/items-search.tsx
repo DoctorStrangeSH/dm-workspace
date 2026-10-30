@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Search, X, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useT } from '@/lib/i18n'
+import { useI18n } from '@/lib/i18n'
+import { srdItemTypeLabel } from '@/lib/srd/item-display'
 
 interface Props {
   query: string
@@ -42,7 +43,7 @@ export default function ItemsSearch({
   availableTypes,
   availableRarities,
 }: Props) {
-  const t = useT()
+  const { t, lang } = useI18n()
   const [showFilters, setShowFilters] = useState(false)
 
   const toggleType = (type: string) => {
@@ -159,13 +160,13 @@ export default function ItemsSearch({
                     aria-pressed={types.includes(type)}
                     onClick={() => toggleType(type)}
                     className={cn(
-                      'min-h-11 rounded border px-3 py-2 text-xs capitalize transition',
+                      'min-h-11 rounded border px-3 py-2 text-xs transition',
                       types.includes(type)
                         ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
                         : 'border-[var(--border-default)] bg-[var(--bg-app)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
                     )}
                   >
-                    {type}
+                    {srdItemTypeLabel(type, lang)}
                   </button>
                 ))}
               </div>

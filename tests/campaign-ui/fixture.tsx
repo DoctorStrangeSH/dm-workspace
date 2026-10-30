@@ -223,8 +223,10 @@ function Fixture() {
               <ItemsClient
                 campaignId="test"
                 initialPage={query.has('initialError') ? { ok: false } : catalogPage()}
-                characters={[]}
-                availableTypes={['Armor', 'Wand', 'Weapon']}
+                characters={
+                  query.has('catalogEditor') ? [{ id: 'offline-hero', name: 'Offline Hero' }] : []
+                }
+                availableTypes={['Armor', 'Wand', 'Weapon', 'Wondrous Item', 'Uncatalogued Relic']}
                 availableRarities={['common', 'rare', 'legendary']}
                 canEditCampaign={false}
                 lang={lang}
