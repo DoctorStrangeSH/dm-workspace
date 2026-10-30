@@ -61,6 +61,34 @@ export const lab = {
   },
 }
 export function catalogPage(filters: ItemFilters = {}, offset = 0): SrdItemsPageResult {
+  if (new URLSearchParams(location.search).has('catalogAppearance')) {
+    const rows = [
+      {
+        key: 'offline-long-wand',
+        name: 'Ancient Wand of the Unbreakable Everlasting Celestial Constellation',
+        name_ru: null,
+        data: {
+          item_type: 'Wand',
+          rarity: 'rare',
+          attunement: true,
+          cost: '250 gp',
+          description: 'Synthetic display fixture',
+        },
+      },
+      {
+        key: 'offline-unknown-category',
+        name: 'Unbroken'.repeat(12),
+        name_ru: null,
+        data: {
+          item_type: 'Uncatalogued Relic',
+          rarity: 'common',
+          attunement: false,
+          description: 'Synthetic unknown-category fixture',
+        },
+      },
+    ].filter((row) => !filters.type?.length || filters.type.includes(row.data.item_type))
+    return { ok: true, items: rows.slice(offset, offset + 24), hasNext: false }
+  }
   const count = filters.query === 'none' ? 0 : filters.query ? 3 : filters.rarity?.length ? 10 : 55
   const items = Array.from({ length: count }, (_, i) => ({
     key: `srd-2024_offline-${i}`,

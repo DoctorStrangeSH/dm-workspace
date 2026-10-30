@@ -1141,6 +1141,15 @@ try {
           exact: true,
         })
         await filters.click()
+        const category = page.getByRole('button', {
+          name: lang === 'ru' ? 'Волшебная палочка' : 'Wand',
+          exact: true,
+        })
+        await category.click()
+        await expect(category).toHaveAttribute('aria-pressed', 'true')
+        await expect
+          .poll(() => page.evaluate(() => window.__uiLab.catalogRequests.at(-1).filters.type))
+          .toEqual(['Wand'])
         const rarity = page.getByRole('button', {
           name: lang === 'ru' ? 'Легендарный (Legendary)' : 'Legendary',
           exact: true,
@@ -1166,6 +1175,81 @@ try {
         expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
       }
     )
+  }
+
+  for (const lang of ['ru', 'en']) {
+    for (const editor of [false, true]) {
+      await scenario(
+        'item cards keep long names, localized categories and read permissions in ' +
+          lang +
+          ' editor=' +
+          editor,
+        {
+          mobile: true,
+          url: '/?screen=items&catalogAppearance&lang=' + lang + (editor ? '&catalogEditor' : ''),
+        },
+        async (page) => {
+          const longName = 'Ancient Wand of the Unbreakable Everlasting Celestial Constellation'
+          const title = page.getByRole('heading', { name: longName, exact: true })
+          await expect(title).toBeVisible()
+          expect(
+            await title.evaluate(
+              (el) =>
+                el.scrollWidth <= el.clientWidth && getComputedStyle(el).whiteSpace !== 'nowrap'
+            )
+          ).toBe(true)
+          const unknownTitle = page.getByRole('heading', {
+            name: 'Unbroken'.repeat(12),
+            exact: true,
+          })
+          expect(await unknownTitle.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          await expect(
+            page.getByText(lang === 'ru' ? 'Волшебная палочка' : 'Wand', { exact: true })
+          ).toBeVisible()
+          await expect(page.getByText('Uncatalogued Relic', { exact: true })).toBeVisible()
+          const details = page.getByRole('button', {
+            name: lang === 'ru' ? 'Подробнее' : 'Details',
+            exact: true,
+          })
+          expect((await details.first().boundingBox()).height).toBeGreaterThanOrEqual(44)
+          const add = page.getByRole('button', {
+            name: lang === 'ru' ? 'Добавить персонажу' : 'Add to character',
+            exact: true,
+          })
+          await expect(add).toHaveCount(editor ? 2 : 0)
+          if (editor) expect((await add.first().boundingBox()).height).toBeGreaterThanOrEqual(44)
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await page.screenshot({
+            path: path.join(
+              output,
+              'mobile-item-cards-' + lang + (editor ? '-editor' : '-reader') + '.png'
+            ),
+            fullPage: true,
+          })
+          if (editor) await add.first().click()
+          else await details.first().click()
+          const dialog = page.getByRole('dialog')
+          await expect(dialog).toBeVisible()
+          await expect(dialog).toContainText(lang === 'ru' ? 'Волшебная палочка' : 'Wand')
+          await expect(dialog.getByRole('combobox')).toHaveCount(editor ? 1 : 0)
+          await dialog
+            .getByRole('button', { name: lang === 'ru' ? 'Закрыть' : 'Close', exact: true })
+            .click()
+          await details.nth(1).click()
+          await expect(page.getByRole('dialog')).toContainText('Uncatalogued Relic')
+          expect(
+            await page
+              .getByRole('dialog')
+              .getByRole('heading')
+              .evaluate((el) => el.scrollWidth <= el.clientWidth)
+          ).toBe(true)
+          await page.keyboard.press('Escape')
+          expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        }
+      )
+    }
   }
 
   await scenario(

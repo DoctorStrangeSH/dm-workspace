@@ -131,12 +131,18 @@ export function Dialog({
           <div className="flex items-start justify-between gap-4 border-b border-[var(--border-default)] p-4">
             <div className="min-w-0 flex-1">
               {title && (
-                <h2 id={titleId} className="text-lg font-semibold text-[var(--text-primary)]">
+                <h2
+                  id={titleId}
+                  className="text-lg font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]"
+                >
                   {title}
                 </h2>
               )}
               {description && (
-                <p id={descriptionId} className="mt-0.5 text-sm text-[var(--text-muted)]">
+                <p
+                  id={descriptionId}
+                  className="mt-0.5 text-sm [overflow-wrap:anywhere] text-[var(--text-muted)]"
+                >
                   {description}
                 </p>
               )}
