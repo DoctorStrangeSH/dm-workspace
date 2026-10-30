@@ -44,7 +44,9 @@ jobs:
         run: npm run test:characters
 
       - name: Magic item catalog source and planning tests
-        run: node --test tests/magic-item-catalog.test.mjs
+        run: |
+          node --test tests/magic-item-catalog.test.mjs
+          node --import tsx --test tests/item-catalog-filters.test.ts
 
       - name: Install browser for offline campaign UI tests
         run: npx playwright install --with-deps chromium
