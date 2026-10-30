@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { addSrdItemToCharacter } from '@/lib/actions/add-item-to-character'
 import { addSrdItemToCampaign } from '@/lib/actions/add-item-to-campaign'
@@ -128,7 +129,10 @@ export default function SrdItemDetailDialog({
           {data.weight && (
             <div>
               <span className="text-[var(--text-muted)]">{t('items.weight')}:</span>{' '}
-              <span className="text-[var(--text-secondary)]">{data.weight}</span>
+              <span className="text-[var(--text-secondary)]">
+                {data.weight}
+                {data.weight_unit === 'lb' ? ' lb' : ''}
+              </span>
             </div>
           )}
           {data.attunement && (
@@ -141,6 +145,19 @@ export default function SrdItemDetailDialog({
 
         {data.description && (
           <div className="whitespace-pre-wrap text-[var(--text-secondary)]">{data.description}</div>
+        )}
+        {data.attunement_detail && (
+          <p className="text-[var(--text-secondary)]">{data.attunement_detail}</p>
+        )}
+        {data.source_document === 'srd-2024' && data.source_collection === 'magicitems' && (
+          <Link
+            href="/srd-license"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block py-2 text-xs text-[var(--text-muted)] underline"
+          >
+            SRD 5.2 · Wizards of the Coast · Open5e · CC BY 4.0
+          </Link>
         )}
       </div>
     </Dialog>

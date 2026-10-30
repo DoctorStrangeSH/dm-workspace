@@ -43,6 +43,11 @@ jobs:
       - name: Character HP, level-up and action boundary regression tests
         run: npm run test:characters
 
+      - name: Magic item catalog source and planning tests
+        run: |
+          node --test tests/magic-item-catalog.test.mjs
+          node --import tsx --test tests/item-catalog-filters.test.ts
+
       - name: Install browser for offline campaign UI tests
         run: npx playwright install --with-deps chromium
 
@@ -97,3 +102,10 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000600_revoke_broadcast_trigger_rpc_execute.sql
       - name: Assert role-scoped Storage and Realtime behavior
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/pr37_ci_assertions.sql
+
+      - name: Setup Node.js for isolated catalog import tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Atomic catalog import and conflict preservation
+        run: CATALOG_TEST_POSTGRES=1 node --test tests/magic-item-catalog.test.mjs
