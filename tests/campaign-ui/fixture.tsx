@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { I18nProvider, useI18n } from '../../src/lib/i18n'
 import { ToastProvider } from '../../src/components/toast/toast-provider'
 import { DmScreenProvider } from '../../src/app/campaign/[id]/dm-screen/dm-screen-context'
@@ -20,7 +20,7 @@ import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-m
 import { SessionChatPanel } from '../../src/app/campaign/[id]/session/session-chat-panel'
 import WizardStep1 from '../../src/app/campaign/[id]/characters/new/wizard-step-1'
 import CharacterSheet from '../../src/app/campaign/[id]/characters/[characterId]/character-sheet'
-import { createEmptyCharacterData, type Character } from '../../src/lib/types'
+import { createEmptyCharacterData, type Character, type SessionWithRsvp } from '../../src/lib/types'
 import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
@@ -142,6 +142,13 @@ Object.assign(window, { __characterFixture: fixtureCharacter })
 
 function Fixture() {
   const { lang } = useI18n()
+  const [sessions, setSessions] = useState(sessionFixtures)
+  useEffect(() => {
+    const receiveServerProps = (event: Event) =>
+      setSessions((event as CustomEvent<SessionWithRsvp[]>).detail)
+    window.addEventListener('offline-session-data', receiveServerProps)
+    return () => window.removeEventListener('offline-session-data', receiveServerProps)
+  }, [])
   const [race, setRace] = useState('srd-2024_goliath')
   const [cls, setClass] = useState('srd-2024_fighter')
   const [subclass, setSubclass] = useState('')
@@ -202,7 +209,8 @@ function Fixture() {
             {screen === 'sessions' ? (
               <SessionsClient
                 campaignId="test"
-                initialSessions={query.has('sessionsEmpty') ? [] : sessionFixtures}
+                initialSessions={query.has('sessionsEmpty') ? [] : sessions}
+                viewerId={query.get('viewer') ?? 'self'}
                 isDm={isDm}
               />
             ) : screen === 'spells' ? (

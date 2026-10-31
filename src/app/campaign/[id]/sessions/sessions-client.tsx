@@ -2,7 +2,7 @@
 
 import { useId, useState, useSyncExternalStore, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, CalendarDays, Clock } from 'lucide-react'
+import { Plus, Trash2, CalendarDays, Clock, Check } from 'lucide-react'
 import { createSession, deleteSession, setRsvp } from '@/lib/actions/sessions'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Card, Dialog, Input, Textarea, EmptyState, Badge } from '@/components/ui'
@@ -13,6 +13,7 @@ interface Props {
   campaignId: string
   initialSessions: SessionWithRsvp[]
   isDm: boolean
+  viewerId: string | null
 }
 
 // Server and the first hydration render agree on UTC, then use the browser's zone.
@@ -20,7 +21,7 @@ const subscribeToTimeZone = () => () => {}
 const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
 const serverTimeZone = () => 'UTC'
 
-export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
+export function SessionsClient({ campaignId, initialSessions, isDm, viewerId }: Props) {
   const { t } = useI18n()
   const timeZone = useSyncExternalStore(subscribeToTimeZone, browserTimeZone, serverTimeZone)
   const router = useRouter()
@@ -30,11 +31,15 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  const [rsvpSessionId, setRsvpSessionId] = useState<string | null>(null)
+  const [rsvpError, setRsvpError] = useState<{ sessionId: string; message: string } | null>(null)
+
   const sessions = initialSessions
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return
     setDeleteError(null)
+    setRsvpSessionId(null)
     startTransition(async () => {
       const res = await deleteSession(deleteTarget, campaignId)
       if ('error' in res) {
@@ -48,10 +53,20 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
   }
 
   const handleRsvp = (sessionId: string, status: RsvpStatus) => {
+    if (isPending) return
+    setRsvpSessionId(sessionId)
+    setRsvpError(null)
     startTransition(async () => {
-      const res = await setRsvp(sessionId, status)
-      if ('error' in res) toast.error(res.error ?? t('common.error'))
-      else router.refresh()
+      try {
+        const res = await setRsvp(sessionId, status)
+        if ('error' in res) {
+          setRsvpError({ sessionId, message: res.error ?? t('common.error') })
+        } else {
+          router.refresh()
+        }
+      } catch {
+        setRsvpError({ sessionId, message: t('sessions.responseError') })
+      }
     })
   }
 
@@ -96,6 +111,9 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
           key={session.id}
           session={session}
           timeZone={timeZone}
+          viewerId={viewerId}
+          isSavingRsvp={isPending && rsvpSessionId === session.id}
+          rsvpError={rsvpError?.sessionId === session.id ? rsvpError.message : null}
           isDm={isDm}
           onDelete={() => {
             setDeleteError(null)
@@ -155,6 +173,9 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
 function SessionCard({
   session,
   timeZone,
+  viewerId,
+  isSavingRsvp,
+  rsvpError,
   isDm,
   onDelete,
   onRsvp,
@@ -162,6 +183,9 @@ function SessionCard({
 }: {
   session: SessionWithRsvp
   timeZone: string
+  viewerId: string | null
+  isSavingRsvp: boolean
+  rsvpError: string | null
   isDm: boolean
   onDelete: () => void
   onRsvp: (status: RsvpStatus) => void
@@ -174,6 +198,10 @@ function SessionCard({
   const hasValidDate = Number.isFinite(date.getTime())
   const isPast = hasValidDate && date < new Date()
   const statuses: RsvpStatus[] = ['yes', 'maybe', 'no']
+  // Display identity only: setRsvp authenticates the writer independently on the server.
+  const savedResponse = viewerId
+    ? session.rsvps.find((r) => r.user_id === viewerId)?.status
+    : undefined
 
   return (
     <Card padding="md" role="article" aria-labelledby={titleId} className="rounded-2xl">
@@ -246,26 +274,43 @@ function SessionCard({
         ))}
       </dl>
 
+      <p aria-live="polite" className="mt-3 text-sm font-medium text-[var(--text-primary)]">
+        {t('sessions.yourResponse')}:{' '}
+        {savedResponse ? t(`rsvp.${savedResponse}`) : t('sessions.noResponse')}
+      </p>
+
       {((hasValidDate && !isPast) || isDm) && (
         <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border-default)] pt-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
           {hasValidDate && !isPast && (
             <div className="min-w-0" role="group" aria-label={t('sessions.yourResponse')}>
-              <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">
-                {t('sessions.yourResponse')}
-              </p>
               <div className="flex flex-wrap gap-2">
                 {statuses.map((status) => (
                   <Button
                     key={status}
-                    variant="secondary"
+                    variant={savedResponse === status ? 'primary' : 'secondary'}
+                    aria-pressed={savedResponse === status}
                     size="md"
                     onClick={() => onRsvp(status)}
                     disabled={isPending}
                   >
+                    {savedResponse === status && <Check size={16} aria-hidden="true" />}
                     <span aria-hidden="true">{RSVP_LABELS[status].icon}</span> {t(`rsvp.${status}`)}
                   </Button>
                 ))}
               </div>
+              {isSavingRsvp && (
+                <p role="status" className="mt-2 text-sm text-[var(--text-muted)]">
+                  {t('sessions.savingResponse')}
+                </p>
+              )}
+              {rsvpError && (
+                <p
+                  role="alert"
+                  className="mt-2 text-sm [overflow-wrap:anywhere] text-[var(--danger-text)]"
+                >
+                  {rsvpError}
+                </p>
+              )}
             </div>
           )}
           {isDm && (
