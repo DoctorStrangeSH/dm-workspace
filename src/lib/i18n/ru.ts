@@ -158,7 +158,16 @@ export const ru: Dictionary = {
   'campaign.create': 'Создать кампанию',
   'campaign.createTitle': 'Новая кампания',
   'campaign.copyLink': 'Скопировать ссылку',
-  'campaign.regenerateCode': 'Перегенерировать код',
+  'campaign.regenerateCode': 'Обновить ссылку',
+  'campaign.inviteLink': 'Приглашение в кампанию',
+  'campaign.linkCopied': 'Ссылка скопирована',
+  'campaign.requestUnconfirmed':
+    'Не удалось подтвердить результат. Обновите страницу и проверьте кампанию перед повтором.',
+  'campaign.regenerateConfirm.title': 'Обновить ссылку приглашения?',
+  'campaign.regenerateConfirm.description':
+    'Старая ссылка для кампании «{name}» перестанет работать.',
+  'campaign.regenerateConfirm.membersUnchanged':
+    'Участники останутся в кампании. После обновления скопируйте и отправьте новую ссылку.',
   'campaign.deleteTitle': 'Удалить кампанию',
   'campaign.deleteConfirm.title': 'Удалить кампанию?',
   'campaign.deleteConfirm.description': '«{name}» будет удалена навсегда. Восстановить нельзя.',

@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|sessions|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -2024,6 +2024,243 @@ try {
           )
         )
         await expect(saved).toHaveText(oldText)
+      }
+    )
+  }
+
+  for (const lang of ['ru', 'en']) {
+    for (const view of ['mobile-320', 'mobile-390', 'desktop']) {
+      await scenario(
+        'campaign cards preserve full names and expose labelled touch actions in ' +
+          lang +
+          ' ' +
+          view,
+        {
+          mobile: view !== 'desktop',
+          width: view === 'mobile-320' ? 320 : 390,
+          url: '/?screen=dashboard&lang=' + lang,
+        },
+        async (page) => {
+          const cards = page.getByRole('article')
+          await expect(cards).toHaveCount(2)
+          const first = cards.nth(0),
+            player = cards.nth(1)
+          const original = await page.evaluate(() => window.__campaignFixtures)
+          for (let i = 0; i < 2; i++) {
+            const card = cards.nth(i),
+              heading = card.getByRole('heading')
+            await expect(heading).toHaveText(original[i].name)
+            expect(
+              await heading.evaluate(
+                (el) => el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight
+              )
+            ).toBe(true)
+            expect(
+              await heading.locator('span').evaluate((el) => getComputedStyle(el).webkitLineClamp)
+            ).toBe('none')
+            const link = card.getByRole('link')
+            await expect(link).toHaveAttribute('href', '/campaign/' + original[i].id)
+            expect((await link.boundingBox()).height).toBeGreaterThanOrEqual(44)
+            expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          }
+          await expect(player).toContainText(original[1].genre)
+          await expect(player.getByRole('button')).toHaveCount(0)
+          await expect(first.getByRole('button')).toHaveCount(3)
+          const labels =
+            lang === 'ru'
+              ? ['Скопировать ссылку', 'Обновить ссылку', 'Удалить кампанию']
+              : ['Copy link', 'Replace link', 'Delete campaign']
+          for (const label of labels) {
+            const button = first.getByRole('button', { name: label, exact: true })
+            await expect(button).toBeVisible()
+            expect((await button.boundingBox()).height).toBeGreaterThanOrEqual(44)
+          }
+          await first.getByRole('button', { name: labels[1], exact: true }).click()
+          const dialog = page.getByRole('dialog')
+          await expect(dialog).toContainText(original[0].name)
+          await expect(dialog).toContainText(
+            lang === 'ru' ? 'перестанет работать' : 'will stop working'
+          )
+          await expect(
+            dialog.getByRole('button', { name: lang === 'ru' ? 'Закрыть' : 'Close', exact: true })
+          ).toBeVisible()
+          expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          await dialog
+            .getByRole('button', { name: lang === 'ru' ? 'Отмена' : 'Cancel', exact: true })
+            .click()
+          await expect(page.getByRole('dialog')).toHaveCount(0)
+          expect(await page.evaluate(() => window.__uiLab.campaignActions)).toEqual([])
+          expect(await page.evaluate(() => window.__campaignFixtures)).toEqual(original)
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await first.screenshot({
+            path: path.join(output, 'campaign-card-' + lang + '-' + view + '.png'),
+          })
+        }
+      )
+    }
+    await scenario(
+      'campaign invitation and deletion confirmations preserve state on failures in ' + lang,
+      { mobile: true, width: 320, url: '/?screen=dashboard&lang=' + lang },
+      async (page) => {
+        const card = page.getByRole('article').first()
+        const copy = card.getByRole('button', {
+          name: lang === 'ru' ? 'Скопировать ссылку' : 'Copy link',
+          exact: true,
+        })
+        const regenLabel = lang === 'ru' ? 'Обновить ссылку' : 'Replace link'
+        await page.evaluate(() =>
+          Object.defineProperty(navigator, 'clipboard', {
+            configurable: true,
+            value: {
+              writeText: async (value) => {
+                window.__uiLab.copiedLinks.push(value)
+              },
+            },
+          })
+        )
+        await copy.click()
+        await expect(card.getByRole('status')).toHaveText(
+          lang === 'ru' ? 'Ссылка скопирована' : 'Link copied'
+        )
+        expect(await page.evaluate(() => window.__uiLab.copiedLinks)).toEqual([
+          origin + '/join/oldcode8',
+        ])
+        await card.getByRole('button', { name: regenLabel, exact: true }).click()
+        const dialog = page.getByRole('dialog')
+        const confirm = dialog.getByRole('button', { name: regenLabel, exact: true })
+        await page.evaluate(() => {
+          window.__uiLab.campaignDelay = 500
+        })
+        await confirm.click()
+        await expect(confirm).toBeDisabled()
+        await expect(
+          dialog.getByRole('button', { name: lang === 'ru' ? 'Закрыть' : 'Close', exact: true })
+        ).toBeDisabled()
+        await page.keyboard.press('Escape')
+        await expect(dialog).toBeVisible()
+        await expect(dialog.getByRole('alert')).toHaveText('Offline campaign action boundary')
+        await expect(card.locator('code')).toHaveText('/join/oldcode8')
+        await page.evaluate(() => {
+          window.__uiLab.campaignOutcome = 'throw'
+        })
+        await confirm.click()
+        await expect(dialog.getByRole('alert')).toContainText(
+          lang === 'ru' ? 'Обновите страницу' : 'Refresh the page'
+        )
+        await expect(card.locator('code')).toHaveText('/join/oldcode8')
+        await page.evaluate(() => {
+          window.__uiLab.campaignOutcome = 'success'
+        })
+        await confirm.click()
+        await expect(dialog).toHaveCount(0)
+        await expect(card.locator('code')).toHaveText('/join/newcode8')
+        await expect(card.getByRole('status')).toHaveCount(0)
+        await copy.click()
+        expect(await page.evaluate(() => window.__uiLab.copiedLinks.at(-1))).toBe(
+          origin + '/join/newcode8'
+        )
+        await page.evaluate(() => {
+          const rows = structuredClone(window.__campaignFixtures)
+          rows[0].invite_code = 'external'
+          window.dispatchEvent(new CustomEvent('offline-campaign-data', { detail: rows }))
+        })
+        await expect(card.locator('code')).toHaveText('/join/external')
+        await expect(card.getByRole('status')).toHaveCount(0)
+        await card
+          .getByRole('button', {
+            name: lang === 'ru' ? 'Удалить кампанию' : 'Delete campaign',
+            exact: true,
+          })
+          .click()
+        await expect(dialog).toContainText(await card.getByRole('heading').textContent())
+        await page.evaluate(() => {
+          window.__uiLab.campaignOutcome = 'error'
+        })
+        await dialog
+          .getByRole('button', { name: lang === 'ru' ? 'Удалить' : 'Delete', exact: true })
+          .click()
+        await expect(dialog.getByRole('alert')).toHaveText('Offline campaign action boundary')
+        await dialog.screenshot({
+          path: path.join(output, 'campaign-delete-' + lang + '-mobile.png'),
+        })
+        await page.evaluate(() => {
+          window.__uiLab.campaignOutcome = 'success'
+        })
+        await dialog
+          .getByRole('button', { name: lang === 'ru' ? 'Удалить' : 'Delete', exact: true })
+          .click()
+        await expect(dialog).toHaveCount(0)
+        expect(await page.evaluate(() => window.__uiLab.campaignActions)).toEqual([
+          ...Array.from({ length: 3 }, () => ({
+            name: 'regenerateInviteCode',
+            args: ['offline-campaign'],
+          })),
+          ...Array.from({ length: 2 }, () => ({
+            name: 'deleteCampaign',
+            args: ['offline-campaign'],
+          })),
+        ])
+        expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(2)
+      }
+    )
+    await scenario(
+      'campaign create preserves its draft and pending dialog through errors in ' + lang,
+      { mobile: true, width: 320, url: '/?screen=dashboard&lang=' + lang },
+      async (page) => {
+        await page
+          .getByRole('button', {
+            name: lang === 'ru' ? 'Создать кампанию' : 'Create campaign',
+            exact: true,
+          })
+          .click()
+        const dialog = page.getByRole('dialog')
+        const name = dialog.getByLabel(lang === 'ru' ? 'Название' : 'Name', { exact: false })
+        const description = dialog.getByRole('textbox', {
+          name: lang === 'ru' ? 'Описание' : 'Description',
+          exact: true,
+        })
+        await name.fill('Synthetic campaign')
+        await description.fill('Keep this draft')
+        const submit = dialog.getByRole('button', {
+          name: lang === 'ru' ? 'Создать' : 'Create',
+          exact: true,
+        })
+        await page.evaluate(() => {
+          window.__uiLab.campaignDelay = 500
+        })
+        await submit.click()
+        await expect(submit).toBeDisabled()
+        await page.keyboard.press('Escape')
+        await expect(dialog).toBeVisible()
+        await expect(dialog.getByRole('alert')).toHaveText('Offline campaign action boundary')
+        await expect(name).toHaveValue('Synthetic campaign')
+        await expect(description).toHaveValue('Keep this draft')
+        await page.evaluate(() => {
+          window.__uiLab.campaignOutcome = 'throw'
+        })
+        await submit.click()
+        await expect(dialog.getByRole('alert')).toContainText(
+          lang === 'ru' ? 'Обновите страницу' : 'Refresh the page'
+        )
+        await expect(name).toHaveValue('Synthetic campaign')
+        expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+        await dialog.screenshot({
+          path: path.join(output, 'campaign-create-' + lang + '-mobile.png'),
+        })
+        await page.evaluate(() => {
+          window.__uiLab.campaignOutcome = 'success'
+        })
+        await submit.click()
+        await expect(dialog).toHaveCount(0)
+        expect(await page.evaluate(() => window.__uiLab.campaignActions)).toEqual(
+          Array.from({ length: 3 }, () => ({
+            name: 'createCampaign',
+            args: [{ name: 'Synthetic campaign', genre: '', description: 'Keep this draft' }],
+          }))
+        )
+        expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(1)
       }
     )
   }

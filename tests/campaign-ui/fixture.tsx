@@ -1,4 +1,8 @@
 import { createRoot } from 'react-dom/client'
+import CampaignCard from '../../src/app/dashboard/campaign-card'
+import CreateCampaignButton from '../../src/app/dashboard/create-campaign-button'
+import { AppShell } from '../../src/components/app-shell'
+import { campaignFixtures } from './campaigns-data'
 import { useEffect, useState } from 'react'
 import { I18nProvider, useI18n } from '../../src/lib/i18n'
 import { ToastProvider } from '../../src/components/toast/toast-provider'
@@ -20,7 +24,12 @@ import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-m
 import { SessionChatPanel } from '../../src/app/campaign/[id]/session/session-chat-panel'
 import WizardStep1 from '../../src/app/campaign/[id]/characters/new/wizard-step-1'
 import CharacterSheet from '../../src/app/campaign/[id]/characters/[characterId]/character-sheet'
-import { createEmptyCharacterData, type Character, type SessionWithRsvp } from '../../src/lib/types'
+import {
+  createEmptyCharacterData,
+  type Character,
+  type SessionWithRsvp,
+  type CampaignWithRole,
+} from '../../src/lib/types'
 import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
@@ -140,6 +149,31 @@ const fixtureCharacter = {
 } as Character
 Object.assign(window, { __characterFixture: fixtureCharacter })
 
+function DashboardFixture() {
+  const [campaigns, setCampaigns] = useState(campaignFixtures)
+  useEffect(() => {
+    const receive = (event: Event) =>
+      setCampaigns((event as CustomEvent<CampaignWithRole[]>).detail)
+    window.addEventListener('offline-campaign-data', receive)
+    return () => window.removeEventListener('offline-campaign-data', receive)
+  }, [])
+  return (
+    <AppShell title="DM Workspace" maxWidth="xl">
+      <div className="mb-6 flex justify-end">
+        <CreateCampaignButton />
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {campaigns.map((campaign) => (
+          <CampaignCard
+            key={campaign.id}
+            campaign={query.get('role') === 'player' ? { ...campaign, role: 'player' } : campaign}
+          />
+        ))}
+      </div>
+    </AppShell>
+  )
+}
+
 function Fixture() {
   const { lang } = useI18n()
   const [sessions, setSessions] = useState(sessionFixtures)
@@ -155,6 +189,7 @@ function Fixture() {
   const isDm = query.get('role') !== 'player'
   const session = location.pathname.includes('session')
   const screen = query.get('screen')
+  if (screen === 'dashboard') return <DashboardFixture />
   return (
     <DmScreenProvider>
       <CampaignShell>
