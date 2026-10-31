@@ -123,6 +123,40 @@ export function referencePage(
   filters: ReferenceFilters = {},
   offset = 0
 ): SrdItemsPageResult {
+  if (kind === 'bestiary' && new URLSearchParams(location.search).has('monsterAppearance')) {
+    const items = [
+      {
+        key: 'offline-long-monster',
+        name: 'Ancient Guardian of the Everlasting Celestial Constellation',
+        name_ru: null,
+        data: {
+          type: 'Dragon',
+          size: 'Large',
+          alignment: 'Synthetic alignment',
+          cr: '1/8',
+          ac: 17,
+          hp: 123,
+          speed: 0,
+          xp: 25,
+          abilities: { str: 23, dex: 8, con: 16, int: 10, wis: 19, cha: 12 },
+          description: 'Synthetic creature description. ' + 'Unbroken'.repeat(30),
+        },
+      },
+      {
+        key: 'offline-custom-monster',
+        name: 'Unbroken'.repeat(12),
+        name_ru: null,
+        data: { type: 'Custom Guardian', size: 'Uncatalogued Size', hp_max: 42 },
+      },
+      {
+        key: 'offline-missing-monster',
+        name: 'Missing creature stats',
+        name_ru: null,
+        data: { type: '', size: '' },
+      },
+    ]
+    return { ok: true, items: items.slice(offset, offset + 24), hasNext: false }
+  }
   if (kind === 'spells' && new URLSearchParams(location.search).has('spellAppearance')) {
     const items = [
       {
