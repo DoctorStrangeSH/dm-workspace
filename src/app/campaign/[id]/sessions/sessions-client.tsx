@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useSyncExternalStore, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, CalendarDays, Clock } from 'lucide-react'
 import { createSession, deleteSession, setRsvp } from '@/lib/actions/sessions'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Card, Dialog, Input, Textarea, EmptyState, Badge } from '@/components/ui'
@@ -15,22 +15,30 @@ interface Props {
   isDm: boolean
 }
 
+// Server and the first hydration render agree on UTC, then use the browser's zone.
+const subscribeToTimeZone = () => () => {}
+const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
+const serverTimeZone = () => 'UTC'
+
 export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
   const { t } = useI18n()
+  const timeZone = useSyncExternalStore(subscribeToTimeZone, browserTimeZone, serverTimeZone)
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const sessions = initialSessions
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return
+    setDeleteError(null)
     startTransition(async () => {
       const res = await deleteSession(deleteTarget, campaignId)
       if ('error' in res) {
-        toast.error(res.error ?? t('common.error'))
+        setDeleteError(res.error ?? t('common.error'))
       } else {
         toast.success(t('sessions.toast.deleted'))
         setDeleteTarget(null)
@@ -87,8 +95,12 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
         <SessionCard
           key={session.id}
           session={session}
+          timeZone={timeZone}
           isDm={isDm}
-          onDelete={() => setDeleteTarget(session.id)}
+          onDelete={() => {
+            setDeleteError(null)
+            setDeleteTarget(session.id)
+          }}
           onRsvp={(status) => handleRsvp(session.id, status)}
           isPending={isPending}
         />
@@ -105,8 +117,10 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
         title={t('sessions.deleteConfirm.title')}
         description={t('sessions.deleteConfirm.description')}
         size="sm"
+        closeLabel={t('common.close')}
+        closeDisabled={isPending}
         footer={
-          <>
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="secondary"
               size="md"
@@ -118,10 +132,21 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
             <Button variant="danger" size="md" onClick={handleDeleteConfirm} loading={isPending}>
               {t('common.delete')}
             </Button>
-          </>
+          </div>
         }
       >
+        <p className="mb-2 font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+          {sessions.find((session) => session.id === deleteTarget)?.title}
+        </p>
         <p className="text-sm text-[var(--text-muted)]">{t('sessions.deleteConfirm.cannotUndo')}</p>
+        {deleteError && (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg bg-[var(--danger-subtle)] p-3 text-sm [overflow-wrap:anywhere] text-[var(--danger-text)]"
+          >
+            {deleteError}
+          </p>
+        )}
       </Dialog>
     </div>
   )
@@ -129,96 +154,133 @@ export function SessionsClient({ campaignId, initialSessions, isDm }: Props) {
 
 function SessionCard({
   session,
+  timeZone,
   isDm,
   onDelete,
   onRsvp,
   isPending,
 }: {
   session: SessionWithRsvp
+  timeZone: string
   isDm: boolean
   onDelete: () => void
   onRsvp: (status: RsvpStatus) => void
   isPending: boolean
 }) {
   const { t, lang } = useI18n()
+  const titleId = useId()
   const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
-
   const date = new Date(session.starts_at)
-  const isPast = date < new Date()
-
-  const yesCount = session.rsvps.filter((r) => r.status === 'yes').length
-  const noCount = session.rsvps.filter((r) => r.status === 'no').length
-  const maybeCount = session.rsvps.filter((r) => r.status === 'maybe').length
+  const hasValidDate = Number.isFinite(date.getTime())
+  const isPast = hasValidDate && date < new Date()
+  const statuses: RsvpStatus[] = ['yes', 'maybe', 'no']
 
   return (
-    <Card padding="md" className={isPast ? 'opacity-60' : ''}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2">
-            <h3 className="truncate font-semibold text-[var(--text-primary)]">{session.title}</h3>
-            {isPast && (
-              <Badge variant="neutral" size="sm">
-                {t('sessions.past')}
-              </Badge>
-            )}
-          </div>
-          <div className="text-sm text-[var(--text-muted)]">
-            📅{' '}
-            {date.toLocaleString(locale, {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-            {' · '}
-            {t('sessions.duration', { n: session.duration_minutes })}
-          </div>
-          {session.description && (
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">{session.description}</p>
-          )}
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-[var(--text-subtle)]">RSVP:</span>
-            <Badge variant="success" size="sm">
-              ✅ {yesCount}
-            </Badge>
-            <Badge variant="danger" size="sm">
-              ❌ {noCount}
-            </Badge>
-            <Badge variant="warning" size="sm">
-              🤔 {maybeCount}
-            </Badge>
-          </div>
-        </div>
-
-        {isDm && (
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Trash2 size={14} />}
-            onClick={onDelete}
-            disabled={isPending}
-            className="text-[var(--danger)]"
-          >
-            <span className="sr-only">{t('common.delete')}</span>
-          </Button>
+    <Card padding="md" role="article" aria-labelledby={titleId} className="rounded-2xl">
+      <div className="mb-3 flex flex-wrap items-start gap-2">
+        <h3
+          id={titleId}
+          className="min-w-0 flex-1 text-lg leading-snug font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]"
+        >
+          {session.title}
+        </h3>
+        {isPast && (
+          <Badge variant="neutral" size="sm">
+            {t('sessions.past')}
+          </Badge>
         )}
       </div>
 
-      {!isPast && (
-        <div className="mt-3 flex flex-wrap gap-1 border-t border-[var(--border-default)] pt-3">
-          {(['yes', 'maybe', 'no'] as RsvpStatus[]).map((status) => (
+      <div className="flex flex-col gap-2 text-sm text-[var(--text-secondary)] sm:flex-row sm:flex-wrap sm:gap-x-5">
+        <div className="flex min-w-0 items-start gap-2">
+          <CalendarDays
+            size={16}
+            className="mt-0.5 shrink-0 text-[var(--accent-text)]"
+            aria-hidden="true"
+          />
+          {hasValidDate ? (
+            <time dateTime={session.starts_at} className="[overflow-wrap:anywhere]">
+              {date.toLocaleString(locale, {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short',
+                timeZone,
+              })}
+            </time>
+          ) : (
+            <span>{t('sessions.dateUnavailable')}</span>
+          )}
+        </div>
+        <div className="flex items-start gap-2">
+          <Clock
+            size={16}
+            className="mt-0.5 shrink-0 text-[var(--accent-text)]"
+            aria-hidden="true"
+          />
+          <span>{t('sessions.duration', { n: session.duration_minutes })}</span>
+        </div>
+      </div>
+
+      {session.description && (
+        <p className="mt-3 text-sm leading-relaxed [overflow-wrap:anywhere] whitespace-pre-wrap text-[var(--text-secondary)]">
+          {session.description}
+        </p>
+      )}
+
+      <dl className="mt-4 flex flex-wrap gap-2" aria-label={t('sessions.responses')}>
+        {statuses.map((status) => (
+          <div
+            key={status}
+            className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] px-3 py-2 text-xs"
+          >
+            <dt className="text-[var(--text-secondary)]">
+              <span aria-hidden="true">{RSVP_LABELS[status].icon}</span> {t(`rsvp.${status}`)}
+            </dt>
+            <dd className="font-semibold text-[var(--text-primary)] tabular-nums">
+              {session.rsvps.filter((r) => r.status === status).length}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {((hasValidDate && !isPast) || isDm) && (
+        <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border-default)] pt-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+          {hasValidDate && !isPast && (
+            <div className="min-w-0" role="group" aria-label={t('sessions.yourResponse')}>
+              <p className="mb-2 text-xs font-medium text-[var(--text-muted)]">
+                {t('sessions.yourResponse')}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {statuses.map((status) => (
+                  <Button
+                    key={status}
+                    variant="secondary"
+                    size="md"
+                    onClick={() => onRsvp(status)}
+                    disabled={isPending}
+                  >
+                    <span aria-hidden="true">{RSVP_LABELS[status].icon}</span> {t(`rsvp.${status}`)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+          {isDm && (
             <Button
-              key={status}
-              variant="secondary"
-              size="sm"
-              onClick={() => onRsvp(status)}
+              variant="ghost"
+              size="md"
+              icon={<Trash2 size={16} aria-hidden="true" />}
+              onClick={onDelete}
               disabled={isPending}
+              className="w-full text-[var(--danger-text)] sm:w-auto"
+              aria-label={t('sessions.deleteLabel', { title: session.title })}
             >
-              {RSVP_LABELS[status].icon} {t(`rsvp.${status}`)}
+              {t('common.delete')}
             </Button>
-          ))}
+          )}
         </div>
       )}
     </Card>
@@ -234,10 +296,12 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
   const [description, setDescription] = useState('')
   const [startsAt, setStartsAt] = useState('')
   const [duration, setDuration] = useState(180)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!title.trim() || !startsAt) return
+    setError(null)
 
     startTransition(async () => {
       const res = await createSession(campaignId, {
@@ -247,7 +311,7 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
         durationMinutes: duration,
       })
       if ('error' in res) {
-        toast.error(res.error ?? t('common.error'))
+        setError(res.error ?? t('common.error'))
       } else {
         toast.success(t('sessions.toast.created'))
         router.refresh()
@@ -257,9 +321,17 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
   }
 
   return (
-    <Dialog open={true} onClose={onClose} title={t('sessions.createTitle')} size="md">
+    <Dialog
+      open={true}
+      onClose={() => !isPending && onClose()}
+      title={t('sessions.createTitle')}
+      size="md"
+      closeLabel={t('common.close')}
+      closeDisabled={isPending}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
+          className="min-h-11 min-w-0"
           label={t('sessions.form.title')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -268,6 +340,7 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
           autoFocus
         />
         <Input
+          className="min-h-11 min-w-0"
           label={t('sessions.form.datetime')}
           type="datetime-local"
           value={startsAt}
@@ -275,6 +348,7 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
           required
         />
         <Input
+          className="min-h-11 min-w-0"
           label={t('sessions.form.duration')}
           type="number"
           value={duration}
@@ -291,7 +365,15 @@ function CreateSessionDialog({ campaignId, onClose }: { campaignId: string; onCl
           placeholder={t('sessions.form.descriptionPlaceholder')}
         />
 
-        <div className="flex justify-end gap-2 pt-2">
+        {error && (
+          <p
+            role="alert"
+            className="rounded-lg bg-[var(--danger-subtle)] p-3 text-sm [overflow-wrap:anywhere] text-[var(--danger-text)]"
+          >
+            {error}
+          </p>
+        )}
+        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
           <Button
             variant="secondary"
             size="md"

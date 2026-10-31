@@ -25,7 +25,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|sessions|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-messages)$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -77,6 +77,7 @@ async function scenario(name, options, body) {
         ? { width: options.width ?? 390, height: 844 }
         : { width: 1440, height: 1000 },
       reducedMotion: 'reduce',
+      ...(options.timezoneId ? { timezoneId: options.timezoneId } : {}),
     })
     const page = await context.newPage()
     const errors = []
@@ -1480,6 +1481,226 @@ try {
         }
       )
     }
+  }
+
+  for (const lang of ['ru', 'en']) {
+    for (const view of ['mobile-player', 'mobile-dm', 'desktop-dm']) {
+      const dm = view !== 'mobile-player'
+      await scenario(
+        'session cards fit and preserve browsing in ' + lang + ' ' + view,
+        {
+          mobile: view.startsWith('mobile'),
+          width: dm ? 390 : 320,
+          timezoneId: 'Europe/Moscow',
+          url: '/?screen=sessions&lang=' + lang + '&role=' + (dm ? 'dm' : 'player'),
+        },
+        async (page) => {
+          const original = await page.evaluate(() => window.__sessionFixtures)
+          const cards = page.getByRole('article')
+          await expect(cards).toHaveCount(3)
+          const first = cards.nth(0),
+            past = cards.nth(1),
+            invalid = cards.nth(2)
+          for (const card of [first, past]) {
+            expect(
+              await card
+                .getByRole('heading')
+                .evaluate(
+                  (el) =>
+                    el.scrollWidth <= el.clientWidth && getComputedStyle(el).whiteSpace !== 'nowrap'
+                )
+            ).toBe(true)
+            expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          }
+          await expect(first.locator('time')).toHaveAttribute('datetime', '2099-07-10T14:30:00Z')
+          await expect(first.locator('time')).toContainText(lang === 'ru' ? '17:30' : '05:30 PM')
+          await expect(first.locator('time')).toContainText(/(?:GMT|UTC)\+3|MSK/)
+          await expect(first).toContainText(lang === 'ru' ? '180 мин' : '180 min')
+          expect(await first.locator('dd').allTextContents()).toEqual(['2', '1', '1'])
+          await expect(first.locator('dl')).toHaveAttribute(
+            'aria-label',
+            lang === 'ru' ? 'Ответы участников' : 'Participant responses'
+          )
+          for (const label of lang === 'ru'
+            ? ['Иду', 'Может быть', 'Не иду']
+            : ['Going', 'Maybe', 'Not going'])
+            await expect(first.locator('dl')).toContainText(label)
+          const response = first.getByRole('group', {
+            name: lang === 'ru' ? 'Ваш ответ' : 'Your response',
+            exact: true,
+          })
+          await expect(response.getByRole('button')).toHaveCount(3)
+          for (const b of await response.getByRole('button').all())
+            expect((await b.boundingBox()).height).toBeGreaterThanOrEqual(44)
+          await expect(past).toContainText(lang === 'ru' ? 'Прошла' : 'Past')
+          await expect(past.getByRole('group')).toHaveCount(0)
+          await expect(invalid).toContainText(
+            lang === 'ru' ? 'Дата недоступна' : 'Date unavailable'
+          )
+          await expect(invalid.locator('time')).toHaveCount(0)
+          await expect(invalid.getByRole('group')).toHaveCount(0)
+          const remove = first.getByRole('button', { name: /^(Удалить сессию|Delete session)/ })
+          await expect(remove).toHaveCount(dm ? 1 : 0)
+          if (dm) expect((await remove.boundingBox()).height).toBeGreaterThanOrEqual(44)
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await first.screenshot({
+            path: path.join(output, 'session-card-' + lang + '-' + view + '.png'),
+          })
+          if (dm) {
+            await remove.click()
+            const dialog = page.getByRole('dialog')
+            await expect(dialog).toContainText(original[0].title)
+            await expect(
+              dialog.getByRole('button', { name: lang === 'ru' ? 'Закрыть' : 'Close', exact: true })
+            ).toBeVisible()
+            expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+            await dialog
+              .getByRole('button', { name: lang === 'ru' ? 'Отмена' : 'Cancel', exact: true })
+              .click()
+            await expect(page.getByRole('dialog')).toHaveCount(0)
+          }
+          expect(await page.evaluate(() => window.__sessionFixtures)).toEqual(original)
+          expect(await page.evaluate(() => window.__uiLab.sessionActions)).toEqual([])
+          expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+          await page.goto(
+            origin +
+              '/?screen=sessions&sessionsEmpty&lang=' +
+              lang +
+              '&role=' +
+              (dm ? 'dm' : 'player')
+          )
+          await expect(page.getByRole('article')).toHaveCount(0)
+          await expect(
+            page.getByRole('heading', {
+              name: lang === 'ru' ? 'Пока нет ни одной сессии' : 'No sessions yet',
+              exact: true,
+            })
+          ).toBeVisible()
+          await expect(
+            page.getByRole('button', {
+              name: lang === 'ru' ? 'Создать сессию' : 'Create session',
+              exact: true,
+            })
+          ).toHaveCount(dm ? 1 : 0)
+          expect(await page.evaluate(() => window.__uiLab.sessionActions)).toEqual([])
+        }
+      )
+    }
+    await scenario(
+      'session forms and deliberate actions retain data after failure in ' + lang,
+      {
+        mobile: true,
+        width: 320,
+        timezoneId: 'Europe/Moscow',
+        url: '/?screen=sessions&lang=' + lang,
+      },
+      async (page) => {
+        const first = page.getByRole('article').first()
+        const going = first
+          .getByRole('group')
+          .getByRole('button', { name: lang === 'ru' ? 'Иду' : 'Going', exact: true })
+        await page.evaluate(() => {
+          window.__uiLab.sessionDelay = 600
+        })
+        await going.click()
+        await expect(going).toBeDisabled()
+        await expect(going).toBeEnabled()
+        await expect(
+          page.getByText('Offline session action boundary', { exact: true }).last()
+        ).toBeVisible()
+        expect(await page.evaluate(() => window.__uiLab.sessionActions)).toEqual([
+          { name: 'setRsvp', args: ['offline-future-session', 'yes'] },
+        ])
+        await page.evaluate(() => {
+          window.__uiLab.sessionDelay = 0
+        })
+        await first.getByRole('button', { name: /^(Удалить сессию|Delete session)/ }).click()
+        const dialog = page.getByRole('dialog')
+        await dialog
+          .getByRole('button', { name: lang === 'ru' ? 'Удалить' : 'Delete', exact: true })
+          .click()
+        await expect(dialog.getByRole('alert')).toContainText('Offline session action boundary')
+        await expect(dialog).toBeVisible()
+        await expect(
+          dialog.getByRole('button', { name: lang === 'ru' ? 'Удалить' : 'Delete', exact: true })
+        ).toBeEnabled()
+        expect(await page.evaluate(() => window.__uiLab.sessionActions.at(-1))).toEqual({
+          name: 'deleteSession',
+          args: ['offline-future-session', 'test'],
+        })
+        await page.evaluate(() => {
+          window.__uiLab.sessionOutcome = 'success'
+        })
+        await dialog
+          .getByRole('button', { name: lang === 'ru' ? 'Удалить' : 'Delete', exact: true })
+          .click()
+        await expect(dialog).toHaveCount(0)
+        expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(1)
+        await page
+          .getByRole('button', {
+            name: lang === 'ru' ? 'Создать сессию' : 'Create session',
+            exact: true,
+          })
+          .click()
+        await expect(dialog).toBeVisible()
+        const title = dialog.getByLabel(lang === 'ru' ? 'Название' : 'Title', { exact: false })
+        const date = dialog.getByLabel(lang === 'ru' ? 'Дата и время' : 'Date and time', {
+          exact: false,
+        })
+        await title.fill('Synthetic retry session')
+        await date.fill('2099-07-11T18:00')
+        await dialog
+          .getByLabel(lang === 'ru' ? 'Описание' : 'Description', { exact: true })
+          .fill('Retain this draft')
+        for (const input of await dialog.locator('input').all())
+          expect((await input.boundingBox()).height).toBeGreaterThanOrEqual(44)
+        expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+        await page.evaluate(() => {
+          window.__uiLab.sessionOutcome = 'error'
+        })
+        await dialog
+          .getByRole('button', { name: lang === 'ru' ? 'Создать' : 'Create', exact: true })
+          .click()
+        await expect(dialog.getByRole('alert')).toContainText('Offline session action boundary')
+        await expect(title).toHaveValue('Synthetic retry session')
+        await expect(date).toHaveValue('2099-07-11T18:00')
+        await expect(
+          dialog.getByRole('button', { name: lang === 'ru' ? 'Создать' : 'Create', exact: true })
+        ).toBeEnabled()
+        expect(await page.evaluate(() => window.__uiLab.sessionActions.at(-1))).toEqual({
+          name: 'createSession',
+          args: [
+            'test',
+            {
+              title: 'Synthetic retry session',
+              description: 'Retain this draft',
+              startsAt: '2099-07-11T15:00:00.000Z',
+              durationMinutes: 180,
+            },
+          ],
+        })
+        await expect(
+          page.getByText(lang === 'ru' ? 'Сессия удалена' : 'Session deleted', { exact: true })
+        ).toHaveCount(0)
+        await dialog.screenshot({
+          path: path.join(output, 'session-create-' + lang + '-mobile.png'),
+        })
+        await page.evaluate(() => {
+          window.__uiLab.sessionOutcome = 'success'
+        })
+        await dialog
+          .getByRole('button', { name: lang === 'ru' ? 'Создать' : 'Create', exact: true })
+          .click()
+        await expect(dialog).toHaveCount(0)
+        expect(await page.evaluate(() => window.__uiLab.sessionActions.map((x) => x.name))).toEqual(
+          ['setRsvp', 'deleteSession', 'deleteSession', 'createSession', 'createSession']
+        )
+        expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(2)
+        expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+      }
+    )
   }
 
   await scenario(
