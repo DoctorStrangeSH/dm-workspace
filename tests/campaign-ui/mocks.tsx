@@ -25,6 +25,9 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  sessionActions: [] as { name: string; args: unknown[] }[],
+  sessionOutcome: 'error' as 'error' | 'success',
+  sessionDelay: 0,
   characterActions: [] as { name: string; args: unknown[] }[],
   refreshes: 0,
   identityOutcome: 'error' as 'error' | 'success' | 'throw',
@@ -400,4 +403,21 @@ export async function longRest(...args: unknown[]) {
 export async function updateCharacterHP(...args: unknown[]) {
   lab.characterActions.push({ name: 'updateCharacterHP', args })
   return { error: 'Offline character action boundary' }
+}
+
+async function sessionAction(name: string, args: unknown[]) {
+  lab.sessionActions.push({ name, args })
+  if (lab.sessionDelay) await new Promise((resolve) => setTimeout(resolve, lab.sessionDelay))
+  return lab.sessionOutcome === 'success'
+    ? { success: true }
+    : { error: 'Offline session action boundary' }
+}
+export async function createSession(...args: unknown[]) {
+  return sessionAction('createSession', args)
+}
+export async function deleteSession(...args: unknown[]) {
+  return sessionAction('deleteSession', args)
+}
+export async function setRsvp(...args: unknown[]) {
+  return sessionAction('setRsvp', args)
 }

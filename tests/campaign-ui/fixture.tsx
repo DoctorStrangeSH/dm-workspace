@@ -27,6 +27,8 @@ import './mocks'
 import { catalogPage, referencePage } from './mocks'
 import SpellsClient from '../../src/app/campaign/[id]/spells/spells-client'
 import BestiaryClient from '../../src/app/campaign/[id]/bestiary/bestiary-client'
+import { SessionsClient } from '../../src/app/campaign/[id]/sessions/sessions-client'
+import { sessionFixtures } from './sessions-data'
 import ItemsClient from '../../src/app/campaign/[id]/items/items-client'
 
 const query = new URLSearchParams(location.search)
@@ -197,7 +199,13 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'spells' ? (
+            {screen === 'sessions' ? (
+              <SessionsClient
+                campaignId="test"
+                initialSessions={query.has('sessionsEmpty') ? [] : sessionFixtures}
+                isDm={isDm}
+              />
+            ) : screen === 'spells' ? (
               <SpellsClient
                 campaignId="test"
                 initialPage={query.has('initialError') ? { ok: false } : referencePage('spells')}
