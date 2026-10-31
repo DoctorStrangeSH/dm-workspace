@@ -223,7 +223,7 @@ function Fixture() {
                   '1/2',
                   ...Array.from({ length: 30 }, (_, i) => String(i + 1)),
                 ]}
-                canEdit={false}
+                canEdit={query.has('monsterEditor')}
                 lang={lang}
               />
             ) : screen === 'items' ? (

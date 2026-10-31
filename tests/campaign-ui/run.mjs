@@ -73,7 +73,9 @@ const browser = await chromium.launch({ headless: true }).catch(async (error) =>
 async function scenario(name, options, body) {
   await test(name, async () => {
     const context = await browser.newContext({
-      viewport: options.mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 },
+      viewport: options.mobile
+        ? { width: options.width ?? 390, height: 844 }
+        : { width: 1440, height: 1000 },
       reducedMotion: 'reduce',
     })
     const page = await context.newPage()
@@ -1347,6 +1349,133 @@ try {
           await expect(page.getByRole('dialog')).toContainText('Custom Arcanum')
           await page.keyboard.press('Escape')
           expect(await page.evaluate(() => window.__referencePage('spells'))).toEqual(original)
+          expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
+        }
+      )
+    }
+  }
+
+  for (const lang of ['ru', 'en']) {
+    for (const view of ['mobile-reader', 'mobile-editor', 'desktop-reader']) {
+      const editor = view === 'mobile-editor'
+      await scenario(
+        'bestiary cards and details preserve source values and fit ' + lang + ' ' + view,
+        {
+          mobile: view.startsWith('mobile'),
+          width: editor ? 390 : 320,
+          url:
+            '/?screen=bestiary&monsterAppearance&lang=' + lang + (editor ? '&monsterEditor' : ''),
+        },
+        async (page) => {
+          const original = await page.evaluate(() => window.__referencePage('bestiary'))
+          const title = page.getByRole('heading', {
+            name: 'Ancient Guardian of the Everlasting Celestial Constellation',
+            exact: true,
+          })
+          await expect(title).toBeVisible()
+          expect(
+            await title.evaluate(
+              (el) =>
+                el.scrollWidth <= el.clientWidth && getComputedStyle(el).whiteSpace !== 'nowrap'
+            )
+          ).toBe(true)
+          const card = title.locator('..')
+          await expect(card).toContainText(lang === 'ru' ? 'Дракон' : 'Dragon')
+          await expect(card).toContainText(lang === 'ru' ? 'Большой (Large)' : 'Large')
+          await expect(card).toContainText((lang === 'ru' ? 'ХП' : 'HP') + ' 123')
+          await expect(card).toContainText((lang === 'ru' ? 'КД' : 'AC') + ' 17')
+          const custom = page.getByRole('heading', { name: 'Unbroken'.repeat(12), exact: true })
+          expect(await custom.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          await expect(custom.locator('..')).toContainText('Custom Guardian')
+          await expect(custom.locator('..')).toContainText((lang === 'ru' ? 'ХП' : 'HP') + ' 42')
+          await expect(page.locator('body')).not.toContainText('monsterType.')
+          await expect(page.locator('body')).not.toContainText('monsterSize.')
+          const details = page.getByRole('button', {
+            name: lang === 'ru' ? 'Подробнее' : 'Details',
+            exact: true,
+          })
+          const add = page.getByRole('button', {
+            name: lang === 'ru' ? 'Добавить в кампанию' : 'Add to campaign',
+            exact: true,
+          })
+          expect((await details.first().boundingBox()).height).toBeGreaterThanOrEqual(44)
+          await expect(add).toHaveCount(editor ? 3 : 0)
+          if (editor) {
+            expect((await add.first().boundingBox()).height).toBeGreaterThanOrEqual(44)
+            await expect(add.first()).toContainText(lang === 'ru' ? 'Добавить' : 'Add')
+          }
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await card.screenshot({
+            path: path.join(output, 'monster-card-' + lang + '-' + view + '.png'),
+          })
+          if (editor) await add.first().click()
+          else await details.first().click()
+          const dialog = page.getByRole('dialog')
+          await expect(dialog).toBeVisible()
+          expect(await dialog.locator('dd').allTextContents()).toEqual([
+            '17',
+            '123',
+            '0 ft',
+            '1/8',
+            '25',
+          ])
+          const abilityGrid = dialog.locator('.grid').nth(1)
+          expect(
+            await abilityGrid.locator(':scope > div > div:nth-child(2)').allTextContents()
+          ).toEqual(['23', '8', '16', '10', '19', '12'])
+          expect(
+            await abilityGrid.locator(':scope > div > div:nth-child(3)').allTextContents()
+          ).toEqual(['+6', '-1', '+3', '+0', '+4', '+1'])
+          const cells = await abilityGrid.locator(':scope > div').evaluateAll((els) =>
+            els.map((el) => ({
+              x: el.getBoundingClientRect().x,
+              y: el.getBoundingClientRect().y,
+            }))
+          )
+          expect(cells[3].y > cells[0].y).toBe(view.startsWith('mobile'))
+          await expect(dialog).toContainText('Synthetic creature description.')
+          expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          const close = dialog
+            .getByRole('button', { name: lang === 'ru' ? 'Закрыть' : 'Close', exact: true })
+            .last()
+          expect((await close.boundingBox()).height).toBeGreaterThanOrEqual(44)
+          await expect(
+            dialog.getByRole('button', {
+              name: lang === 'ru' ? 'Добавить в кампанию' : 'Add to campaign',
+              exact: true,
+            })
+          ).toHaveCount(editor ? 1 : 0)
+          await dialog.screenshot({
+            path: path.join(output, 'monster-detail-' + lang + '-' + view + '.png'),
+          })
+          await close.click()
+          await details.nth(1).click()
+          await expect(dialog).toContainText('Uncatalogued Size, Custom Guardian')
+          expect(await dialog.locator('dd').allTextContents()).toEqual(['—', '42', '—', '—', '—'])
+          expect(
+            await dialog
+              .locator('.grid')
+              .nth(1)
+              .locator(':scope > div > div:nth-child(2)')
+              .allTextContents()
+          ).toEqual(Array(6).fill('—'))
+          expect(
+            await dialog
+              .locator('.grid')
+              .nth(1)
+              .locator(':scope > div > div:nth-child(3)')
+              .allTextContents()
+          ).toEqual(Array(6).fill('—'))
+          expect(
+            await dialog.getByRole('heading').evaluate((el) => el.scrollWidth <= el.clientWidth)
+          ).toBe(true)
+          await page.keyboard.press('Escape')
+          await details.nth(2).click()
+          expect(await dialog.locator('dd').allTextContents()).toEqual(Array(5).fill('—'))
+          await page.keyboard.press('Escape')
+          expect(await page.evaluate(() => window.__referencePage('bestiary'))).toEqual(original)
           expect(await page.evaluate(() => window.__uiLab.characterActions)).toEqual([])
         }
       )

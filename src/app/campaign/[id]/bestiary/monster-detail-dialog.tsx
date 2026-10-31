@@ -8,6 +8,7 @@ import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { abilityShort } from '@/lib/i18n/labels'
+import { monsterCategoryLabel } from '@/lib/srd/monster-display'
 import { srdName } from '@/lib/types'
 import type { SrdMonster } from '@/lib/actions/bestiary-search'
 
@@ -19,7 +20,8 @@ interface Props {
 }
 
 function formatModifier(score: number | undefined): string {
-  const mod = Math.floor(((score ?? 10) - 10) / 2)
+  if (typeof score !== 'number' || !Number.isFinite(score)) return '—'
+  const mod = Math.floor((score - 10) / 2)
   return mod >= 0 ? `+${mod}` : `${mod}`
 }
 
@@ -31,8 +33,8 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
 
   const data = monster.data
 
-  const sizeLabel = data.size ? t(`monsterSize.${data.size.toLowerCase()}`) : ''
-  const typeLabel = data.type ? t(`monsterType.${data.type.toLowerCase()}`) : ''
+  const sizeLabel = data.size ? monsterCategoryLabel('size', data.size, t) : ''
+  const typeLabel = data.type ? monsterCategoryLabel('type', data.type, t) : ''
 
   const handleAdd = () => {
     startTransition(async () => {
@@ -65,77 +67,80 @@ export default function MonsterDetailDialog({ monster, campaignId, canEdit, onCl
       title={srdName(monster, lang)}
       description={description}
       size="lg"
+      closeLabel={t('common.close')}
       footer={
-        canEdit ? (
-          <>
-            <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
-              {t('common.close')}
-            </Button>
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
+            {t('common.close')}
+          </Button>
+          {canEdit && (
             <Button
               variant="primary"
               size="md"
-              icon={<Plus size={14} />}
+              icon={<Plus size={16} aria-hidden="true" />}
               onClick={handleAdd}
               loading={isPending}
             >
               {t('bestiary.addToCampaign')}
             </Button>
-          </>
-        ) : undefined
+          )}
+        </div>
       }
     >
-      <div className="space-y-4 text-sm">
-        <div className="space-y-1 rounded-lg bg-[var(--bg-app)] p-3">
-          <div>
-            <span className="text-[var(--text-muted)]">AC:</span>{' '}
-            <span className="text-[var(--text-secondary)]">{data.ac ?? '—'}</span>
-          </div>
-          <div>
-            <span className="text-[var(--text-muted)]">HP:</span>{' '}
-            <span className="text-[var(--text-secondary)]">{data.hp ?? '—'}</span>
-          </div>
-          <div>
-            <span className="text-[var(--text-muted)]">{t('characters.speed')}:</span>{' '}
-            <span className="text-[var(--text-secondary)]">
-              {data.speed ? t('common.feetShort', { feet: data.speed }) : '—'}
-            </span>
-          </div>
-        </div>
+      <div className="space-y-4 text-sm [overflow-wrap:anywhere]">
+        <dl className="grid grid-cols-2 gap-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-app)] p-3 sm:grid-cols-3">
+          {[
+            { label: t('bestiary.stats.ac'), value: data.ac ?? '—' },
+            { label: t('bestiary.stats.hp'), value: data.hp ?? data.hp_max ?? '—' },
+            {
+              label: t('characters.speed'),
+              value: data.speed != null ? t('common.feetShort', { feet: data.speed }) : '—',
+            },
+          ].map(({ label, value }) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-xs text-[var(--text-muted)]">{label}</dt>
+              <dd className="mt-1 font-semibold text-[var(--text-primary)] tabular-nums">
+                {value}
+              </dd>
+            </div>
+          ))}
+        </dl>
 
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {abilities.map((a) => (
             <div
               key={a.key}
               className="rounded border border-[var(--border-default)] bg-[var(--bg-app)] p-2 text-center"
             >
-              <div className="text-[10px] text-[var(--text-subtle)] uppercase">
+              <div className="text-xs text-[var(--text-muted)] uppercase">
                 {abilityShort(lang, a.key)}
               </div>
-              <div className="text-base font-bold text-[var(--text-primary)]">{a.score ?? 10}</div>
-              <div className="text-[10px] text-[var(--text-subtle)]">{formatModifier(a.score)}</div>
+              <div className="text-base font-bold text-[var(--text-primary)]">{a.score ?? '—'}</div>
+              <div className="text-xs text-[var(--text-muted)]">{formatModifier(a.score)}</div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-lg border border-[var(--warning)]/30 bg-[var(--warning-subtle)] p-3">
-          <div className="flex items-center justify-between text-sm">
-            <div>
-              <strong className="text-[var(--warning-text)]">CR:</strong>{' '}
-              <span className="text-[var(--text-secondary)]">{data.cr ?? '—'}</span>
+        <dl className="grid grid-cols-2 gap-3 rounded-xl border border-[var(--warning)]/30 bg-[var(--warning-subtle)] p-3">
+          {[
+            { label: t('bestiary.stats.cr'), value: data.cr ?? '—' },
+            { label: t('bestiary.stats.xp'), value: data.xp ?? '—' },
+          ].map(({ label, value }) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-xs text-[var(--warning-text)]">{label}</dt>
+              <dd className="mt-1 font-semibold text-[var(--text-primary)] tabular-nums">
+                {value}
+              </dd>
             </div>
-            <div>
-              <strong className="text-[var(--warning-text)]">XP:</strong>{' '}
-              <span className="text-[var(--text-secondary)]">{data.xp ?? '—'}</span>
-            </div>
-          </div>
-        </div>
+          ))}
+        </dl>
 
         {data.description && (
           <div>
             <h3 className="mb-2 font-semibold text-[var(--text-secondary)]">
               {t('common.description')}
             </h3>
-            <div className="text-xs whitespace-pre-wrap text-[var(--text-muted)]">
+            <div className="leading-relaxed whitespace-pre-wrap text-[var(--text-secondary)]">
               {data.description}
             </div>
           </div>
