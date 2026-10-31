@@ -12,6 +12,7 @@ interface CampaignAccess {
     created_at: string
     updated_at: string
   } | null
+  viewerId: string | null
   role: CampaignRole | null
   isDm: boolean
   isMember: boolean
@@ -28,7 +29,7 @@ export async function getCampaignAccess(campaignId: string): Promise<CampaignAcc
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { campaign: null, role: null, isDm: false, isMember: false }
+    return { campaign: null, viewerId: null, role: null, isDm: false, isMember: false }
   }
 
   // Получаем кампанию
@@ -39,7 +40,7 @@ export async function getCampaignAccess(campaignId: string): Promise<CampaignAcc
     .single()
 
   if (!campaign) {
-    return { campaign: null, role: null, isDm: false, isMember: false }
+    return { campaign: null, viewerId: null, role: null, isDm: false, isMember: false }
   }
 
   // Получаем роль пользователя в кампании
@@ -54,6 +55,7 @@ export async function getCampaignAccess(campaignId: string): Promise<CampaignAcc
 
   return {
     campaign,
+    viewerId: user.id,
     role,
     isDm: role === 'dm',
     isMember: role !== null,

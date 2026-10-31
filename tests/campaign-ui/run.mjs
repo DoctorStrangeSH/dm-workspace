@@ -1915,6 +1915,118 @@ try {
       }
     )
   }
+
+  for (const lang of ['ru', 'en']) {
+    for (const [viewer, status] of [
+      ['user-0', 'yes'],
+      ['user-2', 'maybe'],
+      ['user-3', 'no'],
+      ['self', null],
+    ]) {
+      await scenario(
+        'session saved personal response ' + lang + ' ' + (status ?? 'none'),
+        {
+          mobile: true,
+          width: 320,
+          url: '/?screen=sessions&role=player&lang=' + lang + '&viewer=' + viewer,
+        },
+        async (page) => {
+          const card = page.getByRole('article').first()
+          const buttons = card.getByRole('group').getByRole('button')
+          const statuses = ['yes', 'maybe', 'no']
+          const labels =
+            lang === 'ru' ? ['Иду', 'Может быть', 'Не иду'] : ['Going', 'Maybe', 'Not going']
+          for (let i = 0; i < 3; i++) {
+            await expect(buttons.nth(i)).toHaveAttribute(
+              'aria-pressed',
+              String(status === statuses[i])
+            )
+            expect((await buttons.nth(i).boundingBox()).height).toBeGreaterThanOrEqual(44)
+          }
+          await expect(card.locator('[aria-live="polite"]')).toHaveText(
+            (lang === 'ru' ? 'Ваш ответ: ' : 'Your response: ') +
+              (status
+                ? labels[statuses.indexOf(status)]
+                : lang === 'ru'
+                  ? 'Вы ещё не ответили'
+                  : 'Not answered yet')
+          )
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          expect(await page.evaluate(() => window.__uiLab.sessionActions)).toEqual([])
+          await card.screenshot({
+            path: path.join(output, 'session-rsvp-' + lang + '-' + (status ?? 'none') + '.png'),
+          })
+        }
+      )
+    }
+    await scenario(
+      'session saved response survives pending and errors, changes only with refreshed server props in ' +
+        lang,
+      { mobile: true, url: '/?screen=sessions&role=player&viewer=user-2&lang=' + lang },
+      async (page) => {
+        const card = page.getByRole('article').first()
+        const buttons = card.getByRole('group').getByRole('button')
+        const saved = card.locator('[aria-live="polite"]')
+        const oldText = lang === 'ru' ? 'Ваш ответ: Может быть' : 'Your response: Maybe'
+        await page.evaluate(() => {
+          window.__uiLab.sessionDelay = 400
+        })
+        await buttons.nth(0).click()
+        await expect(buttons.nth(0)).toBeDisabled()
+        await expect(card.getByRole('status')).toHaveText(
+          lang === 'ru' ? 'Сохраняем ответ…' : 'Saving response…'
+        )
+        await expect(buttons.nth(1)).toHaveAttribute('aria-pressed', 'true')
+        await expect(saved).toHaveText(oldText)
+        await expect(card.getByRole('alert')).toHaveText('Offline session action boundary')
+        await expect(buttons.nth(0)).toBeEnabled()
+        await expect(saved).toHaveText(oldText)
+        expect(await page.evaluate(() => window.__uiLab.refreshes)).toBe(0)
+        await page.evaluate(() => {
+          window.__uiLab.sessionOutcome = 'throw'
+        })
+        await buttons.nth(0).click()
+        await expect(card.getByRole('alert')).toHaveText(
+          lang === 'ru'
+            ? 'Не удалось сохранить ответ. Попробуйте ещё раз.'
+            : 'Could not save your response. Please try again.'
+        )
+        await expect(saved).toHaveText(oldText)
+        await page.evaluate(() => {
+          window.__uiLab.sessionOutcome = 'success'
+        })
+        await buttons.nth(0).focus()
+        await page.keyboard.press('Enter')
+        await expect.poll(() => page.evaluate(() => window.__uiLab.refreshes)).toBe(1)
+        await expect(card.getByRole('alert')).toHaveCount(0)
+        await expect(saved).toHaveText(oldText)
+        // Model an RSC refresh: actual server props replace the previously saved RSVP.
+        await page.evaluate(() => {
+          const rows = structuredClone(window.__sessionFixtures)
+          rows[0].rsvps.find((r) => r.user_id === 'user-2').status = 'yes'
+          window.dispatchEvent(new CustomEvent('offline-session-data', { detail: rows }))
+        })
+        await expect(buttons.nth(0)).toHaveAttribute('aria-pressed', 'true')
+        await expect(buttons.nth(1)).toHaveAttribute('aria-pressed', 'false')
+        await expect(saved).toHaveText(lang === 'ru' ? 'Ваш ответ: Иду' : 'Your response: Going')
+        expect(await card.locator('dd').allTextContents()).toEqual(['3', '0', '1'])
+        expect(await page.evaluate(() => window.__uiLab.sessionActions)).toEqual(
+          Array.from({ length: 3 }, () => ({
+            name: 'setRsvp',
+            args: ['offline-future-session', 'yes'],
+          }))
+        )
+        await page.evaluate(() =>
+          window.dispatchEvent(
+            new CustomEvent('offline-session-data', { detail: window.__sessionFixtures })
+          )
+        )
+        await expect(saved).toHaveText(oldText)
+      }
+    )
+  }
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))

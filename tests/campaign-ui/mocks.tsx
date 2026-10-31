@@ -26,7 +26,7 @@ const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
   sessionActions: [] as { name: string; args: unknown[] }[],
-  sessionOutcome: 'error' as 'error' | 'success',
+  sessionOutcome: 'error' as 'error' | 'success' | 'throw',
   sessionDelay: 0,
   characterActions: [] as { name: string; args: unknown[] }[],
   refreshes: 0,
@@ -408,6 +408,7 @@ export async function updateCharacterHP(...args: unknown[]) {
 async function sessionAction(name: string, args: unknown[]) {
   lab.sessionActions.push({ name, args })
   if (lab.sessionDelay) await new Promise((resolve) => setTimeout(resolve, lab.sessionDelay))
+  if (lab.sessionOutcome === 'throw') throw new Error('Offline network failure')
   return lab.sessionOutcome === 'success'
     ? { success: true }
     : { error: 'Offline session action boundary' }

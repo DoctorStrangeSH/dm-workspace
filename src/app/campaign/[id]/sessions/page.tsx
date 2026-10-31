@@ -18,7 +18,7 @@ export default async function SessionsPage({ params }: { params: Promise<{ id: s
   const t = createT(getDictionary(lang))
 
   const { id: campaignId } = await params
-  const { campaign, isDm, isMember } = await getCampaignAccess(campaignId)
+  const { campaign, isDm, isMember, viewerId } = await getCampaignAccess(campaignId)
 
   if (!campaign) notFound()
   if (!isMember) redirect('/dashboard')
@@ -54,7 +54,12 @@ export default async function SessionsPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
-      <SessionsClient campaignId={campaignId} initialSessions={sessions} isDm={isDm} />
+      <SessionsClient
+        campaignId={campaignId}
+        initialSessions={sessions}
+        isDm={isDm}
+        viewerId={viewerId}
+      />
     </div>
   )
 }
