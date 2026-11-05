@@ -157,7 +157,15 @@ export const en: Dictionary = {
   'campaign.create': 'Create campaign',
   'campaign.createTitle': 'New campaign',
   'campaign.copyLink': 'Copy link',
-  'campaign.regenerateCode': 'Regenerate code',
+  'campaign.regenerateCode': 'Replace link',
+  'campaign.inviteLink': 'Campaign invitation',
+  'campaign.linkCopied': 'Link copied',
+  'campaign.requestUnconfirmed':
+    'Could not confirm the result. Refresh the page and check the campaign before trying again.',
+  'campaign.regenerateConfirm.title': 'Replace invitation link?',
+  'campaign.regenerateConfirm.description': 'The old link for campaign “{name}” will stop working.',
+  'campaign.regenerateConfirm.membersUnchanged':
+    'Existing members will stay in the campaign. Copy and share the new link after replacing it.',
   'campaign.deleteTitle': 'Delete campaign',
   'campaign.deleteConfirm.title': 'Delete campaign?',
   'campaign.deleteConfirm.description': '"{name}" will be permanently deleted. Cannot be undone.',

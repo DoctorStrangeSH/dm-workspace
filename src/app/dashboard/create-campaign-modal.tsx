@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { createCampaign } from '@/lib/actions/campaigns'
 import { GENRES } from '@/lib/types'
 import { Button, Input, Textarea, Select, Dialog } from '@/components/ui'
@@ -13,6 +14,7 @@ interface Props {
 
 export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
   const t = useT()
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -25,46 +27,57 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (isPending) return
     setError(null)
 
     const formData = new FormData(e.currentTarget)
 
     startTransition(async () => {
-      const res = await createCampaign(formData)
-      if ('error' in res) {
-        setError(res.error ?? t('common.error'))
-        return
+      try {
+        const res = await createCampaign(formData)
+        if ('error' in res) {
+          setError(res.error ?? t('common.error'))
+          return
+        }
+        router.refresh()
+        onSuccess?.()
+        onClose()
+      } catch {
+        setError(t('campaign.requestUnconfirmed'))
       }
-      onSuccess?.()
-      onClose()
     })
   }
 
   return (
     <Dialog
       open={true}
-      onClose={onClose}
+      onClose={() => !isPending && onClose()}
+      closeLabel={t('common.close')}
+      closeDisabled={isPending}
       title={t('campaign.createTitle')}
       size="md"
       footer={
         <>
-          <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
-            {t('common.cancel')}
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            type="submit"
-            form="create-campaign-form"
-            loading={isPending}
-          >
-            {t('common.create')}
-          </Button>
+          <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="secondary" size="md" onClick={onClose} disabled={isPending}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              type="submit"
+              form="create-campaign-form"
+              loading={isPending}
+            >
+              {t('common.create')}
+            </Button>
+          </div>
         </>
       }
     >
       <form id="create-campaign-form" onSubmit={handleSubmit} className="space-y-4">
         <Input
+          className="min-h-11"
           name="name"
           label={t('campaign.form.name')}
           type="text"
@@ -76,6 +89,7 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
         />
 
         <Select
+          className="min-h-11"
           name="genre"
           label={t('campaign.form.genre')}
           options={GENRE_OPTIONS}
@@ -91,7 +105,10 @@ export default function CreateCampaignModal({ onClose, onSuccess }: Props) {
         />
 
         {error && (
-          <div className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]">
+          <div
+            role="alert"
+            className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm [overflow-wrap:anywhere] text-[var(--danger-text)]"
+          >
             {error}
           </div>
         )}

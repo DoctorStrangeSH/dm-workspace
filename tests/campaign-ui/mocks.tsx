@@ -25,6 +25,10 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  campaignActions: [] as { name: string; args: unknown[] }[],
+  copiedLinks: [] as string[],
+  campaignOutcome: 'error' as 'error' | 'success' | 'throw',
+  campaignDelay: 0,
   sessionActions: [] as { name: string; args: unknown[] }[],
   sessionOutcome: 'error' as 'error' | 'success' | 'throw',
   sessionDelay: 0,
@@ -421,4 +425,21 @@ export async function deleteSession(...args: unknown[]) {
 }
 export async function setRsvp(...args: unknown[]) {
   return sessionAction('setRsvp', args)
+}
+
+async function campaignAction(name: string, args: unknown[]) {
+  lab.campaignActions.push({ name, args })
+  if (lab.campaignDelay) await new Promise((resolve) => setTimeout(resolve, lab.campaignDelay))
+  if (lab.campaignOutcome === 'throw') throw new Error('Offline campaign transport failure')
+  if (lab.campaignOutcome === 'error') return { error: 'Offline campaign action boundary' }
+  return { success: true, inviteCode: 'newcode8', campaignId: 'offline-created' }
+}
+export async function createCampaign(form: FormData) {
+  return campaignAction('createCampaign', [Object.fromEntries(form)])
+}
+export async function deleteCampaign(...args: unknown[]) {
+  return campaignAction('deleteCampaign', args)
+}
+export async function regenerateInviteCode(...args: unknown[]) {
+  return campaignAction('regenerateInviteCode', args)
 }
