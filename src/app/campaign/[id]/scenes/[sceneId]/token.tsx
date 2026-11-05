@@ -20,7 +20,16 @@ interface Props {
   onClick: () => void
 }
 
-export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = false, sceneId, canDrag, walls = [], onClick }: Props) {
+export default function Token({
+  token,
+  gridSize,
+  zoomScale = 1,
+  isActiveTurn = false,
+  sceneId,
+  canDrag,
+  walls = [],
+  onClick,
+}: Props) {
   const t = useT()
   const toast = useToast()
   const [dragging, setDragging] = useState(false)
@@ -38,7 +47,12 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
 
   const sizePx = gridSize * token.size
   const hpPercent =
-    token.hp_current !== null && token.hp_max !== null && Number.isFinite(token.hp_current) && Number.isFinite(token.hp_max) && token.hp_current >= 0 && token.hp_max > 0
+    token.hp_current !== null &&
+    token.hp_max !== null &&
+    Number.isFinite(token.hp_current) &&
+    Number.isFinite(token.hp_max) &&
+    token.hp_current >= 0 &&
+    token.hp_max > 0
       ? Math.max(0, Math.min(100, (token.hp_current / token.hp_max) * 100))
       : null
 
@@ -92,12 +106,10 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
       const newX = Math.max(0, Math.round(startRef.current.tokenX + dx / (gridSize * zoomScale)))
       const newY = Math.max(0, Math.round(startRef.current.tokenY + dy / (gridSize * zoomScale)))
 
-      if (walls.length > 0 && isBlockedByWalls(
-        { x: token.x, y: token.y },
-        { x: newX, y: newY },
-        tokenRadius,
-        walls
-      )) {
+      if (
+        walls.length > 0 &&
+        isBlockedByWalls({ x: token.x, y: token.y }, { x: newX, y: newY }, tokenRadius, walls)
+      ) {
         setPos({ x: token.x, y: token.y })
         setBlocked(true)
         toast.error(t('scenes.walls.blocked'))
@@ -123,6 +135,16 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={token.name}
+      data-token-id={token.id}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onClick()
+        }
+      }}
       className={cn(
         'absolute rounded-full border-2 select-none',
         canDrag && 'cursor-grab active:cursor-grabbing',
@@ -145,7 +167,12 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
       onPointerDown={handlePointerDown}
       onClick={!canDrag ? onClick : undefined}
     >
-      {isActiveTurn && <div aria-hidden="true" className="pointer-events-none absolute -inset-2 rounded-full border-2 border-[var(--accent)]/65 motion-safe:animate-pulse" />}
+      {isActiveTurn && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-2 rounded-full border-2 border-[var(--accent)]/65 motion-safe:animate-pulse"
+        />
+      )}
       {token.image_url ? (
         <Image
           src={token.image_url}
@@ -163,7 +190,11 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
       )}
 
       {hpPercent !== null && (
-        <div className="pointer-events-none absolute right-0 -bottom-2 left-0 h-1.5 overflow-hidden rounded-full bg-[var(--bg-app)]" role="img" aria-label={`HP ${token.hp_current} / ${token.hp_max}`}>
+        <div
+          className="pointer-events-none absolute right-0 -bottom-2 left-0 h-1.5 overflow-hidden rounded-full bg-[var(--bg-app)]"
+          role="img"
+          aria-label={`HP ${token.hp_current} / ${token.hp_max}`}
+        >
           <div
             className={cn(
               'h-full transition-all',
@@ -178,9 +209,21 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
         </div>
       )}
 
-      <div className={cn("pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] whitespace-nowrap shadow-[var(--shadow-sm)]", isActiveTurn ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--text-primary)]" : "border-[var(--border-default)] bg-[var(--bg-surface)]/95 text-[var(--text-secondary)]")} data-turn-active={isActiveTurn}>
+      <div
+        className={cn(
+          'pointer-events-none absolute -bottom-7 left-1/2 flex max-w-40 -translate-x-1/2 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] whitespace-nowrap shadow-[var(--shadow-sm)]',
+          isActiveTurn
+            ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--text-primary)]'
+            : 'border-[var(--border-default)] bg-[var(--bg-surface)]/95 text-[var(--text-secondary)]'
+        )}
+        data-turn-active={isActiveTurn}
+      >
         <span className="max-w-24 truncate">{token.name}</span>
-        {hpPercent !== null && <span className="shrink-0 font-semibold tabular-nums text-[var(--text-primary)]">{token.hp_current}/{token.hp_max}</span>}
+        {hpPercent !== null && (
+          <span className="shrink-0 font-semibold text-[var(--text-primary)] tabular-nums">
+            {token.hp_current}/{token.hp_max}
+          </span>
+        )}
       </div>
 
       {conditions.length > 0 && (
@@ -194,7 +237,17 @@ export default function Token({ token, gridSize, zoomScale = 1, isActiveTurn = f
               {c.icon ?? '●'}
             </span>
           ))}
-          {conditions.length > 3 && <span className="flex h-4 min-w-5 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] px-0.5 text-[9px] font-bold" title={conditions.slice(3).map(c => c.name).join(', ')}>+{conditions.length - 3}</span>}
+          {conditions.length > 3 && (
+            <span
+              className="flex h-4 min-w-5 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] px-0.5 text-[9px] font-bold"
+              title={conditions
+                .slice(3)
+                .map((c) => c.name)
+                .join(', ')}
+            >
+              +{conditions.length - 3}
+            </span>
+          )}
         </div>
       )}
     </div>

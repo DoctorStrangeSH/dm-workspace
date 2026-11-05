@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Eye,
@@ -20,13 +20,19 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize,
+  Hand,
+  MousePointer2,
+  Expand,
 } from 'lucide-react'
-import { setActiveScene, uploadMap } from '@/lib/actions/scenes'
+import { setActiveScene } from '@/lib/actions/scenes'
 import { startCombat } from '@/lib/actions/combat'
 import { clearFog } from '@/lib/actions/fog'
 import { createWall, deleteAllWalls } from '@/lib/actions/walls'
 import { useToast } from '@/components/toast/toast-provider'
-import { Button, Input, Dropdown, Tooltip, Dialog } from '@/components/ui'
+import { Button, Input, Dropdown, Dialog } from '@/components/ui'
+import { clampZoom, clientToGrid, fitMap } from '@/lib/maps/geometry'
+import MapUploadDialog from './map-upload-dialog'
+import styles from './map-workspace.module.css'
 import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
@@ -53,7 +59,7 @@ import type {
   TokenOwnerWithProfile,
 } from '@/lib/types'
 
-type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall'
+type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall' | 'pan'
 
 interface Props {
   scene: Scene
@@ -90,7 +96,13 @@ export default function SceneView({
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
-  const [isUploading, setIsUploading] = useState(false)
+  const [showUpload, setShowUpload] = useState(false)
+  const [fitting, setFitting] = useState(true)
+  const workspaceRef = useRef<HTMLDivElement>(null)
+  const panRef = useRef<{ id: number; x: number; y: number; left: number; top: number } | null>(
+    null
+  )
+  const startBusy = useRef(false)
   const [showGrid, setShowGrid] = useState(true)
   const [mapZoom, setMapZoom] = useState(1)
   const liveInitiative = useRealtimeInitiative({ sceneId: scene.id, initialInitiative: initiative })
@@ -104,7 +116,6 @@ export default function SceneView({
   const [templateSize, setTemplateSize] = useState(30)
   const [showClearFogConfirm, setShowClearFogConfirm] = useState(false)
   const [showClearWallsConfirm, setShowClearWallsConfirm] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // CHANGES (задача 2): localWalls — оптимистичное добавление стен
   const [localWalls, setLocalWalls] = useState<SceneWall[]>(() => initialWalls)
@@ -126,31 +137,70 @@ export default function SceneView({
   const mapWidth = scene.width * scene.grid_size
   const mapHeight = scene.height * scene.grid_size
 
-  const changeMapZoom = (next: number) => {
-    const zoom = Math.min(2, Math.max(0.5, Math.round(next * 4) / 4))
-    if (zoom === mapZoom) return
+  useEffect(() => {
+    if (!fitting) return
     const viewport = mapViewportRef.current
-    const centerX = viewport ? (viewport.scrollLeft + viewport.clientWidth / 2) / mapZoom : 0
-    const centerY = viewport ? (viewport.scrollTop + viewport.clientHeight / 2) / mapZoom : 0
+    if (!viewport) return
+    const fit = () =>
+      setMapZoom(fitMap(mapWidth, mapHeight, viewport.clientWidth, viewport.clientHeight))
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(viewport)
+    return () => observer.disconnect()
+  }, [fitting, mapWidth, mapHeight])
+
+  const changeMapZoom = (next: number) => {
+    const zoom = clampZoom(next)
+    const viewport = mapViewportRef.current
+    const stage = wallWrapperRef.current
+    if (!viewport || !stage) return
+    const vr = viewport.getBoundingClientRect()
+    const sr = stage.getBoundingClientRect()
+    const centerX = (vr.left + viewport.clientWidth / 2 - sr.left) / mapZoom
+    const centerY = (vr.top + viewport.clientHeight / 2 - sr.top) / mapZoom
+    setFitting(false)
     setMapZoom(zoom)
     requestAnimationFrame(() => {
-      const target = mapViewportRef.current
-      if (target) {
-        target.scrollLeft = centerX * zoom - target.clientWidth / 2
-        target.scrollTop = centerY * zoom - target.clientHeight / 2
-      }
+      const rect = stage.getBoundingClientRect()
+      viewport.scrollLeft += rect.left + centerX * zoom - vr.left - viewport.clientWidth / 2
+      viewport.scrollTop += rect.top + centerY * zoom - vr.top - viewport.clientHeight / 2
     })
   }
-
   const resetMapView = () => {
-    setMapZoom(1)
-    requestAnimationFrame(() => {
-      const viewport = mapViewportRef.current
-      if (viewport) {
-        viewport.scrollLeft = Math.max(0, (mapWidth - viewport.clientWidth) / 2)
-        viewport.scrollTop = Math.max(0, (mapHeight - viewport.clientHeight) / 2)
-      }
-    })
+    setFitting(true)
+    const viewport = mapViewportRef.current
+    if (viewport) {
+      setMapZoom(fitMap(mapWidth, mapHeight, viewport.clientWidth, viewport.clientHeight))
+      viewport.scrollTo({ left: 0, top: 0 })
+    }
+  }
+  const chooseTool = (tool: ActiveTool) => {
+    setBrushMode(false)
+    setActiveTool(tool)
+    setWallStart(null)
+    setWallPreview(null)
+  }
+  const focusToken = (tokenId: string) => {
+    const viewport = mapViewportRef.current
+    const target = viewport?.querySelector<HTMLElement>(
+      '[data-token-id="' + CSS.escape(tokenId) + '"]'
+    )
+    if (!viewport || !target) return
+    const vr = viewport.getBoundingClientRect()
+    const tr = target.getBoundingClientRect()
+    viewport.scrollLeft += tr.left + tr.width / 2 - vr.left - viewport.clientWidth / 2
+    viewport.scrollTop += tr.top + tr.height / 2 - vr.top - viewport.clientHeight / 2
+    viewport.focus({ preventScroll: true })
+  }
+  const toggleFullscreen = async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen()
+      else if (workspaceRef.current?.requestFullscreen)
+        await workspaceRef.current.requestFullscreen()
+      else toast.info(t('map.fullscreenUnavailable'))
+    } catch {
+      toast.error(t('map.fullscreenUnavailable'))
+    }
   }
 
   const tokensPlural = (n: number) =>
@@ -187,8 +237,7 @@ export default function SceneView({
     ctrl: true,
     handler: () => {
       if (isDm) {
-        if (liveInitiative.length === 0) handleStartCombat()
-        else setShowInitiative((v) => !v)
+        setShowInitiative((v) => !v)
       }
     },
     ignoreInInputs: true,
@@ -206,6 +255,8 @@ export default function SceneView({
   useHotkey({
     code: 'Escape',
     handler: () => {
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return
+      if (brushMode) setBrushMode(false)
       if (activeTool !== 'none') {
         setActiveTool('none')
         setWallStart(null)
@@ -226,31 +277,21 @@ export default function SceneView({
     })
   }
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setIsUploading(true)
-    const res = await uploadMap(scene.id, campaignId, file)
-    setIsUploading(false)
-
-    if ('error' in res) {
-      toast.error(res.error ?? t('common.error'))
-    } else {
-      toast.success(t('scenes.toast.mapUploaded'))
-      router.refresh()
-    }
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
   const handleStartCombat = () => {
+    if (startBusy.current || liveInitiative.length > 0) return
+    startBusy.current = true
     startTransition(async () => {
-      const res = await startCombat(scene.id)
-      if ('error' in res) toast.error(res.error ?? t('common.error'))
-      else {
-        toast.success(t('scenes.toast.combatStarted'))
-        setShowInitiative(true)
-        router.refresh()
+      try {
+        const res = await startCombat(scene.id)
+        if ('error' in res) toast.error(res.error ?? t('common.error'))
+        else {
+          setShowInitiative(true)
+          router.refresh()
+        }
+      } catch {
+        toast.error(t('map.uncertain'))
+      } finally {
+        startBusy.current = false
       }
     })
   }
@@ -285,19 +326,19 @@ export default function SceneView({
   const refresh = () => router.refresh()
   const currentTurn = liveInitiative.find((e) => e.is_current)
 
-  const getGridCoords = (e: React.MouseEvent): { x: number; y: number } | null => {
+  const getGridCoords = (e: React.PointerEvent) => {
     if (!wallWrapperRef.current) return null
-    const rect = wallWrapperRef.current.getBoundingClientRect()
-    const rawX = (e.clientX - rect.left) / (scene.grid_size * mapZoom)
-    const rawY = (e.clientY - rect.top) / (scene.grid_size * mapZoom)
-    return {
-      x: Math.round(rawX * 2) / 2,
-      y: Math.round(rawY * 2) / 2,
-    }
+    return clientToGrid(
+      e,
+      wallWrapperRef.current.getBoundingClientRect(),
+      scene.width,
+      scene.height,
+      'half'
+    )
   }
 
-  const handleWallMouseDown = (e: React.MouseEvent) => {
-    if (activeTool !== 'wall' || !isDm) return
+  const handleWallMouseDown = (e: React.PointerEvent) => {
+    if (activeTool !== 'wall' || !isDm || isPending || e.button !== 0 || !e.isPrimary) return
     e.preventDefault()
     const coords = getGridCoords(e)
     if (!coords) return
@@ -337,7 +378,7 @@ export default function SceneView({
     }
   }
 
-  const handleWallMouseMove = (e: React.MouseEvent) => {
+  const handleWallMouseMove = (e: React.PointerEvent) => {
     if (activeTool !== 'wall' || !wallStart) return
     const coords = getGridCoords(e)
     if (!coords) return
@@ -354,22 +395,22 @@ export default function SceneView({
   const toolsDropdown = [
     {
       label: t('scenes.tool.ruler'),
-      onClick: () => setActiveTool(activeTool === 'ruler' ? 'none' : 'ruler'),
+      onClick: () => chooseTool(activeTool === 'ruler' ? 'none' : 'ruler'),
       icon: <Ruler size={14} />,
     },
     {
       label: t('scenes.tool.cone'),
-      onClick: () => setActiveTool(activeTool === 'cone' ? 'none' : 'cone'),
+      onClick: () => chooseTool(activeTool === 'cone' ? 'none' : 'cone'),
       icon: <Triangle size={14} />,
     },
     {
       label: t('scenes.tool.sphere'),
-      onClick: () => setActiveTool(activeTool === 'sphere' ? 'none' : 'sphere'),
+      onClick: () => chooseTool(activeTool === 'sphere' ? 'none' : 'sphere'),
       icon: <Circle size={14} />,
     },
     {
       label: t('scenes.tool.line'),
-      onClick: () => setActiveTool(activeTool === 'line' ? 'none' : 'line'),
+      onClick: () => chooseTool(activeTool === 'line' ? 'none' : 'line'),
       icon: <MoveRight size={14} />,
     },
   ]
@@ -382,7 +423,10 @@ export default function SceneView({
     },
     {
       label: t('scenes.fog.brush'),
-      onClick: () => setBrushMode((v) => !v),
+      onClick: () => {
+        setActiveTool('none')
+        setBrushMode((v) => !v)
+      },
       icon: <Plus size={14} />,
       disabled: !fogEnabled,
     },
@@ -398,7 +442,7 @@ export default function SceneView({
     {
       label: t('scenes.walls.tool'),
       onClick: () => {
-        setActiveTool(activeTool === 'wall' ? 'none' : 'wall')
+        chooseTool(activeTool === 'wall' ? 'none' : 'wall')
         setWallStart(null)
         setWallPreview(null)
       },
@@ -420,243 +464,82 @@ export default function SceneView({
         : t('scenes.template.line')
 
   return (
-    <div>
-      {/* Панель */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-bold text-[var(--text-primary)]">{scene.name}</h1>
-          <p className="mt-0.5 text-xs text-[var(--text-muted)]">
-            {t('scenes.dimensions', {
-              width: scene.width,
-              height: scene.height,
-              cells: cellsPlural(scene.width),
-              gridSize: scene.grid_size,
-            })}
-            {scene.is_active && (
-              <span className="ml-2 text-[var(--success)]">· {t('scenes.active')}</span>
-            )}
-            {' · '}
-            <span>
-              {tokens.length} {tokensPlural(tokens.length)}
-            </span>
+    <div ref={workspaceRef} className={styles.workspace}>
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="mb-1 text-xs font-semibold tracking-widest text-[var(--accent-text)] uppercase">
+            {t('map.workspace')}
+          </p>
+          <h1 className="text-2xl font-bold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+            {scene.name}
+          </h1>
+          <p className="mt-1 text-xs text-[var(--text-muted)]">
+            {scene.width} × {scene.height} {cellsPlural(scene.width)} · {tokens.length}{' '}
+            {tokensPlural(tokens.length)}
+            {scene.is_active ? ' · ' + t('scenes.active') : ''}
           </p>
         </div>
-
-        {/* ─── Mobile ─── */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex flex-wrap gap-2">
           {isDm && (
             <Button
-              variant="primary"
-              size="sm"
-              icon={<Plus size={14} />}
+              variant={scene.image_url ? 'secondary' : 'primary'}
+              className="min-h-11"
+              icon={<Upload size={16} />}
+              onClick={() => setShowUpload(true)}
+            >
+              {scene.image_url ? t('scenes.map.replace') : t('scenes.map.upload')}
+            </Button>
+          )}
+          {isDm ? (
+            <Button
+              className="min-h-11"
+              icon={<Plus size={16} />}
               onClick={() => setShowAddToken(true)}
             >
               {t('scenes.token')}
             </Button>
-          )}
-
-          {!isDm && (
+          ) : (
             <Button
               variant="secondary"
-              size="sm"
-              icon={<Sparkles size={14} />}
+              className="min-h-11"
+              icon={<Sparkles size={16} />}
               onClick={() => setShowSummon(true)}
             >
               {t('summon.button')}
             </Button>
           )}
-
-          {liveInitiative.length > 0 ? (
+          <Button
+            variant={showInitiative ? 'primary' : 'secondary'}
+            className="min-h-11"
+            icon={<Swords size={16} />}
+            aria-pressed={showInitiative}
+            onClick={() => setShowInitiative((v) => !v)}
+          >
+            {t('scenes.initiative.title')}
+            {liveInitiative.length > 0 ? ' · ' + liveInitiative.length : ''}
+          </Button>
+          {isDm && liveInitiative.length === 0 && (
             <Button
-              variant="danger"
-              size="sm"
-              icon={<Swords size={14} />}
-              onClick={() => setShowInitiative(!showInitiative)}
+              variant="secondary"
+              className="min-h-11"
+              disabled={isPending || tokens.length === 0}
+              onClick={handleStartCombat}
             >
-              {t('scenes.combatWithCount', { count: liveInitiative.length })}
+              {t('map.prepareCombat')}
             </Button>
-          ) : (
-            isDm && (
-              <Button
-                variant="danger"
-                size="sm"
-                icon={<Swords size={14} />}
-                onClick={handleStartCombat}
-                disabled={isPending}
-              >
-                {t('scenes.combat')}
-              </Button>
-            )
           )}
-
-          <Dropdown
-            trigger={
-              <Button variant="ghost" size="sm" icon={<MoreHorizontal size={14} />}>
-                {t('common.more')}
-              </Button>
-            }
-            items={[
-              {
-                label: showGrid ? t('scenes.grid.hide') : t('scenes.grid.show'),
-                onClick: () => setShowGrid(!showGrid),
-                icon: showGrid ? <Eye size={14} /> : <EyeOff size={14} />,
-              },
-              ...toolsDropdown,
-              ...(isDm ? fogDropdown : []),
-              ...(isDm ? wallsDropdown : []),
-              ...(isDm
-                ? [
-                    {
-                      label: scene.image_url ? t('scenes.map.replace') : t('scenes.map.upload'),
-                      onClick: () => fileInputRef.current?.click(),
-                      icon: <Upload size={14} />,
-                    },
-                  ]
-                : []),
-            ]}
-            align="right"
-          />
-        </div>
-
-        {/* ─── Desktop ─── */}
-        <div className="hidden items-center gap-2 md:flex">
-          <Tooltip content={showGrid ? t('scenes.grid.hideHint') : t('scenes.grid.showHint')}>
-            <Button
-              variant={showGrid ? 'secondary' : 'ghost'}
-              size="sm"
-              icon={showGrid ? <Eye size={14} /> : <EyeOff size={14} />}
-              onClick={() => setShowGrid(!showGrid)}
-            >
-              {t('scenes.grid.label')}
-            </Button>
-          </Tooltip>
-
           {isDm && !scene.is_active && (
             <Button
-              variant="primary"
-              size="sm"
-              icon={<Eye size={14} />}
-              onClick={handleActivate}
+              variant="ghost"
+              className="min-h-11"
               disabled={isPending}
+              onClick={handleActivate}
             >
               {t('scenes.activate')}
             </Button>
           )}
-
-          {isDm && (
-            <Button
-              variant="primary"
-              size="sm"
-              icon={<Plus size={14} />}
-              onClick={() => setShowAddToken(true)}
-              title={t('scenes.tokenAddHint')}
-            >
-              {t('scenes.token')}
-            </Button>
-          )}
-
-          {!isDm && (
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={<Sparkles size={14} />}
-              onClick={() => setShowSummon(true)}
-            >
-              {t('summon.button')}
-            </Button>
-          )}
-
-          {isDm && liveInitiative.length === 0 && (
-            <Button
-              variant="danger"
-              size="sm"
-              icon={<Swords size={14} />}
-              onClick={handleStartCombat}
-              disabled={isPending}
-              title={t('scenes.combatStartHint')}
-            >
-              {t('scenes.combatStart')}
-            </Button>
-          )}
-
-          {liveInitiative.length > 0 && (
-            <Button
-              variant="danger"
-              size="sm"
-              icon={<Swords size={14} />}
-              onClick={() => setShowInitiative(!showInitiative)}
-            >
-              {t('scenes.combatWithCount', { count: liveInitiative.length })}
-            </Button>
-          )}
-
-          <div className="mx-1 h-6 w-px bg-[var(--border-default)]" aria-hidden="true" />
-
-          <Dropdown
-            trigger={
-              <Button variant="ghost" size="sm" icon={<MoreHorizontal size={14} />}>
-                {t('scenes.tools')}
-              </Button>
-            }
-            items={toolsDropdown}
-            align="right"
-          />
-
-          {isDm && (
-            <Dropdown
-              trigger={
-                <Button
-                  variant={fogEnabled ? 'secondary' : 'ghost'}
-                  size="sm"
-                  icon={fogEnabled ? <EyeOff size={14} /> : <Eye size={14} />}
-                >
-                  {t('scenes.fog.label')}
-                </Button>
-              }
-              items={fogDropdown}
-              align="right"
-            />
-          )}
-
-          {isDm && (
-            <Dropdown
-              trigger={
-                <Button
-                  variant={activeTool === 'wall' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  icon={<Square size={14} />}
-                >
-                  {t('scenes.walls.label')}
-                </Button>
-              }
-              items={wallsDropdown}
-              align="right"
-            />
-          )}
-
-          {isDm && (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <Button
-                variant="primary"
-                size="sm"
-                icon={<Upload size={14} />}
-                onClick={() => fileInputRef.current?.click()}
-                loading={isUploading}
-              >
-                {scene.image_url ? t('scenes.map.replace') : t('scenes.map.upload')}
-              </Button>
-            </>
-          )}
         </div>
-      </div>
-
+      </header>
       {isDm && initialSummonRequests.length > 0 && (
         <SummonRequestsPanel
           campaignId={campaignId}
@@ -694,7 +577,9 @@ export default function SceneView({
           <Input
             type="number"
             value={templateSize}
-            onChange={(e) => setTemplateSize(Number(e.target.value) || 5)}
+            onChange={(e) =>
+              setTemplateSize(Math.min(120, Math.max(5, Number(e.target.value) || 5)))
+            }
             min={5}
             max={120}
             step={5}
@@ -704,90 +589,304 @@ export default function SceneView({
         </div>
       )}
 
-      {tokens.length === 0 && isDm && (
-        <div className="mb-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)]/50 p-3 text-center text-sm text-[var(--text-muted)]">
-          {t('scenes.emptyHint')}
-        </div>
-      )}
-
-      {/* Масштабирование сохраняет координаты карты и всех её слоёв. */}
-      <div className="mb-2 flex items-center justify-end gap-2" role="group" aria-label="Масштаб карты">
-        <button type="button" aria-label="Уменьшить масштаб карты" title="Уменьшить масштаб" disabled={mapZoom <= 0.5} onClick={() => changeMapZoom(mapZoom - 0.25)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] disabled:opacity-40">
-          <ZoomOut size={17} />
-        </button>
-        <span className="min-w-12 text-center text-sm tabular-nums text-[var(--text-secondary)]" aria-live="polite">{Math.round(mapZoom * 100)}%</span>
-        <button type="button" aria-label="Увеличить масштаб карты" title="Увеличить масштаб" disabled={mapZoom >= 2} onClick={() => changeMapZoom(mapZoom + 0.25)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-primary)] disabled:opacity-40">
-          <ZoomIn size={17} />
-        </button>
-        <button type="button" aria-label="Сбросить масштаб и центрировать карту" title="100% и центр карты" onClick={resetMapView} className="flex h-9 items-center gap-1 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-2 text-xs text-[var(--text-primary)]">
-          <Maximize size={16} /> 100%
-        </button>
-      </div>
-
-      {/* Карта + слои */}
-      <div className="flex justify-center">
-        <div
-          ref={mapViewportRef}
-          className="relative w-full overflow-auto"
-          style={{
-            maxWidth: '100%',
-            maxHeight: 'calc(100vh - 250px)',
-            touchAction: 'pan-x pan-y pinch-zoom',
-            WebkitOverflowScrolling: 'touch',
-          }}
+      <div className={styles.layout + (showInitiative ? ' ' + styles.withQueue : '')}>
+        <section
+          className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]"
+          aria-label={t('map.workspace')}
         >
-          <div style={{ width: mapWidth * mapZoom, height: mapHeight * mapZoom, position: 'relative' }}>
-          <div
-            ref={wallWrapperRef}
-            style={{ position: 'absolute', top: 0, left: 0, width: mapWidth, height: mapHeight, transform: `scale(${mapZoom})`, transformOrigin: 'top left' }}
-            onMouseDown={handleWallMouseDown}
-            onMouseMove={handleWallMouseMove}
-          >
-            <MapCanvas scene={scene} showGrid={showGrid} />
-
-            <WallsLayer
-              scene={scene}
-              initialWalls={localWalls}
-              isDm={isDm}
-              previewWall={wallPreview}
-            />
-
-            <TokenLayer
-              scene={scene}
-              zoomScale={mapZoom}
-              activeTokenId={currentTurn?.token_id ?? null}
-              initialTokens={tokens}
-              isDm={isDm}
-              currentUserId={currentUserId}
-              walls={localWalls}
-              initialTokenOwners={initialTokenOwners}
-              campaignMembers={campaignMembers}
-              onRefresh={refresh}
-            />
-
-            <FogLayer
-              scene={scene}
-              initialFog={initialFog}
-              isDm={isDm}
-              fogEnabled={fogEnabled}
-              brushMode={brushMode}
-            />
-            {activeTool === 'ruler' && (
-              <RulerTool scene={scene} isActive={true} onClose={() => setActiveTool('none')} />
-            )}
-            {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
-              <TemplateTool
-                scene={scene}
-                isActive={true}
-                type={activeTool}
-                size={templateSize}
-                onClose={() => setActiveTool('none')}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] p-2">
+            <div
+              className="flex flex-wrap items-center gap-1"
+              role="group"
+              aria-label={t('scenes.tools')}
+            >
+              <Button
+                variant={activeTool === 'none' && !brushMode ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                aria-pressed={activeTool === 'none' && !brushMode}
+                onClick={() => chooseTool('none')}
+                icon={<MousePointer2 size={16} />}
+              >
+                {t('map.select')}
+              </Button>
+              <Button
+                variant={activeTool === 'pan' ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                aria-pressed={activeTool === 'pan'}
+                onClick={() => chooseTool('pan')}
+                icon={<Hand size={16} />}
+              >
+                {t('map.pan')}
+              </Button>
+              <Button
+                variant={activeTool === 'ruler' ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                aria-pressed={activeTool === 'ruler'}
+                onClick={() => chooseTool(activeTool === 'ruler' ? 'none' : 'ruler')}
+                icon={<Ruler size={16} />}
+              >
+                {t('scenes.tool.ruler')}
+              </Button>
+              <Dropdown
+                trigger={
+                  <Button variant="ghost" className="min-h-11" icon={<Triangle size={16} />}>
+                    {t('map.templates')}
+                  </Button>
+                }
+                items={toolsDropdown.slice(1)}
+                align="left"
               />
-            )}
+              <Button
+                variant={showGrid ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                aria-pressed={showGrid}
+                onClick={() => setShowGrid((v) => !v)}
+              >
+                {t('scenes.grid.label')}
+              </Button>
+              {isDm && (
+                <Dropdown
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      className="min-h-11"
+                      icon={<MoreHorizontal size={16} />}
+                    >
+                      {t('common.more')}
+                    </Button>
+                  }
+                  items={[...fogDropdown, ...wallsDropdown]}
+                  align="left"
+                />
+              )}
+            </div>
+            <div
+              className="flex flex-wrap items-center gap-1"
+              role="group"
+              aria-label={t('map.zoom')}
+            >
+              <Button
+                variant="ghost"
+                className="min-h-11 min-w-11 !px-2"
+                aria-label={t('map.zoomOut')}
+                disabled={mapZoom <= 0.05}
+                onClick={() => changeMapZoom(mapZoom / 1.25)}
+              >
+                <ZoomOut size={18} />
+              </Button>
+              <button
+                type="button"
+                className="min-h-11 min-w-14 rounded-lg text-sm text-[var(--text-secondary)] tabular-nums"
+                onClick={() => changeMapZoom(1)}
+                aria-label={t('map.actualSize')}
+              >
+                {Math.round(mapZoom * 100)}%
+              </button>
+              <Button
+                variant="ghost"
+                className="min-h-11 min-w-11 !px-2"
+                aria-label={t('map.zoomIn')}
+                disabled={mapZoom >= 3}
+                onClick={() => changeMapZoom(mapZoom * 1.25)}
+              >
+                <ZoomIn size={18} />
+              </Button>
+              <Button
+                variant={fitting ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                onClick={resetMapView}
+                icon={<Maximize size={16} />}
+              >
+                {t('map.fit')}
+              </Button>
+              <Button
+                variant="ghost"
+                className="min-h-11 min-w-11 !px-2"
+                aria-label={t('map.fullscreen')}
+                onClick={toggleFullscreen}
+              >
+                <Expand size={18} />
+              </Button>
+            </div>
           </div>
+          {!scene.image_url && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-[var(--border-default)] bg-[var(--accent-subtle)] p-4">
+              <div>
+                <h2 className="font-semibold text-[var(--text-primary)]">{t('map.emptyTitle')}</h2>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                  {isDm ? t('map.emptyHint') : t('map.playerEmpty')}
+                </p>
+              </div>
+              {isDm && (
+                <Button
+                  variant="primary"
+                  className="min-h-11"
+                  onClick={() => setShowUpload(true)}
+                  icon={<Upload size={16} />}
+                >
+                  {t('scenes.map.upload')}
+                </Button>
+              )}
+            </div>
+          )}
+          <div
+            ref={mapViewportRef}
+            tabIndex={0}
+            role="region"
+            aria-label={t('map.viewport')}
+            className={
+              styles.viewport +
+              ' relative w-full overflow-auto bg-[var(--bg-app)] outline-offset-[-3px] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]'
+            }
+            style={{
+              touchAction: 'pan-x pan-y pinch-zoom',
+              backgroundImage: 'radial-gradient(var(--border-default) 1px, transparent 1px)',
+              backgroundSize: '16px 16px',
+            }}
+          >
+            <div
+              className="grid min-h-full min-w-full place-items-center p-4"
+              style={{ width: mapWidth * mapZoom + 32, height: mapHeight * mapZoom + 32 }}
+            >
+              <div
+                style={{
+                  width: mapWidth * mapZoom,
+                  height: mapHeight * mapZoom,
+                  position: 'relative',
+                }}
+              >
+                <div
+                  ref={wallWrapperRef}
+                  data-testid="map-stage"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: mapWidth,
+                    height: mapHeight,
+                    transform: 'scale(' + mapZoom + ')',
+                    transformOrigin: 'top left',
+                  }}
+                  onPointerDown={handleWallMouseDown}
+                  onPointerMove={handleWallMouseMove}
+                >
+                  <MapCanvas scene={scene} showGrid={showGrid} />
+
+                  <WallsLayer
+                    scene={scene}
+                    initialWalls={localWalls}
+                    isDm={isDm}
+                    previewWall={wallPreview}
+                  />
+
+                  <TokenLayer
+                    scene={scene}
+                    zoomScale={mapZoom}
+                    activeTokenId={currentTurn?.token_id ?? null}
+                    initialTokens={tokens}
+                    isDm={isDm}
+                    currentUserId={currentUserId}
+                    walls={localWalls}
+                    initialTokenOwners={initialTokenOwners}
+                    campaignMembers={campaignMembers}
+                    onRefresh={refresh}
+                  />
+
+                  <FogLayer
+                    scene={scene}
+                    initialFog={initialFog}
+                    isDm={isDm}
+                    fogEnabled={fogEnabled}
+                    brushMode={brushMode && activeTool === 'none'}
+                  />
+                  {activeTool === 'ruler' && (
+                    <RulerTool
+                      scene={scene}
+                      isActive={true}
+                      onClose={() => setActiveTool('none')}
+                    />
+                  )}
+                  {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
+                    <TemplateTool
+                      scene={scene}
+                      isActive={true}
+                      type={activeTool}
+                      size={templateSize}
+                      onClose={() => setActiveTool('none')}
+                    />
+                  )}
+                  {activeTool === 'pan' && (
+                    <div
+                      className="absolute inset-0 z-40 cursor-grab active:cursor-grabbing"
+                      style={{ touchAction: 'none' }}
+                      onPointerDown={(e) => {
+                        if (!e.isPrimary || e.button !== 0 || !mapViewportRef.current) return
+                        e.preventDefault()
+                        e.currentTarget.setPointerCapture(e.pointerId)
+                        panRef.current = {
+                          id: e.pointerId,
+                          x: e.clientX,
+                          y: e.clientY,
+                          left: mapViewportRef.current.scrollLeft,
+                          top: mapViewportRef.current.scrollTop,
+                        }
+                      }}
+                      onPointerMove={(e) => {
+                        const p = panRef.current
+                        const view = mapViewportRef.current
+                        if (p && view && p.id === e.pointerId) {
+                          view.scrollLeft = p.left - (e.clientX - p.x)
+                          view.scrollTop = p.top - (e.clientY - p.y)
+                        }
+                      }}
+                      onPointerUp={() => {
+                        panRef.current = null
+                      }}
+                      onPointerCancel={() => {
+                        panRef.current = null
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+          <div className="flex flex-wrap justify-between gap-2 border-t border-[var(--border-default)] px-4 py-3 text-xs text-[var(--text-muted)]">
+            <span>
+              {brushMode
+                ? t('scenes.fog.brush')
+                : activeTool === 'pan'
+                  ? t('map.panHint')
+                  : activeTool === 'none'
+                    ? t('map.selectHint')
+                    : t('map.drawHint')}
+            </span>
+            <span>
+              {t('map.scaleHint')} · {t('map.escapeHint')}
+            </span>
+          </div>
+        </section>
+        {showInitiative && (
+          <InitiativePanel
+            sceneId={scene.id}
+            entries={liveInitiative}
+            isDm={isDm}
+            onClose={() => setShowInitiative(false)}
+            onFocusToken={focusToken}
+          />
+        )}
       </div>
+      {showUpload && isDm && (
+        <MapUploadDialog
+          scene={scene}
+          campaignId={campaignId}
+          onClose={() => setShowUpload(false)}
+          onUploaded={() => {
+            toast.success(t('scenes.toast.mapUploaded'))
+            router.refresh()
+          }}
+        />
+      )}
 
       {/* Модалки */}
       {showAddToken && (
@@ -805,15 +904,6 @@ export default function SceneView({
           sceneId={scene.id}
           monsters={monsters}
           onClose={() => setShowSummon(false)}
-        />
-      )}
-
-      {showInitiative && liveInitiative.length > 0 && (
-        <InitiativePanel
-          sceneId={scene.id}
-          entries={liveInitiative}
-          isDm={isDm}
-          onClose={() => setShowInitiative(false)}
         />
       )}
 

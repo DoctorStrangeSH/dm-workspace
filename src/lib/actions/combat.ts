@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { logEvent } from './logs'
+import { nextTurnEntry } from '@/lib/maps/initiative'
 import { abilityModifier } from '@/lib/dnd/formulas'
 
 async function getSceneCampaign(sceneId: string): Promise<string | null> {
@@ -25,18 +26,25 @@ export async function startCombat(sceneId: string) {
     .from('tokens')
     .select('id, name, character_id, entity_id')
     .eq('scene_id', sceneId)
+    .order('id')
 
   if (!tokens || tokens.length === 0) return { error: 'Нет токенов для инициативы' }
 
-  const { error: clearError } = await supabase.from('initiative').delete().eq('scene_id', sceneId)
-  if (clearError) return { error: 'Не удалось подготовить инициативу' }
+  const { data: existing, error: existingError } = await supabase
+    .from('initiative')
+    .select('id')
+    .eq('scene_id', sceneId)
+    .limit(1)
+  if (existingError) return { error: 'Не удалось проверить очередь ходов' }
+  if (existing?.length)
+    return { error: 'Бой уже подготовлен. Обновите страницу, чтобы открыть очередь.' }
 
-  const entries = tokens.map((t) => ({
+  const entries = tokens.map((t, index) => ({
     scene_id: sceneId,
     campaign_id: campaignId,
     token_id: t.id,
     initiative: 0,
-    turn_order: 0,
+    turn_order: index,
     is_current: false,
   }))
 
@@ -84,6 +92,16 @@ export async function rollInitiativeForToken(initiativeEntryId: string, sceneId:
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Только ГМ' }
 
+  return rollTokenInitiative(initiativeEntryId, sceneId, campaignId, true)
+}
+
+// Both public actions authorize the scene before reaching this internal helper.
+async function rollTokenInitiative(
+  initiativeEntryId: string,
+  sceneId: string,
+  campaignId: string,
+  reorder: boolean
+) {
   const supabase = await createClient()
 
   // Получаем запись инициативы и связанный токен
@@ -138,8 +156,9 @@ export async function rollInitiativeForToken(initiativeEntryId: string, sceneId:
 
   if (error || !updatedEntry) return { error: 'Не удалось обновить инициативу' }
 
-  const orderUpdated = await recalculateTurnOrder(sceneId)
-  if (!orderUpdated) return { error: 'Инициатива обновлена, но не удалось пересчитать порядок ходов' }
+  if (reorder && !(await recalculateTurnOrder(sceneId))) {
+    return { error: 'Инициатива обновлена, но не удалось пересчитать порядок ходов' }
+  }
   await logEvent(
     campaignId,
     'initiative_roll',
@@ -164,13 +183,18 @@ export async function rollAllInitiatives(sceneId: string) {
 
   const results = []
   for (const entry of entries) {
-    results.push(await rollInitiativeForToken(entry.id, sceneId))
+    results.push(await rollTokenInitiative(entry.id, sceneId, campaignId, false))
   }
 
+  const orderUpdated = await recalculateTurnOrder(sceneId)
+  if (!orderUpdated)
+    return { error: 'Броски выполнены, но не удалось пересчитать порядок. Обновите очередь.' }
   const failedRolls = results.filter((result) => !('success' in result && result.success))
   if (failedRolls.length > 0) {
     revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
-    return { error: `Не удалось выполнить бросок инициативы для ${failedRolls.length} из ${entries.length} участников` }
+    return {
+      error: `Не удалось выполнить бросок инициативы для ${failedRolls.length} из ${entries.length} участников`,
+    }
   }
 
   revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
@@ -184,12 +208,13 @@ async function recalculateTurnOrder(sceneId: string): Promise<boolean> {
     .select('id, initiative')
     .eq('scene_id', sceneId)
     .order('initiative', { ascending: false })
+    .order('id')
 
   if (fetchError || !entries || entries.length === 0) return false
   for (let i = 0; i < entries.length; i++) {
     const { data: updated, error } = await supabase
       .from('initiative')
-      .update({ turn_order: i, is_current: i === 0 })
+      .update({ turn_order: i })
       .eq('id', entries[i].id)
       .eq('scene_id', sceneId)
       .select('id')
@@ -212,15 +237,18 @@ export async function nextTurn(sceneId: string) {
     .select('id, turn_order')
     .eq('scene_id', sceneId)
     .order('turn_order')
+    .order('id')
 
   if (!entries || entries.length === 0) return { error: 'Нет инициативы' }
 
-  const { data: currentEntry } = await supabase
+  const { data: currentEntry, error: currentError } = await supabase
     .from('initiative')
     .select('id, turn_order')
     .eq('scene_id', sceneId)
     .eq('is_current', true)
     .maybeSingle()
+
+  if (currentError) return { error: 'Не удалось проверить текущий ход. Обновите очередь.' }
 
   if (!currentEntry) {
     const { data: activated, error } = await supabase
@@ -236,8 +264,7 @@ export async function nextTurn(sceneId: string) {
     return { success: true }
   }
 
-  const nextIndex = (currentEntry.turn_order + 1) % entries.length
-  const nextEntry = entries.find((e) => e.turn_order === nextIndex)
+  const nextEntry = nextTurnEntry(entries, currentEntry.id)
   if (!nextEntry) return { error: 'Не удалось определить следующий ход' }
 
   const { data: cleared, error: clearError } = await supabase
@@ -357,7 +384,10 @@ export async function damageToken(
         .select('id')
         .maybeSingle()
       if (rollbackError || !rolledBack) {
-        return { error: 'HP токена обновлено, но персонаж не найден; не удалось автоматически восстановить прежнее HP токена' }
+        return {
+          error:
+            'HP токена обновлено, но персонаж не найден; не удалось автоматически восстановить прежнее HP токена',
+        }
       }
       return { error: 'Не удалось загрузить связанного персонажа; изменение HP отменено' }
     }
@@ -371,12 +401,15 @@ export async function damageToken(
     // exact JSON value read before computing HP.
     const nextData = { ...data, hp: { ...data.hp, current: newHP } }
 
-    const { data: changed, error: characterUpdateError } = await supabase.rpc('update_character_data_cas', {
-      p_character_id: token.character_id,
-      p_campaign_id: campaignId,
-      p_expected: previous,
-      p_next: nextData,
-    })
+    const { data: changed, error: characterUpdateError } = await supabase.rpc(
+      'update_character_data_cas',
+      {
+        p_character_id: token.character_id,
+        p_campaign_id: campaignId,
+        p_expected: previous,
+        p_next: nextData,
+      }
+    )
 
     if (characterUpdateError || changed !== true) {
       // Best-effort rollback, guarded by the value written above to reduce the chance of overwriting a concurrent change.
@@ -391,7 +424,10 @@ export async function damageToken(
         .maybeSingle()
 
       if (rollbackError || !rolledBack) {
-        return { error: 'Не удалось синхронизировать HP персонажа и восстановить HP токена; проверьте значения HP вручную' }
+        return {
+          error:
+            'Не удалось синхронизировать HP персонажа и восстановить HP токена; проверьте значения HP вручную',
+        }
       }
       return { error: 'Не удалось обновить HP персонажа; изменение HP токена отменено' }
     }

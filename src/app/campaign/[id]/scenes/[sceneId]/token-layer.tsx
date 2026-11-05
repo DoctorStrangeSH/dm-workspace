@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { useT } from '@/lib/i18n'
 import Token from './token'
 import TokenMenu from './token-menu'
 import { useRealtimeTokens } from '@/lib/hooks/use-realtime-tokens'
@@ -32,6 +34,7 @@ export default function TokenLayer({
   campaignMembers = [],
   onRefresh,
 }: Props) {
+  const t = useT()
   // CHANGES: isReady используется для индикатора "Подключение…"
   // (drag НЕ блокируется — иначе первое движение теряется).
   const { tokens, isReady } = useRealtimeTokens({
@@ -44,7 +47,8 @@ export default function TokenLayer({
     initialOwners: initialTokenOwners,
   })
 
-  const [selectedToken, setSelectedToken] = useState<TokenType | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selectedToken = tokens.find((token) => token.id === selectedId) ?? null
 
   const canDragToken = (token: TokenType) => {
     if (isDm) return true
@@ -58,7 +62,7 @@ export default function TokenLayer({
       {/* CHANGES: индикатор "Подключение…" — пока канал не SUBSCRIBED */}
       {!isReady && (
         <div className="pointer-events-none absolute top-2 right-2 z-30 rounded bg-[var(--warning-subtle)] px-2 py-1 text-[10px] text-[var(--warning-text)]">
-          Подключение…
+          {t('map.connecting')}
         </div>
       )}
 
@@ -74,24 +78,26 @@ export default function TokenLayer({
               sceneId={scene.id}
               canDrag={canDragToken(token)}
               walls={walls}
-              onClick={() => setSelectedToken(token)}
+              onClick={() => setSelectedId(token.id)}
             />
           ))}
         </div>
       </div>
 
-      {selectedToken && (
-        <TokenMenu
-          token={selectedToken}
-          scene={scene}
-          isDm={isDm}
-          currentUserId={currentUserId}
-          campaignMembers={campaignMembers}
-          tokenOwners={owners}
-          onClose={() => setSelectedToken(null)}
-          onUpdate={onRefresh}
-        />
-      )}
+      {selectedToken &&
+        createPortal(
+          <TokenMenu
+            token={selectedToken}
+            scene={scene}
+            isDm={isDm}
+            currentUserId={currentUserId}
+            campaignMembers={campaignMembers}
+            tokenOwners={owners}
+            onClose={() => setSelectedId(null)}
+            onUpdate={onRefresh}
+          />,
+          document.fullscreenElement ?? document.body
+        )}
     </>
   )
 }

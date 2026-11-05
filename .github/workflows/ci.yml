@@ -43,6 +43,9 @@ jobs:
       - name: Character HP, level-up and action boundary regression tests
         run: npm run test:characters
 
+      - name: Offline tactical map geometry and combat action boundaries
+        run: npm run test:maps
+
       - name: Magic item catalog source and planning tests
         run: |
           node --test tests/magic-item-catalog.test.mjs

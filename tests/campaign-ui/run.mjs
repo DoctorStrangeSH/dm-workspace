@@ -14,6 +14,7 @@ const result = await build({
   entryPoints: ['tests/campaign-ui/fixture.tsx'],
   bundle: true,
   write: false,
+  outfile: path.join(output, 'fixture.js'),
   platform: 'browser',
   format: 'iife',
   jsx: 'automatic',
@@ -22,10 +23,13 @@ const result = await build({
     {
       name: 'offline-boundaries',
       setup(builder) {
+        builder.onResolve({ filter: /^next\/image$/ }, () => ({
+          path: path.join(root, 'tests/campaign-ui/image-mock.tsx'),
+        }))
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-messages)$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|tokens|token-owners|fog|walls|summons))$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -43,11 +47,20 @@ const candidates = new Scanner({
     { base: path.join(root, 'tests/campaign-ui'), pattern: '*.tsx', negated: false },
   ],
 }).scan()
-const styles = css.build(candidates)
+const styles =
+  css.build(candidates) +
+  (result.outputFiles.find((file) => file.path.endsWith('.css'))?.text ?? '')
 const html =
   '<!doctype html><html lang="ru" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/styles.css"><title>Offline campaign UI tests</title></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>'
 const server = createServer((request, response) => {
   const route = request.url?.split('?')[0]
+  if (route?.startsWith('/api/scenes/')) {
+    response.setHeader('Content-Type', 'image/svg+xml')
+    response.end(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><defs><radialGradient id="g"><stop stop-color="#3f6263"/><stop offset="1" stop-color="#142b32"/></radialGradient></defs><rect width="1200" height="800" fill="url(#g)"/><path d="M0 580 Q300 350 500 550 T1200 400" fill="none" stroke="#80b4b0" stroke-width="95" opacity=".3"/><g fill="#35424c" stroke="#a5abb1" stroke-width="8"><path d="M350 150h300v230h-90V240H440v140h-90z"/><circle cx="500" cy="270" r="70"/><path d="M800 520h140v140H800z"/></g><g fill="#496f5a"><circle cx="150" cy="190" r="85"/><circle cx="1000" cy="200" r="100"/><circle cx="250" cy="700" r="100"/></g></svg>'
+    )
+    return
+  }
   response.setHeader(
     'Content-Type',
     route === '/bundle.js'
@@ -58,7 +71,7 @@ const server = createServer((request, response) => {
   )
   response.end(
     route === '/bundle.js'
-      ? result.outputFiles[0].contents
+      ? result.outputFiles.find((file) => file.path.endsWith('.js')).contents
       : route === '/styles.css'
         ? styles
         : html
@@ -80,6 +93,7 @@ async function scenario(name, options, body) {
       ...(options.timezoneId ? { timezoneId: options.timezoneId } : {}),
     })
     const page = await context.newPage()
+    page.setDefaultTimeout(5000)
     const errors = []
     page.on('pageerror', (error) => errors.push(error.message))
     await context.route('**/*', (route) =>
@@ -94,6 +108,13 @@ async function scenario(name, options, body) {
       await page.goto(origin + (options.url ?? '/'))
       await body(page)
       expect(errors).toEqual([])
+    } catch (error) {
+      console.error({
+        scenario: name,
+        pageErrors: errors,
+        body: (await page.locator('body').innerText()).slice(0, 1500),
+      })
+      throw error
     } finally {
       await context.close()
     }
@@ -2264,6 +2285,320 @@ try {
       }
     )
   }
+
+  for (const lang of ['ru', 'en']) {
+    for (const mobile of [false, true]) {
+      await scenario(
+        'map workspace fits, zooms and docks queue ' + lang + mobile,
+        { mobile, width: 320, url: '/?screen=map&mapImage&combat&current&lang=' + lang },
+        async (page) => {
+          const ru = lang === 'ru'
+          const viewport = page.getByRole('region', {
+            name: ru
+              ? 'Игровая карта — используйте стрелки для прокрутки'
+              : 'Battle map — use arrow keys to scroll',
+          })
+          const stage = page.getByTestId('map-stage')
+          await expect
+            .poll(async () => stage.evaluate((el) => el.getBoundingClientRect().width))
+            .toBeLessThan(await viewport.evaluate((el) => el.clientWidth))
+          await page
+            .getByRole('button', { name: ru ? 'Порядок ходов' : 'Turn order', exact: false })
+            .first()
+            .click()
+          const queue = page.getByRole('complementary', {
+            name: ru ? 'Порядок ходов' : 'Turn order',
+          })
+          await expect(queue).toBeVisible()
+          const vb = await viewport.boundingBox(),
+            qb = await queue.boundingBox()
+          expect(mobile ? qb.y >= vb.y + vb.height : qb.x >= vb.x + vb.width).toBe(true)
+          const before = await stage.evaluate((el) => el.getBoundingClientRect().width)
+          await page
+            .getByRole('button', { name: ru ? 'Увеличить масштаб карты' : 'Zoom in', exact: true })
+            .click()
+          await expect
+            .poll(async () => stage.evaluate((el) => el.getBoundingClientRect().width))
+            .toBeGreaterThan(before)
+          await page.getByRole('button', { name: ru ? 'Вписать' : 'Fit map', exact: true }).click()
+          await expect
+            .poll(async () => stage.evaluate((el) => el.getBoundingClientRect().width))
+            .toBeLessThan(await viewport.evaluate((el) => el.clientWidth))
+          expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          await page.evaluate(() => window.scrollTo(0, 0))
+          await page.screenshot({
+            fullPage: true,
+            path: path.join(output, 'map-' + lang + (mobile ? '-mobile' : '-desktop') + '.png'),
+          })
+          if (mobile) {
+            await viewport.scrollIntoViewIfNeeded()
+            await page.screenshot({ path: path.join(output, 'map-' + lang + '-mobile-field.png') })
+            await queue.scrollIntoViewIfNeeded()
+            await page.screenshot({ path: path.join(output, 'map-' + lang + '-mobile-queue.png') })
+          }
+        }
+      )
+    }
+  }
+  await scenario(
+    'map ruler uses transformed bounds at different zooms without writes',
+    { url: '/?screen=map&mapImage' },
+    async (page) => {
+      const stage = page.getByTestId('map-stage')
+      const ruler = page.getByRole('button', { name: 'Линейка', exact: true })
+      for (const zoom of ['fit', 'actual']) {
+        if (zoom === 'actual')
+          await page.getByRole('button', { name: 'Показать карту в масштабе 100%' }).click()
+        await ruler.click()
+        const bounds = await stage.boundingBox()
+        const cell = bounds.width / 24
+        await page.mouse.move(bounds.x + cell, bounds.y + cell)
+        await page.mouse.down()
+        await page.mouse.move(bounds.x + cell * 4, bounds.y + cell * 5, { steps: 8 })
+        await page.mouse.up()
+        await expect(stage.locator('svg text').first()).toContainText('25')
+        await page.keyboard.press('Escape')
+      }
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'map upload validates and previews, preserves geometry, pending dismissal and explicit upload',
+    { mobile: true, url: '/?screen=map' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Загрузить карту', exact: true }).first().click()
+      const dialog = page.getByRole('dialog')
+      const input = dialog.locator('input[type=file]')
+      await input.setInputFiles({
+        name: 'unsafe.svg',
+        mimeType: 'image/svg+xml',
+        buffer: Buffer.from('<svg/>'),
+      })
+      await expect(dialog.getByRole('alert')).toContainText('PNG')
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      const png = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZKxEAAAAASUVORK5CYII=',
+        'base64'
+      )
+      await input.setInputFiles({ name: 'my-map.png', mimeType: 'image/png', buffer: png })
+      await expect(dialog.getByRole('img', { name: 'Предпросмотр карты с сеткой' })).toBeVisible()
+      await expect(dialog).toContainText('1 × 1 px')
+      await expect(dialog).toContainText('24 × 16')
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      await dialog.screenshot({ path: path.join(output, 'map-upload-mobile.png') })
+      await page.evaluate(() => {
+        window.__uiLab.mapDelay = 300
+      })
+      await dialog.getByRole('button', { name: 'Загрузить карту', exact: true }).click()
+      await page.keyboard.press('Escape')
+      await expect(dialog).toBeVisible()
+      await expect(dialog).toHaveCount(0)
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([
+        {
+          name: 'uploadMap',
+          args: [
+            'offline-scene',
+            'test',
+            { name: 'my-map.png', type: 'image/png', size: png.length },
+          ],
+        },
+      ])
+    }
+  )
+  await scenario(
+    'map upload transport error blocks repeat and keeps preview',
+    { url: '/?screen=map&mapImage' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Заменить карту', exact: true }).click()
+      const dialog = page.getByRole('dialog')
+      await dialog.locator('input[type=file]').setInputFiles({
+        name: 'map.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZKxEAAAAASUVORK5CYII=',
+          'base64'
+        ),
+      })
+      await expect(dialog).toContainText('1 × 1 px')
+      await page.evaluate(() => {
+        window.__uiLab.mapOutcome = 'throw'
+      })
+      await dialog.getByRole('button', { name: 'Заменить фон карты' }).click()
+      await expect(dialog.getByRole('alert')).toContainText('Обновите страницу')
+      await expect(dialog.getByRole('button', { name: 'Заменить фон карты' })).toBeDisabled()
+      expect(await page.evaluate(() => window.__uiLab.mapActions.length)).toBe(1)
+    }
+  )
+  await scenario(
+    'map preparation starts first turn; zero initiative can be rerolled; failures retained',
+    { url: '/?screen=map&combat' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
+      const queue = page.getByRole('complementary', { name: 'Порядок ходов' })
+      await expect(queue).toContainText('Подготовка ходов')
+      await queue
+        .getByRole('button', {
+          name: 'Бросить инициативу: Серебряная хранительница дальних звёзд',
+          exact: true,
+        })
+        .click()
+      expect(await page.evaluate(() => window.__uiLab.mapActions[0])).toEqual({
+        name: 'rollInitiativeForToken',
+        args: ['entry-0', 'offline-scene'],
+      })
+      await page.evaluate(() => {
+        window.__uiLab.mapOutcome = 'error'
+      })
+      await queue.getByRole('button', { name: 'Начать первый ход' }).click()
+      await expect(queue.getByRole('alert')).toContainText('Offline map action failed')
+      await expect(queue.getByRole('button', { name: 'Начать первый ход' })).toBeEnabled()
+    }
+  )
+  await scenario(
+    'map player can inspect and focus, has no DM upload or turn mutations',
+    { mobile: true, url: '/?screen=map&combat&current&role=player&lang=en' },
+    async (page) => {
+      await expect(page.getByRole('button', { name: 'Upload map', exact: true })).toHaveCount(0)
+      await page.getByRole('button', { name: 'Turn order', exact: false }).first().click()
+      const queue = page.getByRole('complementary', { name: 'Turn order' })
+      await expect(queue.getByRole('button', { name: 'Next turn', exact: true })).toHaveCount(0)
+      await expect(
+        queue.getByRole('button', { name: 'Roll initiative:', exact: false })
+      ).toHaveCount(0)
+      await queue
+        .getByRole('button', { name: 'Show on map: Серебряная хранительница дальних звёзд' })
+        .click()
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      await page
+        .getByRole('button', { name: 'Серебряная хранительница дальних звёзд', exact: true })
+        .focus()
+      await page.keyboard.press('Enter')
+      await expect(
+        page.getByRole('heading', { name: 'Серебряная хранительница дальних звёзд', exact: true })
+      ).toBeVisible()
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+
+  await scenario(
+    'map session embedding docks queue below a narrow panel',
+    { url: '/?screen=map-session' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
+      const queue = page.getByRole('complementary', { name: 'Порядок ходов' })
+      const viewport = page.getByRole('region', {
+        name: 'Игровая карта — используйте стрелки для прокрутки',
+      })
+      const vb = await viewport.boundingBox(),
+        qb = await queue.boundingBox()
+      expect(qb.y >= vb.y + vb.height).toBe(true)
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'map panning and focus are local; reroll and end require confirmation',
+    { url: '/?screen=map&mapImage&combat&current' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
+      const queue = page.getByRole('complementary', { name: 'Порядок ходов' })
+      await page.getByRole('button', { name: 'Показать карту в масштабе 100%' }).click()
+      await page.getByRole('button', { name: 'Обзор', exact: true }).click()
+      const viewport = page.getByRole('region', {
+        name: 'Игровая карта — используйте стрелки для прокрутки',
+      })
+      const bounds = await viewport.boundingBox()
+      const before = await viewport.evaluate((el) => el.scrollLeft)
+      await page.mouse.move(bounds.x + bounds.width * 0.7, bounds.y + bounds.height * 0.6)
+      await page.mouse.down()
+      await page.mouse.move(bounds.x + bounds.width * 0.4, bounds.y + bounds.height * 0.6, {
+        steps: 8,
+      })
+      await page.mouse.up()
+      await expect.poll(() => viewport.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before)
+      await queue
+        .getByRole('button', {
+          name: 'Бросить инициативу: Серебряная хранительница дальних звёзд',
+          exact: true,
+        })
+        .click()
+      await expect(page.getByRole('dialog')).toContainText('Текущий ход сохранится')
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      await page.getByRole('dialog').getByRole('button', { name: 'Отмена', exact: true }).click()
+      await queue.getByRole('button', { name: 'Завершить бой', exact: true }).click()
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+    }
+  )
+  await scenario(
+    'map touch ruler and template cancel without moving tokens or writing',
+    { mobile: true, url: '/?screen=map&mapImage' },
+    async (page) => {
+      const stage = page.getByTestId('map-stage')
+      await page.getByRole('button', { name: 'Линейка', exact: true }).click()
+      const layer = stage.locator('div.z-30')
+      await stage.scrollIntoViewIfNeeded()
+      const bounds = await stage.boundingBox(),
+        cell = bounds.width / 24
+      const cdp = await page.context().newCDPSession(page)
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x: bounds.x + cell, y: bounds.y + cell }],
+      })
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: bounds.x + cell * 4, y: bounds.y + cell * 5 }],
+      })
+      await expect(layer.locator('text').first()).toContainText('25')
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] })
+      await cdp.detach()
+      await expect(layer.locator('text')).toHaveCount(0)
+      await page.keyboard.press('Escape')
+      await page.getByRole('button', { name: 'Области', exact: true }).click()
+      await page.getByRole('menuitem', { name: 'Сфера', exact: true }).click()
+      await page.keyboard.press('Escape')
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'map corrupt image and returned upload failure preserve safe retry',
+    { url: '/?screen=map' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Загрузить карту', exact: true }).first().click()
+      const dialog = page.getByRole('dialog'),
+        input = dialog.locator('input[type=file]')
+      await input.setInputFiles({
+        name: 'broken.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('broken'),
+      })
+      await expect(dialog.getByRole('alert')).toContainText('Изображение не удалось открыть')
+      await expect(
+        dialog.getByRole('button', { name: 'Загрузить карту', exact: true })
+      ).toBeDisabled()
+      await input.setInputFiles({
+        name: 'valid.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZKxEAAAAASUVORK5CYII=',
+          'base64'
+        ),
+      })
+      await expect(dialog).toContainText('1 × 1 px')
+      await page.evaluate(() => {
+        window.__uiLab.mapOutcome = 'error'
+      })
+      await dialog.getByRole('button', { name: 'Загрузить карту', exact: true }).click()
+      await expect(dialog.getByRole('alert')).toContainText('Offline map action failed')
+      await expect(
+        dialog.getByRole('button', { name: 'Загрузить карту', exact: true })
+      ).toBeEnabled()
+      expect(await page.evaluate(() => window.__uiLab.mapActions.length)).toBe(1)
+    }
+  )
 } finally {
   await browser.close()
   await new Promise((resolve) => server.close(resolve))

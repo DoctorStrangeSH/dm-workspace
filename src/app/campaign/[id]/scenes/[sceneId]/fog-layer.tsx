@@ -5,6 +5,7 @@ import { revealArea } from '@/lib/actions/fog'
 import { useToast } from '@/components/toast/toast-provider'
 import { useRealtimeFog } from '@/lib/hooks/use-realtime-fog'
 import { useT } from '@/lib/i18n'
+import { clientToGrid } from '@/lib/maps/geometry'
 import type { Scene, FogArea } from '@/lib/types'
 
 interface Props {
@@ -37,16 +38,23 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
     height: area.height * gridSize,
   }))
 
-  const getGridCoords = (e: React.MouseEvent) => {
+  const getGridCoords = (e: React.PointerEvent) => {
     if (!wrapperRef.current) return null
-    const rect = wrapperRef.current.getBoundingClientRect()
-    const x = Math.floor((e.clientX - rect.left) / gridSize)
-    const y = Math.floor((e.clientY - rect.top) / gridSize)
-    return { x, y }
+    return clientToGrid(
+      e,
+      wrapperRef.current.getBoundingClientRect(),
+      scene.width,
+      scene.height,
+      'cell'
+    )
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDm || !brushMode) return
+    if (!e.isPrimary || e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
     const coords = getGridCoords(e)
     if (!coords) return
     setDragging(true)
@@ -54,14 +62,15 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
     setEnd(coords)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return
+  const handleMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging || !e.isPrimary) return
     const coords = getGridCoords(e)
     if (!coords) return
     setEnd(coords)
   }
 
-  const handleMouseUp = async () => {
+  const handleMouseUp = async (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.isPrimary) return
     if (!dragging || !start || !end) {
       setDragging(false)
       return
@@ -74,8 +83,12 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
     setStart(null)
     setEnd(null)
     if (w === 0 || h === 0) return
-    const res = await revealArea(scene.id, x, y, w, h)
-    if ('error' in res) toast.error(res.error ?? t('common.error'))
+    try {
+      const res = await revealArea(scene.id, x, y, w, h)
+      if ('error' in res) toast.error(res.error ?? t('common.error'))
+    } catch {
+      toast.error(t('map.uncertain'))
+    }
   }
 
   const preview =
@@ -101,11 +114,18 @@ export default function FogLayer({ scene, initialFog, isDm, fogEnabled, brushMod
           ? 'pointer-events-auto absolute inset-0'
           : 'pointer-events-none absolute inset-0'
       }
-      style={{ cursor: isInteractive ? 'crosshair' : 'default' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => setDragging(false)}
+      style={{
+        cursor: isInteractive ? 'crosshair' : 'default',
+        touchAction: isInteractive ? 'none' : 'auto',
+      }}
+      onPointerDown={handleMouseDown}
+      onPointerMove={handleMouseMove}
+      onPointerUp={handleMouseUp}
+      onPointerCancel={() => {
+        setDragging(false)
+        setStart(null)
+        setEnd(null)
+      }}
     >
       <svg
         width={width}

@@ -90,6 +90,7 @@ export function SessionScenePanel({
       <div className="min-h-0 flex-1 overflow-auto">
         {activeScene ? (
           <SceneView
+            key={activeScene.id}
             scene={activeScene}
             tokens={tokens}
             characters={characters}
