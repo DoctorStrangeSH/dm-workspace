@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useI18n } from '@/lib/i18n'
 import { pluralize } from '@/lib/i18n/plural'
+import { clientToGrid } from '@/lib/maps/geometry'
 import type { Scene } from '@/lib/types'
 
 interface Props {
@@ -43,19 +44,22 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
 
   if (!isActive) return null
 
-  const getGridCoords = (e: React.MouseEvent | MouseEvent): Point | null => {
+  const getGridCoords = (e: React.PointerEvent) => {
     if (!wrapperRef.current) return null
-    const rect = wrapperRef.current.getBoundingClientRect()
-    const rawX = (e.clientX - rect.left) / gridSize
-    const rawY = (e.clientY - rect.top) / gridSize
-    return {
-      x: Math.round(rawX),
-      y: Math.round(rawY),
-    }
+    return clientToGrid(
+      e,
+      wrapperRef.current.getBoundingClientRect(),
+      scene.width,
+      scene.height,
+      'vertex'
+    )
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.isPrimary || e.button !== 0) return
     e.preventDefault()
+    e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
     const coords = getGridCoords(e)
     if (!coords) return
     setStart(coords)
@@ -63,14 +67,15 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
     setDragging(true)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return
+  const handleMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging || !e.isPrimary) return
     const coords = getGridCoords(e)
     if (!coords) return
     setEnd(coords)
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.isPrimary) return
     setDragging(false)
   }
 
@@ -93,11 +98,15 @@ export default function RulerTool({ scene, isActive, onClose }: Props) {
     <div
       ref={wrapperRef}
       className="absolute inset-0 z-30"
-      style={{ cursor: 'crosshair' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      style={{ cursor: 'crosshair', touchAction: 'none' }}
+      onPointerDown={handleMouseDown}
+      onPointerMove={handleMouseMove}
+      onPointerUp={handleMouseUp}
+      onPointerCancel={() => {
+        setDragging(false)
+        setStart(null)
+        setEnd(null)
+      }}
     >
       <svg
         width={width}

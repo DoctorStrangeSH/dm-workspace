@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { mapRevision } from '@/lib/maps/geometry'
 import Image from 'next/image'
 import { useT } from '@/lib/i18n'
 import type { Scene } from '@/lib/types'
@@ -12,6 +13,8 @@ interface Props {
 
 export default function MapCanvas({ scene, showGrid = true }: Props) {
   const t = useT()
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  const src = '/api/scenes/' + scene.id + '/map?v=' + mapRevision(scene.image_url ?? '')
   const { image_url, width, height, grid_size, grid_type } = scene
 
   const canvasWidth = width * grid_size
@@ -39,21 +42,18 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
       style={{
         width: canvasWidth,
         height: canvasHeight,
-        maxWidth: '100%',
-        // CHANGES (задача 6): на мобилке — 60vh (не calc(100vh-200px)),
-        // touch-action — разрешаем pinch-zoom и pan.
-        maxHeight: 'min(calc(100vh - 200px), 80vh)',
-        touchAction: 'pan-x pan-y pinch-zoom',
       }}
     >
       {image_url ? (
         <Image
-          src={'/api/scenes/' + scene.id + '/map'}
+          key={src}
+          src={src}
+          onError={() => setFailedSrc(src)}
           alt={scene.name}
           fill
           sizes="(max-width: 768px) 100vw, 80vw"
-          className="object-cover"
-          priority
+          className="object-contain"
+          preload
           unoptimized
           draggable={false}
         />
@@ -63,6 +63,14 @@ export default function MapCanvas({ scene, showGrid = true }: Props) {
         </div>
       )}
 
+      {failedSrc === src && (
+        <div
+          role="alert"
+          className="absolute inset-0 flex items-center justify-center bg-[var(--bg-app)] p-6 text-center text-[var(--text-secondary)]"
+        >
+          {t('map.loadError')}
+        </div>
+      )}
       {gridLines && (
         <svg
           className="pointer-events-none absolute inset-0"

@@ -1,13 +1,18 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Swords, ChevronRight, X, Dices, Shield, Minus, Plus, HeartPulse } from 'lucide-react'
-import { nextTurn, endCombat, rollInitiativeForToken, damageToken } from '@/lib/actions/combat'
-import { useToast } from '@/components/toast/toast-provider'
+import { Swords, ChevronRight, X, Dices, LocateFixed, Shield, HeartPulse } from 'lucide-react'
+import {
+  nextTurn,
+  endCombat,
+  rollInitiativeForToken,
+  rollAllInitiatives,
+} from '@/lib/actions/combat'
 import { cn } from '@/lib/utils'
-import { Button, IconButton, Dialog, Badge } from '@/components/ui'
+import { Button, Dialog } from '@/components/ui'
 import { useT } from '@/lib/i18n'
+import { orderTurns, nextTurnEntry } from '@/lib/maps/initiative'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
@@ -15,337 +20,264 @@ interface Props {
   entries: InitiativeEntryWithToken[]
   isDm: boolean
   onClose: () => void
+  onFocusToken?: (tokenId: string) => void
 }
-
-export default function InitiativePanel({ sceneId, entries, isDm, onClose }: Props) {
+export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFocusToken }: Props) {
   const t = useT()
   const router = useRouter()
-  const toast = useToast()
-  const [isPending, startTransition] = useTransition()
-  const [selectedEntry, setSelectedEntry] = useState<InitiativeEntryWithToken | null>(null)
-  const [showEndCombatConfirm, setShowEndCombatConfirm] = useState(false)
-
-  const currentEntry = entries.find((e) => e.is_current)
-
-  const handleNextTurn = () => {
+  const [pending, startTransition] = useTransition()
+  const busy = useRef(false)
+  const [error, setError] = useState('')
+  const [uncertain, setUncertain] = useState(false)
+  const [confirm, setConfirm] = useState<'end' | string | null>(null)
+  const ordered = orderTurns(entries)
+  const currents = ordered.filter((entry) => entry.is_current)
+  const current = currents[0]
+  const next = nextTurnEntry(ordered, current?.id ?? null)
+  const blocked = pending || uncertain || currents.length > 1
+  const run = (operation: () => Promise<{ error?: string }>) => {
+    if (busy.current || uncertain || currents.length > 1) return
+    busy.current = true
+    setError('')
     startTransition(async () => {
-      const res = await nextTurn(sceneId)
-      if ('error' in res) toast.error(res.error ?? t('common.error'))
-      else router.refresh()
-    })
-  }
-
-  const doEndCombat = () => {
-    startTransition(async () => {
-      const res = await endCombat(sceneId)
-      if ('error' in res) {
-        toast.error(res.error ?? t('common.error'))
-      } else {
-        toast.success(t('scenes.toast.combatEnded'))
-        router.refresh()
-        onClose()
-      }
-      setShowEndCombatConfirm(false)
-    })
-  }
-
-  const handleRoll = (entry: InitiativeEntryWithToken) => {
-    startTransition(async () => {
-      const res = await rollInitiativeForToken(entry.id, sceneId)
-      if ('error' in res) {
-        toast.error(res.error ?? t('common.error'))
-      } else {
-        toast.info(`${entry.token.name}: ${res.total}`, {
-          description: `[${res.roll}] ${res.dexMod >= 0 ? '+' : ''}${res.dexMod} (DEX)`,
-        })
-        router.refresh()
+      try {
+        const result = await operation()
+        if (result.error) setError(result.error)
+        else {
+          router.refresh()
+          setConfirm(null)
+        }
+      } catch {
+        setError(t('map.uncertain'))
+        setUncertain(true)
+      } finally {
+        busy.current = false
       }
     })
   }
-
-  const handleDamage = (
-    entry: InitiativeEntryWithToken,
-    amount: number,
-    type: 'damage' | 'heal'
-  ) => {
-    startTransition(async () => {
-      const res = await damageToken(entry.token_id, sceneId, amount, type)
-      if ('error' in res) toast.error(res.error ?? t('common.error'))
-      else router.refresh()
-    })
-  }
-
+  const roll = (entryId: string) => run(() => rollInitiativeForToken(entryId, sceneId))
   return (
-    <aside className="fixed top-0 right-0 z-40 flex h-screen w-full flex-col border-l border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-2xl sm:w-[380px]">
-      <div className="flex items-center justify-between border-b border-[var(--border-default)] p-4">
-        <div className="flex items-center gap-2">
-          <Swords size={18} className="text-[var(--danger)]" />
-          <h2 className="font-semibold text-[var(--text-primary)]">
-            {t('scenes.initiative.title')}
-          </h2>
-          <span className="text-xs text-[var(--text-muted)]">({entries.length})</span>
-        </div>
-        <IconButton variant="ghost" size="sm" label={t('common.close')} onClick={onClose}>
+    <aside
+      aria-label={t('scenes.initiative.title')}
+      className="flex min-w-0 flex-col rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]"
+    >
+      <div className="flex items-center justify-between gap-2 border-b border-[var(--border-default)] p-4">
+        <h2 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
+          <Swords size={18} className="text-[var(--accent-text)]" />
+          {t('scenes.initiative.title')}{' '}
+          <span className="text-sm text-[var(--text-muted)]">{entries.length}</span>
+        </h2>
+        <Button
+          variant="ghost"
+          aria-label={t('common.close')}
+          onClick={onClose}
+          className="min-h-11 min-w-11 !px-2"
+        >
           <X size={18} />
-        </IconButton>
+        </Button>
       </div>
-
-      {currentEntry && (
-        <div className="border-b border-[var(--danger)]/40 bg-[var(--danger-subtle)] p-3">
-          <div className="mb-1 text-xs tracking-wider text-[var(--danger-text)] uppercase">
-            {t('scenes.initiative.now')}
-          </div>
-          <div className="font-semibold text-[var(--text-primary)]">{currentEntry.token.name}</div>
-          {isDm && <Button
-            variant="danger"
-            size="sm"
-            onClick={handleNextTurn}
-            disabled={isPending}
-            icon={<ChevronRight size={14} />}
-            iconPosition="right"
-            className="mt-2 w-full"
-          >
-            {t('scenes.initiative.nextTurn')}
-          </Button>}
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto p-2">
-        {entries.length === 0 ? (
-          <p className="py-8 text-center text-sm text-[var(--text-muted)]">
-            {t('scenes.initiative.empty')}
+      <div
+        className="space-y-3 border-b border-[var(--border-default)] bg-[var(--accent-subtle)] p-4"
+        aria-live="polite"
+      >
+        <div>
+          <p className="text-xs font-semibold tracking-wider text-[var(--accent-text)] uppercase">
+            {current ? t('scenes.initiative.now') : t('map.prepare')}
           </p>
-        ) : (
-          <div className="space-y-1">
-            {entries.map((entry) => {
-              const isCurrent = entry.is_current
-              const hasHP = entry.token.hp_current !== null && entry.token.hp_max !== null && Number.isFinite(entry.token.hp_current) && Number.isFinite(entry.token.hp_max) && entry.token.hp_max > 0
-              const hpPercent = hasHP ? Math.max(0, Math.min(100, (entry.token.hp_current! / entry.token.hp_max!) * 100)) : null
-              const ac = entry.token.ac ?? null
-              const conditions = Array.isArray(entry.token.conditions) ? entry.token.conditions : []
-
-              return (
-                <div
-                  key={entry.id}
-                  className={cn(
-                    'relative rounded-xl border p-3 transition-colors',
-                    isCurrent
-                      ? 'border-[var(--danger)]/50 bg-[var(--danger-subtle)] shadow-[inset_3px_0_0_var(--danger)]'
-                      : 'border-[var(--border-default)] bg-[var(--bg-surface)] hover:bg-[var(--bg-hover)]'
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    {isCurrent && <span className="sr-only">{t('scenes.initiative.now')}</span>}
-                    <div className="w-5 text-center text-xs font-medium text-[var(--text-muted)]">
-                      {entry.initiative}
-                    </div>
-                    <div
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm"
-                      style={{
-                        borderColor: entry.token.color,
-                        backgroundColor: `${entry.token.color}33`,
-                      }}
-                    >
-                      ⚔️
-                    </div>
-                    <button type="button" onClick={() => setSelectedEntry(entry)} aria-label={`${entry.token.name}: ${entry.initiative}`} className="min-w-0 flex-1 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
-                      <span className="block truncate text-sm font-semibold text-[var(--text-primary)]">{entry.token.name}</span>
-                      {isCurrent && <span className="text-[10px] font-semibold text-[var(--danger-text)]">{t('scenes.initiative.now')}</span>}
-                    </button>
-                    {ac !== null && (
-                      <Badge variant="neutral" size="sm" icon={<Shield size={10} />}>
-                        {ac}
-                      </Badge>
-                    )}
-                    {entry.initiative === 0 && isDm && (
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        label={t('scenes.initiative.roll')}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleRoll(entry)
-                        }}
-                        disabled={isPending}
-                      >
-                        <Dices size={14} />
-                      </IconButton>
-                    )}
-                  </div>
-
-                  {hasHP && (
-                    <div className="mt-2 flex flex-wrap items-center gap-2 sm:pl-7">
-                      <HeartPulse size={12} aria-hidden="true" className="text-[var(--danger-text)]" />
-                      <div className="h-2 min-w-12 flex-1 overflow-hidden rounded-full bg-[var(--bg-app)]">
-                        <div
-                          className={cn(
-                            'h-full transition-all duration-300',
-                            (hpPercent ?? 0) > 50
-                              ? 'bg-[var(--success)]'
-                              : (hpPercent ?? 0) > 25
-                                ? 'bg-[var(--warning)]'
-                                : 'bg-[var(--danger)]'
-                          )}
-                          style={{ width: `${hpPercent}%` }}
-                        />
-                      </div>
-                      <span className="w-12 text-right text-[10px] text-[var(--text-muted)] tabular-nums">
-                        {entry.token.hp_current}/{entry.token.hp_max}
-                      </span>
-                      {isDm && (
-                        <div className="flex items-center gap-0.5">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDamage(entry, 5, 'damage')
-                            }}
-                            disabled={isPending}
-                            className="min-h-8 rounded-md px-2 py-1 text-xs font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
-                            title={t('scenes.hp.minus', { n: 5 })}
-                          >
-                            <Minus size={10} className="inline" />5
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDamage(entry, 1, 'damage')
-                            }}
-                            disabled={isPending}
-                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--danger-text)] transition hover:bg-[var(--danger-subtle)] disabled:opacity-50"
-                            title={t('scenes.hp.minus', { n: 1 })}
-                          >
-                            <Minus size={10} className="inline" />1
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDamage(entry, 1, 'heal')
-                            }}
-                            disabled={isPending}
-                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--success-text)] transition hover:bg-[var(--success-subtle)] disabled:opacity-50"
-                            title={t('scenes.hp.plus', { n: 1 })}
-                          >
-                            <Plus size={10} className="inline" />1
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDamage(entry, 5, 'heal')
-                            }}
-                            disabled={isPending}
-                            className="rounded px-1 py-0.5 text-[10px] font-medium text-[var(--success-text)] transition hover:bg-[var(--success-subtle)] disabled:opacity-50"
-                            title={t('scenes.hp.plus', { n: 5 })}
-                          >
-                            <Plus size={10} className="inline" />5
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {conditions.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1 sm:pl-7">
-                      {conditions.map((c, i) => (
-                        <span
-                          key={i}
-                          className="flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[10px]"
-                          title={c.name}
-                        >
-                          {c.icon ?? '●'}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          <p className="mt-1 font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+            {current ? current.token.name : t('map.prepareHint')}
+          </p>
+        </div>
+        {next && (
+          <p className="text-sm [overflow-wrap:anywhere] text-[var(--text-secondary)]">
+            {t('map.upNext')}: <strong>{next.token.name}</strong>
+          </p>
+        )}
+        {isDm && entries.length > 0 && (
+          <Button
+            variant="primary"
+            className="min-h-11 w-full"
+            disabled={blocked}
+            loading={pending}
+            icon={<ChevronRight size={16} />}
+            iconPosition="right"
+            onClick={() => run(() => nextTurn(sceneId))}
+          >
+            {current ? t('scenes.initiative.nextTurn') : t('map.beginTurns')}
+          </Button>
+        )}
+        {!current && isDm && entries.length > 0 && (
+          <Button
+            variant="secondary"
+            className="min-h-11 w-full"
+            disabled={blocked}
+            icon={<Dices size={17} />}
+            onClick={() => run(() => rollAllInitiatives(sceneId))}
+          >
+            {t('map.rollAll')}
+          </Button>
         )}
       </div>
-
-      {isDm && <div className="border-t border-[var(--border-default)] p-3">
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => setShowEndCombatConfirm(true)}
-          disabled={isPending}
-          className="w-full text-[var(--danger-text)]"
-        >
-          {t('scenes.initiative.endCombat')}
-        </Button>
-      </div>}
-
-      {selectedEntry && (
-        <Dialog
-          open={true}
-          onClose={() => setSelectedEntry(null)}
-          title={selectedEntry.token.name}
-          size="sm"
-        >
-          {selectedEntry.token.hp_current !== null && selectedEntry.token.hp_max !== null && selectedEntry.token.hp_max > 0 && (
-            <div className="mb-3">
-              <div className="mb-1 flex items-center justify-between text-sm">
-                <span className="text-[var(--text-muted)]">HP</span>
-                <span className="text-[var(--text-primary)]">
-                  {selectedEntry.token.hp_current}/{selectedEntry.token.hp_max}
-                </span>
-              </div>
-              <div className="h-2 overflow-hidden rounded bg-[var(--bg-app)]">
-                <div
-                  className="h-full bg-[var(--danger)] transition-all duration-300"
-                  style={{
-                    width: `${Math.min(100, Math.max(0, (selectedEntry.token.hp_current! / (selectedEntry.token.hp_max ?? 1)) * 100))}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          {isDm && <div className="grid grid-cols-4 gap-1">
-            {[-5, -1, +1, +5].map((delta) => (
-              <Button
-                key={delta}
-                variant={delta < 0 ? 'danger' : 'primary'}
-                size="md"
-                onClick={() =>
-                  handleDamage(selectedEntry, Math.abs(delta), delta < 0 ? 'damage' : 'heal')
-                }
-                disabled={isPending}
-              >
-                {delta > 0 ? '+' : ''}
-                {delta}
-              </Button>
-            ))}
-          </div>}
-        </Dialog>
+      {currents.length > 1 && (
+        <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
+          {t('map.turnConflict')}
+        </p>
       )}
-
-      {/* CHANGES: confirm() → Dialog */}
-      <Dialog
-        open={showEndCombatConfirm}
-        onClose={() => !isPending && setShowEndCombatConfirm(false)}
-        title={t('scenes.initiative.endCombatConfirm.title')}
-        description={t('scenes.initiative.endCombatConfirm.description')}
-        size="sm"
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={() => setShowEndCombatConfirm(false)}
-              disabled={isPending}
+      {error && (
+        <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
+          {error}
+        </p>
+      )}
+      <ol className="max-h-[28rem] space-y-2 overflow-y-auto p-3">
+        {ordered.map((entry, index) => {
+          const token = entry.token
+          const hpValid =
+            token.hp_current !== null &&
+            token.hp_max !== null &&
+            Number.isFinite(token.hp_current) &&
+            Number.isFinite(token.hp_max) &&
+            token.hp_current >= 0 &&
+            token.hp_current <= token.hp_max &&
+            token.hp_max > 0
+          return (
+            <li
+              key={entry.id}
+              aria-current={entry.is_current ? 'step' : undefined}
+              className={cn(
+                'rounded-xl border p-3',
+                entry.is_current
+                  ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
+                  : 'border-[var(--border-default)] bg-[var(--bg-surface)]'
+              )}
             >
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--bg-app)] text-lg font-bold text-[var(--text-primary)] tabular-nums">
+                  <span className="sr-only">{t('scenes.initiative.title')}</span>
+                  {entry.initiative}
+                  <span className="text-[9px] leading-none text-[var(--text-muted)]">
+                    #{index + 1}
+                  </span>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+                    {token.name}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--accent-text)]">
+                    {entry.is_current
+                      ? t('scenes.initiative.now')
+                      : next?.id === entry.id
+                        ? t('map.upNext')
+                        : t('map.waiting')}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)]">
+                    {hpValid && (
+                      <span className="flex items-center gap-1">
+                        <HeartPulse size={13} /> {token.hp_current}/{token.hp_max}
+                      </span>
+                    )}
+                    {token.ac != null && (
+                      <span className="flex items-center gap-1">
+                        <Shield size={13} />
+                        {token.ac}
+                      </span>
+                    )}
+                  </div>
+                  {Array.isArray(token.conditions) && token.conditions.length > 0 && (
+                    <p className="mt-2 text-xs [overflow-wrap:anywhere] text-[var(--text-secondary)]">
+                      {token.conditions.map((c) => c.name).join(' · ')}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {onFocusToken && (
+                  <Button
+                    variant="ghost"
+                    className="min-h-11 flex-1 text-xs"
+                    icon={<LocateFixed size={15} />}
+                    onClick={() => onFocusToken(token.id)}
+                    aria-label={t('map.focusNamed', { name: token.name })}
+                  >
+                    {t('map.focus')}
+                  </Button>
+                )}
+                {isDm && (
+                  <Button
+                    variant="ghost"
+                    className="min-h-11 text-xs"
+                    disabled={blocked}
+                    aria-label={t('map.rollNamed', { name: token.name })}
+                    icon={<Dices size={15} />}
+                    onClick={() => (current ? setConfirm(entry.id) : roll(entry.id))}
+                  >
+                    {t('scenes.initiative.roll')}
+                  </Button>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+      {entries.length === 0 && (
+        <p className="px-4 pb-4 text-sm text-[var(--text-muted)]">{t('scenes.initiative.empty')}</p>
+      )}
+      {isDm && entries.length > 0 && (
+        <div className="mt-auto border-t border-[var(--border-default)] p-3">
+          <Button
+            variant="ghost"
+            className="min-h-11 w-full text-[var(--danger-text)]"
+            disabled={blocked}
+            onClick={() => setConfirm('end')}
+          >
+            {t('scenes.initiative.endCombat')}
+          </Button>
+        </div>
+      )}
+      <Dialog
+        open={confirm !== null}
+        onClose={() => {
+          if (!busy.current) setConfirm(null)
+        }}
+        closeLabel={t('common.close')}
+        closeDisabled={pending}
+        title={
+          confirm === 'end' ? t('scenes.initiative.endCombatConfirm.title') : t('map.rerollTitle')
+        }
+        description={
+          confirm === 'end'
+            ? t('scenes.initiative.endCombatConfirm.description')
+            : t('map.rerollHint')
+        }
+        footer={
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="secondary" disabled={pending} onClick={() => setConfirm(null)}>
               {t('common.cancel')}
             </Button>
-            <Button variant="danger" size="md" onClick={doEndCombat} loading={isPending}>
-              {t('scenes.initiative.endCombatConfirm.confirm')}
+            <Button
+              variant={confirm === 'end' ? 'danger' : 'primary'}
+              disabled={blocked}
+              loading={pending}
+              onClick={() =>
+                confirm === 'end' ? run(() => endCombat(sceneId)) : confirm && roll(confirm)
+              }
+            >
+              {confirm === 'end'
+                ? t('scenes.initiative.endCombatConfirm.confirm')
+                : t('scenes.initiative.roll')}
             </Button>
-          </>
+          </div>
         }
       >
-        <p className="text-sm text-[var(--text-muted)]">
-          {t('scenes.initiative.endCombatConfirm.cannotUndo')}
+        <p className="text-sm text-[var(--text-secondary)]">
+          {confirm === 'end'
+            ? t('scenes.initiative.endCombatConfirm.cannotUndo')
+            : ordered.find((e) => e.id === confirm)?.token.name}
         </p>
+        {error && (
+          <p role="alert" className="mt-3 text-sm text-[var(--danger-text)]">
+            {error}
+          </p>
+        )}
       </Dialog>
     </aside>
   )

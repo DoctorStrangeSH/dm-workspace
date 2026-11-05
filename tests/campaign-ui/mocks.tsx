@@ -25,6 +25,9 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  mapActions: [] as { name: string; args: unknown[] }[],
+  mapOutcome: 'success' as 'success' | 'error' | 'throw',
+  mapDelay: 0,
   campaignActions: [] as { name: string; args: unknown[] }[],
   copiedLinks: [] as string[],
   campaignOutcome: 'error' as 'error' | 'success' | 'throw',
@@ -442,4 +445,89 @@ export async function deleteCampaign(...args: unknown[]) {
 }
 export async function regenerateInviteCode(...args: unknown[]) {
   return campaignAction('regenerateInviteCode', args)
+}
+
+async function mapAction(name: string, args: unknown[]) {
+  lab.mapActions.push({
+    name,
+    args: args.map((value) =>
+      value instanceof File ? { name: value.name, type: value.type, size: value.size } : value
+    ),
+  })
+  if (lab.mapDelay) await new Promise((resolve) => setTimeout(resolve, lab.mapDelay))
+  if (lab.mapOutcome === 'throw') throw Error('Offline transport failure')
+  if (lab.mapOutcome === 'error') return { error: 'Offline map action failed' }
+  return { success: true, roll: 12, dexMod: 2, total: 14 }
+}
+export const uploadMap = (...args: unknown[]) => mapAction('uploadMap', args)
+export const setActiveScene = (...args: unknown[]) => mapAction('setActiveScene', args)
+export const startCombat = (...args: unknown[]) => mapAction('startCombat', args)
+export const nextTurn = (...args: unknown[]) => mapAction('nextTurn', args)
+export const endCombat = (...args: unknown[]) => mapAction('endCombat', args)
+export const rollAllInitiatives = (...args: unknown[]) => mapAction('rollAllInitiatives', args)
+export const rollInitiativeForToken = (...args: unknown[]) =>
+  mapAction('rollInitiativeForToken', args)
+export const damageToken = (...args: unknown[]) => mapAction('damageToken', args)
+export const clearFog = (...args: unknown[]) => mapAction('clearFog', args)
+export const revealArea = (...args: unknown[]) => mapAction('revealArea', args)
+export const createWall = (...args: unknown[]) => mapAction('createWall', args)
+export const deleteAllWalls = (...args: unknown[]) => mapAction('deleteAllWalls', args)
+export const moveToken = (...args: unknown[]) => mapAction('moveToken', args)
+export const createToken = (...args: unknown[]) => mapAction('createToken', args)
+export const updateTokenHP = (...args: unknown[]) => mapAction('updateTokenHP', args)
+export const toggleTokenVisibility = (...args: unknown[]) =>
+  mapAction('toggleTokenVisibility', args)
+export const deleteToken = (...args: unknown[]) => mapAction('deleteToken', args)
+export const updateTokenConditions = (...args: unknown[]) =>
+  mapAction('updateTokenConditions', args)
+export const addTokenOwner = (...args: unknown[]) => mapAction('addTokenOwner', args)
+export const removeTokenOwner = (...args: unknown[]) => mapAction('removeTokenOwner', args)
+export const approveSummonRequest = (...args: unknown[]) => mapAction('approveSummonRequest', args)
+export const rejectSummonRequest = (...args: unknown[]) => mapAction('rejectSummonRequest', args)
+export const createSummonRequest = (...args: unknown[]) => mapAction('createSummonRequest', args)
+export function useRealtimeInitiative({
+  initialInitiative,
+}: {
+  initialInitiative: import('../../src/lib/types').InitiativeEntryWithToken[]
+}) {
+  return initialInitiative
+}
+export function useRealtimeTokens({
+  initialTokens,
+}: {
+  initialTokens: import('../../src/lib/types').Token[]
+}) {
+  return { tokens: initialTokens, isReady: true }
+}
+export function useRealtimeTokenOwners({
+  initialOwners,
+}: {
+  initialOwners: import('../../src/lib/types').TokenOwnerWithProfile[]
+}) {
+  return { owners: initialOwners }
+}
+export function useRealtimeWalls({
+  initialWalls,
+}: {
+  initialWalls: import('../../src/lib/types').SceneWall[]
+}) {
+  return { walls: initialWalls }
+}
+export function useRealtimeFog({
+  initialFog,
+}: {
+  initialFog: import('../../src/lib/types').FogArea[]
+}) {
+  return initialFog
+}
+export function useRealtimeSummons({
+  initialRequests,
+}: {
+  initialRequests: import('../../src/lib/types').SummonRequestWithRequester[]
+}) {
+  return { requests: initialRequests }
+}
+
+export function useSearchParams() {
+  return new URLSearchParams(location.search)
 }

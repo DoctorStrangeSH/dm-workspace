@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useT } from '@/lib/i18n'
+import { clientToGrid } from '@/lib/maps/geometry'
 import type { Scene } from '@/lib/types'
 
 type TemplateType = 'cone' | 'sphere' | 'line'
@@ -46,17 +47,22 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
 
   if (!isActive) return null
 
-  const getGridCoords = (e: React.MouseEvent): Point | null => {
+  const getGridCoords = (e: React.PointerEvent) => {
     if (!wrapperRef.current) return null
-    const rect = wrapperRef.current.getBoundingClientRect()
-    return {
-      x: Math.round((e.clientX - rect.left) / gridSize),
-      y: Math.round((e.clientY - rect.top) / gridSize),
-    }
+    return clientToGrid(
+      e,
+      wrapperRef.current.getBoundingClientRect(),
+      scene.width,
+      scene.height,
+      'vertex'
+    )
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.isPrimary || e.button !== 0) return
     e.preventDefault()
+    e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
     const coords = getGridCoords(e)
     if (!coords) return
     setStart(coords)
@@ -64,14 +70,15 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
     setDragging(true)
   }
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return
+  const handleMouseMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging || !e.isPrimary) return
     const coords = getGridCoords(e)
     if (!coords) return
     setEnd(coords)
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!e.isPrimary) return
     setDragging(false)
   }
 
@@ -208,11 +215,15 @@ export default function TemplateTool({ scene, isActive, type, size, onClose }: P
     <div
       ref={wrapperRef}
       className="absolute inset-0 z-30"
-      style={{ cursor: 'crosshair' }}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      style={{ cursor: 'crosshair', touchAction: 'none' }}
+      onPointerDown={handleMouseDown}
+      onPointerMove={handleMouseMove}
+      onPointerUp={handleMouseUp}
+      onPointerCancel={() => {
+        setDragging(false)
+        setStart(null)
+        setEnd(null)
+      }}
     >
       <svg
         width={width}
