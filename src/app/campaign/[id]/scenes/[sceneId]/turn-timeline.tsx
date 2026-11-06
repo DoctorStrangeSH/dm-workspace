@@ -23,7 +23,7 @@ interface Props {
   entries: InitiativeEntryWithToken[]
   isDm: boolean
   onFocusToken: (id: string) => void
-  onOpenPanel: () => void
+  onOpenPanel: (opener: HTMLElement) => void
 }
 
 export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel }: Props) {
@@ -108,7 +108,11 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
           >
             {expanded ? t('turns.collapse') : t('turns.showAll')}
           </Button>
-          <Button variant="secondary" className="min-h-11 text-xs" onClick={onOpenPanel}>
+          <Button
+            variant="secondary"
+            className="min-h-11 text-xs"
+            onClick={(event) => onOpenPanel(event.currentTarget)}
+          >
             {t('scenes.combatPanel')}
           </Button>
         </div>

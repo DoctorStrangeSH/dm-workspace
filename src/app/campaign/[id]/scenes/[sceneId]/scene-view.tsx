@@ -111,6 +111,29 @@ export default function SceneView({
   const mapViewportRef = useRef<HTMLDivElement>(null)
   const [showAddToken, setShowAddToken] = useState(false)
   const [showInitiative, setShowInitiative] = useState(false)
+  const [combatReturnFocus, setCombatReturnFocus] = useState<HTMLElement | null>(null)
+  const combatTriggerRef = useRef<HTMLButtonElement>(null)
+  const [mapFocusRequest, setMapFocusRequest] = useState(0)
+  const openCombat = (opener?: HTMLElement) => {
+    const active = document.activeElement
+    setCombatReturnFocus(
+      opener ??
+        (active instanceof HTMLElement && active !== document.body
+          ? active
+          : combatTriggerRef.current)
+    )
+    setShowInitiative(true)
+  }
+  useEffect(() => {
+    // Restore after the portal has unmounted, including Escape before showModal ran.
+    if (!showInitiative && combatReturnFocus?.isConnected)
+      combatReturnFocus.focus({ preventScroll: true })
+  }, [showInitiative, combatReturnFocus])
+  useEffect(() => {
+    if (mapFocusRequest > 0) {
+      mapViewportRef.current?.focus({ preventScroll: true })
+    }
+  }, [mapFocusRequest])
   const [combatBusy, setCombatBusy] = useState(false)
   const combatBusyRef = useRef(false)
   const reportCombatBusy = useCallback((busy: boolean) => {
@@ -195,6 +218,7 @@ export default function SceneView({
   }
   const focusToken = (tokenId: string) => {
     setShowInitiative(false)
+    setMapFocusRequest((request) => request + 1)
     const viewport = mapViewportRef.current
     const target = viewport?.querySelector<HTMLElement>(
       '[data-token-id="' + CSS.escape(tokenId) + '"]'
@@ -204,7 +228,6 @@ export default function SceneView({
     const tr = target.getBoundingClientRect()
     viewport.scrollLeft += tr.left + tr.width / 2 - vr.left - viewport.clientWidth / 2
     viewport.scrollTop += tr.top + tr.height / 2 - vr.top - viewport.clientHeight / 2
-    viewport.focus({ preventScroll: true })
   }
   const toggleFullscreen = async () => {
     try {
@@ -251,7 +274,8 @@ export default function SceneView({
     ctrl: true,
     handler: () => {
       if (isDm && !combatBusyRef.current) {
-        setShowInitiative((v) => !v)
+        if (showInitiative) closeCombat()
+        else openCombat()
       }
     },
     ignoreInInputs: true,
@@ -299,7 +323,7 @@ export default function SceneView({
         const res = await startCombat(scene.id)
         if ('error' in res) toast.error(res.error ?? t('common.error'))
         else {
-          setShowInitiative(true)
+          openCombat()
           router.refresh()
         }
       } catch {
@@ -529,7 +553,8 @@ export default function SceneView({
             icon={<Swords size={16} />}
             aria-pressed={showInitiative}
             aria-haspopup="dialog"
-            onClick={() => setShowInitiative(true)}
+            ref={combatTriggerRef}
+            onClick={(event) => openCombat(event.currentTarget)}
           >
             {t('scenes.initiative.title')}
             {liveInitiative.length > 0 ? ' · ' + liveInitiative.length : ''}
@@ -568,7 +593,7 @@ export default function SceneView({
         entries={liveInitiative}
         isDm={isDm}
         onFocusToken={focusToken}
-        onOpenPanel={() => setShowInitiative(true)}
+        onOpenPanel={openCombat}
       />
 
       {activeTool === 'wall' && (

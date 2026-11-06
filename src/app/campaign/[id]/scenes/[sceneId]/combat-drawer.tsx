@@ -26,16 +26,12 @@ export default function CombatDrawer({
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
-    const opener = document.activeElement as HTMLElement | null
     dialog.showModal()
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
-      const active = document.activeElement
-      const restore = !active || active === document.body || dialog.contains(active)
       dialog.close()
       document.body.style.overflow = overflow
-      if (restore && opener?.isConnected) opener.focus({ preventScroll: true })
     }
   }, [host])
   useEffect(() => {
