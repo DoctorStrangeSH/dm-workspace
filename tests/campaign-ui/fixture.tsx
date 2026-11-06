@@ -1,6 +1,6 @@
 import { SessionScenePanel } from '../../src/app/campaign/[id]/session/session-scene-panel'
 import SceneView from '../../src/app/campaign/[id]/scenes/[sceneId]/scene-view'
-import { mapScene, mapTokens, mapInitiative } from './maps-data'
+import { mapScene, mapTokens, mapInitiative, battleTokens, battleInitiative } from './maps-data'
 import { createRoot } from 'react-dom/client'
 import CampaignCard from '../../src/app/dashboard/campaign-card'
 import CreateCampaignButton from '../../src/app/dashboard/create-campaign-button'
@@ -177,6 +177,64 @@ function DashboardFixture() {
   )
 }
 
+function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?: boolean }) {
+  const [entries, setEntries] = useState(() =>
+    (query.has('manyTokens') ? battleInitiative : mapInitiative).map((entry, index) => ({
+      ...entry,
+      is_current: query.has('current') && index === Number(query.get('turn') ?? 0),
+      token: {
+        ...entry.token,
+        ...(query.has('hideEnemy') && index === 3 ? { is_hidden: true } : {}),
+        ...(query.has('brokenPortrait') && index === 1 ? { image_url: '/broken-portrait' } : {}),
+      },
+    }))
+  )
+  useEffect(() => {
+    Object.assign(window, { __turnEntries: entries })
+    const update = (event: Event) => setEntries((event as CustomEvent<typeof entries>).detail)
+    window.addEventListener('offline-turn-data', update)
+    return () => window.removeEventListener('offline-turn-data', update)
+  }, [entries])
+  const tokens = query.has('manyTokens') ? battleTokens : mapTokens
+  if (embedded)
+    return (
+      <div style={{ maxWidth: 700 }}>
+        <SessionScenePanel
+          campaignId="test"
+          scenes={[mapScene]}
+          activeScene={mapScene}
+          tokens={tokens}
+          characters={[]}
+          monsters={[]}
+          initiative={entries}
+          initialFog={[]}
+          initialWalls={[]}
+          initialTokenOwners={[]}
+          currentUserId="self"
+        />
+      </div>
+    )
+  return (
+    <SceneView
+      key={query.get('scene') ?? 'map'}
+      scene={{
+        ...mapScene,
+        ...(query.has('mapImage') ? { image_url: 'private-map-revision' } : {}),
+      }}
+      tokens={tokens}
+      characters={[]}
+      monsters={[]}
+      initiative={query.has('combat') ? entries : []}
+      initialFog={[]}
+      initialWalls={[]}
+      initialSummonRequests={[]}
+      campaignId="test"
+      isDm={isDm}
+      currentUserId="self"
+    />
+  )
+}
+
 function Fixture() {
   const { lang } = useI18n()
   const [sessions, setSessions] = useState(sessionFixtures)
@@ -245,46 +303,9 @@ function Fixture() {
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
             {screen === 'map-session' ? (
-              <div style={{ maxWidth: 700 }}>
-                <SessionScenePanel
-                  campaignId="test"
-                  scenes={[mapScene]}
-                  activeScene={mapScene}
-                  tokens={mapTokens}
-                  characters={[]}
-                  monsters={[]}
-                  initiative={mapInitiative}
-                  initialFog={[]}
-                  initialWalls={[]}
-                  initialTokenOwners={[]}
-                  currentUserId="self"
-                />
-              </div>
+              <BattleMapFixture isDm={isDm} embedded />
             ) : screen === 'map' ? (
-              <SceneView
-                key={query.get('scene') ?? 'map'}
-                scene={{
-                  ...mapScene,
-                  ...(query.has('mapImage') ? { image_url: 'private-map-revision' } : {}),
-                }}
-                tokens={mapTokens}
-                characters={[]}
-                monsters={[]}
-                initiative={
-                  query.has('combat')
-                    ? mapInitiative.map((e, i) => ({
-                        ...e,
-                        is_current: query.has('current') && i === 0,
-                      }))
-                    : []
-                }
-                initialFog={[]}
-                initialWalls={[]}
-                initialSummonRequests={[]}
-                campaignId="test"
-                isDm={isDm}
-                currentUserId="self"
-              />
+              <BattleMapFixture isDm={isDm} />
             ) : screen === 'sessions' ? (
               <SessionsClient
                 campaignId="test"

@@ -37,6 +37,7 @@ import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
 import InitiativePanel from './initiative-panel'
+import TurnTimeline from './turn-timeline'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import FogLayer from './fog-layer'
 import RulerTool from './ruler-tool'
@@ -324,7 +325,8 @@ export default function SceneView({
   }
 
   const refresh = () => router.refresh()
-  const currentTurn = liveInitiative.find((e) => e.is_current)
+  const currentTurns = liveInitiative.filter((entry) => entry.is_current)
+  const currentTurn = currentTurns.length === 1 ? currentTurns[0] : undefined
 
   const getGridCoords = (e: React.PointerEvent) => {
     if (!wallWrapperRef.current) return null
@@ -548,20 +550,12 @@ export default function SceneView({
         />
       )}
 
-      {currentTurn && (
-        <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] px-4 py-2">
-          <div className="flex items-center gap-2">
-            <Swords size={16} className="text-[var(--danger)]" />
-            <span className="text-sm text-[var(--text-secondary)]">
-              {t('scenes.currentTurn')}:{' '}
-              <strong className="text-[var(--text-primary)]">{currentTurn.token.name}</strong>
-            </span>
-          </div>
-          <Button variant="danger" size="sm" onClick={() => setShowInitiative(true)}>
-            {t('scenes.combatPanel')}
-          </Button>
-        </div>
-      )}
+      <TurnTimeline
+        entries={liveInitiative}
+        isDm={isDm}
+        onFocusToken={focusToken}
+        onOpenPanel={() => setShowInitiative(true)}
+      />
 
       {activeTool === 'wall' && (
         <div className="mb-3 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-subtle)] px-3 py-2 text-sm text-[var(--accent-text)]">

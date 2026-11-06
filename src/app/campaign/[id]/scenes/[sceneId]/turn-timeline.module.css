@@ -1,0 +1,40 @@
+.rail {
+  display: flex;
+  gap: 0.625rem;
+  overflow-x: auto;
+  padding: 1rem;
+  scroll-padding: 1rem;
+  overscroll-behavior-x: contain;
+  outline-offset: -3px;
+}
+.item {
+  flex: 0 0 124px;
+  min-width: 0;
+  display: flex;
+}
+.expanded {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(104px, 100%), 1fr));
+  overflow-x: visible;
+}
+.expanded .item {
+  flex: initial;
+}
+
+.status {
+  min-width: 0;
+  flex: 1;
+}
+.navigation {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+@container (max-width:480px) {
+  .status {
+    flex-basis: 100%;
+  }
+  .navigation {
+    margin-left: auto;
+  }
+}
