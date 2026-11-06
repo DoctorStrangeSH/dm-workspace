@@ -30,13 +30,11 @@ export class TokenMovement {
   }
 
   receive(position: TokenPosition) {
-    if (compareTokenRevision(position.updated_at, this.authoritative.updated_at) < 0) return
+    const revision = compareTokenRevision(position.updated_at, this.authoritative.updated_at)
+    if (revision < 0) return
     this.authoritative = position
+    if (this.uncertain && revision > 0) this.uncertain = false
     if (!this.saving && !this.uncertain) this.show(position)
-    if (this.uncertain && position.x === this.position.x && position.y === this.position.y) {
-      this.uncertain = false
-      this.show(position)
-    }
   }
 
   private show(position: { x: number; y: number }) {
@@ -67,7 +65,7 @@ export class TokenMovement {
         }
       } catch {
         // A lost response is not proof of a rejected write. Keep the latest local intent
-        // until a subsequent authoritative event acknowledges it; do not auto-retry.
+        // until a newer authoritative event arrives; do not auto-retry.
         this.uncertain = true
         this.queued = null
         if (!this.disposed) this.fail(null)

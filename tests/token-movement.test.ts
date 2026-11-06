@@ -79,7 +79,9 @@ test('lost response keeps location until acknowledgement; disposal suppresses ca
   r.movement.receive(point(0, 0))
   assert.equal(r.movement.position.x, 1)
   assert.deepEqual(r.errors, [null])
-  r.movement.receive(point(1, 1))
+  // A newer authoritative move from another client must also end uncertainty.
+  r.movement.receive(point(5, 1))
+  assert.equal(r.movement.position.x, 5)
   r.movement.move({ x: 2, y: 0 })
   r.movement.move({ x: 3, y: 0 })
   const before = [...r.painted]
