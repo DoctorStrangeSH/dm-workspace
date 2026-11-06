@@ -6,6 +6,7 @@ import { createServer } from 'node:http'
 import { readFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { test } from 'node:test'
+import { initiativeSyncScenarios } from './initiative-sync-scenarios.mjs'
 
 const root = process.cwd()
 const output = path.join(root, 'test-results/campaign-ui')
@@ -23,8 +24,14 @@ const result = await build({
     {
       name: 'offline-boundaries',
       setup(builder) {
-        builder.onResolve({ filter: /^@\/lib\/supabase\/client$/ }, () => ({
-          path: path.join(root, 'tests/campaign-ui/token-transport.ts'),
+        builder.onResolve({ filter: /^@\/lib\/supabase\/client$/ }, (args) => ({
+          path: path.join(
+            root,
+            'tests/campaign-ui/',
+            args.importer.endsWith('use-realtime-initiative.ts')
+              ? 'initiative-transport.ts'
+              : 'token-transport.ts'
+          ),
         }))
         builder.onResolve({ filter: /^next\/image$/ }, () => ({
           path: path.join(root, 'tests/campaign-ui/image-mock.tsx'),
@@ -134,6 +141,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await initiativeSyncScenarios(scenario, expect)
   await scenario(
     'map combat drawer survives pending Escape and shortcuts, then closes safely',
     { url: '/?screen=map&combat' },
