@@ -115,6 +115,7 @@ async function scenario(name, options, body) {
       console.error({
         scenario: name,
         pageErrors: errors,
+        focus: await page.evaluate(() => document.activeElement?.outerHTML?.slice(0, 350)),
         body: (await page.locator('body').innerText()).slice(0, 1500),
       })
       throw error
@@ -280,6 +281,15 @@ try {
       await page.getByRole('button', { name: 'Панель боя', exact: true }).click()
       await expect(drawer).toBeInViewport()
       await page.keyboard.press('Escape')
+      for (let i = 0; i < 6; i++) {
+        const opener =
+          i % 2 ? trigger : page.getByRole('button', { name: 'Панель боя', exact: true })
+        await opener.click()
+        // Disabled pending controls or native modal teardown can leave focus on body.
+        await page.evaluate(() => document.activeElement.blur())
+        await page.keyboard.press('Escape')
+        await expect(opener).toBeFocused()
+      }
     }
   )
   await scenario(
@@ -2653,6 +2663,9 @@ try {
       await queue
         .getByRole('button', { name: 'Show on map: Серебряная хранительница дальних звёзд' })
         .click()
+      await expect(
+        page.getByRole('region', { name: 'Battle map — use arrow keys to scroll' })
+      ).toBeFocused()
       expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
       await page
         .getByRole('button', { name: 'Серебряная хранительница дальних звёзд', exact: true })
