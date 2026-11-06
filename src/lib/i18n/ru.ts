@@ -679,6 +679,10 @@ export const ru: Dictionary = {
   'scenes.combatStartHint': 'Начать бой (Ctrl+B)',
   'scenes.combatWithCount': 'Бой ({count})',
   'scenes.combatPanel': 'Панель боя',
+  'map.addParticipants': 'Добавить новые токены в бой',
+  'map.addParticipantsHint':
+    'Добавляет токены с карты в конец очереди. Текущий ход и прежние броски сохраняются. Затем бросьте инициативу новичкам.',
+  'map.participantsAdded': 'Добавлено участников: {count}',
   'scenes.currentTurn': 'Ход',
   'scenes.tools': 'Инструменты',
   'scenes.tool.ruler': 'Линейка',

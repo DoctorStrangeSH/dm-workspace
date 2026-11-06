@@ -23,13 +23,16 @@ const result = await build({
     {
       name: 'offline-boundaries',
       setup(builder) {
+        builder.onResolve({ filter: /^@\/lib\/supabase\/client$/ }, () => ({
+          path: path.join(root, 'tests/campaign-ui/token-transport.ts'),
+        }))
         builder.onResolve({ filter: /^next\/image$/ }, () => ({
           path: path.join(root, 'tests/campaign-ui/image-mock.tsx'),
         }))
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|tokens|token-owners|fog|walls|summons))$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -130,6 +133,170 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await scenario(
+    'map combat drawer survives pending Escape and shortcuts, then closes safely',
+    { url: '/?screen=map&combat' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
+      const drawer = page.getByRole('dialog', { name: 'Панель боя', exact: true })
+      await page.evaluate(() => {
+        window.__uiLab.mapDeferred = true
+      })
+      await drawer.getByRole('button', { name: 'Начать первый ход' }).click()
+      await expect(drawer).toHaveAttribute('data-busy', 'true')
+      await page.keyboard.press('Escape')
+      await page.keyboard.press('Control+b')
+      await expect(drawer).toBeVisible()
+      await expect(drawer.getByRole('button', { name: 'Закрыть', exact: true })).toBeDisabled()
+      await page.evaluate(() => window.__uiLab.mapPending[0].resolve())
+      await expect(drawer.getByRole('button', { name: 'Начать первый ход' })).toBeEnabled()
+      await page.keyboard.press('Escape')
+      await expect(drawer).toHaveCount(0)
+    }
+  )
+  await scenario(
+    'map combat drawer and nested confirmation work in native fullscreen',
+    { url: '/?screen=map&combat&current' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Полноэкранный игровой стол', exact: true }).click()
+      await expect.poll(() => page.evaluate(() => Boolean(document.fullscreenElement))).toBe(true)
+      await page.getByRole('button', { name: 'Панель боя', exact: true }).click()
+      const drawer = page.getByRole('dialog', { name: 'Панель боя', exact: true })
+      await expect(drawer).toBeInViewport()
+      expect(await drawer.evaluate((el) => document.fullscreenElement.contains(el))).toBe(true)
+      await drawer.getByRole('button', { name: 'Завершить бой', exact: true }).click()
+      await expect(page.getByRole('dialog')).toHaveCount(2)
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('dialog')).toHaveCount(1)
+      await expect(drawer).toBeVisible()
+      await expect(drawer).toHaveAttribute('data-busy', 'false')
+      await page.keyboard.press('Escape')
+      await expect(drawer).toHaveCount(0)
+      await page.evaluate(() => document.exitFullscreen())
+    }
+  )
+  await scenario(
+    'token rapid moves resist delayed events, stale refresh and reconnect using real hook',
+    { url: '/?screen=map&mapImage' },
+    async (page) => {
+      const token = page.locator('[data-token-id="hero"]')
+      const drag = async (dx, cancel = false) =>
+        token.evaluate(
+          (el, { dx, cancel }) => {
+            const r = el.getBoundingClientRect()
+            const event = (type, x) =>
+              new PointerEvent(type, {
+                bubbles: true,
+                isPrimary: true,
+                pointerId: 1,
+                pointerType: 'mouse',
+                button: 0,
+                clientX: r.x + 10 + x,
+                clientY: r.y + 10,
+              })
+            el.dispatchEvent(event('pointerdown', 0))
+            window.dispatchEvent(event('pointermove', dx))
+            window.dispatchEvent(event(cancel ? 'pointercancel' : 'pointerup', dx))
+          },
+          { dx, cancel }
+        )
+      await page.evaluate(() => {
+        window.__uiLab.moveDeferred = true
+      })
+      await drag(50)
+      await expect.poll(() => page.evaluate(() => window.__uiLab.movePending.length)).toBe(1)
+      await drag(100)
+      await expect(token).toHaveCSS('left', '300px')
+      await drag(50, true)
+      await expect(token).toHaveCSS('left', '300px')
+      await page.waitForTimeout(650)
+      await page.evaluate(() => window.__tokenLab.emit('UPDATE', window.__tokenLab.rows[0]))
+      await expect(token).toHaveCSS('left', '300px')
+      expect(
+        await page.evaluate(
+          () => window.__uiLab.mapActions.filter((x) => x.name === 'moveToken').length
+        )
+      ).toBe(1)
+      await page.evaluate(() => window.__uiLab.movePending[0].resolve({}))
+      await expect.poll(() => page.evaluate(() => window.__uiLab.movePending.length)).toBe(2)
+      await expect(token).toHaveCSS('left', '300px')
+      await page.evaluate(() => window.__uiLab.movePending[1].resolve({}))
+      await expect(token).toHaveCSS('left', '300px')
+      await page.evaluate(() => {
+        const old = {
+          ...window.__tokenLab.rows[0],
+          x: 4,
+          updated_at: '2030-01-01T00:00:00.000001Z',
+        }
+        window.__tokenLab.emit('UPDATE', old)
+        window.dispatchEvent(
+          new CustomEvent('offline-token-data', { detail: [old, window.__tokenLab.rows[1]] })
+        )
+        window.__tokenLab.rows[0] = old
+        window.__tokenLab.reconnect()
+      })
+      await expect(token).toHaveCSS('left', '300px')
+      await page.evaluate(() => {
+        const next = {
+          ...window.__tokenLab.rows[0],
+          x: 9,
+          updated_at: '2030-01-01T00:00:00.000003Z',
+        }
+        window.__tokenLab.emit('UPDATE', next)
+        window.__tokenLab.deferSnapshots = true
+        window.__tokenLab.reconnect()
+      })
+      await expect(token).toHaveCSS('left', '450px')
+      await page.evaluate(() => {
+        window.__tokenLab.emit('UPDATE', {
+          ...window.__tokenLab.rows[0],
+          x: 10,
+          updated_at: '2030-01-01T00:00:00.000004Z',
+        })
+        window.__tokenLab.snapshots[0](window.__tokenLab.rows)
+      })
+      await expect(token).toHaveCSS('left', '500px')
+    }
+  )
+  await scenario(
+    'map combat drawer traps focus, prepares empty combat and appends reinforcements',
+    { mobile: true, url: '/?screen=map&combat&current' },
+    async (page) => {
+      const trigger = page.getByRole('button', { name: 'Порядок ходов', exact: false }).first()
+      await trigger.click()
+      const drawer = page.getByRole('dialog', { name: 'Панель боя', exact: true })
+      for (let i = 0; i < 20; i++) {
+        await page.keyboard.press('Tab')
+        expect(await drawer.evaluate((el) => el.contains(document.activeElement))).toBe(true)
+      }
+      await drawer.getByRole('button', { name: 'Добавить новые токены в бой' }).click()
+      await expect(drawer.getByRole('status')).toContainText('Добавлено участников: 3')
+      expect(await page.evaluate(() => window.__uiLab.mapActions[0])).toEqual({
+        name: 'addCombatParticipants',
+        args: ['offline-scene'],
+      })
+      await page.keyboard.press('Escape')
+      await expect(trigger).toBeFocused()
+      await page.getByRole('button', { name: 'Панель боя', exact: true }).click()
+      await expect(drawer).toBeInViewport()
+      await page.keyboard.press('Escape')
+    }
+  )
+  await scenario(
+    'map empty combat panel prepares tokens visibly',
+    { url: '/?screen=map' },
+    async (page) => {
+      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
+      await page
+        .getByRole('dialog', { name: 'Панель боя' })
+        .getByRole('button', { name: 'Подготовить бой' })
+        .click()
+      expect(await page.evaluate(() => window.__uiLab.mapActions[0])).toEqual({
+        name: 'startCombat',
+        args: ['offline-scene'],
+      })
+    }
+  )
   await scenario(
     'desktop tools are distinct; switching panels, Escape and adjacent layout',
     {},
@@ -2289,7 +2456,9 @@ try {
   for (const lang of ['ru', 'en']) {
     for (const mobile of [false, true]) {
       await scenario(
-        'map workspace fits, zooms and docks queue ' + lang + mobile,
+        'map workspace starts at 100%, fits on request and opens visible combat drawer ' +
+          lang +
+          mobile,
         { mobile, width: 320, url: '/?screen=map&mapImage&combat&current&lang=' + lang },
         async (page) => {
           const ru = lang === 'ru'
@@ -2299,9 +2468,11 @@ try {
               : 'Battle map — use arrow keys to scroll',
           })
           const stage = page.getByTestId('map-stage')
-          await expect
-            .poll(async () => stage.evaluate((el) => el.getBoundingClientRect().width))
-            .toBeLessThan(await viewport.evaluate((el) => el.clientWidth))
+          await expect(
+            page.getByRole('button', {
+              name: ru ? 'Показать карту в масштабе 100%' : 'Show map at 100%',
+            })
+          ).toHaveText('100%')
           await page
             .getByRole('button', { name: ru ? 'Порядок ходов' : 'Turn order', exact: false })
             .first()
@@ -2310,9 +2481,18 @@ try {
             name: ru ? 'Порядок ходов' : 'Turn order',
           })
           await expect(queue).toBeVisible()
-          const vb = await viewport.boundingBox(),
-            qb = await queue.boundingBox()
-          expect(mobile ? qb.y >= vb.y + vb.height : qb.x >= vb.x + vb.width).toBe(true)
+          const drawer = page.getByRole('dialog', {
+            name: ru ? 'Панель боя' : 'Combat panel',
+            exact: true,
+          })
+          expect(await drawer.evaluate((el) => el.matches(':modal'))).toBe(true)
+          const qb = await drawer.boundingBox()
+          expect(qb.y).toBeGreaterThanOrEqual(0)
+          expect(qb.x + qb.width).toBeLessThanOrEqual(mobile ? 320 : 1440)
+          await page.screenshot({
+            path: path.join(output, 'combat-drawer-' + lang + mobile + '.png'),
+          })
+          await page.keyboard.press('Escape')
           const before = await stage.evaluate((el) => el.getBoundingClientRect().width)
           await page
             .getByRole('button', { name: ru ? 'Увеличить масштаб карты' : 'Zoom in', exact: true })
@@ -2336,7 +2516,9 @@ try {
           if (mobile) {
             await viewport.scrollIntoViewIfNeeded()
             await page.screenshot({ path: path.join(output, 'map-' + lang + '-mobile-field.png') })
-            await queue.scrollIntoViewIfNeeded()
+            await page
+              .getByRole('button', { name: ru ? 'Панель боя' : 'Combat panel', exact: true })
+              .click()
             await page.screenshot({ path: path.join(output, 'map-' + lang + '-mobile-queue.png') })
           }
         }
@@ -2484,7 +2666,7 @@ try {
   )
 
   await scenario(
-    'map session embedding docks queue below a narrow panel',
+    'map session embedding opens visible modal and keeps zoom when hidden',
     { url: '/?screen=map-session' },
     async (page) => {
       await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
@@ -2492,9 +2674,27 @@ try {
       const viewport = page.getByRole('region', {
         name: 'Игровая карта — используйте стрелки для прокрутки',
       })
-      const vb = await viewport.boundingBox(),
-        qb = await queue.boundingBox()
-      expect(qb.y >= vb.y + vb.height).toBe(true)
+      await expect(queue).toBeInViewport()
+      await page.keyboard.press('Escape')
+      const zoom = page.getByRole('button', { name: 'Показать карту в масштабе 100%' })
+      await expect(zoom).toHaveText('100%')
+      await page.getByRole('button', { name: 'Вписать', exact: true }).click()
+      const fitted = await zoom.textContent()
+      await viewport.evaluate((el) => {
+        el.style.display = 'none'
+      })
+      await page.waitForTimeout(100)
+      await expect(zoom).toHaveText(fitted)
+      await page
+        .getByRole('region', {
+          name: 'Игровая карта — используйте стрелки для прокрутки',
+          includeHidden: true,
+        })
+        .evaluate((el) => {
+          el.style.display = ''
+        })
+      await zoom.click()
+      await expect(zoom).toHaveText('100%')
       expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
     }
   )
@@ -2502,7 +2702,6 @@ try {
     'map panning and focus are local; reroll and end require confirmation',
     { url: '/?screen=map&mapImage&combat&current' },
     async (page) => {
-      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
       const queue = page.getByRole('complementary', { name: 'Порядок ходов' })
       await page.getByRole('button', { name: 'Показать карту в масштабе 100%' }).click()
       await page.getByRole('button', { name: 'Обзор', exact: true }).click()
@@ -2519,17 +2718,26 @@ try {
       })
       await page.mouse.up()
       await expect.poll(() => viewport.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before)
+      await page.getByRole('button', { name: 'Порядок ходов', exact: false }).first().click()
       await queue
         .getByRole('button', {
           name: 'Бросить инициативу: Серебряная хранительница дальних звёзд',
           exact: true,
         })
         .click()
-      await expect(page.getByRole('dialog')).toContainText('Текущий ход сохранится')
+      await expect(
+        page.getByRole('dialog', { name: 'Перебросить инициативу?', exact: true })
+      ).toContainText('Текущий ход сохранится')
       expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
-      await page.getByRole('dialog').getByRole('button', { name: 'Отмена', exact: true }).click()
+      await page
+        .getByRole('dialog', { name: 'Перебросить инициативу?', exact: true })
+        .getByRole('button', { name: 'Отмена', exact: true })
+        .click()
       await queue.getByRole('button', { name: 'Завершить бой', exact: true }).click()
       expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      await page.keyboard.press('Escape')
+      await expect(page.getByRole('dialog')).toHaveCount(1)
+      await expect(queue).toBeVisible()
       await page.keyboard.press('Escape')
       await expect(page.getByRole('dialog')).toHaveCount(0)
     }

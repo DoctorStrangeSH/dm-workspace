@@ -195,7 +195,12 @@ function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?
     window.addEventListener('offline-turn-data', update)
     return () => window.removeEventListener('offline-turn-data', update)
   }, [entries])
-  const tokens = query.has('manyTokens') ? battleTokens : mapTokens
+  const [tokens, setTokens] = useState(query.has('manyTokens') ? battleTokens : mapTokens)
+  useEffect(() => {
+    const update = (event: Event) => setTokens((event as CustomEvent<typeof tokens>).detail)
+    window.addEventListener('offline-token-data', update)
+    return () => window.removeEventListener('offline-token-data', update)
+  }, [])
   if (embedded)
     return (
       <div style={{ maxWidth: 700 }}>

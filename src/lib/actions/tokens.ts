@@ -84,13 +84,26 @@ export async function createToken(
   if (!Number.isFinite(data.x) || !Number.isFinite(data.y)) {
     return { error: 'Некорректные координаты токена' }
   }
-  if (data.size !== undefined && (!Number.isFinite(data.size) || data.size < 0.25 || data.size > 10)) {
+  if (
+    data.size !== undefined &&
+    (!Number.isFinite(data.size) || data.size < 0.25 || data.size > 10)
+  ) {
     return { error: 'Размер токена должен быть от 0.25 до 10' }
   }
-  if (data.hp_current !== undefined && data.hp_current !== null && typeof data.hp_current !== 'number' && typeof data.hp_current !== 'string') {
+  if (
+    data.hp_current !== undefined &&
+    data.hp_current !== null &&
+    typeof data.hp_current !== 'number' &&
+    typeof data.hp_current !== 'string'
+  ) {
     return { error: 'Некорректное текущее HP' }
   }
-  if (data.hp_max !== undefined && data.hp_max !== null && typeof data.hp_max !== 'number' && typeof data.hp_max !== 'string') {
+  if (
+    data.hp_max !== undefined &&
+    data.hp_max !== null &&
+    typeof data.hp_max !== 'number' &&
+    typeof data.hp_max !== 'string'
+  ) {
     return { error: 'Некорректное максимальное HP' }
   }
 
@@ -143,7 +156,10 @@ export async function createToken(
       return { error: 'Некорректная ссылка на изображение' }
     }
   }
-  if (data.color !== undefined && (typeof data.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(data.color))) {
+  if (
+    data.color !== undefined &&
+    (typeof data.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(data.color))
+  ) {
     return { error: 'Некорректный цвет токена' }
   }
   if (data.owner_id !== undefined && data.owner_id !== null && typeof data.owner_id !== 'string') {
@@ -158,7 +174,8 @@ export async function createToken(
   let hpMax = data.hp_max ?? null
   if (typeof hpCurrent === 'string') hpCurrent = normalizeMonsterHP(hpCurrent)
   if (typeof hpMax === 'string') hpMax = normalizeMonsterHP(hpMax)
-  if (hpCurrent !== null && (typeof hpCurrent !== 'number' || !Number.isFinite(hpCurrent))) hpCurrent = null
+  if (hpCurrent !== null && (typeof hpCurrent !== 'number' || !Number.isFinite(hpCurrent)))
+    hpCurrent = null
   if (hpMax !== null && (typeof hpMax !== 'number' || !Number.isFinite(hpMax))) hpMax = null
 
   const { data: token, error } = await supabase
@@ -218,11 +235,11 @@ export async function moveToken(tokenId: string, sceneId: string, x: number, y: 
     .eq('id', tokenId)
     .eq('scene_id', sceneId)
     .eq('campaign_id', campaignId)
-    .select('id')
+    .select('id, x, y, updated_at')
     .maybeSingle()
 
   if (error || !data) return { error: 'Не удалось переместить' }
-  return { success: true }
+  return { success: true, position: { x: data.x, y: data.y, updated_at: data.updated_at } }
 }
 
 export async function updateTokenHP(tokenId: string, sceneId: string, hp_current: number) {

@@ -16,7 +16,7 @@ type Row = {
   turn_order: number
   is_current: boolean
 }
-function rig(initial: Row[], isDm = true, failCurrent = false) {
+function rig(initial: Row[], isDm = true, failCurrent = false, tokenIds = ['t', 'u', 'v']) {
   const rows = structuredClone(initial)
   const writes: { table: string; value: Record<string, unknown>; filters: [string, unknown][] }[] =
     []
@@ -26,14 +26,26 @@ function rig(initial: Row[], isDm = true, failCurrent = false) {
       const filters: [string, unknown][] = []
       const orders: { key: string; ascending: boolean }[] = []
       let update: Record<string, unknown> | undefined
+      let additions: Omit<Row, 'id'>[] | undefined
       const execute = () => {
         if (table === 'scenes') return { data: { campaign_id: 'campaign' }, error: null }
         if (table === 'tokens')
           return {
-            data: { id: 't', name: 'Hero', character_id: null, entity_id: null },
+            data: tokenIds
+              .filter((id) => filters.every(([key, value]) => key !== 'id' || value === id))
+              .map((id) => ({ id, name: 'Hero', character_id: null, entity_id: null })),
             error: null,
           }
         if (table !== 'initiative') throw Error('unexpected table ' + table)
+        if (additions) {
+          const inserted = additions
+            .filter(
+              (a) => !rows.some((row) => row.scene_id === a.scene_id && row.token_id === a.token_id)
+            )
+            .map((row, index) => ({ ...row, id: 'new-' + index }))
+          rows.push(...inserted)
+          return { data: inserted, error: null }
+        }
         const found = rows.filter((row) =>
           filters.every(([key, value]) => row[key as keyof Row] === value)
         )
@@ -53,6 +65,11 @@ function rig(initial: Row[], isDm = true, failCurrent = false) {
       }
       const q = {
         select: () => q,
+        upsert: (value: Omit<Row, 'id'>[], options: unknown) => {
+          assert.deepEqual(options, { onConflict: 'scene_id,token_id', ignoreDuplicates: true })
+          additions = value
+          return q
+        },
         limit: () => q,
         eq: (key: string, value: unknown) => {
           filters.push([key, value])
@@ -141,4 +158,27 @@ test('roll-all recalculates once and keeps preparation inactive', async () => {
   assert.equal(r.queries.filter((q) => q.orders.join(',') === 'initiative,id').length, 1)
   assert.ok(r.rows.every((row) => !row.is_current))
   assert.ok(r.writes.every((w) => !('is_current' in w.value)))
+})
+
+test('reinforcements append once without changing rolls, current turn or previous order', async () => {
+  const r = rig(rows, true, false, ['t', 'u', 'v', 'monster1', 'monster2', 'monster3'])
+  assert.deepEqual(await r.actions.addCombatParticipants('scene'), { success: true, count: 3 })
+  assert.deepEqual(r.rows.slice(0, 3), rows)
+  assert.deepEqual(
+    r.rows.slice(3).map((row) => [row.turn_order, row.initiative, row.is_current]),
+    [
+      [21, 0, false],
+      [22, 0, false],
+      [23, 0, false],
+    ]
+  )
+  assert.deepEqual(await r.actions.addCombatParticipants('scene'), { success: true, count: 0 })
+  assert.equal(r.rows.length, 6)
+  assert.equal(r.writes.length, 0)
+})
+test('reinforcements require DM and an existing prepared queue', async () => {
+  for (const r of [rig(rows, false), rig([])]) {
+    assert.ok('error' in (await r.actions.addCombatParticipants('scene')))
+    assert.equal(r.writes.length, 0)
+  }
 })

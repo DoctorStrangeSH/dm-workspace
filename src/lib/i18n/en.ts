@@ -674,6 +674,10 @@ export const en: Dictionary = {
   'scenes.combatStartHint': 'Start combat (Ctrl+B)',
   'scenes.combatWithCount': 'Combat ({count})',
   'scenes.combatPanel': 'Combat panel',
+  'map.addParticipants': 'Add new tokens to combat',
+  'map.addParticipantsHint':
+    'Appends map tokens to the queue. Keeps the current turn and existing rolls. Then roll initiative for the newcomers.',
+  'map.participantsAdded': 'Participants added: {count}',
   'scenes.currentTurn': 'Turn',
   'scenes.tools': 'Tools',
   'scenes.tool.ruler': 'Ruler',

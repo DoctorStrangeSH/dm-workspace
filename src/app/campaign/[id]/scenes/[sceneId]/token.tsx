@@ -7,6 +7,7 @@ import { useToast } from '@/components/toast/toast-provider'
 import { useT } from '@/lib/i18n'
 import { isBlockedByWalls } from '@/lib/collision'
 import { cn } from '@/lib/utils'
+import { TokenMovement } from '@/lib/maps/token-movement'
 import type { Token as TokenType, SceneWall } from '@/lib/types'
 
 interface Props {
@@ -36,14 +37,42 @@ export default function Token({
   const [pos, setPos] = useState({ x: token.x, y: token.y })
   const [blocked, setBlocked] = useState(false)
   const startRef = useRef({ x: 0, y: 0, tokenX: token.x, tokenY: token.y })
-  const lastMovedAtRef = useRef(0)
+  const dragRef = useRef(false)
+  const cleanupRef = useRef<(() => void) | null>(null)
+  const blockedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [movement] = useState(
+    () =>
+      new TokenMovement(
+        token,
+        async ({ x, y }) => {
+          const result = await moveToken(token.id, sceneId, x, y)
+          if ('error' in result) return { error: result.error ?? t('common.error') }
+          return { position: result.position }
+        },
+        setPos,
+        (error) => toast.error(error ?? t('map.uncertain'))
+      )
+  )
 
   useEffect(() => {
-    if (dragging) return
-    const sinceMoved = Date.now() - lastMovedAtRef.current
-    if (sinceMoved < 500) return
-    setPos({ x: token.x, y: token.y })
-  }, [token.x, token.y, dragging])
+    movement.setCallbacks(
+      (position) => {
+        if (!dragRef.current) setPos(position)
+      },
+      (error) => toast.error(error ?? t('map.uncertain'))
+    )
+  }, [movement, t, toast])
+  useEffect(() => {
+    movement.receive(token)
+  }, [token, movement])
+  useEffect(() => {
+    movement.activate()
+    return () => {
+      movement.dispose()
+      cleanupRef.current?.()
+      if (blockedTimer.current) clearTimeout(blockedTimer.current)
+    }
+  }, [movement])
 
   const sizePx = gridSize * token.size
   const hpPercent =
@@ -60,11 +89,18 @@ export default function Token({
 
   // Pointer Events support mouse, touch and stylus with the same drag rules.
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!canDrag || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return
+    if (
+      !canDrag ||
+      dragRef.current ||
+      !e.isPrimary ||
+      (e.pointerType === 'mouse' && e.button !== 0)
+    )
+      return
     e.preventDefault()
     e.stopPropagation()
 
     setDragging(true)
+    dragRef.current = true
     startRef.current = { x: e.clientX, y: e.clientY, tokenX: pos.x, tokenY: pos.y }
     const activePointerId = e.pointerId
 
@@ -72,6 +108,8 @@ export default function Token({
       window.removeEventListener('pointermove', handlePointerMove)
       window.removeEventListener('pointerup', handlePointerUp)
       window.removeEventListener('pointercancel', handlePointerCancel)
+      dragRef.current = false
+      cleanupRef.current = null
       setDragging(false)
     }
 
@@ -87,11 +125,11 @@ export default function Token({
     const handlePointerCancel = (ev: PointerEvent) => {
       if (ev.pointerId !== activePointerId) return
       cleanup()
-      setPos({ x: token.x, y: token.y })
+      setPos(movement.position)
       setBlocked(false)
     }
 
-    const handlePointerUp = async (ev: PointerEvent) => {
+    const handlePointerUp = (ev: PointerEvent) => {
       if (ev.pointerId !== activePointerId) return
       cleanup()
       setBlocked(false)
@@ -99,6 +137,7 @@ export default function Token({
       const dx = ev.clientX - startRef.current.x
       const dy = ev.clientY - startRef.current.y
       if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+        setPos(movement.position)
         onClick()
         return
       }
@@ -108,27 +147,28 @@ export default function Token({
 
       if (
         walls.length > 0 &&
-        isBlockedByWalls({ x: token.x, y: token.y }, { x: newX, y: newY }, tokenRadius, walls)
+        isBlockedByWalls(
+          { x: startRef.current.tokenX, y: startRef.current.tokenY },
+          { x: newX, y: newY },
+          tokenRadius,
+          walls
+        )
       ) {
-        setPos({ x: token.x, y: token.y })
+        setPos(movement.position)
         setBlocked(true)
         toast.error(t('scenes.walls.blocked'))
-        setTimeout(() => setBlocked(false), 600)
+        if (blockedTimer.current) clearTimeout(blockedTimer.current)
+        blockedTimer.current = setTimeout(() => setBlocked(false), 600)
         return
       }
 
-      setPos({ x: newX, y: newY })
-      lastMovedAtRef.current = Date.now()
-      const res = await moveToken(token.id, sceneId, newX, newY)
-      if ('error' in res) {
-        toast.error(res.error ?? t('common.error'))
-        setPos({ x: token.x, y: token.y })
-      }
+      movement.move({ x: newX, y: newY })
     }
 
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
     window.addEventListener('pointercancel', handlePointerCancel)
+    cleanupRef.current = cleanup
   }
 
   const conditions = Array.isArray(token.conditions) ? token.conditions : []

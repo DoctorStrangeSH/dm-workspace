@@ -40,6 +40,9 @@ test('fit preserves aspect and leaves padding; small maps never enlarged automat
   assert.equal(fitMap(1200, 800, 632, 432), 0.5)
   assert.equal(fitMap(100, 100, 632, 432), 1)
   assert.equal(fitMap(1200, 800, 320, 844), 0.24)
+  assert.equal(fitMap(1200, 800, 0, 0), 1)
+  assert.equal(fitMap(1200, 800, 700, 0), 1)
+  assert.equal(fitMap(0, 0, 700, 500), 1)
 })
 test('only nonempty supported raster images up to 10MiB pass', () => {
   for (const type of ['image/png', 'image/jpeg', 'image/webp'])

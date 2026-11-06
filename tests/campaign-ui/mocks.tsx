@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { tokenTransport } from './token-transport'
 import type { AnchorHTMLAttributes } from 'react'
 import type { CharacterData, MessageWithAuthor } from '../../src/lib/types'
 import type { ItemFilters, SrdItemsPageResult } from '../../src/lib/actions/items-search'
@@ -28,6 +29,13 @@ export const lab = {
   mapActions: [] as { name: string; args: unknown[] }[],
   mapOutcome: 'success' as 'success' | 'error' | 'throw',
   mapDelay: 0,
+  mapDeferred: false,
+  mapPending: [] as { resolve: () => void }[],
+  moveDeferred: false,
+  movePending: [] as {
+    resolve: (result: { error?: string }) => void
+    reject: (error: Error) => void
+  }[],
   campaignActions: [] as { name: string; args: unknown[] }[],
   copiedLinks: [] as string[],
   campaignOutcome: 'error' as 'error' | 'success' | 'throw',
@@ -455,6 +463,7 @@ async function mapAction(name: string, args: unknown[]) {
     ),
   })
   if (lab.mapDelay) await new Promise((resolve) => setTimeout(resolve, lab.mapDelay))
+  if (lab.mapDeferred) await new Promise<void>((resolve) => lab.mapPending.push({ resolve }))
   if (lab.mapOutcome === 'throw') throw Error('Offline transport failure')
   if (lab.mapOutcome === 'error') return { error: 'Offline map action failed' }
   return { success: true, roll: 12, dexMod: 2, total: 14 }
@@ -462,6 +471,10 @@ async function mapAction(name: string, args: unknown[]) {
 export const uploadMap = (...args: unknown[]) => mapAction('uploadMap', args)
 export const setActiveScene = (...args: unknown[]) => mapAction('setActiveScene', args)
 export const startCombat = (...args: unknown[]) => mapAction('startCombat', args)
+export const addCombatParticipants = async (...args: unknown[]) => ({
+  ...(await mapAction('addCombatParticipants', args)),
+  count: 3,
+})
 export const nextTurn = (...args: unknown[]) => mapAction('nextTurn', args)
 export const endCombat = (...args: unknown[]) => mapAction('endCombat', args)
 export const rollAllInitiatives = (...args: unknown[]) => mapAction('rollAllInitiatives', args)
@@ -472,7 +485,17 @@ export const clearFog = (...args: unknown[]) => mapAction('clearFog', args)
 export const revealArea = (...args: unknown[]) => mapAction('revealArea', args)
 export const createWall = (...args: unknown[]) => mapAction('createWall', args)
 export const deleteAllWalls = (...args: unknown[]) => mapAction('deleteAllWalls', args)
-export const moveToken = (...args: unknown[]) => mapAction('moveToken', args)
+export const moveToken = async (id: string, sceneId: string, x: number, y: number) => {
+  const result = await mapAction('moveToken', [id, sceneId, x, y])
+  if ('error' in result) return result
+  const deferred = lab.moveDeferred
+    ? await new Promise<{ error?: string }>((resolve, reject) =>
+        lab.movePending.push({ resolve, reject })
+      )
+    : {}
+  if (deferred.error) return deferred
+  return { success: true, position: tokenTransport.save(id, x, y) }
+}
 export const createToken = (...args: unknown[]) => mapAction('createToken', args)
 export const updateTokenHP = (...args: unknown[]) => mapAction('updateTokenHP', args)
 export const toggleTokenVisibility = (...args: unknown[]) =>
