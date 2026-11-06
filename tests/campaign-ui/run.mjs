@@ -2509,6 +2509,7 @@ try {
       const viewport = page.getByRole('region', {
         name: 'Игровая карта — используйте стрелки для прокрутки',
       })
+      await viewport.scrollIntoViewIfNeeded()
       const bounds = await viewport.boundingBox()
       const before = await viewport.evaluate((el) => el.scrollLeft)
       await page.mouse.move(bounds.x + bounds.width * 0.7, bounds.y + bounds.height * 0.6)
@@ -2597,6 +2598,245 @@ try {
         dialog.getByRole('button', { name: 'Загрузить карту', exact: true })
       ).toBeEnabled()
       expect(await page.evaluate(() => window.__uiLab.mapActions.length)).toBe(1)
+    }
+  )
+
+  for (const lang of ['ru', 'en']) {
+    for (const mobile of [false, true]) {
+      await scenario(
+        'turn timeline shows 3 characters and 8 creatures ' + lang + ' ' + mobile,
+        {
+          mobile,
+          width: 320,
+          url:
+            '/?screen=map&mapImage&combat&current&manyTokens&turn=2&lang=' +
+            lang +
+            (lang === 'en' ? '&theme=light' : ''),
+        },
+        async (page) => {
+          const ru = lang === 'ru'
+          const timeline = page.getByRole('region', { name: ru ? 'Лента ходов' : 'Turn timeline' })
+          const list = timeline.getByRole('list', {
+            name: ru ? 'Очередь инициативы' : 'Initiative queue',
+          })
+          await expect(list.getByRole('listitem')).toHaveCount(11)
+          await expect(timeline).toContainText(ru ? 'Персонажи: 3' : 'Characters: 3')
+          await expect(timeline).toContainText(ru ? 'Существа: 8' : 'Creatures: 8')
+          await expect(list.locator('[aria-current="step"]')).toHaveCount(1)
+          await expect(list.locator('[aria-current="step"]')).toHaveAttribute(
+            'data-entry-id',
+            'battle-entry-2'
+          )
+          await expect(list.locator('[data-entry-id="battle-entry-3"]')).toContainText(
+            ru ? 'Следующий' : 'Up next'
+          )
+          expect(
+            await list.locator('li').evaluateAll((els) => els.map((el) => el.dataset.entryId))
+          ).toEqual(Array.from({ length: 11 }, (_, i) => 'battle-entry-' + i))
+          await expect(list.locator('[data-entry-id="battle-entry-10"]')).toContainText('0')
+          await timeline.scrollIntoViewIfNeeded()
+          await page.screenshot({
+            path: path.join(
+              output,
+              'turn-timeline-' + lang + (mobile ? '-mobile' : '-desktop') + '.png'
+            ),
+            fullPage: !mobile,
+          })
+          await timeline
+            .getByRole('button', { name: ru ? 'Вся очередь' : 'Show all', exact: true })
+            .click()
+          await expect(
+            timeline.getByRole('button', {
+              name: ru ? 'Свернуть в ленту' : 'Collapse to strip',
+              exact: true,
+            })
+          ).toHaveAttribute('aria-expanded', 'true')
+          for (const item of await list.locator('li').all()) {
+            const box = await item.boundingBox()
+            expect(box.x >= 0 && box.x + box.width <= (mobile ? 320 : 1440)).toBe(true)
+          }
+          expect(
+            await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
+          ).toBe(true)
+          if (mobile) {
+            await list.scrollIntoViewIfNeeded()
+            await page.screenshot({
+              path: path.join(output, 'turn-timeline-' + lang + '-expanded.png'),
+              fullPage: true,
+            })
+            await timeline.scrollIntoViewIfNeeded()
+            await page.screenshot({
+              path: path.join(output, 'turn-timeline-' + lang + '-expanded-start.png'),
+            })
+            await list.getByRole('listitem').last().scrollIntoViewIfNeeded()
+            await page.screenshot({
+              path: path.join(output, 'turn-timeline-' + lang + '-expanded-end.png'),
+            })
+          }
+          const target = list.locator('[data-entry-id="battle-entry-4"]').getByRole('button')
+          await target.focus()
+          await page.keyboard.press('Enter')
+          await expect(
+            page.getByRole('region', {
+              name: ru
+                ? 'Игровая карта — используйте стрелки для прокрутки'
+                : 'Battle map — use arrow keys to scroll',
+            })
+          ).toBeFocused()
+          expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+        }
+      )
+    }
+  }
+  await scenario(
+    'turn timeline follows server updates, scrolls only itself and wraps after last',
+    { mobile: true, width: 320, url: '/?screen=map&combat&current&manyTokens' },
+    async (page) => {
+      const timeline = page.getByRole('region', { name: 'Лента ходов' })
+      const list = timeline.getByRole('list')
+      await timeline.scrollIntoViewIfNeeded()
+      const before = await page.evaluate(() => scrollY)
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent('offline-turn-data', {
+            detail: window.__turnEntries.map((e, i) => ({ ...e, is_current: i === 10 })),
+          })
+        )
+      )
+      await expect(list.locator('[aria-current="step"]')).toHaveAttribute(
+        'data-entry-id',
+        'battle-entry-10'
+      )
+      await expect(timeline.getByRole('status')).toContainText('Следующий: Аэлина')
+      expect(Math.abs((await page.evaluate(() => scrollY)) - before)).toBeLessThan(2)
+      const end = await list.locator('[data-entry-id="battle-entry-10"]').boundingBox(),
+        rail = await list.boundingBox()
+      expect(end.x >= rail.x && end.x + end.width <= rail.x + rail.width).toBe(true)
+      const endScroll = await list.evaluate((el) => el.scrollLeft)
+      await timeline.getByRole('button', { name: 'Прокрутить очередь назад', exact: true }).click()
+      await expect.poll(() => list.evaluate((el) => el.scrollLeft)).toBeLessThan(endScroll)
+      const backScroll = await list.evaluate((el) => el.scrollLeft)
+      await timeline.getByRole('button', { name: 'Показать текущий ход в ленте' }).click()
+      await expect.poll(() => list.evaluate((el) => el.scrollLeft)).toBeGreaterThan(backScroll)
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent('offline-turn-data', {
+            detail: window.__turnEntries.filter((e) => !e.is_current),
+          })
+        )
+      )
+      await expect(list.getByRole('listitem')).toHaveCount(10)
+      await expect(list.locator('[aria-current="step"]')).toHaveCount(0)
+      await page.evaluate(() =>
+        window.dispatchEvent(new CustomEvent('offline-turn-data', { detail: [] }))
+      )
+      await expect(timeline).toHaveCount(0)
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'turn timeline preparation and conflicted current never invent a turn',
+    { url: '/?screen=map&combat&manyTokens' },
+    async (page) => {
+      const timeline = page.getByRole('region', { name: 'Лента ходов' })
+      await expect(timeline.getByRole('status')).toContainText('Подготовка ходов')
+      await expect(timeline.getByRole('status')).toContainText('Первым ходит: Аэлина')
+      await expect(timeline.locator('[aria-current="step"]')).toHaveCount(0)
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent('offline-turn-data', {
+            detail: window.__turnEntries.map((e, i) => ({ ...e, is_current: i < 2 })),
+          })
+        )
+      )
+      await expect(timeline.getByRole('status')).toContainText('Дождитесь обновления очереди')
+      await expect(timeline.locator('[aria-current="step"]')).toHaveCount(0)
+      await timeline.getByRole('button', { name: 'Панель боя' }).click()
+      await expect(
+        page
+          .getByRole('complementary', { name: 'Порядок ходов' })
+          .getByRole('button', { name: 'Начать первый ход' })
+      ).toBeDisabled()
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'turn timeline player conceals hidden portraits, names and stats in both views',
+    { url: '/?screen=map&combat&current&turn=3&manyTokens&hideEnemy&role=player&lang=en' },
+    async (page) => {
+      const timeline = page.getByRole('region', { name: 'Turn timeline' })
+      await expect(timeline.getByRole('listitem')).toHaveCount(10)
+      await expect(timeline.locator('[data-entry-id="battle-entry-3"]')).toHaveCount(0)
+      await expect(timeline.getByRole('status')).toContainText('Hidden participant')
+      await expect(timeline.locator('[aria-current="step"]')).toHaveCount(0)
+      await timeline.getByRole('button', { name: 'Combat panel' }).click()
+      const panel = page.getByRole('complementary', { name: 'Turn order' })
+      await expect(panel.getByRole('listitem')).toHaveCount(10)
+      await expect(panel).toContainText('Hidden participant')
+      await expect(panel.getByRole('button', { name: 'Next turn', exact: true })).toHaveCount(0)
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'turn timeline handles failed portraits and narrow session embedding',
+    { url: '/?screen=map-session&current&manyTokens&brokenPortrait' },
+    async (page) => {
+      const timeline = page.getByRole('region', { name: 'Лента ходов' })
+      await expect(timeline.getByRole('listitem')).toHaveCount(11)
+      await expect(timeline.locator('[data-entry-id="battle-entry-0"] img')).toBeVisible()
+      await expect(timeline.locator('[data-entry-id="battle-entry-1"] img')).toHaveCount(0)
+      await expect(timeline.locator('[data-entry-id="battle-entry-1"] svg')).toHaveCount(1)
+      const box = await timeline.boundingBox()
+      expect(box.width).toBeLessThanOrEqual(700)
+      await timeline.getByRole('button', { name: 'Вся очередь', exact: true }).click()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true
+      )
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+    }
+  )
+  await scenario(
+    'turn timeline supports one unlinked token and all-hidden player queue',
+    { url: '/?screen=map&combat&current&manyTokens&role=player' },
+    async (page) => {
+      const timeline = page.getByRole('region', { name: 'Лента ходов' })
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent('offline-turn-data', {
+            detail: [
+              {
+                ...window.__turnEntries[0],
+                initiative: 0,
+                token: {
+                  ...window.__turnEntries[0].token,
+                  character_id: null,
+                  entity_id: null,
+                  name: 'Одинокий жетон',
+                },
+              },
+            ],
+          })
+        )
+      )
+      await expect(timeline.getByRole('listitem')).toHaveCount(1)
+      await expect(timeline).toContainText('Жетоны: 1')
+      await expect(timeline.getByRole('list').getByRole('button')).toHaveAccessibleName(
+        /Инициатива 0/
+      )
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent('offline-turn-data', {
+            detail: window.__turnEntries.map((e) => ({
+              ...e,
+              token: { ...e.token, is_hidden: true },
+            })),
+          })
+        )
+      )
+      await expect(timeline.getByRole('listitem')).toHaveCount(0)
+      await expect(timeline).toContainText('Участники пока скрыты мастером')
+      await expect(timeline).not.toContainText('Одинокий жетон')
+      expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
     }
   )
 } finally {

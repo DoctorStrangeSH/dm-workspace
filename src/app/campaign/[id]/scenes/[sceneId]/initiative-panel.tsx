@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 import { Button, Dialog } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { orderTurns, nextTurnEntry } from '@/lib/maps/initiative'
+import CombatPortrait from './combat-portrait'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
@@ -32,7 +33,10 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
   const [confirm, setConfirm] = useState<'end' | string | null>(null)
   const ordered = orderTurns(entries)
   const currents = ordered.filter((entry) => entry.is_current)
-  const current = currents[0]
+  const current = currents.length === 1 ? currents[0] : undefined
+  const visible = ordered.filter((entry) => isDm || !entry.token.is_hidden)
+  const publicName = (entry: InitiativeEntryWithToken) =>
+    isDm || !entry.token.is_hidden ? entry.token.name : t('turns.hidden')
   const next = nextTurnEntry(ordered, current?.id ?? null)
   const blocked = pending || uncertain || currents.length > 1
   const run = (operation: () => Promise<{ error?: string }>) => {
@@ -65,7 +69,7 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
         <h2 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
           <Swords size={18} className="text-[var(--accent-text)]" />
           {t('scenes.initiative.title')}{' '}
-          <span className="text-sm text-[var(--text-muted)]">{entries.length}</span>
+          <span className="text-sm text-[var(--text-muted)]">{visible.length}</span>
         </h2>
         <Button
           variant="ghost"
@@ -82,15 +86,23 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
       >
         <div>
           <p className="text-xs font-semibold tracking-wider text-[var(--accent-text)] uppercase">
-            {current ? t('scenes.initiative.now') : t('map.prepare')}
+            {currents.length > 1
+              ? t('map.turnConflict')
+              : current
+                ? t('scenes.initiative.now')
+                : t('map.prepare')}
           </p>
           <p className="mt-1 font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
-            {current ? current.token.name : t('map.prepareHint')}
+            {currents.length > 1
+              ? t('turns.waitForSync')
+              : current
+                ? publicName(current)
+                : t('map.prepareHint')}
           </p>
         </div>
-        {next && (
+        {next && currents.length <= 1 && (
           <p className="text-sm [overflow-wrap:anywhere] text-[var(--text-secondary)]">
-            {t('map.upNext')}: <strong>{next.token.name}</strong>
+            {t('map.upNext')}: <strong>{publicName(next)}</strong>
           </p>
         )}
         {isDm && entries.length > 0 && (
@@ -129,7 +141,7 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
         </p>
       )}
       <ol className="max-h-[28rem] space-y-2 overflow-y-auto p-3">
-        {ordered.map((entry, index) => {
+        {visible.map((entry, index) => {
           const token = entry.token
           const hpValid =
             token.hp_current !== null &&
@@ -151,6 +163,7 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
               )}
             >
               <div className="flex items-start gap-3">
+                <CombatPortrait token={token} size={36} />
                 <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--bg-app)] text-lg font-bold text-[var(--text-primary)] tabular-nums">
                   <span className="sr-only">{t('scenes.initiative.title')}</span>
                   {entry.initiative}
