@@ -9,12 +9,6 @@
 .viewport {
   height: clamp(340px, 62dvh, 740px);
 }
-@container (min-width: 1000px) {
-  .withQueue {
-    grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: start;
-  }
-}
 .workspace:fullscreen {
   padding: 1rem;
   background: var(--bg-app);

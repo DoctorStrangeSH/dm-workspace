@@ -22,6 +22,14 @@ export function clientToGrid(
 }
 export const clampZoom = (zoom: number) => Math.min(3, Math.max(0.05, zoom))
 export function fitMap(width: number, height: number, viewWidth: number, viewHeight: number) {
+  if (
+    ![width, height, viewWidth, viewHeight].every(Number.isFinite) ||
+    width <= 0 ||
+    height <= 0 ||
+    viewWidth <= 32 ||
+    viewHeight <= 32
+  )
+    return 1
   return clampZoom(
     Math.min(1, Math.max(1, viewWidth - 32) / width, Math.max(1, viewHeight - 32) / height)
   )

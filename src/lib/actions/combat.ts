@@ -57,6 +57,48 @@ export async function startCombat(sceneId: string) {
   return { success: true }
 }
 
+/** Append reinforcements without changing existing rolls, order, or the active turn. */
+export async function addCombatParticipants(sceneId: string) {
+  const campaignId = await getSceneCampaign(sceneId)
+  if (!campaignId) return { error: 'Сцена не найдена' }
+  const { isDm } = await getCampaignAccess(campaignId)
+  if (!isDm) return { error: 'Только ГМ' }
+  const supabase = await createClient()
+  const { data: existing, error: queueError } = await supabase
+    .from('initiative')
+    .select('token_id, turn_order')
+    .eq('scene_id', sceneId)
+  if (queueError || !existing?.length) return { error: 'Сначала подготовьте бой' }
+  const { data: tokens, error: tokenError } = await supabase
+    .from('tokens')
+    .select('id')
+    .eq('scene_id', sceneId)
+    .eq('campaign_id', campaignId)
+    .order('id')
+  if (tokenError || !tokens) return { error: 'Не удалось загрузить токены' }
+  const present = new Set(existing.map((entry) => entry.token_id))
+  const firstOrder = Math.max(...existing.map((entry) => entry.turn_order)) + 1
+  const additions = tokens
+    .filter((token) => !present.has(token.id))
+    .map((token, index) => ({
+      scene_id: sceneId,
+      campaign_id: campaignId,
+      token_id: token.id,
+      initiative: 0,
+      turn_order: firstOrder + index,
+      is_current: false,
+    }))
+  if (!additions.length) return { success: true, count: 0 }
+  // Verified initiative_token_unique(scene_id, token_id): repeated requests cannot duplicate tokens.
+  const { data, error } = await supabase
+    .from('initiative')
+    .upsert(additions, { onConflict: 'scene_id,token_id', ignoreDuplicates: true })
+    .select('id')
+  if (error) return { error: 'Не удалось добавить участников' }
+  revalidatePath(`/campaign/${campaignId}/scenes/${sceneId}`)
+  return { success: true, count: data?.length ?? 0 }
+}
+
 export async function endCombat(sceneId: string) {
   const campaignId = await getSceneCampaign(sceneId)
   if (!campaignId) return { error: 'Сцена не найдена' }

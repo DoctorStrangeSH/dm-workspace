@@ -3,6 +3,15 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Token } from '@/lib/types'
+import { compareTokenRevision } from '@/lib/maps/token-movement'
+
+function freshSnapshot(current: Token[], incoming: Token[]) {
+  const byId = new Map(current.map((token) => [token.id, token]))
+  return incoming.map((token) => {
+    const prior = byId.get(token.id)
+    return prior && compareTokenRevision(prior.updated_at, token.updated_at) > 0 ? prior : token
+  })
+}
 
 interface Options {
   sceneId: string
@@ -18,7 +27,7 @@ export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Op
   const [prevInitial, setPrevInitial] = useState(initialTokens)
   if (initialTokens !== prevInitial) {
     setPrevInitial(initialTokens)
-    setTokens(initialTokens)
+    setTokens((current) => freshSnapshot(current, initialTokens))
   }
 
   useEffect(() => {
@@ -30,7 +39,7 @@ export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Op
       const version = changeVersion.current
       const { data, error } = await supabase.from('tokens').select('*').eq('scene_id', sceneId)
       if (cancelled || error || !data || version !== changeVersion.current) return
-      setTokens(data as Token[])
+      setTokens((current) => freshSnapshot(current, data as Token[]))
     }
 
     const setup = async () => {
@@ -45,7 +54,7 @@ export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Op
       channel
         .on('broadcast', { event: 'INSERT' }, (payload) => {
           const newToken = payload.payload.record as Token
-          if (!newToken || newToken.scene_id !== sceneId) return
+          if (cancelled || !newToken || newToken.scene_id !== sceneId) return
           changeVersion.current++
           setTokens((prev) => {
             if (prev.some((t) => t.id === newToken.id)) return prev
@@ -54,13 +63,21 @@ export function useRealtimeTokens({ sceneId, initialTokens, enabled = true }: Op
         })
         .on('broadcast', { event: 'UPDATE' }, (payload) => {
           const updated = payload.payload.record as Token
-          if (!updated || updated.scene_id !== sceneId) return
+          if (cancelled || !updated || updated.scene_id !== sceneId) return
           changeVersion.current++
-          setTokens((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
+          setTokens((prev) =>
+            prev.some((t) => t.id === updated.id)
+              ? prev.map((t) =>
+                  t.id === updated.id && compareTokenRevision(updated.updated_at, t.updated_at) >= 0
+                    ? updated
+                    : t
+                )
+              : [...prev, updated]
+          )
         })
         .on('broadcast', { event: 'DELETE' }, (payload) => {
           const old = payload.payload.old_record as { id: string; scene_id?: string }
-          if (!old || (old.scene_id && old.scene_id !== sceneId)) return
+          if (cancelled || !old || (old.scene_id && old.scene_id !== sceneId)) return
           changeVersion.current++
           setTokens((prev) => prev.filter((t) => t.id !== old.id))
         })

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef, useEffect } from 'react'
+import { useState, useTransition, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Eye,
@@ -37,6 +37,7 @@ import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
 import InitiativePanel from './initiative-panel'
+import CombatDrawer from './combat-drawer'
 import TurnTimeline from './turn-timeline'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import FogLayer from './fog-layer'
@@ -98,7 +99,7 @@ export default function SceneView({
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
   const [showUpload, setShowUpload] = useState(false)
-  const [fitting, setFitting] = useState(true)
+  const [fitting, setFitting] = useState(false)
   const workspaceRef = useRef<HTMLDivElement>(null)
   const panRef = useRef<{ id: number; x: number; y: number; left: number; top: number } | null>(
     null
@@ -110,6 +111,15 @@ export default function SceneView({
   const mapViewportRef = useRef<HTMLDivElement>(null)
   const [showAddToken, setShowAddToken] = useState(false)
   const [showInitiative, setShowInitiative] = useState(false)
+  const [combatBusy, setCombatBusy] = useState(false)
+  const combatBusyRef = useRef(false)
+  const reportCombatBusy = useCallback((busy: boolean) => {
+    combatBusyRef.current = busy
+    setCombatBusy(busy)
+  }, [])
+  const closeCombat = () => {
+    if (!combatBusyRef.current) setShowInitiative(false)
+  }
   const [showSummon, setShowSummon] = useState(false)
   const [fogEnabled, setFogEnabled] = useState(scene.fog_enabled ?? false)
   const [brushMode, setBrushMode] = useState(false)
@@ -142,8 +152,10 @@ export default function SceneView({
     if (!fitting) return
     const viewport = mapViewportRef.current
     if (!viewport) return
-    const fit = () =>
+    const fit = () => {
+      if (viewport.clientWidth <= 32 || viewport.clientHeight <= 32) return
       setMapZoom(fitMap(mapWidth, mapHeight, viewport.clientWidth, viewport.clientHeight))
+    }
     fit()
     const observer = new ResizeObserver(fit)
     observer.observe(viewport)
@@ -170,7 +182,7 @@ export default function SceneView({
   const resetMapView = () => {
     setFitting(true)
     const viewport = mapViewportRef.current
-    if (viewport) {
+    if (viewport && viewport.clientWidth > 32 && viewport.clientHeight > 32) {
       setMapZoom(fitMap(mapWidth, mapHeight, viewport.clientWidth, viewport.clientHeight))
       viewport.scrollTo({ left: 0, top: 0 })
     }
@@ -182,6 +194,7 @@ export default function SceneView({
     setWallPreview(null)
   }
   const focusToken = (tokenId: string) => {
+    setShowInitiative(false)
     const viewport = mapViewportRef.current
     const target = viewport?.querySelector<HTMLElement>(
       '[data-token-id="' + CSS.escape(tokenId) + '"]'
@@ -237,7 +250,7 @@ export default function SceneView({
     code: 'KeyB',
     ctrl: true,
     handler: () => {
-      if (isDm) {
+      if (isDm && !combatBusyRef.current) {
         setShowInitiative((v) => !v)
       }
     },
@@ -256,7 +269,7 @@ export default function SceneView({
   useHotkey({
     code: 'Escape',
     handler: () => {
-      if (document.querySelector('[role="dialog"][aria-modal="true"]')) return
+      if (document.querySelector('dialog[open], [role="dialog"][aria-modal="true"]')) return
       if (brushMode) setBrushMode(false)
       if (activeTool !== 'none') {
         setActiveTool('none')
@@ -515,7 +528,8 @@ export default function SceneView({
             className="min-h-11"
             icon={<Swords size={16} />}
             aria-pressed={showInitiative}
-            onClick={() => setShowInitiative((v) => !v)}
+            aria-haspopup="dialog"
+            onClick={() => setShowInitiative(true)}
           >
             {t('scenes.initiative.title')}
             {liveInitiative.length > 0 ? ' · ' + liveInitiative.length : ''}
@@ -583,7 +597,7 @@ export default function SceneView({
         </div>
       )}
 
-      <div className={styles.layout + (showInitiative ? ' ' + styles.withQueue : '')}>
+      <div className={styles.layout}>
         <section
           className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]"
           aria-label={t('map.workspace')}
@@ -861,13 +875,16 @@ export default function SceneView({
           </div>
         </section>
         {showInitiative && (
-          <InitiativePanel
-            sceneId={scene.id}
-            entries={liveInitiative}
-            isDm={isDm}
-            onClose={() => setShowInitiative(false)}
-            onFocusToken={focusToken}
-          />
+          <CombatDrawer label={t('scenes.combatPanel')} blocked={combatBusy} onClose={closeCombat}>
+            <InitiativePanel
+              sceneId={scene.id}
+              entries={liveInitiative}
+              isDm={isDm}
+              onClose={closeCombat}
+              onFocusToken={focusToken}
+              onBusyChange={reportCombatBusy}
+            />
+          </CombatDrawer>
         )}
       </div>
       {showUpload && isDm && (

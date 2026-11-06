@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Swords, ChevronRight, X, Dices, LocateFixed, Shield, HeartPulse } from 'lucide-react'
 import {
@@ -8,6 +8,8 @@ import {
   endCombat,
   rollInitiativeForToken,
   rollAllInitiatives,
+  addCombatParticipants,
+  startCombat,
 } from '@/lib/actions/combat'
 import { cn } from '@/lib/utils'
 import { Button, Dialog } from '@/components/ui'
@@ -22,14 +24,23 @@ interface Props {
   isDm: boolean
   onClose: () => void
   onFocusToken?: (tokenId: string) => void
+  onBusyChange?: (busy: boolean) => void
 }
-export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFocusToken }: Props) {
+export default function InitiativePanel({
+  sceneId,
+  entries,
+  isDm,
+  onClose,
+  onFocusToken,
+  onBusyChange,
+}: Props) {
   const t = useT()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const busy = useRef(false)
   const [error, setError] = useState('')
   const [uncertain, setUncertain] = useState(false)
+  const [notice, setNotice] = useState('')
   const [confirm, setConfirm] = useState<'end' | string | null>(null)
   const ordered = orderTurns(entries)
   const currents = ordered.filter((entry) => entry.is_current)
@@ -39,10 +50,16 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
     isDm || !entry.token.is_hidden ? entry.token.name : t('turns.hidden')
   const next = nextTurnEntry(ordered, current?.id ?? null)
   const blocked = pending || uncertain || currents.length > 1
+  useLayoutEffect(() => {
+    onBusyChange?.(busy.current || pending || confirm !== null)
+  }, [pending, confirm, onBusyChange])
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange])
   const run = (operation: () => Promise<{ error?: string }>) => {
     if (busy.current || uncertain || currents.length > 1) return
     busy.current = true
+    onBusyChange?.(true)
     setError('')
+    setNotice('')
     startTransition(async () => {
       try {
         const result = await operation()
@@ -74,6 +91,7 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
         <Button
           variant="ghost"
           aria-label={t('common.close')}
+          disabled={pending}
           onClick={onClose}
           className="min-h-11 min-w-11 !px-2"
         >
@@ -139,6 +157,31 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
         <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
           {error}
         </p>
+      )}
+      {isDm && entries.length > 0 && (
+        <div className="border-b border-[var(--border-default)] p-3">
+          <Button
+            className="min-h-11 w-full"
+            variant="secondary"
+            disabled={blocked}
+            onClick={() =>
+              run(async () => {
+                const result = await addCombatParticipants(sceneId)
+                if (result.count !== undefined)
+                  setNotice(t('map.participantsAdded', { count: result.count }))
+                return result
+              })
+            }
+          >
+            {t('map.addParticipants')}
+          </Button>
+          <p className="mt-2 text-xs text-[var(--text-muted)]">{t('map.addParticipantsHint')}</p>
+          {notice && (
+            <p role="status" className="mt-2 text-sm">
+              {notice}
+            </p>
+          )}
+        </div>
       )}
       <ol className="max-h-[28rem] space-y-2 overflow-y-auto p-3">
         {visible.map((entry, index) => {
@@ -207,6 +250,7 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
                   <Button
                     variant="ghost"
                     className="min-h-11 flex-1 text-xs"
+                    disabled={pending}
                     icon={<LocateFixed size={15} />}
                     onClick={() => onFocusToken(token.id)}
                     aria-label={t('map.focusNamed', { name: token.name })}
@@ -232,7 +276,19 @@ export default function InitiativePanel({ sceneId, entries, isDm, onClose, onFoc
         })}
       </ol>
       {entries.length === 0 && (
-        <p className="px-4 pb-4 text-sm text-[var(--text-muted)]">{t('scenes.initiative.empty')}</p>
+        <div className="space-y-3 px-4 pb-4">
+          <p className="text-sm text-[var(--text-muted)]">{t('scenes.initiative.empty')}</p>
+          {isDm && (
+            <Button
+              variant="primary"
+              className="min-h-11 w-full"
+              disabled={blocked}
+              onClick={() => run(() => startCombat(sceneId))}
+            >
+              {t('map.prepareCombat')}
+            </Button>
+          )}
+        </div>
       )}
       {isDm && entries.length > 0 && (
         <div className="mt-auto border-t border-[var(--border-default)] p-3">
