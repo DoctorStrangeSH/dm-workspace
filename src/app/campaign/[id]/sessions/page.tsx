@@ -25,6 +25,9 @@ export default async function SessionsPage({ params }: { params: Promise<{ id: s
 
   const sessions = await getSessions(campaignId)
 
+  // eslint-disable-next-line react-hooks/purity
+  const initialNow = Date.now()
+
   const countLabel = pluralize(lang, sessions.length, {
     one: t('sessions.count.one'),
     few: t('sessions.count.few'),
@@ -56,6 +59,7 @@ export default async function SessionsPage({ params }: { params: Promise<{ id: s
 
       <SessionsClient
         campaignId={campaignId}
+        initialNow={initialNow}
         initialSessions={sessions}
         isDm={isDm}
         viewerId={viewerId}

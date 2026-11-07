@@ -1,3 +1,4 @@
+import { sessionPlanningScenarios } from './session-planning-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -121,6 +122,7 @@ async function scenario(name, options, body) {
         : route.abort('blockedbyclient')
     )
     try {
+      if (options.clockTime) await page.clock.install({ time: new Date(options.clockTime) })
       await page.goto(origin + (options.url ?? '/'))
       await body(page)
       expect(errors).toEqual([])
@@ -147,6 +149,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await sessionPlanningScenarios(scenario, expect, output)
   await onboardingScenarios(scenario, expect, output)
   await routeScenarios(scenario, expect, output)
   await spellAreaScenarios(scenario, expect, output)
@@ -1718,6 +1721,10 @@ try {
         },
         async (page) => {
           const original = await page.evaluate(() => window.__sessionFixtures)
+          await page
+            .locator('summary')
+            .filter({ hasText: lang === 'ru' ? 'Прошлые игры' : 'Past games' })
+            .click()
           const cards = page.getByRole('article')
           await expect(cards).toHaveCount(3)
           const first = cards.nth(0),

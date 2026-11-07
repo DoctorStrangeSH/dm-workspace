@@ -1591,4 +1591,20 @@ export const ru: Dictionary = {
     'Стрелки — переместить курсор, Enter или пробел — добавить точку, Backspace — отменить точку, Home — центр карты, Escape — закрыть маршрут.',
   'route.cursor': 'Курсор: столбец {x}, строка {y}.',
   'route.shortHint': 'Нажимайте на клетки, чтобы добавить точки пути',
+  'sessions.plan.next': 'Ближайшая игра',
+  'sessions.plan.later': 'Дальше по плану',
+  'sessions.plan.archive': 'Прошлые игры',
+  'sessions.plan.undated': 'Проверьте дату и длительность',
+  'sessions.plan.noUpcoming': 'Новая игра пока не запланирована',
+  'sessions.plan.scheduleHint':
+    'Выберите дату следующего приключения. Прошлые игры остаются в архиве ниже.',
+  'sessions.plan.waitHint':
+    'Мастер может назначить следующую встречу. А пока подготовьте героя или обсудите планы с партией.',
+  'sessions.plan.ongoing': 'Игра идёт',
+  'sessions.plan.tools': 'К игре под рукой',
+  'sessions.plan.calendar': 'В личный календарь',
+  'sessions.plan.calendarLabel': 'Добавить «{title}» в календарь',
+  'sessions.plan.calendarHint':
+    'Скачайте файл и откройте его в своём календаре. Если расписание изменится, добавьте встречу заново.',
+  'sessions.plan.calendarError': 'Не удалось скачать файл календаря. Попробуйте ещё раз.',
 }
