@@ -58,6 +58,9 @@ jobs:
       - name: Offline campaign tools, chat and localization browser tests
         run: npm run test:campaign-ui
 
+      - name: Real Next production CSS layout regression (offline)
+        run: npm run test:production-layout
+
       - name: Lint
         run: npm run lint
 
