@@ -9,6 +9,7 @@ import { test } from 'node:test'
 import { initiativeSyncScenarios } from './initiative-sync-scenarios.mjs'
 import { combatFinderScenarios } from './combat-finder-scenarios.mjs'
 import { spellAreaScenarios } from './spell-area-scenarios.mjs'
+import { routeScenarios } from './route-scenarios.mjs'
 
 const root = process.cwd()
 const output = path.join(root, 'test-results/campaign-ui')
@@ -143,6 +144,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await routeScenarios(scenario, expect, output)
   await spellAreaScenarios(scenario, expect, output)
   await combatFinderScenarios(scenario, expect, output)
   await initiativeSyncScenarios(scenario, expect)

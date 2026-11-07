@@ -20,6 +20,7 @@ import {
   Hand,
   MousePointer2,
   Expand,
+  Route,
 } from 'lucide-react'
 import { setActiveScene } from '@/lib/actions/scenes'
 import { startCombat } from '@/lib/actions/combat'
@@ -41,6 +42,9 @@ import FogLayer from './fog-layer'
 import RulerTool from './ruler-tool'
 import TemplateTool from './template-tool'
 import SpellAreaControls from './spell-area-controls'
+import { RouteControls, RouteLayer } from './route-planner'
+import { appendRoutePoint, routeDistance, type RouteMetric } from '@/lib/maps/route'
+import type { MapPoint } from '@/lib/maps/geometry'
 import type { AreaPlacement, AreaShape } from '@/lib/maps/spell-areas'
 import WallsLayer from './walls-layer'
 import SummonDialog from './summon-dialog'
@@ -60,7 +64,7 @@ import type {
   TokenOwnerWithProfile,
 } from '@/lib/types'
 
-type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall' | 'pan' | 'cube'
+type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall' | 'pan' | 'cube' | 'route'
 
 interface Props {
   scene: Scene
@@ -155,6 +159,44 @@ export default function SceneView({
   const templatePlacement = templateDraft?.sceneId === scene.id ? templateDraft.value : null
   const templateLayerRef = useRef<HTMLDivElement>(null)
   const areaTriggerRef = useRef<HTMLButtonElement>(null)
+  const routeTriggerRef = useRef<HTMLButtonElement>(null)
+  const routeLayerRef = useRef<HTMLDivElement>(null)
+  const routeKey = `${scene.id}:${scene.width}:${scene.height}:${scene.grid_type}`
+  const emptyRoute = {
+    key: routeKey,
+    points: [] as MapPoint[],
+    cursor: { x: Math.floor(scene.width / 2) + 0.5, y: Math.floor(scene.height / 2) + 0.5 },
+    metric: 'straight' as RouteMetric,
+  }
+  const [routeDraft, setRouteDraft] = useState(emptyRoute)
+  const route = routeDraft.key === routeKey ? routeDraft : emptyRoute
+  const routeTotal = routeDistance(route.points, route.metric)
+  const updateRoute = (patch: Partial<typeof emptyRoute>) =>
+    setRouteDraft((previous) => ({
+      ...(previous.key === routeKey ? previous : emptyRoute),
+      ...patch,
+    }))
+  const addRoutePoint = (point: MapPoint) =>
+    setRouteDraft((previous) => {
+      const current = previous.key === routeKey ? previous : emptyRoute
+      return { ...current, points: appendRoutePoint(current.points, point) }
+    })
+  const moveRouteCursor = (cursor: MapPoint) =>
+    setRouteDraft((previous) => {
+      const current = previous.key === routeKey ? previous : emptyRoute
+      return current.cursor.x === cursor.x && current.cursor.y === cursor.y
+        ? current
+        : { ...current, cursor }
+    })
+  const undoRoute = () =>
+    setRouteDraft((previous) => {
+      const current = previous.key === routeKey ? previous : emptyRoute
+      return { ...current, points: current.points.slice(0, -1) }
+    })
+  const closeRoute = () => {
+    chooseTool('none')
+    routeTriggerRef.current?.focus({ preventScroll: true })
+  }
   const isArea = (tool: ActiveTool): tool is AreaShape =>
     ['cone', 'sphere', 'line', 'cube'].includes(tool)
   const setTemplatePlacement = (value: AreaPlacement | null) =>
@@ -224,6 +266,7 @@ export default function SceneView({
   const chooseTool = (tool: ActiveTool) => {
     setBrushMode(false)
     if (!isArea(tool) || !isArea(activeTool)) setTemplateDraft(null)
+    if (tool !== 'route' || activeTool !== 'route') setRouteDraft(emptyRoute)
     setActiveTool(tool)
     setWallStart(null)
     setWallPreview(null)
@@ -309,6 +352,8 @@ export default function SceneView({
       if (brushMode) setBrushMode(false)
       if (isArea(activeTool)) {
         closeAreas()
+      } else if (activeTool === 'route') {
+        closeRoute()
       } else if (activeTool !== 'none') {
         setActiveTool('none')
         setWallStart(null)
@@ -508,6 +553,42 @@ export default function SceneView({
     templateLayerRef.current?.focus({ preventScroll: true })
   }
 
+  const locateRoute = () => {
+    const viewport = mapViewportRef.current
+    const stage = wallWrapperRef.current
+    if (!viewport || !stage) return
+    const vr = viewport.getBoundingClientRect()
+    const sr = stage.getBoundingClientRect()
+    const point = clientToGrid(
+      {
+        clientX: (Math.max(vr.left, sr.left) + Math.min(vr.right, sr.right)) / 2,
+        clientY: (Math.max(vr.top, sr.top) + Math.min(vr.bottom, sr.bottom)) / 2,
+      },
+      sr,
+      scene.width,
+      scene.height,
+      'cell'
+    )
+    updateRoute({ cursor: { x: point.x + 0.5, y: point.y + 0.5 } })
+    viewport.scrollIntoView({ block: 'nearest' })
+    routeLayerRef.current?.focus({ preventScroll: true })
+  }
+
+  const revealRouteCursor = (point: MapPoint) => {
+    moveRouteCursor(point)
+    const viewport = mapViewportRef.current
+    const stage = wallWrapperRef.current
+    if (!viewport || !stage) return
+    const vr = viewport.getBoundingClientRect()
+    const sr = stage.getBoundingClientRect()
+    const x = sr.left + (point.x / scene.width) * sr.width
+    const y = sr.top + (point.y / scene.height) * sr.height
+    viewport.scrollLeft +=
+      x < vr.left + 24 ? x - vr.left - 24 : x > vr.right - 24 ? x - vr.right + 24 : 0
+    viewport.scrollTop +=
+      y < vr.top + 64 ? y - vr.top - 64 : y > vr.bottom - 24 ? y - vr.bottom + 24 : 0
+  }
+
   return (
     <div ref={workspaceRef} className={styles.workspace}>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -658,6 +739,17 @@ export default function SceneView({
                 {t('map.templates')}
               </Button>
               <Button
+                ref={routeTriggerRef}
+                variant={activeTool === 'route' ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                aria-pressed={activeTool === 'route'}
+                aria-expanded={activeTool === 'route'}
+                onClick={() => (activeTool === 'route' ? closeRoute() : chooseTool('route'))}
+                icon={<Route size={16} />}
+              >
+                {t('route.button')}
+              </Button>
+              <Button
                 variant={showGrid ? 'secondary' : 'ghost'}
                 className="min-h-11"
                 aria-pressed={showGrid}
@@ -756,6 +848,18 @@ export default function SceneView({
               onClose={closeAreas}
             />
           )}
+          {activeTool === 'route' && (
+            <RouteControls
+              points={route.points}
+              metric={route.metric}
+              squareGrid={scene.grid_type === 'square'}
+              onMetric={(metric) => updateRoute({ metric })}
+              onLocate={locateRoute}
+              onUndo={undoRoute}
+              onClear={() => updateRoute({ points: [] })}
+              onClose={closeRoute}
+            />
+          )}
           {!scene.image_url && (
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-[var(--border-default)] bg-[var(--accent-subtle)] p-4">
               <div>
@@ -791,6 +895,19 @@ export default function SceneView({
               backgroundSize: '16px 16px',
             }}
           >
+            {activeTool === 'route' && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none sticky top-2 left-2 z-40 h-0 w-fit max-w-[calc(100%-1rem)]"
+              >
+                <div
+                  data-testid="route-map-summary"
+                  className="rounded-xl border border-[var(--accent)] bg-[var(--bg-elevated)] px-3 py-2 text-xs font-bold text-[var(--accent-text)] tabular-nums shadow-[var(--shadow-md)]"
+                >
+                  {t('route.total', { feet: routeTotal.feet })}
+                </div>
+              </div>
+            )}
             <div
               className="grid min-h-full min-w-full place-items-center p-4"
               style={{ width: mapWidth * mapZoom + 32, height: mapHeight * mapZoom + 32 }}
@@ -853,6 +970,21 @@ export default function SceneView({
                       onClose={() => setActiveTool('none')}
                     />
                   )}
+                  {activeTool === 'route' && (
+                    <RouteLayer
+                      key={routeKey}
+                      scene={scene}
+                      points={route.points}
+                      metric={route.metric}
+                      cursor={route.cursor}
+                      onCursor={moveRouteCursor}
+                      onKeyboardCursor={revealRouteCursor}
+                      onAdd={addRoutePoint}
+                      onUndo={undoRoute}
+                      onClose={closeRoute}
+                      layerRef={routeLayerRef}
+                    />
+                  )}
                   {isArea(activeTool) && (
                     <TemplateTool
                       key={scene.id}
@@ -911,7 +1043,9 @@ export default function SceneView({
                   ? t('map.panHint')
                   : activeTool === 'none'
                     ? t('map.selectHint')
-                    : t('map.drawHint')}
+                    : activeTool === 'route'
+                      ? t('route.shortHint')
+                      : t('map.drawHint')}
             </span>
             <span>
               {t('map.scaleHint')} · {t('map.escapeHint')}
