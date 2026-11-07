@@ -204,18 +204,35 @@ export default function CampaignOverview({
                 id="campaign-empty-title"
                 className="mt-3 font-semibold text-[var(--text-primary)]"
               >
-                {t('overview.emptyTitle')}
+                {t('overview.firstStepsTitle')}
               </h2>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[var(--text-muted)]">
                 {t(isDm ? 'overview.emptyDm' : 'overview.emptyPlayer')}
               </p>
-              <Link
-                href={`${base}/chapters`}
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 py-2 text-sm font-medium text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
-              >
-                <BookOpen size={16} aria-hidden="true" />
-                {t('overview.openChapters')}
-              </Link>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <Link
+                  href={`${base}/${isDm ? 'chapters' : 'characters'}`}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 py-2 text-sm font-medium text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                >
+                  {isDm ? (
+                    <BookOpen size={16} aria-hidden="true" />
+                  ) : (
+                    <Sword size={16} aria-hidden="true" />
+                  )}
+                  {t(isDm ? 'overview.openChapters' : 'overview.openCharacters')}
+                </Link>
+                <Link
+                  href={`${base}/${isDm ? 'scenes' : 'chat'}`}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 py-2 text-sm font-medium text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                >
+                  {isDm ? (
+                    <Map size={16} aria-hidden="true" />
+                  ) : (
+                    <Users size={16} aria-hidden="true" />
+                  )}
+                  {t(isDm ? 'overview.firstMap' : 'overview.firstChat')}
+                </Link>
+              </div>
             </section>
           ) : (
             <EntitiesBreakdown campaignId={campaign.id} stats={stats.entities} />

@@ -1,17 +1,19 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Input, Button } from '@/components/ui'
 import { useT } from '@/lib/i18n'
+import { authPath, inviteReturnPath, safeReturnPath } from '@/lib/auth/return-path'
+import { InvitationNotice } from '@/components/auth/invitation-notice'
 
 function SignupForm() {
   const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') || '/dashboard'
+  const next = safeReturnPath(searchParams.get('next'))
   const supabase = createClient()
 
   const [email, setEmail] = useState('')
@@ -19,32 +21,82 @@ function SignupForm() {
   const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [confirmationSent, setConfirmationSent] = useState(false)
+  const pending = useRef(false)
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (pending.current) return
+    pending.current = true
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: username.toLowerCase().replace(/\s+/g, '_'),
-          display_name: username,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username.toLowerCase().replace(/\s+/g, '_'),
+            display_name: username,
+          },
         },
-      },
-    })
+      })
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        pending.current = false
+        return
+      }
+      if (!data.session) {
+        setPassword('')
+        setConfirmationSent(true)
+        setLoading(false)
+        pending.current = false
+        return
+      }
+      router.replace(next)
+      router.refresh()
+    } catch {
+      setError(t('auth.connectionError'))
       setLoading(false)
-      return
+      pending.current = false
     }
-
-    router.push(next)
-    router.refresh()
   }
+
+  if (confirmationSent)
+    return (
+      <section
+        role="status"
+        aria-live="polite"
+        className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 shadow-2xl sm:p-8"
+      >
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('auth.confirm.title')}</h1>
+        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
+          {t('auth.confirm.description')}
+        </p>
+        {inviteReturnPath(next) && (
+          <div className="mt-5">
+            <InvitationNotice />
+          </div>
+        )}
+        <Link
+          href={authPath('login', next)}
+          prefetch={false}
+          className="mt-6 flex min-h-11 items-center justify-center rounded-xl bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-[var(--accent-foreground)]"
+        >
+          {t('auth.confirm.login')}
+        </Link>
+        <button
+          type="button"
+          onClick={() => setConfirmationSent(false)}
+          className="mt-3 min-h-11 w-full rounded-xl border border-[var(--border-default)] px-4 py-2 text-sm text-[var(--text-secondary)]"
+        >
+          {t('auth.confirm.edit')}
+        </button>
+      </section>
+    )
 
   return (
     <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)]/80 p-8 shadow-2xl backdrop-blur">
@@ -52,6 +104,7 @@ function SignupForm() {
         {t('auth.signup.title')}
       </h1>
       <p className="mb-6 text-sm text-[var(--text-muted)]">{t('auth.signup.subtitle')}</p>
+      {inviteReturnPath(next) && <InvitationNotice />}
 
       <form onSubmit={handleSignup} className="space-y-4">
         <Input
@@ -90,7 +143,10 @@ function SignupForm() {
         />
 
         {error && (
-          <div className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]">
+          <div
+            role="alert"
+            className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]"
+          >
             {error}
           </div>
         )}
@@ -103,7 +159,8 @@ function SignupForm() {
       <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
         {t('auth.signup.hasAccount')}{' '}
         <Link
-          href={`/login${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`}
+          href={authPath('login', next)}
+          prefetch={false}
           className="text-[var(--accent-text)] hover:underline"
         >
           {t('auth.signup.loginLink')}

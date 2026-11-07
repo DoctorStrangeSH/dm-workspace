@@ -3,6 +3,7 @@
 import { randomInt } from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { isInviteCode } from '@/lib/auth/return-path'
 
 export async function createCampaign(formData: FormData) {
   const supabase = await createClient()
@@ -101,21 +102,32 @@ export async function regenerateInviteCode(campaignId: string) {
 }
 
 export async function joinCampaign(code: string) {
+  if (!isInviteCode(code))
+    return { error: 'Неверный код приглашения', code: 'invalid_invite' as const }
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return { error: 'Не авторизован' }
+  if (!user) return { error: 'Не авторизован', code: 'auth_required' as const }
 
   const { data, error } = await supabase.rpc('join_campaign_by_code', {
     code,
   })
 
   if (error) {
-    console.error('joinCampaign error:', error)
-    return { error: 'Неверный код приглашения' }
+    if (error.code === '22023')
+      return { error: 'Неверный код приглашения', code: 'invalid_invite' as const }
+    if (error.code === '42501') return { error: 'Не авторизован', code: 'auth_required' as const }
+    return { error: 'Не удалось подтвердить присоединение', code: 'uncertain' as const }
   }
 
+  if (
+    typeof data !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data)
+  ) {
+    return { error: 'Не удалось подтвердить присоединение', code: 'uncertain' as const }
+  }
+  revalidatePath('/dashboard')
   return { success: true, campaignId: data }
 }

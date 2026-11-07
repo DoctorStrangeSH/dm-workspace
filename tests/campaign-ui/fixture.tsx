@@ -1,3 +1,6 @@
+import LoginPage from '../../src/app/(auth)/login/page'
+import SignupPage from '../../src/app/(auth)/signup/page'
+import { JoinCampaignForm } from '../../src/app/join/[code]/join-campaign-form'
 import { SessionScenePanel } from '../../src/app/campaign/[id]/session/session-scene-panel'
 import SceneView from '../../src/app/campaign/[id]/scenes/[sceneId]/scene-view'
 import InitiativeSyncFixture from './initiative-sync-fixture'
@@ -275,6 +278,18 @@ function Fixture() {
   const isDm = query.get('role') !== 'player'
   const session = location.pathname.includes('session')
   const screen = query.get('screen')
+  if (screen === 'login' || screen === 'signup' || screen === 'join')
+    return (
+      <main className="mx-auto w-full max-w-md p-4">
+        {screen === 'login' ? (
+          <LoginPage />
+        ) : screen === 'signup' ? (
+          <SignupPage />
+        ) : (
+          <JoinCampaignForm code="synthetic8" />
+        )}
+      </main>
+    )
   if (screen === 'dashboard') return <DashboardFixture />
   return (
     <DmScreenProvider>

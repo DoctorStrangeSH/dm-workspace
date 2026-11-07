@@ -1,42 +1,49 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useRef, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Input, Button } from '@/components/ui'
 import { useT } from '@/lib/i18n'
+import { authPath, inviteReturnPath, safeReturnPath } from '@/lib/auth/return-path'
+import { InvitationNotice } from '@/components/auth/invitation-notice'
 
 function LoginForm() {
   const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') || '/dashboard'
+  const next = safeReturnPath(searchParams.get('next'))
   const supabase = createClient()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const pending = useRef(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (pending.current) return
+    pending.current = true
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError(error.message)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setError(error.message)
+        setLoading(false)
+        pending.current = false
+        return
+      }
+      router.replace(next)
+      router.refresh()
+    } catch {
+      setError(t('auth.connectionError'))
       setLoading(false)
-      return
+      pending.current = false
     }
-
-    router.push(next)
-    router.refresh()
   }
 
   return (
@@ -45,6 +52,7 @@ function LoginForm() {
         {t('auth.login.title')}
       </h1>
       <p className="mb-6 text-sm text-[var(--text-muted)]">{t('auth.login.subtitle')}</p>
+      {inviteReturnPath(next) && <InvitationNotice />}
 
       <form onSubmit={handleLogin} className="space-y-4">
         <Input
@@ -70,7 +78,10 @@ function LoginForm() {
         />
 
         {error && (
-          <div className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]">
+          <div
+            role="alert"
+            className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger-subtle)] p-2 text-sm text-[var(--danger-text)]"
+          >
             {error}
           </div>
         )}
@@ -83,7 +94,8 @@ function LoginForm() {
       <p className="mt-6 text-center text-sm text-[var(--text-muted)]">
         {t('auth.login.noAccount')}{' '}
         <Link
-          href={`/signup${next !== '/dashboard' ? `?next=${encodeURIComponent(next)}` : ''}`}
+          href={authPath('signup', next)}
+          prefetch={false}
           className="text-[var(--accent-text)] hover:underline"
         >
           {t('auth.login.signupLink')}

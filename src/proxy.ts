@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { authPath, safeReturnPath } from '@/lib/auth/return-path'
 
 export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname === '/srd-license') return NextResponse.next({ request })
@@ -29,20 +30,27 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAuthRoute =
-    request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup')
+    request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup'
 
   const isHome = request.nextUrl.pathname === '/'
 
   if (!user && !isAuthRoute && !isHome) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
+    url.search = ''
+    const next = safeReturnPath(request.nextUrl.pathname + request.nextUrl.search)
+    const target = new URL(authPath('login', next), url.origin)
+    const response = NextResponse.redirect(target)
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
+    response.headers.set('Cache-Control', 'private, no-store')
+    return response
   }
 
   if (user && (isAuthRoute || isHome)) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    const response = NextResponse.redirect(url)
+    const next = isAuthRoute ? safeReturnPath(url.searchParams.get('next')) : '/dashboard'
+    const target = new URL(next, url.origin)
+    const response = NextResponse.redirect(target)
     // Keep any refreshed session cookies when the public entry redirects a member.
     supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
     response.headers.set('Cache-Control', 'private, no-store')
