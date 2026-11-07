@@ -1540,4 +1540,25 @@ export const en: Dictionary = {
   'areas.sideValue': 'Side {feet} ft',
   'areas.lengthValue': 'Length {feet} ft',
   'areas.lineValue': '{feet} × {width} ft',
+  'route.button': 'Route',
+  'route.title': 'Route planner',
+  'route.close': 'Close route planner',
+  'route.total': '{feet} ft — total route',
+  'route.summary': 'Cells: {cells} · Segments: {count}',
+  'route.limit': 'Limit reached: {count} points. Undo a point or start again.',
+  'route.locate': 'Cursor on map',
+  'route.undo': 'Undo point',
+  'route.clear': 'Clear route',
+  'route.metric': 'Distance calculation',
+  'route.straight': 'Straight line',
+  'route.grid': 'Diagonal = 5 ft',
+  'route.hint':
+    'Click cells to plan a route with turns. On the map: arrows move the cursor, Enter adds a point, Backspace undoes, Esc exits.',
+  'route.private':
+    'Only you see this route; it does not move tokens. One cell is 5 feet; the GM checks walls, terrain and whether the move is allowed.',
+  'route.canvas': 'Plan a route on the map',
+  'route.keyboard':
+    'Arrows move the cursor, Enter or Space adds a point, Backspace undoes, Home centers the cursor, Escape closes the route planner.',
+  'route.cursor': 'Cursor: column {x}, row {y}.',
+  'route.shortHint': 'Click cells to add route points',
 }
