@@ -17,6 +17,8 @@ import { cn } from '@/lib/utils'
 import { orderTurns, nextTurnEntry } from '@/lib/maps/initiative'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 import CombatPortrait from './combat-portrait'
+import CombatConditions from './combat-conditions'
+import { combatConditions } from '@/lib/maps/combat-conditions'
 import styles from './turn-timeline.module.css'
 
 interface Props {
@@ -178,6 +180,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
         className={cn(styles.rail, expanded && styles.expanded)}
       >
         {visible.map((entry, index) => {
+          const conditions = combatConditions(entry.token.conditions, t)
           const active = !conflict && current?.id === entry.id
           const isNext = !conflict && !!current && next?.id === entry.id && !active
           const status = active
@@ -202,12 +205,20 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
               <button
                 type="button"
                 onClick={() => onFocusToken(entry.token.id)}
-                aria-label={t('turns.focus', {
-                  position: index + 1,
-                  name: entry.token.name,
-                  initiative: entry.initiative,
-                  status,
-                })}
+                aria-label={
+                  t('turns.focus', {
+                    position: index + 1,
+                    name: entry.token.name,
+                    initiative: entry.initiative,
+                    status,
+                  }) +
+                  (conditions.length
+                    ? '. ' +
+                      t('combatFinder.conditions') +
+                      ': ' +
+                      conditions.map((condition) => condition.label).join(', ')
+                    : '')
+                }
                 className={cn(
                   'relative flex h-full w-full flex-col items-center rounded-xl border p-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
                   active
@@ -238,6 +249,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
                   {kind}
                   {entry.token.is_hidden && <EyeOff size={11} aria-label={t('turns.hiddenDm')} />}
                 </span>
+                <CombatConditions conditions={conditions} compact />
                 <span
                   className={cn(
                     'mt-auto pt-2 text-[10px] font-semibold',

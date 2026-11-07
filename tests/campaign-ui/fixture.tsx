@@ -185,6 +185,25 @@ function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?
       is_current: query.has('current') && index === Number(query.get('turn') ?? 0),
       token: {
         ...entry.token,
+        ...(query.has('withConditions')
+          ? {
+              conditions:
+                index === 0
+                  ? [
+                      { name: 'poisoned' },
+                      { name: 'grappled' },
+                      { name: 'prone' },
+                      { name: 'Благословение серебряной луны' },
+                    ]
+                  : index === 1
+                    ? [{ name: 'blinded' }]
+                    : index === 3
+                      ? [{ name: 'Secret hidden omen' }]
+                      : index === 5
+                        ? [{ name: 'poisoned' }]
+                        : [],
+            }
+          : {}),
         ...(query.has('hideEnemy') && index === 3 ? { is_hidden: true } : {}),
         ...(query.has('brokenPortrait') && index === 1 ? { image_url: '/broken-portrait' } : {}),
       },
