@@ -2,25 +2,36 @@
 
 Веб-приложение (VTT) для D&D 5.24 (2024) — мастерская ГМа и игроков. Создавай кампании, веди главы, управляй сценами, токенами, музыкой и хендаутами. Всё в одном месте.
 
+Production: https://dm-workspace.vercel.app
+
+## 📚 Документация
+
+| Документ | Назначение |
+| --- | --- |
+| [docs/README.md](docs/README.md) | Оглавление всей документации |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Дорожная карта: выполнено / в работе / запланировано |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Архитектура, схемы, данные, тестовый контур |
+| [docs/ENGINEERING_PROCESS.md](docs/ENGINEERING_PROCESS.md) | Ветки, критерии слияния, релиз, синхронизация Miro |
+| [docs/TECHNICAL_IMPROVEMENTS.md](docs/TECHNICAL_IMPROVEMENTS.md) | Технический долг и предложения |
+
 ## ✨ Возможности
 
+- **Публичный вход** — лендинг, офлайн-демо игрового стола, онбординг по приглашению.
 - **Кампании и роли** — ГМ / игрок, приглашения по invite-code.
-- **Кабинет ГМа** — главы (CodeMirror + wikilinks), сущности, связи, теги, шаблоны, иерархия локаций, статистика.
-- **Лист персонажа** — wizard, характеристики, навыки, HP, death saves, заклинания, инвентарь, level-up.
-- **VTT** — сцены, карты, токены, боевая система, Realtime (Broadcast), туман войны, линейка, шаблоны.
-- **Мультимедиа** — музыка, хендауты, логи сессий, чат с дайс-роллером.
-- **SRD 2024** (Open5e) — бестиарий, заклинания, предметы.
+- **Кабинет ГМа** — главы (CodeMirror + wikilinks), сущности, связи, теги, шаблоны, иерархия локаций, генераторы.
+- **Лист персонажа** — wizard, класс/подкласс SRD, характеристики, навыки, HP, death saves, заклинания, инвентарь, level-up.
+- **Тактическая карта** — сцены, загрузка карт, токены, таймлайн инициативы, поиск участников, области заклинаний, маршруты, туман войны, стены, Realtime.
+- **Сессии** — планирование, RSVP, экспорт в календарь, журнал, чат с дайс-роллером.
+- **Мультимедиа** — музыка, приватные хендауты.
+- **SRD 5.2** (Open5e) — бестиарий, заклинания, предметы, магические предметы.
 - **Настройки** — профиль, безопасность, тема, удаление аккаунта.
 
 ## 🛠 Стек
 
-- **Next.js 16** (App Router) + **TypeScript** + **Tailwind CSS 4**
-- **Supabase** (PostgreSQL, Auth, RLS, Realtime, Storage)
-- **CodeMirror 6** — редактор глав с wikilinks
-- **@dnd-kit** — drag-and-drop (главы, токены)
-- **lucide-react** — иконки
-- **Playwright** — E2E + visual regression
-- **Sentry** — мониторинг ошибок (отложен, см. Этап 6)
+- **Next.js 16** (App Router, `proxy.ts`) + **React 19** + **TypeScript** + **Tailwind CSS 4**
+- **Supabase** (PostgreSQL, Auth, RLS, Realtime Broadcast, Storage)
+- **CodeMirror 6**, **@dnd-kit**, **zustand**, **lucide-react**
+- **Playwright** + `node --test` — тесты; **GitHub Actions** — CI; **Vercel** — хостинг
 
 ## 🚀 Быстрый старт
 
@@ -29,190 +40,139 @@
 ```bash
 git clone https://github.com/DoctorStrangeSH/dm-workspace.git
 cd dm-workspace
-2. Установи зависимости
-bash
-npm install
-3. Настрой окружение
-Создай .env.local в корне:
+```
 
-env
+### 2. Установи зависимости
+
+```bash
+npm install
+```
+
+### 3. Настрой окружение
+
+Создай `.env.local` в корне:
+
+```env
 # Supabase (DEV-проект!)
 NEXT_PUBLIC_SUPABASE_URL=https://[dev-project].supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=[dev-anon-key]
 SUPABASE_SERVICE_ROLE_KEY=[dev-service-role-key]
 
-# Sentry (опционально, см. Этап 6)
+# Sentry (опционально)
 # SENTRY_DSN=https://...
-⚠️ Важно: для локальной разработки используй DEV-проект Supabase, не PROD. Seed-скрипт (npm run seed:test) откажется работать на PROD.
+```
 
-4. Примени схему БД
-Все SQL-миграции — в supabase/ (если есть) или в истории Supabase Dashboard → SQL Editor. Примени их по порядку.
+⚠️ Для локальной разработки используй DEV-проект Supabase, не PROD. Seed-скрипт (`npm run seed:test`) откажется работать на PROD.
 
-5. Запусти dev-сервер
-bash
+### 4. Примени схему БД
+
+Hardening-миграции — в `supabase/migrations/`, применяются по порядку имени файла. Базовая схема пока хранится вне репозитория (см. [TD-01](docs/TECHNICAL_IMPROVEMENTS.md)).
+
+### 5. Запусти dev-сервер
+
+```bash
 npm run dev
+```
+
 Открой http://localhost:3000.
 
-📜 Скрипты
-Скрипт	Что делает
-npm run dev	Dev-сервер (Turbopack)
-npm run build	Production build
-npm run start	Production-сервер (после build)
-npm run lint	ESLint (0 errors, 0 warnings)
-npm run lint:fix	ESLint с автофиксом
-npm run format	Prettier по всему проекту
-npm run format:check	Проверка форматирования (для CI)
-npm run test:e2e	Все Playwright-тесты
-npm run test:e2e:smoke	Smoke-тесты (16 сценариев)
-npm run test:e2e:screenshots	Visual regression (11 скриншотов)
-npm run test:e2e:update	Обновить эталоны скриншотов
-npm run seed:test	Создать тестовые данные в DEV Supabase
-🧪 Тестирование
-Smoke-тесты (16)
-Покрывают: логин, дашборд, кампанию, главы, редактор, VTT, настройки. Работают на chromium (desktop) и Pixel 5 (mobile).
+## 📜 Скрипты
 
-bash
-npm run test:e2e:smoke
-Visual regression (11)
-Скриншоты ключевых страниц. Сравниваются с эталонами в tests/screenshots.spec.ts-snapshots/.
+| Скрипт | Что делает |
+| --- | --- |
+| `npm run dev` | Dev-сервер (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Production-сервер (после build) |
+| `npm run lint` / `lint:fix` | ESLint |
+| `npm run format` / `format:check` | Prettier |
+| `npm run test:characters` | Персонажи, HP, level-up |
+| `npm run test:maps` | Геометрия карты, бой, маршруты, области |
+| `npm run test:campaign-ui` | Офлайн UI кампании (Playwright) |
+| `npm run test:production-layout` | Регрессия production CSS |
+| `npm run test:public-landing` | Лендинг, граница авторизации, демо |
+| `npm run test:security:pr37` | Статические проверки миграций безопасности |
+| `npm run test:hp:harness` | Офлайн HP-харнесс (mock) |
+| `npm run test:e2e:smoke` | Smoke E2E (нужен DEV Supabase) |
+| `npm run test:e2e:screenshots` / `test:e2e:update` | Visual regression / обновление эталонов |
+| `npm run seed:test` | Тестовые данные в DEV Supabase |
 
-bash
-npm run test:e2e:screenshots
-Обновить эталоны (после намеренного изменения дизайна):
+## 🧪 Тестирование
 
-bash
-npm run test:e2e:update
-Перед тестами — seed
-Если тестовых данных нет:
+Полная матрица наборов и их статус в CI — [ARCHITECTURE.md §7](docs/ARCHITECTURE.md).
 
-bash
-npm run seed:test
-Создаёт: пользователя test@dm-workspace.dev / test-password-123, кампанию «Test Campaign» с 2 главами, 3 сущностями, сценой, персонажем.
+Smoke E2E и visual regression требуют DEV Supabase. Перед запуском выполни `npm run seed:test`: создаётся тестовый пользователь `test@dm-workspace.dev`, кампания «Test Campaign» с 2 главами, 3 сущностями, сценой и персонажем (учётные данные — в `scripts/seed-test-user.ts`).
 
-📁 Структура
-text
+## 📁 Структура
+
+```text
 src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # login, signup
-│   ├── campaign/[id]/     # кампания: chapters, entities, characters, scenes, ...
-│   ├── dashboard/         # список кампаний
-│   ├── settings/          # профиль, безопасность, тема
-│   └── page.tsx           # редирект на /dashboard или /login
-├── components/             # Toast, Breadcrumbs, EmptyState, Skeleton
+├── app/                # App Router: (auth), campaign/[id]/*, dashboard, join, settings, api
+├── components/         # app-shell, landing, ui, toast, мобильная навигация
 ├── lib/
-│   ├── actions/           # Server Actions (только они могут импортить server-модули)
-│   ├── queries/           # Server-only запросы к Supabase
-│   ├── hooks/             # use-realtime-*, use-hotkey, use-theme, ...
-│   ├── dnd/               # D&D-логика (формулы, level-up, SRD-adapter)
-│   ├── srd/               # Open5e-парсеры
-│   └── supabase/          # client.ts, server.ts
-└── proxy.ts               # Next.js 16 proxy (замена middleware)
+│   ├── actions/        # Server Actions — единственная точка записи
+│   ├── queries/        # server-only чтение
+│   ├── hooks/          # use-realtime-*, autosave, hotkeys, theme
+│   ├── dnd/            # правила D&D: HP, level-up, классы, слоты
+│   ├── maps/           # геометрия, инициатива, маршруты, области заклинаний
+│   ├── srd/            # парсеры Open5e
+│   └── supabase/       # client.ts, server.ts
+└── proxy.ts            # Next.js 16 proxy (сессия и редиректы)
 
-supabase/                  # SQL-миграции (если есть)
-scripts/                   # seed-open5e.ts, seed-test-user.ts
-tests/                     # Playwright: smoke, screenshots, helpers
-🗄 Схема БД (Supabase)
-Таблица	Назначение
-profiles	username, display_name, avatar_url
-campaigns	name, genre, owner_id, invite_code
-campaign_members	campaign_id, user_id, role (dm/player)
-chapters	campaign_id, title, content_md, order_index
-entities	campaign_id, type, name, data_json
-entity_relations	source_id, target_id, relation_type
-characters	campaign_id, user_id, name, data_json
-scenes	campaign_id, name, grid_size, width, height
-tokens	scene_id, name, x, y, hp_current, hp_max
-initiative	scene_id, token_id, initiative, turn_order
-fog_areas	scene_id, x, y, width, height, is_revealed
-playlists / tracks	музыка
-handouts	хендауты
-session_logs	логи сессий
-messages	чат
-srd_*	кэш SRD 2024 (Open5e)
-🔐 RLS и безопасность
-Все таблицы — под RLS.
+supabase/migrations/    # SQL-миграции
+supabase/verification/  # SQL-проверки и фикстуры CI
+scripts/                # seed-скрипты
+tests/                  # unit, офлайн-браузерные, Playwright E2E
+docs/                   # документация
+```
 
-Helper-функции: is_campaign_dm(campaign_id), user_campaign_ids().
+## 🗄 Схема БД (Supabase)
 
-Никогда не делай прямой подзапрос к таблице с RLS — только через security definer функцию.
+| Таблица | Назначение |
+| --- | --- |
+| `profiles` | username, display_name, avatar_url |
+| `campaigns` | name, genre, owner_id, invite_code |
+| `campaign_members` | campaign_id, user_id, role (dm/player) |
+| `chapters` | campaign_id, title, content_md, order_index |
+| `entities` / `entity_relations` | сущности и связи |
+| `characters` | campaign_id, user_id, name, data_json |
+| `scenes` | campaign_id, name, grid_size, width, height |
+| `tokens` | scene_id, name, x, y, hp_current, hp_max |
+| `initiative` | scene_id, token_id, initiative, turn_order |
+| `fog_areas` | туман войны |
+| `playlists` / `tracks` | музыка |
+| `handouts` | хендауты |
+| `session_logs` | логи сессий |
+| `messages` | чат |
+| `srd_*` | кэш SRD (Open5e) |
 
-replica identity full для tokens, initiative (Realtime UPDATE).
+Диаграмма связей — [ARCHITECTURE.md §4](docs/ARCHITECTURE.md).
 
-realtime.messages: using (true) для authenticated.
+## 🔐 RLS и безопасность
 
-📡 Realtime
-Используется Broadcast (не postgres_changes) для:
+- Все таблицы — под RLS; helper-функции `is_campaign_dm(campaign_id)`, `user_campaign_ids()`.
+- Подзапросы к RLS-таблицам — только через `security definer` функции.
+- Каналы Realtime авторизуются по членству в кампании (миграция `20261027000100`).
+- Хендауты, музыка и карты сцен — в приватных бакетах Storage, выдаются через `app/api/*`.
+- `replica identity full` для `tokens`, `initiative`.
 
-tokens, initiative, fog, messages, handouts, music, chapters.
+## 📡 Realtime
 
-Триггеры через realtime.broadcast_changes().
+Broadcast (не `postgres_changes`) для tokens, initiative, fog, walls, summons, messages, handouts, music, chapters. Триггеры — `realtime.broadcast_changes()`, клиентские хуки — `use-realtime-*`.
 
-Хуки: use-realtime-*.
+## 🚀 Деплой
 
-🚀 Деплой
-Vercel
-Подключи репозиторий к Vercel.
+Vercel подключён к GitHub: каждый PR получает Preview, слияние в `main` выпускает Production. Порядок релиза и отката — [ENGINEERING_PROCESS.md](docs/ENGINEERING_PROCESS.md).
 
-Добавь env-переменные (Settings → Environment Variables):
+Переменные окружения Vercel: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Для Preview используй DEV-проект Supabase.
 
-NEXT_PUBLIC_SUPABASE_URL (PROD)
+## 🗺 Дорожная карта
 
-NEXT_PUBLIC_SUPABASE_ANON_KEY (PROD)
+Актуальная дорожная карта с приоритетами и зависимостями — [docs/ROADMAP.md](docs/ROADMAP.md).
 
-SUPABASE_SERVICE_ROLE_KEY (PROD)
+## 📝 Лицензия
 
-Deploy.
+Private project. All rights reserved. Материалы SRD — см. `/srd-license`.
 
-⚠️ Для Preview используй DEV-проект Supabase (чтобы превью не трогали PROD).
+## 🤝 Контакты
 
-Supabase (PROD)
-Примени SQL-миграции.
-
-Настрой RLS-политики.
-
-Настрой Auth (email confirmation, SMTP — см. Этап 6).
-
-🗺 Дорожная карта
-Этап	Статус
-0 — Стабилизация фундамента	✅
-1 — Дизайн-система	⬜
-2 — Рефакторинг страниц	⬜
-3 — A11y + производительность	⬜
-4 — Паритет с конкурентами (генераторы, DM-панель, календарь)	⬜
-5 — Превосходство (стены, призыв, Session Mode, AI)	⬜
-6 — Экосистема (плагины, i18n, PWA, API)	⬜
-7 — Полировка и бета-запуск	⬜
-📝 Лицензия
-Private project. All rights reserved.
-
-🤝 Контакты
-GitHub: @DoctorStrangeSH
-
-Проект: dm-workspace
-
-text
-
----
-
-## 📄 Шаг 2 — `PROJECT_STATE.md`
-
-Если у тебя есть `PROJECT_STATE.md` (из первого сообщения) — он **устарел**. Пришли его текущую версию — я дам **актуальный** с:
-- Текущий прогресс (Этапы 0–7).
-- Что сделано в Этапе 0 (0.1–0.7).
-- Что дальше (Этап 1).
-- Все критичные правила (Next.js 16, RLS, Realtime, UX).
-- Структура БД (актуальная).
-- Env-переменные (имена, без значений).
-- Скрипты.
-
----
-
-## 📋 Что делать
-
-1. **Замени `README.md`** на версию выше.
-2. **Пришли `PROJECT_STATE.md`** (текущий) — я дам актуальный.
-3. **Закоммить README:**
-   ```powershell
-   git add README.md
-   git commit -m "docs: replace default create-next-app README with project description"
-   git push
+GitHub: [@DoctorStrangeSH](https://github.com/DoctorStrangeSH)
