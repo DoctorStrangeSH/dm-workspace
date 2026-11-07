@@ -251,26 +251,29 @@ export default function Layout({children}: {children: React.ReactNode}) {
       await page.getByRole('link', { name: 'Log in', exact: true }).click()
       await page.getByRole('button', { name: 'Sign in', exact: true }).waitFor()
       await page.getByRole('link', { name: '← DM Workspace', exact: true }).click()
-      await page.reload()
       await page
         .getByRole('heading', { level: 1, name: 'Your story. Everything else, at hand.' })
         .waitFor()
-      await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
+      assert.equal(new URL(page.url()).pathname, '/')
+    }
+    await page.reload()
+    await page
+      .getByRole('heading', { level: 1, name: 'Your story. Everything else, at hand.' })
+      .waitFor()
+    await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
+    await page.screenshot({
+      path: path.join(results, 'public-landing-' + width + '-en-light.png'),
+      fullPage: true,
+    })
+    if (width < 740) {
+      await page.locator('#demo').scrollIntoViewIfNeeded()
       await page.screenshot({
-        path: path.join(results, 'public-landing-' + width + '-en-light.png'),
-        fullPage: true,
+        path: path.join(results, 'public-landing-' + width + '-en-demo.png'),
       })
-      if (width < 740) {
-        await page.locator('#demo').scrollIntoViewIfNeeded()
-        await page.screenshot({
-          path: path.join(results, 'public-landing-' + width + '-en-demo.png'),
-        })
-        await page.getByRole('button', { name: 'Next turn', exact: true }).scrollIntoViewIfNeeded()
-        await page.screenshot({
-          path: path.join(results, 'public-landing-' + width + '-en-queue.png'),
-        })
-      }
-      await page.getByRole('button', { name: 'Русский', exact: true }).waitFor()
+      await page.getByRole('button', { name: 'Next turn', exact: true }).scrollIntoViewIfNeeded()
+      await page.screenshot({
+        path: path.join(results, 'public-landing-' + width + '-en-queue.png'),
+      })
     }
     await page.getByRole('button', { name: 'Русский', exact: true }).click()
   }
