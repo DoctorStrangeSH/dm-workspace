@@ -9,6 +9,7 @@ import { test } from 'node:test'
 import { initiativeSyncScenarios } from './initiative-sync-scenarios.mjs'
 import { combatFinderScenarios } from './combat-finder-scenarios.mjs'
 import { spellAreaScenarios } from './spell-area-scenarios.mjs'
+import { onboardingScenarios } from './onboarding-scenarios.mjs'
 import { routeScenarios } from './route-scenarios.mjs'
 
 const root = process.cwd()
@@ -31,9 +32,11 @@ const result = await build({
           path: path.join(
             root,
             'tests/campaign-ui/',
-            args.importer.endsWith('use-realtime-initiative.ts')
-              ? 'initiative-transport.ts'
-              : 'token-transport.ts'
+            args.importer.includes('/(auth)/') || args.importer.includes('\\(auth)\\')
+              ? 'auth-transport.ts'
+              : args.importer.endsWith('use-realtime-initiative.ts')
+                ? 'initiative-transport.ts'
+                : 'token-transport.ts'
           ),
         }))
         builder.onResolve({ filter: /^next\/image$/ }, () => ({
@@ -144,6 +147,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await onboardingScenarios(scenario, expect, output)
   await routeScenarios(scenario, expect, output)
   await spellAreaScenarios(scenario, expect, output)
   await combatFinderScenarios(scenario, expect, output)
@@ -706,11 +710,15 @@ try {
     'overview distinguishes empty materials, unavailable statistics and passing preparation checks',
     { mobile: true, url: '/?screen=overview&stats=empty&lang=en' },
     async (page) => {
-      await expect(page.getByRole('heading', { name: 'Build your campaign world' })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'The next step for your party' })
+      ).toBeVisible()
       await expect(page.getByText('Updated chapters and entities will appear here.')).toBeVisible()
       await page.goto(origin + '/?screen=overview&stats=unavailable&lang=en')
       await expect(page.getByRole('status')).toContainText('Statistics are unavailable')
-      await expect(page.getByRole('heading', { name: 'Build your campaign world' })).toHaveCount(0)
+      await expect(page.getByRole('heading', { name: 'The next step for your party' })).toHaveCount(
+        0
+      )
       await expect(
         page.getByRole('navigation', { name: 'Continue your adventure' }).getByRole('link')
       ).toHaveCount(4)

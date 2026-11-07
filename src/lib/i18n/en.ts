@@ -1112,6 +1112,31 @@ export const en: Dictionary = {
 
   // ─── Auth ───
   'auth.password': 'Password',
+  'auth.invite.title': 'Invitation saved',
+  'auth.invite.description':
+    'After signing in, you will return to the invitation and can join the party.',
+  'auth.connectionError': 'Could not reach the server. Check your connection and try again.',
+  'auth.confirm.title': 'Check your email',
+  'auth.confirm.description':
+    'If email confirmation is required, open the message and confirm your address. Then return here and sign in with your password.',
+  'auth.confirm.login': 'Continue to sign in',
+  'auth.confirm.edit': 'Edit registration details',
+  'join.confirm.eyebrow': 'YOUR NEXT ADVENTURE',
+  'join.confirm.title': 'You are invited to the table',
+  'join.confirm.ready': 'You are signed in. Confirm that you want to join the campaign.',
+  'join.confirm.party': 'Together with your party',
+  'join.confirm.description':
+    'After joining, you can open the campaign, explore characters and talk to your party in chat.',
+  'join.confirm.submit': 'Join and open campaign',
+  'join.confirm.pending': 'Joining…',
+  'join.confirm.dashboard': 'My campaigns',
+  'join.confirm.note': 'You will join only after pressing the button.',
+  'join.confirm.authError': 'Your session has ended. Sign in again to keep using this invitation.',
+  'join.confirm.uncertain':
+    'Could not confirm the result. Check My campaigns: you may already have joined.',
+  'overview.firstStepsTitle': 'The next step for your party',
+  'overview.firstMap': 'Prepare a map',
+  'overview.firstChat': 'Meet your party',
   'auth.login.title': 'Sign in',
   'auth.login.subtitle': 'DM Workspace awaits you',
   'auth.login.submit': 'Sign in',

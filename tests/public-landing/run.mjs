@@ -311,6 +311,22 @@ export default function Layout({children}: {children: React.ReactNode}) {
     assert.equal(response.status(), 307, route)
     assert.equal(new URL(response.headers().location, origin).pathname, '/login', route)
   }
+  // A guest keeps the invitation through the REAL production proxy and both forms.
+  await context.addCookies([{ name: 'dm-lang', value: 'en', url: origin }])
+  await page.goto(origin + '/join/synthetic8')
+  assert.equal(new URL(page.url()).searchParams.get('next'), '/join/synthetic8')
+  await page.getByText('Invitation saved', { exact: true }).waitFor()
+  assert.equal(
+    await page.locator('a[href^="/signup"]').getAttribute('href'),
+    '/signup?next=%2Fjoin%2Fsynthetic8'
+  )
+  await page.locator('a[href^="/signup"]').click()
+  await page.getByRole('button', { name: 'Create account', exact: true }).waitFor()
+  assert.equal(
+    await page.locator('a[href^="/login"]').getAttribute('href'),
+    '/login?next=%2Fjoin%2Fsynthetic8'
+  )
+  await page.screenshot({ path: path.join(results, 'invitation-signup-en.png'), fullPage: true })
   const noJS = await browser.newContext({ javaScriptEnabled: false })
   const noJSPage = await noJS.newPage()
   await noJSPage.goto(origin)

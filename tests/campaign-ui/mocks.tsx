@@ -26,6 +26,10 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  joinCalls: [] as string[],
+  joinOutcome: 'success' as 'success' | 'invalid_invite' | 'auth_required' | 'uncertain' | 'throw',
+  joinPending: [] as (() => void)[],
+  joinDeferred: false,
   mapActions: [] as { name: string; args: unknown[] }[],
   mapOutcome: 'success' as 'success' | 'error' | 'throw',
   mapDelay: 0,
@@ -334,6 +338,9 @@ export function useRouter() {
     refresh() {
       lab.refreshes++
     },
+    replace(url: string) {
+      lab.navigated.push(url)
+    },
     push(url: string) {
       lab.navigated.push(url)
     },
@@ -553,4 +560,13 @@ export function useRealtimeSummons({
 
 export function useSearchParams() {
   return new URLSearchParams(location.search)
+}
+
+export async function joinCampaign(code: string) {
+  lab.joinCalls.push(code)
+  if (lab.joinDeferred) await new Promise<void>((resolve) => lab.joinPending.push(resolve))
+  if (lab.joinOutcome === 'throw') throw Error('Synthetic response lost')
+  return lab.joinOutcome === 'success'
+    ? { success: true, campaignId: 'synthetic-campaign' }
+    : { error: 'Synthetic error', code: lab.joinOutcome }
 }

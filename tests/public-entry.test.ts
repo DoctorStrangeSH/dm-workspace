@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { NextRequest, NextResponse } from 'next/server'
 import ts from 'typescript'
+import * as returnPath from '../src/lib/auth/return-path'
 
 const source = ts.transpileModule(
   readFileSync(new URL('../src/proxy.ts', import.meta.url), 'utf8'),
@@ -15,6 +16,7 @@ function rig(signedIn = false, refresh = false) {
   let checks = 0
   const imports = {
     'next/server': { NextResponse },
+    '@/lib/auth/return-path': returnPath,
     '@supabase/ssr': {
       createServerClient: (
         _url: unknown,
@@ -99,4 +101,36 @@ test('language-only cookies do not grant access and license does not call auth',
   assert.equal(new URL(response.headers.get('location')!).pathname, '/login')
   await r.proxy(new NextRequest('https://example.test/srd-license'))
   assert.equal(r.checks(), 1)
+})
+
+test('proxy preserves invitations and private query paths, with safe member destinations', async () => {
+  const guest = rig(false, true)
+  for (const [route, destination] of [
+    ['/join/synthetic8', '/join/synthetic8'],
+    ['/campaign/id/scenes/map?mode=table', '/campaign/id/scenes/map?mode=table'],
+    ['/api/private?next=//evil.test', '/dashboard'],
+    ['/login-extra', '/dashboard'],
+  ]) {
+    const response = await guest.proxy(new NextRequest('https://example.test' + route))
+    const target = new URL(response.headers.get('location')!)
+    assert.equal(target.origin, 'https://example.test')
+    assert.equal(target.pathname, '/login')
+    assert.equal(target.searchParams.get('next') ?? '/dashboard', destination)
+    assert.equal(response.cookies.get('test-session')?.value, 'refreshed')
+    assert.equal(response.headers.get('cache-control'), 'private, no-store')
+  }
+  const member = rig(true, true)
+  for (const [next, expected] of [
+    ['/join/synthetic8', '/join/synthetic8'],
+    ['/campaign/id?tab=one', '/campaign/id?tab=one'],
+    ['//evil.test', '/dashboard'],
+    ['/login?next=/join/x', '/dashboard'],
+    ['/api/write', '/dashboard'],
+  ]) {
+    const response = await member.proxy(
+      new NextRequest('https://example.test/login?next=' + encodeURIComponent(next))
+    )
+    assert.equal(response.headers.get('location'), 'https://example.test' + expected)
+    assert.equal(response.cookies.get('test-session')?.value, 'refreshed')
+  }
 })
