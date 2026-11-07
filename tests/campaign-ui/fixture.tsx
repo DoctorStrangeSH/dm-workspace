@@ -350,6 +350,7 @@ function Fixture() {
               <BattleMapFixture isDm={isDm} />
             ) : screen === 'sessions' ? (
               <SessionsClient
+                initialNow={Date.parse('2026-11-07T12:00:00Z')}
                 campaignId="test"
                 initialSessions={query.has('sessionsEmpty') ? [] : sessions}
                 viewerId={query.get('viewer') ?? 'self'}

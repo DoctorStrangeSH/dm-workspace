@@ -1586,4 +1586,20 @@ export const en: Dictionary = {
     'Arrows move the cursor, Enter or Space adds a point, Backspace undoes, Home centers the cursor, Escape closes the route planner.',
   'route.cursor': 'Cursor: column {x}, row {y}.',
   'route.shortHint': 'Click cells to add route points',
+  'sessions.plan.next': 'Next game',
+  'sessions.plan.later': 'Coming up',
+  'sessions.plan.archive': 'Past games',
+  'sessions.plan.undated': 'Check the date and duration',
+  'sessions.plan.noUpcoming': 'No upcoming games yet',
+  'sessions.plan.scheduleHint':
+    'Pick a date for the next adventure. Your past games stay in the archive below.',
+  'sessions.plan.waitHint':
+    'Your game master can schedule the next adventure. Meanwhile, prepare your character or talk to your party.',
+  'sessions.plan.ongoing': 'In progress',
+  'sessions.plan.tools': 'Ready for the game',
+  'sessions.plan.calendar': 'Add to calendar',
+  'sessions.plan.calendarLabel': 'Add {title} to calendar',
+  'sessions.plan.calendarHint':
+    'Download a calendar file, then open it in your calendar app. Later schedule changes must be added again.',
+  'sessions.plan.calendarError': 'Could not download the calendar file. Please try again.',
 }

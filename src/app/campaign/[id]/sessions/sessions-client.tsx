@@ -1,8 +1,22 @@
 'use client'
 
-import { useId, useState, useSyncExternalStore, useTransition } from 'react'
+import { useEffect, useId, useState, useSyncExternalStore, useTransition } from 'react'
+import Link from 'next/link'
+import { planSessions, sessionWindow, sessionCalendar } from '@/lib/sessions/planning'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, CalendarDays, Clock, Check } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  CalendarDays,
+  Clock,
+  Check,
+  Download,
+  Sword,
+  Map,
+  MessageCircle,
+  MonitorPlay,
+  BookOpen,
+} from 'lucide-react'
 import { createSession, deleteSession, setRsvp } from '@/lib/actions/sessions'
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Card, Dialog, Input, Textarea, EmptyState, Badge } from '@/components/ui'
@@ -14,6 +28,7 @@ interface Props {
   initialSessions: SessionWithRsvp[]
   isDm: boolean
   viewerId: string | null
+  initialNow: number
 }
 
 // Server and the first hydration render agree on UTC, then use the browser's zone.
@@ -21,7 +36,7 @@ const subscribeToTimeZone = () => () => {}
 const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone
 const serverTimeZone = () => 'UTC'
 
-export function SessionsClient({ campaignId, initialSessions, isDm, viewerId }: Props) {
+export function SessionsClient({ campaignId, initialSessions, isDm, viewerId, initialNow }: Props) {
   const { t } = useI18n()
   const timeZone = useSyncExternalStore(subscribeToTimeZone, browserTimeZone, serverTimeZone)
   const router = useRouter()
@@ -34,7 +49,21 @@ export function SessionsClient({ campaignId, initialSessions, isDm, viewerId }: 
   const [rsvpSessionId, setRsvpSessionId] = useState<string | null>(null)
   const [rsvpError, setRsvpError] = useState<{ sessionId: string; message: string } | null>(null)
 
+  const [now, setNow] = useState(initialNow)
+  useEffect(() => {
+    const update = () => setNow(Date.now())
+    update()
+    const timer = window.setInterval(update, 30_000)
+    window.addEventListener('focus', update)
+    document.addEventListener('visibilitychange', update)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('focus', update)
+      document.removeEventListener('visibilitychange', update)
+    }
+  }, [initialNow])
   const sessions = initialSessions
+  const plan = planSessions(sessions, now)
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return
@@ -73,6 +102,7 @@ export function SessionsClient({ campaignId, initialSessions, isDm, viewerId }: 
   if (sessions.length === 0) {
     return (
       <>
+        <SessionPrepLinks campaignId={campaignId} isDm={isDm} />
         <EmptyState
           icon="📅"
           title={t('sessions.empty.title')}
@@ -106,23 +136,73 @@ export function SessionsClient({ campaignId, initialSessions, isDm, viewerId }: 
         </div>
       )}
 
-      {sessions.map((session) => (
-        <SessionCard
-          key={session.id}
-          session={session}
-          timeZone={timeZone}
-          viewerId={viewerId}
-          isSavingRsvp={isPending && rsvpSessionId === session.id}
-          rsvpError={rsvpError?.sessionId === session.id ? rsvpError.message : null}
-          isDm={isDm}
-          onDelete={() => {
-            setDeleteError(null)
-            setDeleteTarget(session.id)
-          }}
-          onRsvp={(status) => handleRsvp(session.id, status)}
-          isPending={isPending}
-        />
-      ))}
+      <SessionPrepLinks campaignId={campaignId} isDm={isDm} />
+      {plan.upcoming.length === 0 && (
+        <section
+          className="rounded-2xl border border-dashed border-[var(--border-default)] p-5"
+          aria-labelledby="no-upcoming-title"
+        >
+          <h2 id="no-upcoming-title" className="font-semibold text-[var(--text-primary)]">
+            {t('sessions.plan.noUpcoming')}
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--text-muted)]">
+            {t(isDm ? 'sessions.plan.scheduleHint' : 'sessions.plan.waitHint')}
+          </p>
+        </section>
+      )}
+      {[
+        { key: 'next', title: 'sessions.plan.next', entries: plan.upcoming.slice(0, 1) },
+        { key: 'later', title: 'sessions.plan.later', entries: plan.upcoming.slice(1) },
+        { key: 'past', title: 'sessions.plan.archive', entries: plan.past },
+        { key: 'undated', title: 'sessions.plan.undated', entries: plan.undated },
+      ].map(({ key, title, entries }) => {
+        if (!entries.length) return null
+        const cards = entries.map((session) => (
+          <SessionCard
+            key={session.id}
+            session={session}
+            timeZone={timeZone}
+            viewerId={viewerId}
+            now={now}
+            highlighted={key === 'next'}
+            isSavingRsvp={isPending && rsvpSessionId === session.id}
+            rsvpError={rsvpError?.sessionId === session.id ? rsvpError.message : null}
+            isDm={isDm}
+            onDelete={() => {
+              setDeleteError(null)
+              setDeleteTarget(session.id)
+            }}
+            onRsvp={(status) => handleRsvp(session.id, status)}
+            isPending={isPending}
+          />
+        ))
+        return key === 'past' ? (
+          <details
+            key={key}
+            className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4"
+          >
+            <summary className="min-h-11 cursor-pointer content-center rounded-lg font-semibold text-[var(--text-secondary)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+              {t(title)} · {entries.length}
+            </summary>
+            <div className="mt-3 space-y-3">{cards}</div>
+          </details>
+        ) : (
+          <section key={key} aria-labelledby={'session-group-' + key} className="space-y-3">
+            <h2
+              id={'session-group-' + key}
+              className="pt-3 text-lg font-semibold text-[var(--text-primary)]"
+            >
+              {t(title)}
+              {key !== 'next' && (
+                <span className="ml-2 text-sm font-normal text-[var(--text-muted)]">
+                  {' · ' + entries.length}
+                </span>
+              )}
+            </h2>
+            {cards}
+          </section>
+        )
+      })}
 
       {showCreate && (
         <CreateSessionDialog campaignId={campaignId} onClose={() => setShowCreate(false)} />
@@ -170,8 +250,41 @@ export function SessionsClient({ campaignId, initialSessions, isDm, viewerId }: 
   )
 }
 
+function SessionPrepLinks({ campaignId, isDm }: { campaignId: string; isDm: boolean }) {
+  const t = useT()
+  const links = [
+    { route: 'characters', label: 'nav.characters', icon: Sword },
+    {
+      route: isDm ? 'scenes' : 'chat',
+      label: isDm ? 'nav.scenes' : 'nav.chat',
+      icon: isDm ? Map : MessageCircle,
+    },
+    {
+      route: isDm ? 'session' : 'chapters',
+      label: isDm ? 'overview.startSession' : 'nav.chapters',
+      icon: isDm ? MonitorPlay : BookOpen,
+    },
+  ]
+  return (
+    <nav aria-label={t('sessions.plan.tools')} className="my-4 grid gap-2 sm:grid-cols-3">
+      {links.map(({ route, label, icon: Icon }) => (
+        <Link
+          key={route}
+          href={`/campaign/${campaignId}/${route}`}
+          className="flex min-h-11 items-center gap-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+        >
+          <Icon size={18} className="shrink-0 text-[var(--accent-text)]" aria-hidden="true" />
+          <span>{t(label)}</span>
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
 function SessionCard({
   session,
+  now,
+  highlighted,
   timeZone,
   viewerId,
   isSavingRsvp,
@@ -182,6 +295,8 @@ function SessionCard({
   isPending,
 }: {
   session: SessionWithRsvp
+  now: number
+  highlighted: boolean
   timeZone: string
   viewerId: string | null
   isSavingRsvp: boolean
@@ -194,9 +309,12 @@ function SessionCard({
   const { t, lang } = useI18n()
   const titleId = useId()
   const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
+  const [calendarError, setCalendarError] = useState(false)
+  const timing = sessionWindow(session)
   const date = new Date(session.starts_at)
   const hasValidDate = Number.isFinite(date.getTime())
-  const isPast = hasValidDate && date < new Date()
+  const isPast = !!timing && timing.end <= now
+  const isOngoing = !!timing && timing.start <= now && timing.end > now
   const statuses: RsvpStatus[] = ['yes', 'maybe', 'no']
   // Display identity only: setRsvp authenticates the writer independently on the server.
   const savedResponse = viewerId
@@ -204,7 +322,16 @@ function SessionCard({
     : undefined
 
   return (
-    <Card padding="md" role="article" aria-labelledby={titleId} className="rounded-2xl">
+    <Card
+      padding="md"
+      role="article"
+      aria-labelledby={titleId}
+      className={
+        highlighted
+          ? 'rounded-2xl border-[var(--accent)]/50 bg-[linear-gradient(130deg,var(--accent-subtle),var(--bg-surface))] shadow-[var(--shadow-md)]'
+          : 'rounded-2xl'
+      }
+    >
       <div className="mb-3 flex flex-wrap items-start gap-2">
         <h3
           id={titleId}
@@ -212,6 +339,11 @@ function SessionCard({
         >
           {session.title}
         </h3>
+        {isOngoing && (
+          <Badge variant="success" size="sm">
+            {t('sessions.plan.ongoing')}
+          </Badge>
+        )}
         {isPast && (
           <Badge variant="neutral" size="sm">
             {t('sessions.past')}
@@ -279,9 +411,59 @@ function SessionCard({
         {savedResponse ? t(`rsvp.${savedResponse}`) : t('sessions.noResponse')}
       </p>
 
-      {((hasValidDate && !isPast) || isDm) && (
+      {timing && (
+        <div className="mt-4">
+          <Button
+            variant="secondary"
+            size="md"
+            icon={<Download size={16} aria-hidden="true" />}
+            aria-label={t('sessions.plan.calendarLabel', { title: session.title })}
+            onClick={() => {
+              setCalendarError(false)
+              let url: string | null = null
+              let anchor: HTMLAnchorElement | null = null
+              try {
+                const content = sessionCalendar(session, Date.now())
+                if (!content) throw Error('Invalid calendar date')
+                url = URL.createObjectURL(
+                  new Blob([content], { type: 'text/calendar;charset=utf-8' })
+                )
+                anchor = document.createElement('a')
+                anchor.href = url
+                anchor.download =
+                  'dm-workspace-session-' +
+                  session.id.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 80) +
+                  '.ics'
+                document.body.appendChild(anchor)
+                anchor.click()
+              } catch {
+                setCalendarError(true)
+              } finally {
+                anchor?.remove()
+                if (url) {
+                  const downloadUrl = url
+                  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000)
+                }
+              }
+            }}
+          >
+            {t('sessions.plan.calendar')}
+          </Button>
+          {highlighted && (
+            <p className="mt-2 text-xs leading-5 text-[var(--text-muted)]">
+              {t('sessions.plan.calendarHint')}
+            </p>
+          )}
+          {calendarError && (
+            <p role="alert" className="mt-2 text-sm text-[var(--danger-text)]">
+              {t('sessions.plan.calendarError')}
+            </p>
+          )}
+        </div>
+      )}
+      {((timing && !isPast) || isDm) && (
         <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border-default)] pt-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-          {hasValidDate && !isPast && (
+          {timing && !isPast && (
             <div className="min-w-0" role="group" aria-label={t('sessions.yourResponse')}>
               <div className="flex flex-wrap gap-2">
                 {statuses.map((status) => (
