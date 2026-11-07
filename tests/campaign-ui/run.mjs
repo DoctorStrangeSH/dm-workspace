@@ -8,6 +8,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { initiativeSyncScenarios } from './initiative-sync-scenarios.mjs'
 import { combatFinderScenarios } from './combat-finder-scenarios.mjs'
+import { spellAreaScenarios } from './spell-area-scenarios.mjs'
 
 const root = process.cwd()
 const output = path.join(root, 'test-results/campaign-ui')
@@ -142,6 +143,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await spellAreaScenarios(scenario, expect, output)
   await combatFinderScenarios(scenario, expect, output)
   await initiativeSyncScenarios(scenario, expect)
   await scenario(
@@ -2792,7 +2794,7 @@ try {
       await expect(layer.locator('text')).toHaveCount(0)
       await page.keyboard.press('Escape')
       await page.getByRole('button', { name: 'Области', exact: true }).click()
-      await page.getByRole('menuitem', { name: 'Сфера', exact: true }).click()
+      await expect(page.getByRole('region', { name: 'Область заклинания' })).toBeVisible()
       await page.keyboard.press('Escape')
       expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
     }

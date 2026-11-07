@@ -10,9 +10,6 @@ import {
   Swords,
   Eraser,
   Ruler,
-  Circle,
-  MoveRight,
-  Triangle,
   MoreHorizontal,
   Square,
   Trash2,
@@ -29,7 +26,7 @@ import { startCombat } from '@/lib/actions/combat'
 import { clearFog } from '@/lib/actions/fog'
 import { createWall, deleteAllWalls } from '@/lib/actions/walls'
 import { useToast } from '@/components/toast/toast-provider'
-import { Button, Input, Dropdown, Dialog } from '@/components/ui'
+import { Button, Dropdown, Dialog } from '@/components/ui'
 import { clampZoom, clientToGrid, fitMap } from '@/lib/maps/geometry'
 import MapUploadDialog from './map-upload-dialog'
 import styles from './map-workspace.module.css'
@@ -43,6 +40,8 @@ import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import FogLayer from './fog-layer'
 import RulerTool from './ruler-tool'
 import TemplateTool from './template-tool'
+import SpellAreaControls from './spell-area-controls'
+import type { AreaPlacement, AreaShape } from '@/lib/maps/spell-areas'
 import WallsLayer from './walls-layer'
 import SummonDialog from './summon-dialog'
 import SummonRequestsPanel from './summon-requests-panel'
@@ -61,7 +60,7 @@ import type {
   TokenOwnerWithProfile,
 } from '@/lib/types'
 
-type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall' | 'pan'
+type ActiveTool = 'none' | 'ruler' | 'cone' | 'sphere' | 'line' | 'wall' | 'pan' | 'cube'
 
 interface Props {
   scene: Scene
@@ -148,6 +147,18 @@ export default function SceneView({
   const [brushMode, setBrushMode] = useState(false)
   const [activeTool, setActiveTool] = useState<ActiveTool>('none')
   const [templateSize, setTemplateSize] = useState(30)
+  const [templateWidth, setTemplateWidth] = useState(5)
+  const [templateDraft, setTemplateDraft] = useState<{
+    sceneId: string
+    value: AreaPlacement
+  } | null>(null)
+  const templatePlacement = templateDraft?.sceneId === scene.id ? templateDraft.value : null
+  const templateLayerRef = useRef<HTMLDivElement>(null)
+  const areaTriggerRef = useRef<HTMLButtonElement>(null)
+  const isArea = (tool: ActiveTool): tool is AreaShape =>
+    ['cone', 'sphere', 'line', 'cube'].includes(tool)
+  const setTemplatePlacement = (value: AreaPlacement | null) =>
+    setTemplateDraft(value ? { sceneId: scene.id, value } : null)
   const [showClearFogConfirm, setShowClearFogConfirm] = useState(false)
   const [showClearWallsConfirm, setShowClearWallsConfirm] = useState(false)
 
@@ -212,6 +223,7 @@ export default function SceneView({
   }
   const chooseTool = (tool: ActiveTool) => {
     setBrushMode(false)
+    if (!isArea(tool) || !isArea(activeTool)) setTemplateDraft(null)
     setActiveTool(tool)
     setWallStart(null)
     setWallPreview(null)
@@ -295,7 +307,9 @@ export default function SceneView({
     handler: () => {
       if (document.querySelector('dialog[open], [role="dialog"][aria-modal="true"]')) return
       if (brushMode) setBrushMode(false)
-      if (activeTool !== 'none') {
+      if (isArea(activeTool)) {
+        closeAreas()
+      } else if (activeTool !== 'none') {
         setActiveTool('none')
         setWallStart(null)
         setWallPreview(null)
@@ -429,31 +443,6 @@ export default function SceneView({
     })
   }
 
-  // CHANGES (задача 1): убран дубль стены из toolsDropdown.
-  // Стена — только в wallsDropdown.
-  const toolsDropdown = [
-    {
-      label: t('scenes.tool.ruler'),
-      onClick: () => chooseTool(activeTool === 'ruler' ? 'none' : 'ruler'),
-      icon: <Ruler size={14} />,
-    },
-    {
-      label: t('scenes.tool.cone'),
-      onClick: () => chooseTool(activeTool === 'cone' ? 'none' : 'cone'),
-      icon: <Triangle size={14} />,
-    },
-    {
-      label: t('scenes.tool.sphere'),
-      onClick: () => chooseTool(activeTool === 'sphere' ? 'none' : 'sphere'),
-      icon: <Circle size={14} />,
-    },
-    {
-      label: t('scenes.tool.line'),
-      onClick: () => chooseTool(activeTool === 'line' ? 'none' : 'line'),
-      icon: <MoveRight size={14} />,
-    },
-  ]
-
   const fogDropdown = [
     {
       label: fogEnabled ? t('scenes.fog.hide') : t('scenes.fog.show'),
@@ -495,12 +484,29 @@ export default function SceneView({
     },
   ]
 
-  const templateLabel =
-    activeTool === 'cone'
-      ? t('scenes.template.cone')
-      : activeTool === 'sphere'
-        ? t('scenes.template.sphere')
-        : t('scenes.template.line')
+  const closeAreas = () => {
+    chooseTool('none')
+    areaTriggerRef.current?.focus({ preventScroll: true })
+  }
+  const centerArea = () => {
+    const viewport = mapViewportRef.current
+    const stage = wallWrapperRef.current
+    if (!viewport || !stage) return
+    const vr = viewport.getBoundingClientRect()
+    const sr = stage.getBoundingClientRect()
+    const origin = clientToGrid(
+      {
+        clientX: (Math.max(vr.left, sr.left) + Math.min(vr.right, sr.right)) / 2,
+        clientY: (Math.max(vr.top, sr.top) + Math.min(vr.bottom, sr.bottom)) / 2,
+      },
+      sr,
+      scene.width,
+      scene.height
+    )
+    setTemplatePlacement({ origin, angle: templatePlacement?.angle ?? 0 })
+    viewport.scrollIntoView({ block: 'nearest' })
+    templateLayerRef.current?.focus({ preventScroll: true })
+  }
 
   return (
     <div ref={workspaceRef} className={styles.workspace}>
@@ -602,26 +608,6 @@ export default function SceneView({
         </div>
       )}
 
-      {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
-        <div className="mb-3 flex items-center gap-2">
-          <span className="text-sm text-[var(--text-muted)]">
-            {t('scenes.template.size', { tool: templateLabel })}:
-          </span>
-          <Input
-            type="number"
-            value={templateSize}
-            onChange={(e) =>
-              setTemplateSize(Math.min(120, Math.max(5, Number(e.target.value) || 5)))
-            }
-            min={5}
-            max={120}
-            step={5}
-            className="w-20"
-          />
-          <span className="text-sm text-[var(--text-subtle)]">{t('scenes.template.feet')}</span>
-        </div>
-      )}
-
       <div className={styles.layout}>
         <section
           className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]"
@@ -660,15 +646,17 @@ export default function SceneView({
               >
                 {t('scenes.tool.ruler')}
               </Button>
-              <Dropdown
-                trigger={
-                  <Button variant="ghost" className="min-h-11" icon={<Triangle size={16} />}>
-                    {t('map.templates')}
-                  </Button>
-                }
-                items={toolsDropdown.slice(1)}
-                align="left"
-              />
+              <Button
+                ref={areaTriggerRef}
+                variant={isArea(activeTool) ? 'secondary' : 'ghost'}
+                className="min-h-11"
+                aria-pressed={isArea(activeTool)}
+                aria-expanded={isArea(activeTool)}
+                onClick={() => (isArea(activeTool) ? closeAreas() : chooseTool('sphere'))}
+                icon={<Sparkles size={16} />}
+              >
+                {t('map.templates')}
+              </Button>
               <Button
                 variant={showGrid ? 'secondary' : 'ghost'}
                 className="min-h-11"
@@ -742,6 +730,32 @@ export default function SceneView({
               </Button>
             </div>
           </div>
+          {isArea(activeTool) && (
+            <SpellAreaControls
+              shape={activeTool}
+              size={templateSize}
+              width={templateWidth}
+              placed={!!templatePlacement}
+              onShape={(shape) => chooseTool(shape)}
+              onSize={setTemplateSize}
+              onWidth={setTemplateWidth}
+              onPreset={(preset) => {
+                chooseTool(preset.shape)
+                setTemplateSize(preset.size)
+                setTemplateWidth(preset.width)
+              }}
+              onCenter={centerArea}
+              onRotate={(direction) => {
+                if (templatePlacement)
+                  setTemplatePlacement({
+                    ...templatePlacement,
+                    angle: templatePlacement.angle + (direction * Math.PI) / 12,
+                  })
+              }}
+              onClear={() => setTemplatePlacement(null)}
+              onClose={closeAreas}
+            />
+          )}
           {!scene.image_url && (
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-[var(--border-default)] bg-[var(--accent-subtle)] p-4">
               <div>
@@ -839,13 +853,18 @@ export default function SceneView({
                       onClose={() => setActiveTool('none')}
                     />
                   )}
-                  {(activeTool === 'cone' || activeTool === 'sphere' || activeTool === 'line') && (
+                  {isArea(activeTool) && (
                     <TemplateTool
+                      key={scene.id}
                       scene={scene}
-                      isActive={true}
                       type={activeTool}
                       size={templateSize}
-                      onClose={() => setActiveTool('none')}
+                      zoom={mapZoom}
+                      lineWidth={templateWidth}
+                      placement={templatePlacement}
+                      onChange={setTemplatePlacement}
+                      layerRef={templateLayerRef}
+                      onClose={closeAreas}
                     />
                   )}
                   {activeTool === 'pan' && (
