@@ -7,6 +7,7 @@ import { readFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { test } from 'node:test'
 import { initiativeSyncScenarios } from './initiative-sync-scenarios.mjs'
+import { combatFinderScenarios } from './combat-finder-scenarios.mjs'
 
 const root = process.cwd()
 const output = path.join(root, 'test-results/campaign-ui')
@@ -141,6 +142,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await combatFinderScenarios(scenario, expect, output)
   await initiativeSyncScenarios(scenario, expect)
   await scenario(
     'map combat drawer survives pending Escape and shortcuts, then closes safely',
@@ -279,7 +281,9 @@ try {
         expect(await drawer.evaluate((el) => el.contains(document.activeElement))).toBe(true)
       }
       await drawer.getByRole('button', { name: 'Добавить новые токены в бой' }).click()
-      await expect(drawer.getByRole('status')).toContainText('Добавлено участников: 3')
+      await expect(
+        drawer.getByRole('status').filter({ hasText: 'Добавлено участников: 3' })
+      ).toBeVisible()
       expect(await page.evaluate(() => window.__uiLab.mapActions[0])).toEqual({
         name: 'addCombatParticipants',
         args: ['offline-scene'],

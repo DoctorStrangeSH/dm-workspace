@@ -2,7 +2,17 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Swords, ChevronRight, X, Dices, LocateFixed, Shield, HeartPulse } from 'lucide-react'
+import {
+  Swords,
+  ChevronRight,
+  X,
+  Dices,
+  LocateFixed,
+  Shield,
+  HeartPulse,
+  Search,
+  EyeOff,
+} from 'lucide-react'
 import {
   nextTurn,
   endCombat,
@@ -12,10 +22,12 @@ import {
   startCombat,
 } from '@/lib/actions/combat'
 import { cn } from '@/lib/utils'
-import { Button, Dialog } from '@/components/ui'
+import { Button, Dialog, Input } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { orderTurns, nextTurnEntry } from '@/lib/maps/initiative'
 import CombatPortrait from './combat-portrait'
+import CombatConditions from './combat-conditions'
+import { combatConditions, matchesCombatSearch } from '@/lib/maps/combat-conditions'
 import type { InitiativeEntryWithToken } from '@/lib/types'
 
 interface Props {
@@ -41,11 +53,34 @@ export default function InitiativePanel({
   const [error, setError] = useState('')
   const [uncertain, setUncertain] = useState(false)
   const [notice, setNotice] = useState('')
+  const [query, setQuery] = useState('')
+  const [kind, setKind] = useState('all')
+  const [withConditions, setWithConditions] = useState(false)
+  const searchInput = useRef<HTMLInputElement>(null)
   const [confirm, setConfirm] = useState<'end' | string | null>(null)
   const ordered = orderTurns(entries)
   const currents = ordered.filter((entry) => entry.is_current)
   const current = currents.length === 1 ? currents[0] : undefined
   const visible = ordered.filter((entry) => isDm || !entry.token.is_hidden)
+  const participants = visible.map((entry, index) => ({
+    entry,
+    position: index + 1,
+    kind: entry.token.character_id ? 'characters' : entry.token.entity_id ? 'creatures' : 'tokens',
+    conditions: combatConditions(entry.token.conditions, t),
+  }))
+  const matches = participants.filter(
+    (participant) =>
+      (kind === 'all' || kind === participant.kind) &&
+      (!withConditions || participant.conditions.length > 0) &&
+      matchesCombatSearch(participant.entry.token.name, participant.conditions, query)
+  )
+  const filtered = query.trim() !== '' || kind !== 'all' || withConditions
+  const resetFilters = () => {
+    setQuery('')
+    setKind('all')
+    setWithConditions(false)
+    searchInput.current?.focus()
+  }
   const publicName = (entry: InitiativeEntryWithToken) =>
     isDm || !entry.token.is_hidden ? entry.token.name : t('turns.hidden')
   const next = nextTurnEntry(ordered, current?.id ?? null)
@@ -183,8 +218,66 @@ export default function InitiativePanel({
           )}
         </div>
       )}
-      <ol className="max-h-[28rem] space-y-2 overflow-y-auto p-3">
-        {visible.map((entry, index) => {
+      {entries.length > 0 && (
+        <div className="space-y-3 border-b border-[var(--border-default)] p-3">
+          <Input
+            ref={searchInput}
+            type="search"
+            label={t('combatFinder.search')}
+            placeholder={t('combatFinder.placeholder')}
+            icon={<Search size={17} aria-hidden="true" />}
+            className="min-h-11"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <div role="group" aria-label={t('combatFinder.kind')} className="flex flex-wrap gap-1.5">
+            {['all', 'characters', 'creatures', 'tokens'].map((value) => {
+              const count =
+                value === 'all'
+                  ? participants.length
+                  : participants.filter((p) => p.kind === value).length
+              if (value !== 'all' && count === 0 && kind !== value) return null
+              return (
+                <Button
+                  key={value}
+                  variant={kind === value ? 'primary' : 'secondary'}
+                  className="min-h-11 text-xs"
+                  aria-pressed={kind === value}
+                  onClick={() => setKind(value)}
+                >
+                  {t(value === 'all' ? 'combatFinder.all' : 'turns.' + value)}
+                  <span className="ml-1 tabular-nums">{count}</span>
+                </Button>
+              )
+            })}
+            <Button
+              variant={withConditions ? 'primary' : 'secondary'}
+              className="min-h-11 text-xs"
+              aria-pressed={withConditions}
+              onClick={() => setWithConditions((value) => !value)}
+            >
+              {t('combatFinder.withConditions')}
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p role="status" className="text-xs text-[var(--text-secondary)]">
+              {t('combatFinder.results', { shown: matches.length, total: visible.length })}
+            </p>
+            {filtered && (
+              <Button variant="ghost" className="min-h-11 text-xs" onClick={resetFilters}>
+                {t('combatFinder.reset')}
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-[var(--text-muted)]">{t('combatFinder.hint')}</p>
+        </div>
+      )}
+      <ol
+        aria-label={t('combatFinder.participants')}
+        className="max-h-[28rem] space-y-2 overflow-y-auto p-3"
+      >
+        {matches.map(({ entry, position, conditions }) => {
+          const active = currents.length === 1 && current?.id === entry.id
           const token = entry.token
           const hpValid =
             token.hp_current !== null &&
@@ -197,10 +290,11 @@ export default function InitiativePanel({
           return (
             <li
               key={entry.id}
-              aria-current={entry.is_current ? 'step' : undefined}
+              aria-current={active ? 'step' : undefined}
+              data-entry-id={entry.id}
               className={cn(
                 'rounded-xl border p-3',
-                entry.is_current
+                active
                   ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
                   : 'border-[var(--border-default)] bg-[var(--bg-surface)]'
               )}
@@ -211,17 +305,20 @@ export default function InitiativePanel({
                   <span className="sr-only">{t('scenes.initiative.title')}</span>
                   {entry.initiative}
                   <span className="text-[9px] leading-none text-[var(--text-muted)]">
-                    #{index + 1}
+                    #{position}
                   </span>
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
                     {token.name}
+                    {token.is_hidden && isDm && (
+                      <EyeOff size={13} className="ml-1 inline" aria-label={t('turns.hiddenDm')} />
+                    )}
                   </p>
                   <p className="mt-0.5 text-xs text-[var(--accent-text)]">
-                    {entry.is_current
+                    {active
                       ? t('scenes.initiative.now')
-                      : next?.id === entry.id
+                      : currents.length <= 1 && next?.id === entry.id
                         ? t('map.upNext')
                         : t('map.waiting')}
                   </p>
@@ -238,11 +335,7 @@ export default function InitiativePanel({
                       </span>
                     )}
                   </div>
-                  {Array.isArray(token.conditions) && token.conditions.length > 0 && (
-                    <p className="mt-2 text-xs [overflow-wrap:anywhere] text-[var(--text-secondary)]">
-                      {token.conditions.map((c) => c.name).join(' · ')}
-                    </p>
-                  )}
+                  <CombatConditions conditions={conditions} />
                 </div>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -275,6 +368,13 @@ export default function InitiativePanel({
           )
         })}
       </ol>
+      {entries.length > 0 && matches.length === 0 && (
+        <div className="space-y-2 px-4 pb-4">
+          <p className="text-sm text-[var(--text-secondary)]">
+            {visible.length === 0 ? t('turns.noVisible') : t('combatFinder.empty')}
+          </p>
+        </div>
+      )}
       {entries.length === 0 && (
         <div className="space-y-3 px-4 pb-4">
           <p className="text-sm text-[var(--text-muted)]">{t('scenes.initiative.empty')}</p>
