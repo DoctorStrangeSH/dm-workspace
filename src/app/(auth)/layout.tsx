@@ -4,7 +4,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="mb-6 inline-flex min-h-11 items-center text-[var(--text-secondary)]"
+          className="mb-6 inline-flex min-h-11 items-center text-slate-200 hover:text-white"
         >
           ← DM Workspace
         </Link>
