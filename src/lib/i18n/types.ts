@@ -3,6 +3,7 @@ export type Lang = 'ru' | 'en'
 export const LANGS: readonly Lang[] = ['ru', 'en'] as const
 export const DEFAULT_LANG: Lang = 'ru'
 export const LANG_COOKIE = 'dm-lang'
+export const LANG_CHANGE_EVENT = 'dm-lang-change'
 
 /** Плоский словарь: ключ → строка. Вложенность через точку. */
 export type Dictionary = Record<string, string>

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useSyncExternalStore } from 'react'
 import type { Lang } from './types'
-import { LANG_COOKIE, DEFAULT_LANG, isLang } from './types'
+import { LANG_COOKIE, LANG_CHANGE_EVENT, DEFAULT_LANG, isLang } from './types'
 import { createT, getDictionary, type TFunction } from './dictionaries'
 
 interface I18nContextValue {
@@ -17,12 +17,14 @@ const I18nContext = createContext<I18nContextValue | null>(null)
 // Язык читается из cookie через useSyncExternalStore:
 //  - SSR:      DEFAULT_LANG ('ru') — совпадает с <html lang="ru">
 //  - клиент:   синхронно из document.cookie
-//  - обновление: после router.refresh() (LangToggle) → ре-рендер провайдера
+//  - обновление: событие предпочтения или router.refresh() (LangToggle)
 // Это чинит build-ошибку "cookies() в RootLayout блокирует prerender".
 
-function subscribe(_callback: () => void) {
-  // cookie не шлёт событий; подписка нужна только для API useSyncExternalStore.
-  return () => {}
+function subscribe(callback: () => void) {
+  // Cookie changes do not emit events. Public controls notify this shared store
+  // so client navigation into auth forms immediately sees the same language.
+  window.addEventListener(LANG_CHANGE_EVENT, callback)
+  return () => window.removeEventListener(LANG_CHANGE_EVENT, callback)
 }
 
 function getSnapshot(): Lang {
