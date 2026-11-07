@@ -1,14 +1,6 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { PublicLanding } from '@/components/landing/public-landing'
 
-export const instant = false
-
-export default async function Home() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (user) redirect('/dashboard')
-  redirect('/login')
+// The proxy keeps the authenticated dashboard redirect. This page has no user data.
+export default function Home() {
+  return <PublicLanding />
 }

@@ -31,16 +31,22 @@ export async function proxy(request: NextRequest) {
   const isAuthRoute =
     request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup')
 
-  if (!user && !isAuthRoute) {
+  const isHome = request.nextUrl.pathname === '/'
+
+  if (!user && !isAuthRoute && !isHome) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute) {
+  if (user && (isAuthRoute || isHome)) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
+    const response = NextResponse.redirect(url)
+    // Keep any refreshed session cookies when the public entry redirects a member.
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
+    response.headers.set('Cache-Control', 'private, no-store')
+    return response
   }
 
   return supabaseResponse

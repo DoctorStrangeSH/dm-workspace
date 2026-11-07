@@ -61,6 +61,9 @@ jobs:
       - name: Real Next production CSS layout regression (offline)
         run: npm run test:production-layout
 
+      - name: Public landing, auth boundary and offline demo (real Next production)
+        run: npm run test:public-landing
+
       - name: Lint
         run: npm run lint
 
