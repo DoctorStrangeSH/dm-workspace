@@ -1,5 +1,6 @@
 import { SessionScenePanel } from '../../src/app/campaign/[id]/session/session-scene-panel'
 import SceneView from '../../src/app/campaign/[id]/scenes/[sceneId]/scene-view'
+import InitiativeSyncFixture from './initiative-sync-fixture'
 import { mapScene, mapTokens, mapInitiative, battleTokens, battleInitiative } from './maps-data'
 import { createRoot } from 'react-dom/client'
 import CampaignCard from '../../src/app/dashboard/campaign-card'
@@ -307,7 +308,9 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'map-session' ? (
+            {screen === 'initiative-sync' ? (
+              <InitiativeSyncFixture />
+            ) : screen === 'map-session' ? (
               <BattleMapFixture isDm={isDm} embedded />
             ) : screen === 'map' ? (
               <BattleMapFixture isDm={isDm} />
