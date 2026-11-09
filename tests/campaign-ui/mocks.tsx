@@ -1,7 +1,12 @@
 import { useSyncExternalStore } from 'react'
 import { tokenTransport } from './token-transport'
 import type { AnchorHTMLAttributes } from 'react'
-import type { CharacterData, MessageWithAuthor } from '../../src/lib/types'
+import type {
+  CharacterData,
+  MessageWithAuthor,
+  MessageType,
+  MessageMetadata,
+} from '../../src/lib/types'
 import type { ItemFilters, SrdItemsPageResult } from '../../src/lib/actions/items-search'
 import type { SpellFilters } from '../../src/lib/actions/spells-search'
 import type { MonsterFilters } from '../../src/lib/actions/bestiary-search'
@@ -26,6 +31,8 @@ let messages = Array.from({ length: 50 }, (_, n) =>
 const emit = () => listeners.forEach((listener) => listener())
 export const lab = {
   sent: [] as string[],
+  sentRolls: [] as MessageMetadata[],
+  throwNextMessage: false,
   joinCalls: [] as string[],
   joinOutcome: 'success' as 'success' | 'invalid_invite' | 'auth_required' | 'uncertain' | 'throw',
   joinPending: [] as (() => void)[],
@@ -299,14 +306,24 @@ export async function getChapterForExport() {
   return { error: 'Offline export boundary', data: null }
 }
 Object.assign(window, { __uiLab: lab })
-export async function sendMessage(_campaign: string, content: string) {
+export async function sendMessage(
+  _campaign: string,
+  content: string,
+  type: MessageType = 'text',
+  metadata: MessageMetadata = {}
+) {
   lab.sent.push(content)
+  if (type === 'roll') lab.sentRolls.push(structuredClone(metadata))
   await new Promise((resolve) => setTimeout(resolve, lab.delay))
+  if (lab.throwNextMessage) {
+    lab.throwNextMessage = false
+    throw Error('Synthetic message transport failure')
+  }
   if (lab.failNext) {
     lab.failNext = false
     return { error: 'Synthetic send failure' }
   }
-  messages = [...messages, makeMessage(crypto.randomUUID(), content, 'self')]
+  messages = [...messages, { ...makeMessage(crypto.randomUUID(), content, 'self'), type, metadata }]
   emit()
   return { success: true, messageId: messages.at(-1)!.id }
 }

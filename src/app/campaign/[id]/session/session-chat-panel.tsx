@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { MessageSquare } from 'lucide-react'
 import { sendMessage } from '@/lib/actions/messages'
@@ -10,7 +10,7 @@ import MessageList from '../chat/message-list'
 import MessageInput from '../chat/message-input'
 import DiceRoller from '../chat/dice-roller'
 import { useT } from '@/lib/i18n'
-import { rollDice, parseDice } from '@/lib/dnd/formulas'
+import { rollChatDice, type D20Mode } from '@/lib/dnd/chat-dice'
 import type { MessageWithAuthor } from '@/lib/types'
 import { useDmScreenContext } from '../dm-screen/dm-screen-context'
 
@@ -28,6 +28,8 @@ export function SessionChatPanel({ campaignId, initialMessages, currentUserId, i
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
+  const rolling = useRef(false)
+  const [rollError, setRollError] = useState<string | null>(null)
 
   const handleSendText = async (content: string) => {
     const res = await sendMessage(campaignId, content, 'text')
@@ -39,28 +41,27 @@ export function SessionChatPanel({ campaignId, initialMessages, currentUserId, i
     return true
   }
 
-  const handleRoll = (sides: number, count: number, modifier: number) => {
-    const expr = `${count}d${sides}${modifier >= 0 ? '+' : ''}${modifier}`
-    const parsed = parseDice(expr)
-    if (!parsed) return
-    const result = rollDice(parsed)
-
+  const handleRoll = (sides: number, count: number, modifier: number, mode: D20Mode = 'normal') => {
+    if (isPending || rolling.current) return
+    const result = rollChatDice(sides, count, modifier, mode)
+    if (!result) return
+    setRollError(null)
+    rolling.current = true
     startTransition(async () => {
-      const res = await sendMessage(
-        campaignId,
-        `${count}d${sides}${modifier !== 0 ? (modifier > 0 ? `+${modifier}` : modifier) : ''} = ${result.total}`,
-        'roll',
-        {
-          roll: {
-            expression: expr,
-            rolls: result.rolls,
-            total: result.total,
-            modifier,
-          },
-        }
-      )
-      if ('error' in res) toast.error(res.error ?? t('common.error'))
-      else router.refresh()
+      try {
+        const res = await sendMessage(
+          campaignId,
+          `${result.expression} = ${result.total}`,
+          'roll',
+          { roll: result }
+        )
+        if ('error' in res) setRollError(res.error ?? t('common.error'))
+        else router.refresh()
+      } catch {
+        setRollError(t('chat.dice.uncertain'))
+      } finally {
+        rolling.current = false
+      }
     })
   }
 
@@ -75,7 +76,10 @@ export function SessionChatPanel({ campaignId, initialMessages, currentUserId, i
   }
 
   return (
-    <aside id="campaign-session-chat" className="flex min-h-0 flex-col border-l border-[var(--border-default)] bg-[var(--bg-surface)]">
+    <aside
+      id="campaign-session-chat"
+      className="flex min-h-0 flex-col border-l border-[var(--border-default)] bg-[var(--bg-surface)]"
+    >
       <div className="flex shrink-0 items-center gap-2 border-b border-[var(--border-default)] px-3 py-2">
         <MessageSquare size={14} className="text-[var(--accent-text)]" />
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t('chat.title')}</h2>
@@ -89,7 +93,7 @@ export function SessionChatPanel({ campaignId, initialMessages, currentUserId, i
         active={isChatOpen}
       />
 
-      <DiceRoller onRoll={handleRoll} disabled={isPending} />
+      <DiceRoller onRoll={handleRoll} disabled={isPending} error={rollError} />
 
       <MessageInput onSend={handleSendText} disabled={isPending} />
     </aside>
