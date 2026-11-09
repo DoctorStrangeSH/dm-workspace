@@ -148,12 +148,22 @@ export default function MessageList({
                     {roll.label && (
                       <div className="mb-1 text-xs text-[var(--text-muted)]">{roll.label}</div>
                     )}
-                    <div className="flex items-center gap-2">
+                    {roll.advantage !== roll.disadvantage &&
+                      (roll.advantage || roll.disadvantage) && (
+                        <p className="mb-1 text-xs font-medium text-[var(--accent-text)]">
+                          {t(
+                            roll.advantage
+                              ? 'chat.dice.advantageResult'
+                              : 'chat.dice.disadvantageResult'
+                          )}
+                        </p>
+                      )}
+                    <div className="flex flex-wrap items-center gap-2">
                       <Dices size={14} className="shrink-0 text-[var(--accent-text)]" />
                       <span className="text-lg font-bold text-[var(--accent-text)]">
                         {roll.total}
                       </span>
-                      <span className="font-mono text-xs text-[var(--text-muted)]">
+                      <span className="min-w-0 font-mono text-xs break-words text-[var(--text-muted)]">
                         [{roll.rolls.join(', ')}]
                         {roll.modifier !== 0 && (
                           <>

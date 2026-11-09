@@ -1,13 +1,13 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { sendMessage, deleteMessage } from '@/lib/actions/messages'
 import { useToast } from '@/components/toast/toast-provider'
 import MessageList from './message-list'
 import MessageInput from './message-input'
 import DiceRoller from './dice-roller'
-import { rollDice, parseDice } from '@/lib/dnd/formulas'
+import { rollChatDice, type D20Mode } from '@/lib/dnd/chat-dice'
 import { useT } from '@/lib/i18n'
 import type { MessageWithAuthor } from '@/lib/types'
 import { useRealtimeMessages } from '@/lib/hooks/use-realtime-messages'
@@ -30,6 +30,8 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
+  const rolling = useRef(false)
+  const [rollError, setRollError] = useState<string | null>(null)
 
   const handleSendText = async (content: string) => {
     const res = await sendMessage(campaignId, content, 'text')
@@ -40,17 +42,27 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
     router.refresh()
     return true
   }
-  const handleRoll = (sides: number, count: number, modifier: number) => {
-    const expr = `${count}d${sides}${modifier >= 0 ? '+' : ''}${modifier}`
-    const parsed = parseDice(expr)
-    if (!parsed) return
-    const result = rollDice(parsed)
+  const handleRoll = (sides: number, count: number, modifier: number, mode: D20Mode = 'normal') => {
+    if (isPending || rolling.current) return
+    const result = rollChatDice(sides, count, modifier, mode)
+    if (!result) return
+    setRollError(null)
+    rolling.current = true
     startTransition(async () => {
-      const res = await sendMessage(campaignId, `${expr} = ${result.total}`, 'roll', {
-        roll: { expression: expr, rolls: result.rolls, total: result.total, modifier },
-      })
-      if ('error' in res) toast.error(res.error ?? t('common.error'))
-      else router.refresh()
+      try {
+        const res = await sendMessage(
+          campaignId,
+          `${result.expression} = ${result.total}`,
+          'roll',
+          { roll: result }
+        )
+        if ('error' in res) setRollError(res.error ?? t('common.error'))
+        else router.refresh()
+      } catch {
+        setRollError(t('chat.dice.uncertain'))
+      } finally {
+        rolling.current = false
+      }
     })
   }
   const handleDelete = (messageId: string) => {
@@ -79,7 +91,7 @@ export default function ChatPanel({ campaignId, initialMessages, currentUserId, 
         onDelete={handleDelete}
         active={isChatOpen}
       />
-      <DiceRoller onRoll={handleRoll} disabled={isPending} />
+      <DiceRoller onRoll={handleRoll} disabled={isPending} error={rollError} />
       <MessageInput onSend={handleSendText} disabled={isPending} />
     </WorkspacePanel>
   )
