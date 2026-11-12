@@ -1191,11 +1191,23 @@ export const ru: Dictionary = {
   'settings.deleteAccount.toast.deleted': 'Аккаунт удалён',
 
   // ─── Generators ───
-  'generators.subtitle': 'Сокровища, магазины, энкаунтеры, wild magic, безумие — для импровизации',
+  'generators.workbench.title': 'Мастерская ведущего',
+  'generators.workbench.hint':
+    'Подготовьте находку, торговца или неожиданную встречу. Переключайтесь свободно: результаты и настройки останутся на месте, пока открыта страница.',
+  'generators.workbench.tools': 'Инструменты ведущего',
+  'generators.workbench.treasure': 'Монеты и редкие находки',
+  'generators.workbench.shop': 'Товары и цены торговца',
+  'generators.workbench.encounter': 'Существа и завязка сцены',
+  'generators.workbench.wildMagic': 'Неожиданный эффект d100',
+  'generators.workbench.madness': 'Эффект и длительность',
+  'generators.copying': 'Копирование…',
+  'generators.copyError':
+    'Не удалось скопировать. Результат сохранён на странице — попробуйте ещё раз или выделите текст вручную.',
+  'generators.subtitle': 'Пять инструментов для подготовки и импровизации за игровым столом',
   'generators.tab.treasure': 'Сокровища',
   'generators.tab.shop': 'Магазины',
-  'generators.tab.encounter': 'Энкаунтеры',
-  'generators.tab.wildMagic': 'Wild Magic',
+  'generators.tab.encounter': 'Встречи',
+  'generators.tab.wildMagic': 'Дикая магия',
   'generators.tab.madness': 'Безумие',
   'generators.generate': 'Сгенерировать',
   'generators.copy': 'Копировать',

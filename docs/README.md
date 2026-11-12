@@ -23,6 +23,7 @@
 | [CHARACTER_LIBRARY_UX.md](CHARACTER_LIBRARY_UX.md) | Character inventory and spellbook — 2026-10-30 |
 | [COMBAT_PARTICIPANT_FINDER.md](COMBAT_PARTICIPANT_FINDER.md) | Combat participant finder |
 | [CHAT_DICE_WORKBENCH.md](CHAT_DICE_WORKBENCH.md) | Панель кубиков, преимущество и помеха в чате |
+| [GM_GENERATOR_WORKBENCH.md](GM_GENERATOR_WORKBENCH.md) | Мастерская ведущего и сохранение результатов генераторов |
 | [INITIATIVE_SYNC.md](INITIATIVE_SYNC.md) | Initiative refresh synchronization |
 | [INVITATION_ONBOARDING.md](INVITATION_ONBOARDING.md) | Invitation and first-campaign onboarding |
 | [ITEM_CATALOG_DISPLAY.md](ITEM_CATALOG_DISPLAY.md) | Item catalog labels and card readability |

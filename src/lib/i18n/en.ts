@@ -1184,6 +1184,18 @@ export const en: Dictionary = {
   'settings.deleteAccount.toast.deleted': 'Account deleted',
 
   // ─── Generators ───
+  'generators.workbench.title': 'Game master’s workbench',
+  'generators.workbench.hint':
+    'Prepare a discovery, a merchant or an unexpected encounter. Switch freely: results and settings stay in place while this page is open.',
+  'generators.workbench.tools': 'Game master tools',
+  'generators.workbench.treasure': 'Coins and rare discoveries',
+  'generators.workbench.shop': 'Merchant stock and prices',
+  'generators.workbench.encounter': 'Creatures and a scene hook',
+  'generators.workbench.wildMagic': 'An unexpected d100 effect',
+  'generators.workbench.madness': 'Effect and duration',
+  'generators.copying': 'Copying…',
+  'generators.copyError':
+    'Could not copy. Your result is still on this page — try again or select the text manually.',
   'generators.subtitle': 'Treasure, shops, encounters, wild magic, madness — for improvisation',
   'generators.tab.treasure': 'Treasure',
   'generators.tab.shop': 'Shops',
