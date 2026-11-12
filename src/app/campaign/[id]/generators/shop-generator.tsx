@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Dices, Copy, Check, Store } from 'lucide-react'
+import { CopyResultButton } from './copy-result-button'
+import { Dices, Store } from 'lucide-react'
 import { Button, Card, Select, Badge } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { generateShop, type ShopSize, type ShopType, type ShopResult } from '@/lib/generators/shop'
@@ -12,7 +13,6 @@ export function ShopGenerator() {
   const [size, setSize] = useState<ShopSize>('town')
   const [type, setType] = useState<ShopType>('general')
   const [result, setResult] = useState<ShopResult | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const SIZE_OPTIONS = [
     { value: 'village', label: t('generators.shopSize.village') },
@@ -33,14 +33,6 @@ export function ShopGenerator() {
   const handleGenerate = () => {
     // CHANGES (К8): передаём lang — контент на нужном языке
     setResult(generateShop(size, type, lang))
-  }
-
-  const handleCopy = async () => {
-    if (!result) return
-    const text = formatResult(result)
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -75,21 +67,14 @@ export function ShopGenerator() {
 
       {result && (
         <Card padding="md">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Store size={18} className="text-[var(--accent-text)]" />
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                 {result.description}
               </h3>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={copied ? <Check size={14} /> : <Copy size={14} />}
-              onClick={handleCopy}
-            >
-              {copied ? t('generators.copied') : t('generators.copy')}
-            </Button>
+            <CopyResultButton key={formatResult(result)} text={formatResult(result)} />
           </div>
 
           <div className="space-y-2">
@@ -102,7 +87,7 @@ export function ShopGenerator() {
                   <div className="truncate font-medium text-[var(--text-primary)]">{item.name}</div>
                   <div className="text-xs text-[var(--text-muted)]">{item.category}</div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
                   <Badge variant="neutral" size="sm">
                     ×{item.quantity}
                   </Badge>

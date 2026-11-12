@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Dices, Copy, Check, Brain } from 'lucide-react'
+import { CopyResultButton } from './copy-result-button'
+import { Dices, Brain } from 'lucide-react'
 import { Button, Card, Select } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { generateMadness, type MadnessType, type MadnessResult } from '@/lib/generators/madness'
@@ -10,7 +11,6 @@ export function MadnessGenerator() {
   const t = useT()
   const [type, setType] = useState<MadnessType>('short')
   const [result, setResult] = useState<MadnessResult | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const TYPE_OPTIONS = [
     { value: 'short', label: t('generators.madnessType.short') },
@@ -22,20 +22,11 @@ export function MadnessGenerator() {
     setResult(generateMadness(type))
   }
 
-  const handleCopy = async () => {
-    if (!result) return
-    await navigator.clipboard.writeText(
-      `d100 = ${result.roll}: ${result.effect.name} — ${result.effect.description} (${result.duration})`
-    )
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   return (
     <div className="space-y-4">
       <Card padding="md">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 basis-40">
             <Select
               label={t('generators.form.madnessType')}
               options={TYPE_OPTIONS}
@@ -51,22 +42,18 @@ export function MadnessGenerator() {
 
       {result && (
         <Card padding="md">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Brain size={18} className="text-[var(--accent-text)]" />
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                 d100 = {result.roll}
               </h3>
               <span className="text-sm text-[var(--text-muted)]">({result.duration})</span>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={copied ? <Check size={14} /> : <Copy size={14} />}
-              onClick={handleCopy}
-            >
-              {copied ? t('generators.copied') : t('generators.copy')}
-            </Button>
+            <CopyResultButton
+              key={`d100 = ${result.roll}: ${result.effect.name} — ${result.effect.description} (${result.duration})`}
+              text={`d100 = ${result.roll}: ${result.effect.name} — ${result.effect.description} (${result.duration})`}
+            />
           </div>
 
           <div className="flex items-start gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">

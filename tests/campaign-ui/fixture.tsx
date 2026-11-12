@@ -1,3 +1,4 @@
+import { GeneratorsClient } from '../../src/app/campaign/[id]/generators/generators-client'
 import LoginPage from '../../src/app/(auth)/login/page'
 import SignupPage from '../../src/app/(auth)/signup/page'
 import { JoinCampaignForm } from '../../src/app/join/[code]/join-campaign-form'
@@ -291,6 +292,14 @@ function Fixture() {
       </main>
     )
   if (screen === 'dashboard') return <DashboardFixture />
+  if (screen === 'generators')
+    return (
+      <main className="mx-auto w-full max-w-5xl p-4">
+        <LangToggle />
+        <ThemeToggle />
+        <GeneratorsClient />
+      </main>
+    )
   return (
     <DmScreenProvider>
       <CampaignShell>

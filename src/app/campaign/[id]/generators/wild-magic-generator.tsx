@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Dices, Copy, Check, Sparkles } from 'lucide-react'
+import { CopyResultButton } from './copy-result-button'
+import { Dices, Sparkles } from 'lucide-react'
 import { Button, Card } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import { generateWildMagic, type WildMagicResult } from '@/lib/generators/wild-magic'
@@ -9,19 +10,9 @@ import { generateWildMagic, type WildMagicResult } from '@/lib/generators/wild-m
 export function WildMagicGenerator() {
   const t = useT()
   const [result, setResult] = useState<WildMagicResult | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const handleGenerate = () => {
     setResult(generateWildMagic())
-  }
-
-  const handleCopy = async () => {
-    if (!result) return
-    await navigator.clipboard.writeText(
-      `d100 = ${result.roll}: ${result.effect.name} — ${result.effect.description}`
-    )
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
@@ -40,21 +31,17 @@ export function WildMagicGenerator() {
 
       {result && (
         <Card padding="md">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Sparkles size={18} className="text-[var(--accent-text)]" />
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                 d100 = {result.roll}
               </h3>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={copied ? <Check size={14} /> : <Copy size={14} />}
-              onClick={handleCopy}
-            >
-              {copied ? t('generators.copied') : t('generators.copy')}
-            </Button>
+            <CopyResultButton
+              key={`d100 = ${result.roll}: ${result.effect.name} — ${result.effect.description}`}
+              text={`d100 = ${result.roll}: ${result.effect.name} — ${result.effect.description}`}
+            />
           </div>
 
           <div className="flex items-start gap-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">

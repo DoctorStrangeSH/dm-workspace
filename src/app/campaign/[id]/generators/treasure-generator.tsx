@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Dices, Copy, Check } from 'lucide-react'
+import { CopyResultButton } from './copy-result-button'
+import { Dices } from 'lucide-react'
 import { Button, Card, Select } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { generateTreasure, type TreasureTier, type TreasureResult } from '@/lib/generators/treasure'
@@ -11,7 +12,6 @@ export function TreasureGenerator() {
   const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
   const [tier, setTier] = useState<TreasureTier>('1-4')
   const [result, setResult] = useState<TreasureResult | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const TIER_OPTIONS = [
     { value: '1-4', label: t('generators.tier.1_4') },
@@ -25,19 +25,11 @@ export function TreasureGenerator() {
     setResult(generateTreasure(tier, lang))
   }
 
-  const handleCopy = async () => {
-    if (!result) return
-    const text = formatResult(result)
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   return (
     <div className="space-y-4">
       <Card padding="md">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 basis-40">
             <Select
               label={t('generators.form.tier')}
               options={TIER_OPTIONS}
@@ -53,18 +45,11 @@ export function TreasureGenerator() {
 
       {result && (
         <Card padding="md">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <h3 className="text-lg font-semibold text-[var(--text-primary)]">
               {t('generators.treasure.result')}
             </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={copied ? <Check size={14} /> : <Copy size={14} />}
-              onClick={handleCopy}
-            >
-              {copied ? t('generators.copied') : t('generators.copy')}
-            </Button>
+            <CopyResultButton key={formatResult(result)} text={formatResult(result)} />
           </div>
 
           <div className="space-y-4">

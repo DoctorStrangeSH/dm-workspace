@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Dices, Copy, Check, Swords } from 'lucide-react'
+import { CopyResultButton } from './copy-result-button'
+import { Dices, Swords } from 'lucide-react'
 import { Button, Card, Select, Badge } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import {
@@ -17,7 +18,6 @@ export function EncounterGenerator() {
   const [biome, setBiome] = useState<EncounterBiome>('forest')
   const [tier, setTier] = useState<EncounterTier>('1-4')
   const [result, setResult] = useState<EncounterResult | null>(null)
-  const [copied, setCopied] = useState(false)
 
   const BIOME_OPTIONS = [
     { value: 'forest', label: t('generators.biome.forest') },
@@ -53,13 +53,6 @@ export function EncounterGenerator() {
     setResult(generateEncounter(biome, tier, lang))
   }
 
-  const handleCopy = async () => {
-    if (!result) return
-    await navigator.clipboard.writeText(formatResult(result))
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   return (
     <div className="space-y-4">
       <Card padding="md">
@@ -92,8 +85,8 @@ export function EncounterGenerator() {
 
       {result && (
         <Card padding="md">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               <Swords size={18} className="text-[var(--danger)]" />
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
                 {t('generators.encounter.title')}
@@ -102,14 +95,7 @@ export function EncounterGenerator() {
                 {DIFFICULTY_LABELS[result.difficulty].label}
               </Badge>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={copied ? <Check size={14} /> : <Copy size={14} />}
-              onClick={handleCopy}
-            >
-              {copied ? t('generators.copied') : t('generators.copy')}
-            </Button>
+            <CopyResultButton key={formatResult(result)} text={formatResult(result)} />
           </div>
 
           <p className="mb-4 text-sm text-[var(--text-muted)] italic">{result.description}</p>

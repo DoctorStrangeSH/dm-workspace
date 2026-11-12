@@ -1,5 +1,6 @@
 import { sessionPlanningScenarios } from './session-planning-scenarios.mjs'
 import { diceScenarios } from './dice-scenarios.mjs'
+import { generatorScenarios } from './generator-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -150,6 +151,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await generatorScenarios(scenario, expect, output)
   await diceScenarios(scenario, expect, output)
   await sessionPlanningScenarios(scenario, expect, output)
   await onboardingScenarios(scenario, expect, output)
