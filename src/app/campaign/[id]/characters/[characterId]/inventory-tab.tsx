@@ -29,6 +29,8 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [rarityFilter, setRarityFilter] = useState('all')
+  const [inventoryScope, setInventoryScope] = useState('all')
+  const [sort, setSort] = useState('name')
   const [showAddDialog, setShowAddDialog] = useState(false)
 
   const data = character.data_json
@@ -48,17 +50,32 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
 
   const filteredInventory = useMemo(
     () =>
-      inventory.filter((item) => {
-        const term = search.trim().toLocaleLowerCase(lang === 'ru' ? 'ru' : 'en')
-        return (
-          (!term ||
-            item.name.toLocaleLowerCase(lang === 'ru' ? 'ru' : 'en').includes(term) ||
-            (item.notes ?? '').toLocaleLowerCase(lang === 'ru' ? 'ru' : 'en').includes(term)) &&
-          (typeFilter === 'all' || (item.itemType ?? 'other') === typeFilter) &&
-          (rarityFilter === 'all' || (item.rarity ?? 'common') === rarityFilter)
-        )
-      }),
-    [inventory, search, typeFilter, rarityFilter, lang]
+      inventory
+        .filter((item) => {
+          const term = search.trim().toLocaleLowerCase(lang === 'ru' ? 'ru' : 'en')
+          return (
+            (!term ||
+              item.name.toLocaleLowerCase(lang === 'ru' ? 'ru' : 'en').includes(term) ||
+              (item.notes ?? '').toLocaleLowerCase(lang === 'ru' ? 'ru' : 'en').includes(term) ||
+              (item.description ?? '').toLocaleLowerCase(lang).includes(term)) &&
+            (typeFilter === 'all' || (item.itemType ?? 'other') === typeFilter) &&
+            (rarityFilter === 'all' || (item.rarity ?? 'common') === rarityFilter) &&
+            (inventoryScope === 'all' ||
+              (inventoryScope === 'ready'
+                ? item.equipped
+                : inventoryScope === 'attuned'
+                  ? item.attuned
+                  : !item.equipped && !item.attuned))
+          )
+        })
+        .sort((a, b) =>
+          sort === 'weight'
+            ? (b.weight ?? 0) * b.quantity - (a.weight ?? 0) * a.quantity
+            : sort === 'quantity'
+              ? b.quantity - a.quantity
+              : a.name.localeCompare(b.name, lang)
+        ),
+    [inventory, search, typeFilter, rarityFilter, inventoryScope, sort, lang]
   )
 
   const equipped = inventory.filter((i) => i.equipped && !i.attuned)
@@ -130,6 +147,23 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
         ))}
       </div>
 
+      <div
+        role="group"
+        aria-label={t('sheet.inventory.all')}
+        className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4"
+      >
+        {(['all', 'ready', 'attuned', 'pack'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={inventoryScope === key}
+            onClick={() => setInventoryScope(key)}
+            className={`min-h-11 min-w-0 rounded-xl border px-2 text-xs font-semibold ${inventoryScope === key ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]' : 'border-[var(--border-default)] text-[var(--text-muted)]'}`}
+          >
+            {t('sheet.inventory.' + key)}
+          </button>
+        ))}
+      </div>
       <section
         aria-label={lang === 'en' ? 'Inventory filters' : 'Фильтры инвентаря'}
         className="mb-4 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 sm:p-4"
@@ -189,16 +223,36 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
           </label>
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+          <label className="flex items-center gap-2">
+            {t('sheet.inventory.sort')}
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+              className="min-h-11 min-w-0 rounded-lg border border-[var(--border-default)] bg-[var(--bg-app)] px-2 text-sm text-[var(--text-primary)]"
+            >
+              {(['name', 'weight', 'quantity'] as const).map((key) => (
+                <option key={key} value={key}>
+                  {t('sheet.inventory.' + key)}
+                </option>
+              ))}
+            </select>
+          </label>
           <span role="status" aria-live="polite">
             {lang === 'en' ? 'Found' : 'Найдено'}: {filteredInventory.length} / {inventory.length}
           </span>
-          {(search || typeFilter !== 'all' || rarityFilter !== 'all') && (
+          {(search ||
+            typeFilter !== 'all' ||
+            rarityFilter !== 'all' ||
+            inventoryScope !== 'all' ||
+            sort !== 'name') && (
             <button
               type="button"
               onClick={() => {
                 setSearch('')
                 setTypeFilter('all')
                 setRarityFilter('all')
+                setInventoryScope('all')
+                setSort('name')
               }}
               className="inline-flex min-h-11 items-center gap-1 rounded-md px-3 py-2 text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
             >
@@ -209,14 +263,16 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
         </div>
       </section>
 
-      <CurrencyTracker
-        characterId={character.id}
-        campaignId={campaignId}
-        currency={currency}
-        canEdit={canEdit}
-      />
+      <div className="grid gap-3 md:grid-cols-2">
+        <CurrencyTracker
+          characterId={character.id}
+          campaignId={campaignId}
+          currency={currency}
+          canEdit={canEdit}
+        />
 
-      <EncumbranceBar currentWeight={totalWeight} capacity={capacity} />
+        <EncumbranceBar currentWeight={totalWeight} capacity={capacity} />
+      </div>
 
       {inventory.length === 0 ? (
         <EmptyState
@@ -250,7 +306,7 @@ export default function InventoryTab({ character, campaignId, canEdit }: Props) 
                     <span className="font-normal text-[var(--text-subtle)]">({group.badge})</span>
                   )}
                 </h3>
-                <div className="space-y-1.5">
+                <div className="grid gap-3 2xl:grid-cols-2">
                   {group.items.map((item) => (
                     <InventoryItem
                       key={item.id}

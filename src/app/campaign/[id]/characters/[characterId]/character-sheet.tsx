@@ -21,6 +21,7 @@ import CharacterTabs from './character-tabs'
 import SpellsTab from './spells/spells-tab'
 import InventoryTab from './inventory-tab'
 import FeaturesTab from './features-tab'
+import CharacterActionDock from './character-action-dock'
 import LevelUpDialog from './level-up-dialog'
 import { Card, Button, IconButton, Dialog } from '@/components/ui'
 import {
@@ -182,7 +183,7 @@ export default function CharacterSheet({
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full max-w-[100rem] min-w-0">
       <Breadcrumbs
         items={[
           { label: t('nav.dashboard'), href: '/dashboard' },
@@ -369,80 +370,87 @@ export default function CharacterSheet({
 
       {!hp && <HPValidationNotice character={character} />}
 
-      <CharacterTabs
-        overviewContent={
-          <>
-            <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {ABILITIES.map((ability) => (
-                <AbilityBox
-                  key={ability}
-                  ability={ability}
-                  score={data.abilities[ability]}
-                  modifier={abilityModifier(data.abilities[ability])}
-                  onRoll={() => rollAbility(ability)}
-                />
-              ))}
-            </div>
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0">
+          <CharacterTabs
+            overviewContent={
+              <>
+                <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+                  {ABILITIES.map((ability) => (
+                    <AbilityBox
+                      key={ability}
+                      ability={ability}
+                      score={data.abilities[ability]}
+                      modifier={abilityModifier(data.abilities[ability])}
+                      onRoll={() => rollAbility(ability)}
+                    />
+                  ))}
+                </div>
 
-            <div className="mb-4">
-              <CombatStats
-                ac={data.ac}
-                initiative={getInitiative(data)}
-                speed={data.speed}
-                passivePerception={getPassivePerception(data)}
-                onRollInitiative={rollInitiative}
-              />
-            </div>
+                <div className="mb-4">
+                  <CombatStats
+                    ac={data.ac}
+                    initiative={getInitiative(data)}
+                    speed={data.speed}
+                    passivePerception={getPassivePerception(data)}
+                    onRollInitiative={rollInitiative}
+                  />
+                </div>
 
-            <div className="mb-4">
-              <HPTracker
-                characterId={character.id}
-                campaignId={campaignId}
-                hp={data.hp}
-                canEdit={canEdit}
-              />
-            </div>
+                <div className="mb-4">
+                  <HPTracker
+                    characterId={character.id}
+                    campaignId={campaignId}
+                    hp={data.hp}
+                    canEdit={canEdit}
+                  />
+                </div>
 
-            {hp?.current === 0 && (
-              <div className="mb-4">
-                <DeathSavesTracker
-                  characterId={character.id}
-                  campaignId={campaignId}
-                  deathSaves={
-                    data.deathSaves ?? {
-                      successes: 0,
-                      failures: 0,
-                      stabilized: false,
-                    }
-                  }
-                  canEdit={canEdit}
-                />
-              </div>
-            )}
+                {hp?.current === 0 && (
+                  <div className="mb-4">
+                    <DeathSavesTracker
+                      characterId={character.id}
+                      campaignId={campaignId}
+                      deathSaves={
+                        data.deathSaves ?? {
+                          successes: 0,
+                          failures: 0,
+                          stabilized: false,
+                        }
+                      }
+                      canEdit={canEdit}
+                    />
+                  </div>
+                )}
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <SavesList
-                proficientSaves={data.proficientSaves ?? []}
-                getBonus={(ability) => getSaveBonus(data, ability)}
-                onRoll={rollSave}
-              />
-              <SkillsList
-                proficientSkills={data.proficientSkills ?? []}
-                proficiencyBonus={profBonus}
-                getBonus={(skill) => getSkillBonus(data, skill)}
-                onRoll={rollSkill}
-              />
-            </div>
-          </>
-        }
-        spellsContent={
-          <SpellsTab character={character} campaignId={campaignId} canEdit={canEditData} />
-        }
-        inventoryContent={
-          <InventoryTab character={character} campaignId={campaignId} canEdit={canEditData} />
-        }
-        featuresContent={<FeaturesTab />}
-      />
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <SavesList
+                    proficientSaves={data.proficientSaves ?? []}
+                    getBonus={(ability) => getSaveBonus(data, ability)}
+                    onRoll={rollSave}
+                  />
+                  <SkillsList
+                    proficientSkills={data.proficientSkills ?? []}
+                    proficiencyBonus={profBonus}
+                    getBonus={(skill) => getSkillBonus(data, skill)}
+                    onRoll={rollSkill}
+                  />
+                </div>
+              </>
+            }
+            spellsContent={
+              <SpellsTab character={character} campaignId={campaignId} canEdit={canEditData} />
+            }
+            inventoryContent={
+              <InventoryTab character={character} campaignId={campaignId} canEdit={canEditData} />
+            }
+            featuresContent={
+              <FeaturesTab character={character} campaignId={campaignId} canEdit={canEditData} />
+            }
+          />
+        </div>
+        <CharacterActionDock data={data} />
+      </div>
 
       <Dialog
         open={classChange !== null}

@@ -42,8 +42,10 @@ export default function CharacterTabs({
 
   function handleTabKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
     let nextIndex: number | undefined
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % TABS.length
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + TABS.length) % TABS.length
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown')
+      nextIndex = (index + 1) % TABS.length
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+      nextIndex = (index - 1 + TABS.length) % TABS.length
     if (event.key === 'Home') nextIndex = 0
     if (event.key === 'End') nextIndex = TABS.length - 1
     if (nextIndex === undefined) return
@@ -80,21 +82,30 @@ export default function CharacterTabs({
               onKeyDown={(event) => handleTabKeyDown(event, index)}
               onClick={() => setActiveTab(tab.key)}
               className={cn(
-                'flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-medium transition touch-manipulation sm:min-h-11 sm:px-3 sm:text-sm',
+                'flex min-h-12 min-w-0 touch-manipulation items-center justify-center gap-2 rounded-lg px-2 py-2 text-xs font-medium transition sm:min-h-11 sm:px-3 sm:text-sm',
                 isActive
                   ? 'bg-[var(--accent)] text-white'
                   : 'text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
               )}
             >
               <Icon size={18} className="shrink-0" aria-hidden="true" />
-              <span className="min-w-0 break-words text-center">{tab.label}</span>
+              <span className="min-w-0 text-center break-words">{tab.label}</span>
             </button>
           )
         })}
       </div>
 
-      <div id="character-tabpanel" role="tabpanel" aria-labelledby={`character-tab-${activeTab}`} tabIndex={0}>
-        {contents[activeTab]}
+      <div
+        id="character-tabpanel"
+        role="tabpanel"
+        aria-labelledby={`character-tab-${activeTab}`}
+        tabIndex={0}
+      >
+        {TABS.map((tab) => (
+          <div key={tab.key} hidden={activeTab !== tab.key}>
+            {contents[tab.key]}
+          </div>
+        ))}
       </div>
     </div>
   )

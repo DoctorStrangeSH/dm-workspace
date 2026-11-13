@@ -151,6 +151,38 @@ const fixtureCharacter = {
           spellSlots: { 1: { current: 0, max: 4 }, 2: { current: 2, max: 2 } },
         }
       : {}),
+    ...(query.has('workspace')
+      ? {
+          attacks: [
+            { name: 'Longsword', bonus: 5, damage: '1d8+3', notes: 'Versatile weapon' },
+            { name: 'Complex', bonus: 2, damage: '1d8+1d4' },
+          ],
+          features: ['Second Wind: recover hit points using your class rules.'],
+          traits: ['Darkvision'],
+          spellcastingAbility: 'cha',
+          spells: [
+            {
+              id: 'acid',
+              name: 'Acid Arrow',
+              level: 2,
+              school: 'Evocation',
+              castingTime: '1 action',
+              range: '90 feet',
+              duration: 'instantaneous',
+              alwaysPrepared: true,
+              description: 'A shimmering green arrow.',
+            },
+            {
+              id: 'focus',
+              name: 'Focus',
+              level: 1,
+              duration: 'Concentration, up to 1 minute',
+              prepared: true,
+            },
+            { id: 'ritual', name: 'Ritual', level: 1, ritual: true },
+          ],
+        }
+      : {}),
     notes: 'keep this note',
     hp: hpFixtures[query.get('hp') ?? 'string'],
   },
@@ -267,6 +299,12 @@ function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?
 function Fixture() {
   const { lang } = useI18n()
   const [sessions, setSessions] = useState(sessionFixtures)
+  const [sheetCharacter, setSheetCharacter] = useState(fixtureCharacter)
+  useEffect(() => {
+    const receive = (event: Event) => setSheetCharacter((event as CustomEvent<Character>).detail)
+    window.addEventListener('offline-character-data', receive)
+    return () => window.removeEventListener('offline-character-data', receive)
+  }, [])
   useEffect(() => {
     const receiveServerProps = (event: Event) =>
       setSessions((event as CustomEvent<SessionWithRsvp[]>).detail)
@@ -408,7 +446,7 @@ function Fixture() {
               />
             ) : screen === 'character-sheet' ? (
               <CharacterSheet
-                character={fixtureCharacter}
+                character={sheetCharacter}
                 campaignId="test"
                 campaignName="Пепел и звёзды"
                 owner={{ display_name: 'Мира', username: 'Mira' }}

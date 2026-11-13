@@ -13,6 +13,7 @@ import AddSpellDialog from './add-spell-dialog'
 import { abilityModifier, formatModifier, proficiencyBonus } from '@/lib/dnd/formulas'
 import { useI18n } from '@/lib/i18n'
 import { pluralize } from '@/lib/i18n/plural'
+import { isConcentration } from '@/lib/dnd/character-workspace'
 import type { Character, CharacterSpell, CharacterData } from '@/lib/types'
 
 interface Props {
@@ -32,6 +33,7 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
   const [search, setSearch] = useState('')
   const [levelFilter, setLevelFilter] = useState('all')
   const [preparedFilter, setPreparedFilter] = useState('all')
+  const [tacticalFilter, setTacticalFilter] = useState('all')
 
   const data: CharacterData = character.data_json
 
@@ -46,11 +48,14 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
           spell.name.toLocaleLowerCase(lang).includes(term) ||
           (spell.description ?? '').toLocaleLowerCase(lang).includes(term)) &&
         (levelFilter === 'all' || String(spell.level) === levelFilter) &&
-        (preparedFilter === 'all' || Boolean(spell.prepared) === (preparedFilter === 'prepared'))
+        (preparedFilter === 'all' ||
+          Boolean(spell.prepared || spell.alwaysPrepared) === (preparedFilter === 'prepared')) &&
+        (tacticalFilter === 'all' ||
+          (tacticalFilter === 'rituals' ? spell.ritual : isConcentration(spell.duration)))
     )
-  }, [spells, search, levelFilter, preparedFilter, lang])
+  }, [spells, search, levelFilter, preparedFilter, tacticalFilter, lang])
   const availableLevels = [...new Set(spells.map((spell) => spell.level))].sort((a, b) => a - b)
-  const preparedCount = spells.filter((spell) => spell.prepared).length
+  const preparedCount = spells.filter((spell) => spell.prepared || spell.alwaysPrepared).length
   const ritualCount = spells.filter((spell) => spell.ritual).length
 
   const spellsByLevel = useMemo(() => {
@@ -148,6 +153,53 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
         )}
       </CharacterLibraryHeader>
 
+      {data.spellcastingAbility && (
+        <dl className="mb-4 grid grid-cols-2 gap-3">
+          {[
+            {
+              label: t('sheet.spells.attack'),
+              value: formatModifier(
+                abilityModifier(data.abilities[data.spellcastingAbility]) +
+                  proficiencyBonus(data.level)
+              ),
+            },
+            {
+              label: t('sheet.spells.dc'),
+              value:
+                8 +
+                abilityModifier(data.abilities[data.spellcastingAbility]) +
+                proficiencyBonus(data.level),
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent-subtle)] p-4"
+            >
+              <dt className="text-xs text-[var(--text-muted)]">{stat.label}</dt>
+              <dd className="mt-1 text-2xl font-bold text-[var(--accent-text)]">{stat.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      <div
+        role="group"
+        aria-label={t('sheet.spells.focus')}
+        className="mb-4 grid grid-cols-3 gap-2"
+      >
+        {(['all', 'rituals', 'concentration'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={tacticalFilter === key}
+            onClick={() => setTacticalFilter(key)}
+            className={`min-h-11 min-w-0 rounded-xl border p-2 text-xs font-semibold break-words ${tacticalFilter === key ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]' : 'border-[var(--border-default)] text-[var(--text-muted)]'}`}
+          >
+            {key === 'all' ? t('common.all') : t('sheet.spells.' + key)}
+          </button>
+        ))}
+      </div>
+
       <dl aria-label={t('spells.library.summary')} className="mb-4 grid grid-cols-3 gap-2">
         {[
           { label: t('common.total'), count: spells.length },
@@ -225,13 +277,17 @@ export default function SpellsTab({ character, campaignId, canEdit }: Props) {
           <span role="status">
             {t('spells.library.found', { found: filteredSpells.length, total: spells.length })}
           </span>
-          {(search || levelFilter !== 'all' || preparedFilter !== 'all') && (
+          {(search ||
+            levelFilter !== 'all' ||
+            preparedFilter !== 'all' ||
+            tacticalFilter !== 'all') && (
             <button
               type="button"
               onClick={() => {
                 setSearch('')
                 setLevelFilter('all')
                 setPreparedFilter('all')
+                setTacticalFilter('all')
               }}
               className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-[var(--accent-text)] hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
             >

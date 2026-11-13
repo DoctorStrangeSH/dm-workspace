@@ -1184,6 +1184,66 @@ export const en: Dictionary = {
   'settings.deleteAccount.toast.deleted': 'Account deleted',
 
   // ─── Generators ───
+  'sheet.dock': 'Action panel',
+  'sheet.hp': 'Hit points',
+  'sheet.ac': 'Armor class',
+  'sheet.speed': 'Speed',
+  'sheet.mode': 'd20 roll mode',
+  'sheet.ability': 'Ability to check',
+  'sheet.normal': 'Normal roll',
+  'sheet.advantage': 'Advantage · two d20',
+  'sheet.disadvantage': 'Disadvantage · two d20',
+  'sheet.check': 'Check',
+  'sheet.attack': 'Attack',
+  'sheet.damage': 'Damage',
+  'sheet.rollHint':
+    'Personal rolls. Advantage selects the higher d20; disadvantage selects the lower. Resolve hits and critical damage separately.',
+  'sheet.rollError':
+    'Could not roll. Supported: XdY±Z (up to 20 dice and ±100 bonus), or fixed damage from 0 to 100.',
+  'sheet.history': 'Recent rolls',
+  'sheet.noRolls': 'The last five results from this page will appear here.',
+  'sheet.features.hint':
+    'Keep class abilities, traits and play notes together. Text entries do not apply automatic stat bonuses.',
+  'sheet.features.edit': 'Edit abilities',
+  'sheet.features.attacks': 'Attacks and techniques',
+  'sheet.features.attacksHint':
+    'Up to 30 attacks. Attack bonus: integer from −100 to 100. Damage: e.g. 1d8+3; complex formulas can be recorded but need a separate roll.',
+  'sheet.features.addAttack': 'Add attack',
+  'sheet.features.attack.name': 'Attack name',
+  'sheet.features.attack.bonus': 'Attack bonus',
+  'sheet.features.attack.damage': 'Damage formula',
+  'sheet.features.attack.notes': 'Conditions and notes',
+  'sheet.features.features': 'Abilities',
+  'sheet.features.traits': 'Traits',
+  'sheet.features.notes': 'Character notes',
+  'sheet.features.empty': 'No entries yet.',
+  'sheet.features.add': 'Add entry',
+  'sheet.features.invalid':
+    'Check entries: nonempty abilities/traits up to 2000 characters, notes up to 12,000. Attacks need a name, damage formula and integer bonus from −100 to 100.',
+  'sheet.features.conflict':
+    'The character changed while editing. Copy your draft and reopen the editor to use the current version.',
+  'sheet.features.uncertain':
+    'Could not confirm saving. Your draft is still here. Check the refreshed page before trying again.',
+  'sheet.features.saved': 'Saved. Refreshing character data.',
+  'sheet.features.unsaved':
+    'Your draft stays when switching sections. Save before reloading or leaving this page.',
+  'sheet.spells.focus': 'Tactical filter',
+  'sheet.spells.rituals': 'Rituals',
+  'sheet.spells.concentration': 'Concentration',
+  'sheet.spells.attack': 'Spell attack bonus',
+  'sheet.spells.dc': 'Spell save DC',
+  'sheet.spells.book': 'In spellbook',
+  'sheet.spells.attackHint':
+    'Spell attack roll; no slot is spent. Use for spells requiring an attack roll.',
+  'sheet.inventory.all': 'All items',
+  'sheet.inventory.ready': 'Equipment',
+  'sheet.inventory.attuned': 'Attunement',
+  'sheet.inventory.pack': 'Backpack',
+  'sheet.inventory.sort': 'Item order',
+  'sheet.inventory.name': 'By name',
+  'sheet.inventory.weight': 'Heaviest first',
+  'sheet.inventory.quantity': 'By quantity',
+  'sheet.inventory.description': 'Item description',
   'generators.workbench.title': 'Game master’s workbench',
   'generators.workbench.hint':
     'Prepare a discovery, a merchant or an unexpected encounter. Switch freely: results and settings stay in place while this page is open.',

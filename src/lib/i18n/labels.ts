@@ -25,8 +25,11 @@ export function skillLabel(lang: Lang, key: SkillKey): string {
   return tr(lang, `skill.${camel}`)
 }
 
-export function spellSchoolLabel(lang: Lang, key: SpellSchool): string {
-  return tr(lang, `school.${key}`)
+export function spellSchoolLabel(lang: Lang, key: SpellSchool | string): string {
+  const raw = key.trim()
+  const lookup = `school.${raw.toLowerCase()}`
+  const translated = tr(lang, lookup)
+  return translated === lookup ? raw : translated
 }
 
 export function currencyLabel(lang: Lang, key: 'pp' | 'gp' | 'sp' | 'cp'): string {

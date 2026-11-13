@@ -12,7 +12,15 @@ import {
 import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
-import { ITEM_TYPES, ITEM_RARITIES, itemTypeLabel, itemRarityLabel, itemRarityClass, type ItemType, type ItemRarity } from '@/lib/dnd/inventory-metadata'
+import {
+  ITEM_TYPES,
+  ITEM_RARITIES,
+  itemTypeLabel,
+  itemRarityLabel,
+  itemRarityClass,
+  type ItemType,
+  type ItemRarity,
+} from '@/lib/dnd/inventory-metadata'
 import { cn } from '@/lib/utils'
 import type { CharacterInventoryItem } from '@/lib/types'
 
@@ -96,144 +104,189 @@ export default function InventoryItem({ item, characterId, campaignId, canEdit }
     <>
       <div className="group rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3 transition-colors hover:border-[var(--accent)]/40">
         <div className="flex flex-wrap items-center gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--accent-text)]">{item.attuned ? <Sparkles size={18} /> : item.equipped ? <Shield size={18} /> : <Package size={18} />}</div>
-        <div className="flex shrink-0 items-center gap-1">
-          {canEdit ? (
-            <button
-              onClick={handleToggleEquipped}
-              disabled={isPending}
-              className={cn(
-                'flex h-11 w-11 items-center justify-center rounded-lg border-2 transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
-                item.equipped
-                  ? 'border-[var(--info)] bg-[var(--info)]'
-                  : 'border-[var(--border-default)] hover:border-[var(--border-hover)]'
-              )}
-              title={item.equipped ? t('inventory.item.unequip') : t('inventory.item.equip')}
-              aria-label={`${item.name}: ${item.equipped ? t('inventory.item.unequip') : t('inventory.item.equip')}`}
-              aria-pressed={!!item.equipped}
-            >
-              {item.equipped && <Shield size={10} className="text-white" />}
-            </button>
-          ) : (
-            item.equipped && <Shield size={14} className="text-[var(--info-text)]" />
-          )}
-          {item.attuned && <Sparkles size={14} className="text-[var(--accent-text)]" />}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          {isEditing ? (
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="min-h-11 min-w-28 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
-              />
-              <input
-                type="number"
-                value={editQuantity}
-                onChange={(e) => setEditQuantity(Number(e.target.value))}
-                min={1}
-                className="min-h-11 w-16 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
-              />
-              <select aria-label={lang === 'en' ? 'Item type' : 'Тип предмета'} value={editType} onChange={(e) => setEditType(e.target.value as ItemType)} className="min-h-11 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
-                {ITEM_TYPES.map((value) => <option key={value} value={value}>{itemTypeLabel(value, lang)}</option>)}
-              </select>
-              <select aria-label={lang === 'en' ? 'Rarity' : 'Редкость'} value={editRarity} onChange={(e) => setEditRarity(e.target.value as ItemRarity)} className="min-h-11 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]">
-                {ITEM_RARITIES.map((value) => <option key={value} value={value}>{itemRarityLabel(value, lang)}</option>)}
-              </select>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-subtle)] text-[var(--accent-text)]">
+            {item.attuned ? (
+              <Sparkles size={18} />
+            ) : item.equipped ? (
+              <Shield size={18} />
+            ) : (
+              <Package size={18} />
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            {canEdit ? (
               <button
-                onClick={handleSaveEdit}
-                aria-label={t('common.save')}
+                onClick={handleToggleEquipped}
                 disabled={isPending}
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-[var(--bg-hover)]"
-              >
-                <Check size={14} className="text-[var(--success)]" />
-              </button>
-              <button
-                aria-label={t('common.cancel')}
-                onClick={() => {
-                  setIsEditing(false)
-                  setEditName(item.name)
-                  setEditQuantity(item.quantity)
-                  setEditType(item.itemType ?? 'other')
-                  setEditRarity(item.rarity ?? 'common')
-                }}
-                className="rounded p-1 hover:bg-[var(--bg-hover)]"
-              >
-                <X size={14} className="text-[var(--text-muted)]" />
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="min-w-0 break-words font-medium text-[var(--text-primary)]">{item.name}</span>
-                {item.quantity > 1 && (
-                  <span className="rounded bg-[var(--bg-secondary)] px-1.5 py-0.5 text-xs text-[var(--text-muted)]">
-                    ×{item.quantity}
-                  </span>
+                className={cn(
+                  'flex h-11 w-11 items-center justify-center rounded-lg border-2 transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+                  item.equipped
+                    ? 'border-[var(--info)] bg-[var(--info)]'
+                    : 'border-[var(--border-default)] hover:border-[var(--border-hover)]'
                 )}
+                title={item.equipped ? t('inventory.item.unequip') : t('inventory.item.equip')}
+                aria-label={`${item.name}: ${item.equipped ? t('inventory.item.unequip') : t('inventory.item.equip')}`}
+                aria-pressed={!!item.equipped}
+              >
+                {item.equipped && <Shield size={10} className="text-white" />}
+              </button>
+            ) : (
+              item.equipped && <Shield size={14} className="text-[var(--info-text)]" />
+            )}
+            {item.attuned && <Sparkles size={14} className="text-[var(--accent-text)]" />}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            {isEditing ? (
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="min-h-11 min-w-28 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                />
+                <input
+                  type="number"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(Number(e.target.value))}
+                  min={1}
+                  className="min-h-11 w-16 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 py-1 text-sm text-[var(--text-primary)] focus:border-[var(--border-focus)] focus:outline-none"
+                />
+                <select
+                  aria-label={lang === 'en' ? 'Item type' : 'Тип предмета'}
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value as ItemType)}
+                  className="min-h-11 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]"
+                >
+                  {ITEM_TYPES.map((value) => (
+                    <option key={value} value={value}>
+                      {itemTypeLabel(value, lang)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label={lang === 'en' ? 'Rarity' : 'Редкость'}
+                  value={editRarity}
+                  onChange={(e) => setEditRarity(e.target.value as ItemRarity)}
+                  className="min-h-11 min-w-0 rounded border border-[var(--border-default)] bg-[var(--bg-primary)] px-2 text-sm text-[var(--text-primary)]"
+                >
+                  {ITEM_RARITIES.map((value) => (
+                    <option key={value} value={value}>
+                      {itemRarityLabel(value, lang)}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleSaveEdit}
+                  aria-label={t('common.save')}
+                  disabled={isPending}
+                  className="flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-[var(--bg-hover)]"
+                >
+                  <Check size={14} className="text-[var(--success)]" />
+                </button>
+                <button
+                  aria-label={t('common.cancel')}
+                  onClick={() => {
+                    setIsEditing(false)
+                    setEditName(item.name)
+                    setEditQuantity(item.quantity)
+                    setEditType(item.itemType ?? 'other')
+                    setEditRarity(item.rarity ?? 'common')
+                  }}
+                  className="rounded p-1 hover:bg-[var(--bg-hover)]"
+                >
+                  <X size={14} className="text-[var(--text-muted)]" />
+                </button>
               </div>
-              {(item.itemType || item.rarity) && (
-                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {item.itemType && itemTypeLabel(item.itemType, lang) && (
-                    <span className="rounded-md border border-[var(--border-default)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">{itemTypeLabel(item.itemType, lang)}</span>
-                  )}
-                  {item.rarity && itemRarityLabel(item.rarity, lang) && (
-                    <span className={cn('rounded-md border px-2 py-0.5 text-[11px] font-semibold', itemRarityClass(item.rarity))}>{itemRarityLabel(item.rarity, lang)}</span>
+            ) : (
+              <>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <span className="min-w-0 font-medium break-words text-[var(--text-primary)]">
+                    {item.name}
+                  </span>
+                  {item.quantity > 1 && (
+                    <span className="rounded bg-[var(--bg-secondary)] px-1.5 py-0.5 text-xs text-[var(--text-muted)]">
+                      ×{item.quantity}
+                    </span>
                   )}
                 </div>
-              )}
-              {item.notes && (
-                <p className="break-words text-xs text-[var(--text-muted)]">{item.notes}</p>
-              )}
-            </>
-          )}
-        </div>
-
-        {item.weight && item.weight > 0 && (
-          <span className="shrink-0 text-xs text-[var(--text-muted)]">
-            {(item.weight * item.quantity).toFixed(1)} {t('inventory.item.lb')}
-          </span>
-        )}
-
-        {canEdit && !isEditing && (
-          <div className="ml-auto flex shrink-0 items-center gap-1 md:opacity-60 md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-            <button
-              onClick={handleToggleAttuned}
-              disabled={isPending}
-              className={cn(
-                'flex h-11 w-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
-                item.attuned
-                  ? 'text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]'
-                  : 'text-[var(--text-subtle)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)]'
-              )}
-              title={item.attuned ? t('inventory.item.unattune') : t('inventory.item.attune')}
-              aria-label={`${item.name}: ${item.attuned ? t('inventory.item.unattune') : t('inventory.item.attune')}`}
-              aria-pressed={!!item.attuned}
-            >
-              <Sparkles size={12} />
-            </button>
-            <button
-              onClick={() => setIsEditing(true)}
-              disabled={isPending}
-              className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
-              title={t('common.edit')}
-              aria-label={`${t('common.edit')}: ${item.name}`}
-            >
-              <Pencil size={12} className="text-[var(--text-muted)]" />
-            </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isPending}
-              className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
-              title={t('common.delete')}
-              aria-label={`${t('common.delete')}: ${item.name}`}
-            >
-              <Trash2 size={12} className="text-[var(--danger)]" />
-            </button>
+                {(item.itemType || item.rarity) && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {item.itemType && itemTypeLabel(item.itemType, lang) && (
+                      <span className="rounded-md border border-[var(--border-default)] px-2 py-0.5 text-[11px] text-[var(--text-muted)]">
+                        {itemTypeLabel(item.itemType, lang)}
+                      </span>
+                    )}
+                    {item.rarity && itemRarityLabel(item.rarity, lang) && (
+                      <span
+                        className={cn(
+                          'rounded-md border px-2 py-0.5 text-[11px] font-semibold',
+                          itemRarityClass(item.rarity)
+                        )}
+                      >
+                        {itemRarityLabel(item.rarity, lang)}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {item.notes && (
+                  <p className="text-xs break-words text-[var(--text-muted)]">{item.notes}</p>
+                )}
+                {item.description && item.description !== item.notes && (
+                  <details className="mt-2 text-sm text-[var(--text-secondary)]">
+                    <summary className="min-h-11 cursor-pointer py-3 text-xs text-[var(--accent-text)]">
+                      {t('sheet.inventory.description')}
+                    </summary>
+                    <p className="break-words whitespace-pre-wrap">{item.description}</p>
+                  </details>
+                )}
+              </>
+            )}
           </div>
-        )}
+
+          {item.weight && item.weight > 0 && (
+            <span className="shrink-0 text-xs text-[var(--text-muted)]">
+              {(item.weight * item.quantity).toFixed(1)} {t('inventory.item.lb')}
+            </span>
+          )}
+
+          {canEdit && !isEditing && (
+            <div className="ml-auto flex shrink-0 items-center gap-1">
+              <button
+                onClick={handleToggleAttuned}
+                disabled={isPending}
+                className={cn(
+                  'flex h-11 w-11 items-center justify-center rounded-lg transition focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+                  item.attuned
+                    ? 'text-[var(--accent-text)] hover:bg-[var(--accent-subtle)]'
+                    : 'text-[var(--text-subtle)] hover:bg-[var(--bg-hover)] hover:text-[var(--accent-text)]'
+                )}
+                title={item.attuned ? t('inventory.item.unattune') : t('inventory.item.attune')}
+                aria-label={`${item.name}: ${item.attuned ? t('inventory.item.unattune') : t('inventory.item.attune')}`}
+                aria-pressed={!!item.attuned}
+              >
+                <Sparkles size={16} />
+              </button>
+              <button
+                onClick={() => setIsEditing(true)}
+                disabled={isPending}
+                className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                title={t('common.edit')}
+                aria-label={`${t('common.edit')}: ${item.name}`}
+              >
+                <Pencil size={16} className="text-[var(--text-muted)]" />
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isPending}
+                className="flex h-11 w-11 items-center justify-center rounded-lg transition hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                title={t('common.delete')}
+                aria-label={`${t('common.delete')}: ${item.name}`}
+              >
+                <Trash2 size={16} className="text-[var(--danger)]" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
