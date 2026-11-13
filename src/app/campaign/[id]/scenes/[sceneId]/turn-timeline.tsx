@@ -10,6 +10,7 @@ import {
   Swords,
   Circle,
   EyeOff,
+  Rows3,
 } from 'lucide-react'
 import { Button } from '@/components/ui'
 import { useT } from '@/lib/i18n'
@@ -33,6 +34,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
   const listId = useId()
   const rail = useRef<HTMLOListElement>(null)
   const [expanded, setExpanded] = useState(false)
+  const [compact, setCompact] = useState(true)
   const ordered = orderTurns(entries).filter((entry) => entry.token)
   const visible = ordered.filter((entry) => isDm || !entry.token.is_hidden)
   const currents = ordered.filter((entry) => entry.is_current)
@@ -71,7 +73,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
     const lr = list.getBoundingClientRect()
     const cr = card.getBoundingClientRect()
     list.scrollLeft += cr.left + cr.width / 2 - lr.left - list.clientWidth / 2
-  }, [currentId, expanded])
+  }, [currentId, expanded, compact])
 
   if (ordered.length === 0) return null
   return (
@@ -79,7 +81,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
       aria-label={t('turns.title')}
       className="mb-4 min-w-0 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]"
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-default)] px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] px-4 py-2">
         <div className="min-w-0">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">
             <ListOrdered size={18} className="text-[var(--accent-text)]" />
@@ -103,7 +105,17 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
         <div className="flex flex-wrap gap-1">
           <Button
             variant="ghost"
-            className="min-h-11 text-xs"
+            className="min-h-11 min-w-11 !px-2 text-xs"
+            title={t('turns.compact')}
+            aria-pressed={compact}
+            onClick={() => setCompact((value) => !value)}
+          >
+            <Rows3 size={16} aria-hidden="true" />
+            <span className="sr-only sm:not-sr-only">{t('turns.compact')}</span>
+          </Button>
+          <Button
+            variant="ghost"
+            className="min-h-11 !px-2 text-xs"
             aria-expanded={expanded}
             aria-controls={listId}
             onClick={() => setExpanded((value) => !value)}
@@ -112,7 +124,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
           </Button>
           <Button
             variant="secondary"
-            className="min-h-11 text-xs"
+            className="min-h-11 !px-2 text-xs"
             onClick={(event) => onOpenPanel(event.currentTarget)}
           >
             {t('scenes.combatPanel')}
@@ -177,7 +189,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
         id={listId}
         tabIndex={0}
         aria-label={t('turns.queue')}
-        className={cn(styles.rail, expanded && styles.expanded)}
+        className={cn(styles.rail, expanded && styles.expanded, compact && styles.compact)}
       >
         {visible.map((entry, index) => {
           const conditions = combatConditions(entry.token.conditions, t)
@@ -220,6 +232,7 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
                     : '')
                 }
                 className={cn(
+                  styles.card,
                   'relative flex h-full w-full flex-col items-center rounded-xl border p-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
                   active
                     ? 'border-[var(--accent)] bg-[var(--accent-subtle)] shadow-[0_0_0_1px_var(--accent)]'
@@ -227,7 +240,12 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
                   isNext && 'border-dashed border-[var(--accent)]'
                 )}
               >
-                <span className="mb-2 flex w-full items-center justify-between gap-1 text-[10px] font-semibold text-[var(--text-muted)]">
+                <span
+                  className={cn(
+                    styles.scores,
+                    'mb-2 flex w-full items-center justify-between gap-1 text-[10px] font-semibold text-[var(--text-muted)]'
+                  )}
+                >
                   <span>#{index + 1}</span>
                   <span
                     className={cn(
@@ -241,17 +259,32 @@ export default function TurnTimeline({ entries, isDm, onFocusToken, onOpenPanel 
                     {entry.initiative}
                   </span>
                 </span>
-                <CombatPortrait token={entry.token} />
-                <span className="mt-2 w-full text-xs font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+                <span className={styles.portrait}>
+                  <CombatPortrait token={entry.token} size={compact ? 32 : 48} />
+                </span>
+                <span
+                  className={cn(
+                    styles.name,
+                    'mt-2 w-full text-xs font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]'
+                  )}
+                >
                   {entry.token.name}
                 </span>
-                <span className="mt-1 flex flex-wrap items-center justify-center gap-1 text-[10px] text-[var(--text-muted)]">
+                <span
+                  className={cn(
+                    styles.kind,
+                    'mt-1 flex flex-wrap items-center justify-center gap-1 text-[10px] text-[var(--text-muted)]'
+                  )}
+                >
                   {kind}
                   {entry.token.is_hidden && <EyeOff size={11} aria-label={t('turns.hiddenDm')} />}
                 </span>
-                <CombatConditions conditions={conditions} compact />
+                <div className={styles.conditions}>
+                  <CombatConditions conditions={conditions} compact />
+                </div>
                 <span
                   className={cn(
+                    styles.turnStatus,
                     'mt-auto pt-2 text-[10px] font-semibold',
                     active || isNext ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)]'
                   )}

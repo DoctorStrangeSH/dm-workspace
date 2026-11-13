@@ -3,6 +3,7 @@ import { diceScenarios } from './dice-scenarios.mjs'
 import { generatorScenarios } from './generator-scenarios.mjs'
 import { characterWorkspaceScenarios } from './character-workspace-scenarios.mjs'
 import { preparationScenarios } from './preparation-scenarios.mjs'
+import { compactCombatScenarios } from './compact-combat-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -153,6 +154,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await compactCombatScenarios(scenario, expect, output)
   await preparationScenarios(scenario, expect, output)
   await characterWorkspaceScenarios(scenario, expect, output)
   await generatorScenarios(scenario, expect, output)

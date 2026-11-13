@@ -30,6 +30,45 @@
   align-items: center;
   gap: 0.25rem;
 }
+.compact .item {
+  flex-basis: 184px;
+}
+.compact.expanded {
+  grid-template-columns: repeat(auto-fill, minmax(min(184px, 100%), 1fr));
+}
+.compact .card {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
+  align-content: start;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  text-align: left;
+  padding: 0.625rem;
+}
+.compact .scores {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.compact .portrait {
+  grid-column: 1;
+  grid-row: 2 / 4;
+}
+.compact .name {
+  grid-column: 2;
+  margin: 0;
+}
+.compact .kind {
+  grid-column: 2;
+  justify-content: start;
+  margin: 0;
+}
+.compact .conditions,
+.compact .turnStatus {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 0.25rem;
+}
 @container (max-width:480px) {
   .status {
     flex-basis: 100%;
