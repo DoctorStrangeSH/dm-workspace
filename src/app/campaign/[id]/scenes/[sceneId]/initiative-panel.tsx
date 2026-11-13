@@ -115,293 +115,312 @@ export default function InitiativePanel({
   return (
     <aside
       aria-label={t('scenes.initiative.title')}
-      className="flex min-w-0 flex-col rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]"
+      className="flex h-dvh min-w-0 flex-col overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-md)]"
     >
-      <div className="flex items-center justify-between gap-2 border-b border-[var(--border-default)] p-4">
-        <h2 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
-          <Swords size={18} className="text-[var(--accent-text)]" />
-          {t('scenes.initiative.title')}{' '}
-          <span className="text-sm text-[var(--text-muted)]">{visible.length}</span>
-        </h2>
-        <Button
-          variant="ghost"
-          aria-label={t('common.close')}
-          disabled={pending}
-          onClick={onClose}
-          className="min-h-11 min-w-11 !px-2"
-        >
-          <X size={18} />
-        </Button>
-      </div>
       <div
-        className="space-y-3 border-b border-[var(--border-default)] bg-[var(--accent-subtle)] p-4"
-        aria-live="polite"
+        data-combat-controls
+        className="shrink-0 bg-[var(--bg-elevated)] shadow-[var(--shadow-sm)]"
       >
-        <div>
-          <p className="text-xs font-semibold tracking-wider text-[var(--accent-text)] uppercase">
-            {currents.length > 1
-              ? t('map.turnConflict')
-              : current
-                ? t('scenes.initiative.now')
-                : t('map.prepare')}
-          </p>
-          <p className="mt-1 font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
-            {currents.length > 1
-              ? t('turns.waitForSync')
-              : current
-                ? publicName(current)
-                : t('map.prepareHint')}
-          </p>
+        <div className="flex items-center justify-between gap-2 border-b border-[var(--border-default)] px-4 py-2">
+          <h2 className="flex items-center gap-2 font-semibold text-[var(--text-primary)]">
+            <Swords size={18} className="text-[var(--accent-text)]" />
+            {t('scenes.initiative.title')}{' '}
+            <span className="text-sm text-[var(--text-muted)]">{visible.length}</span>
+          </h2>
+          <Button
+            variant="ghost"
+            aria-label={t('common.close')}
+            disabled={pending}
+            onClick={onClose}
+            className="min-h-11 min-w-11 !px-2"
+          >
+            <X size={18} />
+          </Button>
         </div>
-        {next && currents.length <= 1 && (
-          <p className="text-sm [overflow-wrap:anywhere] text-[var(--text-secondary)]">
-            {t('map.upNext')}: <strong>{publicName(next)}</strong>
-          </p>
-        )}
-        {isDm && entries.length > 0 && (
-          <Button
-            variant="primary"
-            className="min-h-11 w-full"
-            disabled={blocked}
-            loading={pending}
-            icon={<ChevronRight size={16} />}
-            iconPosition="right"
-            onClick={() => run(() => nextTurn(sceneId))}
-          >
-            {current ? t('scenes.initiative.nextTurn') : t('map.beginTurns')}
-          </Button>
-        )}
-        {!current && isDm && entries.length > 0 && (
-          <Button
-            variant="secondary"
-            className="min-h-11 w-full"
-            disabled={blocked}
-            icon={<Dices size={17} />}
-            onClick={() => run(() => rollAllInitiatives(sceneId))}
-          >
-            {t('map.rollAll')}
-          </Button>
-        )}
-      </div>
-      {currents.length > 1 && (
-        <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
-          {t('map.turnConflict')}
-        </p>
-      )}
-      {error && (
-        <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
-          {error}
-        </p>
-      )}
-      {isDm && entries.length > 0 && (
-        <div className="border-b border-[var(--border-default)] p-3">
-          <Button
-            className="min-h-11 w-full"
-            variant="secondary"
-            disabled={blocked}
-            onClick={() =>
-              run(async () => {
-                const result = await addCombatParticipants(sceneId)
-                if (result.count !== undefined)
-                  setNotice(t('map.participantsAdded', { count: result.count }))
-                return result
-              })
-            }
-          >
-            {t('map.addParticipants')}
-          </Button>
-          <p className="mt-2 text-xs text-[var(--text-muted)]">{t('map.addParticipantsHint')}</p>
-          {notice && (
-            <p role="status" className="mt-2 text-sm">
-              {notice}
+        <div
+          className="space-y-2 border-b border-[var(--border-default)] bg-[var(--accent-subtle)] px-4 py-3"
+          aria-live="polite"
+        >
+          <div>
+            <p className="text-xs font-semibold tracking-wider text-[var(--accent-text)] uppercase">
+              {currents.length > 1
+                ? t('map.turnConflict')
+                : current
+                  ? t('scenes.initiative.now')
+                  : t('map.prepare')}
+            </p>
+            <p className="mt-1 font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+              {currents.length > 1
+                ? t('turns.waitForSync')
+                : current
+                  ? publicName(current)
+                  : t('map.prepareHint')}
+            </p>
+          </div>
+          {next && currents.length <= 1 && (
+            <p className="text-sm [overflow-wrap:anywhere] text-[var(--text-secondary)]">
+              {t('map.upNext')}: <strong>{publicName(next)}</strong>
             </p>
           )}
-        </div>
-      )}
-      {entries.length > 0 && (
-        <div className="space-y-3 border-b border-[var(--border-default)] p-3">
-          <Input
-            ref={searchInput}
-            type="search"
-            label={t('combatFinder.search')}
-            placeholder={t('combatFinder.placeholder')}
-            icon={<Search size={17} aria-hidden="true" />}
-            className="min-h-11"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <div role="group" aria-label={t('combatFinder.kind')} className="flex flex-wrap gap-1.5">
-            {['all', 'characters', 'creatures', 'tokens'].map((value) => {
-              const count =
-                value === 'all'
-                  ? participants.length
-                  : participants.filter((p) => p.kind === value).length
-              if (value !== 'all' && count === 0 && kind !== value) return null
-              return (
-                <Button
-                  key={value}
-                  variant={kind === value ? 'primary' : 'secondary'}
-                  className="min-h-11 text-xs"
-                  aria-pressed={kind === value}
-                  onClick={() => setKind(value)}
-                >
-                  {t(value === 'all' ? 'combatFinder.all' : 'turns.' + value)}
-                  <span className="ml-1 tabular-nums">{count}</span>
-                </Button>
-              )
-            })}
-            <Button
-              variant={withConditions ? 'primary' : 'secondary'}
-              className="min-h-11 text-xs"
-              aria-pressed={withConditions}
-              onClick={() => setWithConditions((value) => !value)}
-            >
-              {t('combatFinder.withConditions')}
-            </Button>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p role="status" className="text-xs text-[var(--text-secondary)]">
-              {t('combatFinder.results', { shown: matches.length, total: visible.length })}
-            </p>
-            {filtered && (
-              <Button variant="ghost" className="min-h-11 text-xs" onClick={resetFilters}>
-                {t('combatFinder.reset')}
-              </Button>
-            )}
-          </div>
-          <p className="text-xs text-[var(--text-muted)]">{t('combatFinder.hint')}</p>
-        </div>
-      )}
-      <ol
-        aria-label={t('combatFinder.participants')}
-        className="max-h-[28rem] space-y-2 overflow-y-auto p-3"
-      >
-        {matches.map(({ entry, position, conditions }) => {
-          const active = currents.length === 1 && current?.id === entry.id
-          const token = entry.token
-          const hpValid =
-            token.hp_current !== null &&
-            token.hp_max !== null &&
-            Number.isFinite(token.hp_current) &&
-            Number.isFinite(token.hp_max) &&
-            token.hp_current >= 0 &&
-            token.hp_current <= token.hp_max &&
-            token.hp_max > 0
-          return (
-            <li
-              key={entry.id}
-              aria-current={active ? 'step' : undefined}
-              data-entry-id={entry.id}
-              className={cn(
-                'rounded-xl border p-3',
-                active
-                  ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
-                  : 'border-[var(--border-default)] bg-[var(--bg-surface)]'
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <CombatPortrait token={token} size={36} />
-                <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--bg-app)] text-lg font-bold text-[var(--text-primary)] tabular-nums">
-                  <span className="sr-only">{t('scenes.initiative.title')}</span>
-                  {entry.initiative}
-                  <span className="text-[9px] leading-none text-[var(--text-muted)]">
-                    #{position}
-                  </span>
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
-                    {token.name}
-                    {token.is_hidden && isDm && (
-                      <EyeOff size={13} className="ml-1 inline" aria-label={t('turns.hiddenDm')} />
-                    )}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[var(--accent-text)]">
-                    {active
-                      ? t('scenes.initiative.now')
-                      : currents.length <= 1 && next?.id === entry.id
-                        ? t('map.upNext')
-                        : t('map.waiting')}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)]">
-                    {hpValid && (
-                      <span className="flex items-center gap-1">
-                        <HeartPulse size={13} /> {token.hp_current}/{token.hp_max}
-                      </span>
-                    )}
-                    {token.ac != null && (
-                      <span className="flex items-center gap-1">
-                        <Shield size={13} />
-                        {token.ac}
-                      </span>
-                    )}
-                  </div>
-                  <CombatConditions conditions={conditions} />
-                </div>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {onFocusToken && (
-                  <Button
-                    variant="ghost"
-                    className="min-h-11 flex-1 text-xs"
-                    disabled={pending}
-                    icon={<LocateFixed size={15} />}
-                    onClick={() => onFocusToken(token.id)}
-                    aria-label={t('map.focusNamed', { name: token.name })}
-                  >
-                    {t('map.focus')}
-                  </Button>
-                )}
-                {isDm && (
-                  <Button
-                    variant="ghost"
-                    className="min-h-11 text-xs"
-                    disabled={blocked}
-                    aria-label={t('map.rollNamed', { name: token.name })}
-                    icon={<Dices size={15} />}
-                    onClick={() => (current ? setConfirm(entry.id) : roll(entry.id))}
-                  >
-                    {t('scenes.initiative.roll')}
-                  </Button>
-                )}
-              </div>
-            </li>
-          )
-        })}
-      </ol>
-      {entries.length > 0 && matches.length === 0 && (
-        <div className="space-y-2 px-4 pb-4">
-          <p className="text-sm text-[var(--text-secondary)]">
-            {visible.length === 0 ? t('turns.noVisible') : t('combatFinder.empty')}
-          </p>
-        </div>
-      )}
-      {entries.length === 0 && (
-        <div className="space-y-3 px-4 pb-4">
-          <p className="text-sm text-[var(--text-muted)]">{t('scenes.initiative.empty')}</p>
-          {isDm && (
+          {isDm && entries.length > 0 && (
             <Button
               variant="primary"
               className="min-h-11 w-full"
               disabled={blocked}
-              onClick={() => run(() => startCombat(sceneId))}
+              loading={pending}
+              icon={<ChevronRight size={16} />}
+              iconPosition="right"
+              onClick={() => run(() => nextTurn(sceneId))}
             >
-              {t('map.prepareCombat')}
+              {current ? t('scenes.initiative.nextTurn') : t('map.beginTurns')}
+            </Button>
+          )}
+          {!current && isDm && entries.length > 0 && (
+            <Button
+              variant="secondary"
+              className="min-h-11 w-full"
+              disabled={blocked}
+              icon={<Dices size={17} />}
+              onClick={() => run(() => rollAllInitiatives(sceneId))}
+            >
+              {t('map.rollAll')}
             </Button>
           )}
         </div>
-      )}
-      {isDm && entries.length > 0 && (
-        <div className="mt-auto border-t border-[var(--border-default)] p-3">
-          <Button
-            variant="ghost"
-            className="min-h-11 w-full text-[var(--danger-text)]"
-            disabled={blocked}
-            onClick={() => setConfirm('end')}
-          >
-            {t('scenes.initiative.endCombat')}
-          </Button>
-        </div>
-      )}
+      </div>
+      <div
+        data-combat-scroll
+        role="region"
+        aria-label={t('combatUi.details')}
+        tabIndex={0}
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+      >
+        {currents.length > 1 && (
+          <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
+            {t('map.turnConflict')}
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="p-3 text-sm text-[var(--danger-text)]">
+            {error}
+          </p>
+        )}
+        {isDm && entries.length > 0 && (
+          <div className="border-b border-[var(--border-default)] p-3">
+            <Button
+              className="min-h-11 w-full"
+              variant="secondary"
+              disabled={blocked}
+              onClick={() =>
+                run(async () => {
+                  const result = await addCombatParticipants(sceneId)
+                  if (result.count !== undefined)
+                    setNotice(t('map.participantsAdded', { count: result.count }))
+                  return result
+                })
+              }
+            >
+              {t('map.addParticipants')}
+            </Button>
+            <p className="mt-2 text-xs text-[var(--text-muted)]">{t('map.addParticipantsHint')}</p>
+            {notice && (
+              <p role="status" className="mt-2 text-sm">
+                {notice}
+              </p>
+            )}
+          </div>
+        )}
+        {entries.length > 0 && (
+          <div className="space-y-3 border-b border-[var(--border-default)] p-3">
+            <Input
+              ref={searchInput}
+              type="search"
+              label={t('combatFinder.search')}
+              placeholder={t('combatFinder.placeholder')}
+              icon={<Search size={17} aria-hidden="true" />}
+              className="min-h-11"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+            <div
+              role="group"
+              aria-label={t('combatFinder.kind')}
+              className="flex flex-wrap gap-1.5"
+            >
+              {['all', 'characters', 'creatures', 'tokens'].map((value) => {
+                const count =
+                  value === 'all'
+                    ? participants.length
+                    : participants.filter((p) => p.kind === value).length
+                if (value !== 'all' && count === 0 && kind !== value) return null
+                return (
+                  <Button
+                    key={value}
+                    variant={kind === value ? 'primary' : 'secondary'}
+                    className="min-h-11 text-xs"
+                    aria-pressed={kind === value}
+                    onClick={() => setKind(value)}
+                  >
+                    {t(value === 'all' ? 'combatFinder.all' : 'turns.' + value)}
+                    <span className="ml-1 tabular-nums">{count}</span>
+                  </Button>
+                )
+              })}
+              <Button
+                variant={withConditions ? 'primary' : 'secondary'}
+                className="min-h-11 text-xs"
+                aria-pressed={withConditions}
+                onClick={() => setWithConditions((value) => !value)}
+              >
+                {t('combatFinder.withConditions')}
+              </Button>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p role="status" className="text-xs text-[var(--text-secondary)]">
+                {t('combatFinder.results', { shown: matches.length, total: visible.length })}
+              </p>
+              {filtered && (
+                <Button variant="ghost" className="min-h-11 text-xs" onClick={resetFilters}>
+                  {t('combatFinder.reset')}
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">{t('combatFinder.hint')}</p>
+          </div>
+        )}
+        <ol aria-label={t('combatFinder.participants')} className="space-y-2 p-3">
+          {matches.map(({ entry, position, conditions }) => {
+            const active = currents.length === 1 && current?.id === entry.id
+            const token = entry.token
+            const hpValid =
+              token.hp_current !== null &&
+              token.hp_max !== null &&
+              Number.isFinite(token.hp_current) &&
+              Number.isFinite(token.hp_max) &&
+              token.hp_current >= 0 &&
+              token.hp_current <= token.hp_max &&
+              token.hp_max > 0
+            return (
+              <li
+                key={entry.id}
+                aria-current={active ? 'step' : undefined}
+                data-entry-id={entry.id}
+                className={cn(
+                  'rounded-xl border p-3',
+                  active
+                    ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
+                    : 'border-[var(--border-default)] bg-[var(--bg-surface)]'
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <CombatPortrait token={token} size={36} />
+                  <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-[var(--bg-app)] text-lg font-bold text-[var(--text-primary)] tabular-nums">
+                    <span className="sr-only">{t('scenes.initiative.title')}</span>
+                    {entry.initiative}
+                    <span className="text-[9px] leading-none text-[var(--text-muted)]">
+                      #{position}
+                    </span>
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold [overflow-wrap:anywhere] text-[var(--text-primary)]">
+                      {token.name}
+                      {token.is_hidden && isDm && (
+                        <EyeOff
+                          size={13}
+                          className="ml-1 inline"
+                          aria-label={t('turns.hiddenDm')}
+                        />
+                      )}
+                    </p>
+                    <p className="mt-0.5 text-xs text-[var(--accent-text)]">
+                      {active
+                        ? t('scenes.initiative.now')
+                        : currents.length <= 1 && next?.id === entry.id
+                          ? t('map.upNext')
+                          : t('map.waiting')}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)]">
+                      {hpValid && (
+                        <span className="flex items-center gap-1">
+                          <HeartPulse size={13} /> {token.hp_current}/{token.hp_max}
+                        </span>
+                      )}
+                      {token.ac != null && (
+                        <span className="flex items-center gap-1">
+                          <Shield size={13} />
+                          {token.ac}
+                        </span>
+                      )}
+                    </div>
+                    <CombatConditions conditions={conditions} />
+                  </div>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {onFocusToken && (
+                    <Button
+                      variant="ghost"
+                      className="min-h-11 flex-1 text-xs"
+                      disabled={pending}
+                      icon={<LocateFixed size={15} />}
+                      onClick={() => onFocusToken(token.id)}
+                      aria-label={t('map.focusNamed', { name: token.name })}
+                    >
+                      {t('map.focus')}
+                    </Button>
+                  )}
+                  {isDm && (
+                    <Button
+                      variant="ghost"
+                      className="min-h-11 !px-2 text-xs"
+                      disabled={blocked}
+                      aria-label={t('map.rollNamed', { name: token.name })}
+                      title={t('map.rollNamed', { name: token.name })}
+                      icon={<Dices size={15} />}
+                      onClick={() => (current ? setConfirm(entry.id) : roll(entry.id))}
+                    >
+                      {t('combatUi.rollShort')}
+                    </Button>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+        {entries.length > 0 && matches.length === 0 && (
+          <div className="space-y-2 px-4 pb-4">
+            <p className="text-sm text-[var(--text-secondary)]">
+              {visible.length === 0 ? t('turns.noVisible') : t('combatFinder.empty')}
+            </p>
+          </div>
+        )}
+        {entries.length === 0 && (
+          <div className="space-y-3 px-4 pb-4">
+            <p className="text-sm text-[var(--text-muted)]">{t('scenes.initiative.empty')}</p>
+            {isDm && (
+              <Button
+                variant="primary"
+                className="min-h-11 w-full"
+                disabled={blocked}
+                onClick={() => run(() => startCombat(sceneId))}
+              >
+                {t('map.prepareCombat')}
+              </Button>
+            )}
+          </div>
+        )}
+        {isDm && entries.length > 0 && (
+          <div className="mt-auto border-t border-[var(--border-default)] p-3">
+            <Button
+              variant="ghost"
+              className="min-h-11 w-full text-[var(--danger-text)]"
+              disabled={blocked}
+              onClick={() => setConfirm('end')}
+            >
+              {t('scenes.initiative.endCombat')}
+            </Button>
+          </div>
+        )}
+      </div>
       <Dialog
         open={confirm !== null}
         onClose={() => {
