@@ -39,6 +39,8 @@ import {
   type CampaignWithRole,
 } from '../../src/lib/types'
 import CharacterWizard from '../../src/app/campaign/[id]/characters/new/character-wizard'
+import ScenesClient from '../../src/app/campaign/[id]/scenes/scenes-client'
+import ChapterStartGuide from '../../src/app/campaign/[id]/chapters/chapter-start-guide'
 import { characterClassName, characterSpeciesName } from '../../src/lib/dnd/character-display-names'
 import './mocks'
 import { catalogPage, referencePage } from './mocks'
@@ -389,7 +391,38 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'initiative-sync' ? (
+            {screen === 'scene-library' ? (
+              <ScenesClient
+                campaignId="test"
+                isDm={isDm}
+                initialScenes={
+                  query.has('empty')
+                    ? []
+                    : [
+                        { ...mapScene, id: 'active', name: 'Observatory', is_active: true },
+                        {
+                          ...mapScene,
+                          id: 'map',
+                          name: 'Ancient ruins',
+                          is_active: false,
+                          image_url: 'private-map',
+                        },
+                        {
+                          ...mapScene,
+                          id: 'blank',
+                          name: 'Tavern ' + 'Long name '.repeat(8),
+                          is_active: false,
+                        },
+                      ]
+                }
+              />
+            ) : screen === 'chapter-start' ? (
+              isDm ? (
+                <ChapterStartGuide campaignId="test" />
+              ) : (
+                <p>Player view</p>
+              )
+            ) : screen === 'initiative-sync' ? (
               <InitiativeSyncFixture />
             ) : screen === 'map-session' ? (
               <BattleMapFixture isDm={isDm} embedded />

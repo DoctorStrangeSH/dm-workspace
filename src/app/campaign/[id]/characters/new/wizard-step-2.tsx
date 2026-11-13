@@ -23,11 +23,12 @@ interface Props {
   setAbilities: (abilities: Record<AbilityKey, number>) => void
   mode: AbilityMode
   setMode: (mode: AbilityMode) => void
+  onSuggest?: () => void
 }
 
 const ABILITIES: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha']
 
-export default function WizardStep2({ abilities, setAbilities, mode, setMode }: Props) {
+export default function WizardStep2({ abilities, setAbilities, mode, setMode, onSuggest }: Props) {
   // CHANGES (К9): нужен и t, и lang (для abilityShort).
   const { t, lang } = useI18n()
 
@@ -124,6 +125,25 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
 
   return (
     <div className="space-y-6">
+      {onSuggest && (
+        <div className="rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-subtle)] p-4">
+          <button
+            type="button"
+            className="min-h-11 rounded-lg bg-[var(--accent)] px-4 text-sm font-semibold text-[var(--accent-foreground)]"
+            onClick={() => {
+              onSuggest()
+              setSelectedValue(null)
+              setDraggedFrom(null)
+              setDraggedValue(null)
+            }}
+          >
+            {t('prep.suggest')}
+          </button>
+          <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">
+            {t('prep.suggestHint')}
+          </p>
+        </div>
+      )}
       {/* Переключатель режима */}
       <div className="flex items-center gap-2 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-1">
         <button
@@ -132,7 +152,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
           className={cn(
             'flex-1 rounded px-3 py-1.5 text-sm transition-colors',
             mode === 'pointbuy'
-              ? 'bg-[var(--accent)] text-white'
+              ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
               : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           )}
         >
@@ -144,7 +164,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
           className={cn(
             'flex-1 rounded px-3 py-1.5 text-sm transition-colors',
             mode === 'standard'
-              ? 'bg-[var(--accent)] text-white'
+              ? 'bg-[var(--accent)] text-[var(--accent-foreground)]'
               : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           )}
         >
@@ -275,7 +295,7 @@ export default function WizardStep2({ abilities, setAbilities, mode, setMode }: 
                     className={cn(
                       'rounded-lg border px-3 py-1.5 text-sm font-medium transition',
                       isSelected
-                        ? 'border-[var(--accent)] bg-[var(--accent)] text-white ring-2 ring-[var(--accent)]/40'
+                        ? 'border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-foreground)] ring-2 ring-[var(--accent)]/40'
                         : isUsed
                           ? 'cursor-not-allowed border-[var(--border-default)] bg-[var(--bg-surface)] text-[var(--text-subtle)] opacity-40'
                           : 'cursor-grab border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)] hover:bg-[var(--accent)]/20 active:cursor-grabbing'

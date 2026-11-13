@@ -61,6 +61,9 @@ export const lab = {
   sheetOutcome: 'error' as 'error' | 'success' | 'throw',
   sheetDelay: 0,
   createdCharacters: [] as { campaignId: string; name: string; data: CharacterData }[],
+  createOutcome: 'success' as 'success' | 'error' | 'throw',
+  createDelay: 0,
+  chapterCreates: [] as { campaignId: string; title: string }[],
   navigated: [] as string[],
   chapterSaves: [] as string[],
   chapterSaveFails: false,
@@ -297,7 +300,14 @@ export async function addSrdItemToCampaign(...args: unknown[]) {
 }
 export async function createCharacter(campaignId: string, name: string, data: CharacterData) {
   lab.createdCharacters.push({ campaignId, name, data: structuredClone(data) })
+  if (lab.createDelay > 0) await new Promise((resolve) => setTimeout(resolve, lab.createDelay))
+  if (lab.createOutcome === 'throw') throw Error('Synthetic creation transport failure')
+  if (lab.createOutcome === 'error') return { error: 'Offline creation failure' }
   return { success: true, characterId: 'offline-character' }
+}
+export async function createChapter(campaignId: string, data: FormData) {
+  lab.chapterCreates.push({ campaignId, title: String(data.get('title')) })
+  return { error: 'Offline chapter creation' }
 }
 export async function updateChapterContent(_chapter: string, _campaign: string, content: string) {
   lab.chapterSaves.push(content)
@@ -500,6 +510,8 @@ async function mapAction(name: string, args: unknown[]) {
 }
 export const uploadMap = (...args: unknown[]) => mapAction('uploadMap', args)
 export const setActiveScene = (...args: unknown[]) => mapAction('setActiveScene', args)
+export const deleteScene = (...args: unknown[]) => mapAction('deleteScene', args)
+export const createScene = (...args: unknown[]) => mapAction('createScene', args)
 export const startCombat = (...args: unknown[]) => mapAction('startCombat', args)
 export const addCombatParticipants = async (...args: unknown[]) => ({
   ...(await mapAction('addCombatParticipants', args)),

@@ -54,17 +54,15 @@ export default function WizardStep3({
               type="button"
               onClick={() => {
                 setBackgroundSlug(bg.slug)
-                const oldBg = BACKGROUNDS.find((b) => b.slug === backgroundSlug)
-                if (oldBg) {
-                  setChosenSkills(chosenSkills.filter((s) => !oldBg.skills.includes(s)))
-                }
+                setChosenSkills(chosenSkills.filter((s) => !bg.skills.includes(s)))
               }}
               className={cn(
-                'rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+                'min-h-11 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
                 backgroundSlug === bg.slug
                   ? 'border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
                   : 'border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--border-hover)]'
               )}
+              aria-pressed={backgroundSlug === bg.slug}
             >
               {bg.name}
             </button>
@@ -98,8 +96,9 @@ export default function WizardStep3({
                   type="button"
                   onClick={() => toggleSkill(skill)}
                   disabled={isDisabled}
+                  aria-pressed={isChosen || isFromBackground}
                   className={cn(
-                    'rounded-lg border px-3 py-2 text-left text-sm transition-colors',
+                    'min-h-11 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
                     isChosen || isFromBackground
                       ? 'border-[var(--success)]/30 bg-[var(--success-subtle)] text-[var(--success-text)]'
                       : 'border-[var(--border-default)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:border-[var(--border-hover)]',

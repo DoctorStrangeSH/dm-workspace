@@ -1,6 +1,57 @@
 import type { Dictionary } from './types'
 
 export const en: Dictionary = {
+  'prep.chapterUncertain':
+    'Could not confirm creation. Check the chapter list before trying again.',
+  'prep.steps': 'Character creation steps',
+  'prep.preview': 'Your hero',
+  'prep.unnamed': 'A new adventurer',
+  'prep.previewHint':
+    'Choose a species and class to see your hero’s statistics and final ability scores.',
+  'prep.bonuses':
+    'Scores include the selected species bonuses. The preview updates with every change.',
+  'prep.backgroundLater': 'Choose background proficiencies on step three.',
+  'prep.creationHint':
+    'AC is shown without equipment. HP above level one uses average increases. Configure class features and equipment in the character sheet.',
+  'prep.suggest': 'Suggest scores for my class',
+  'prep.suggestHint':
+    'Replaces current scores: class abilities first, then Constitution and Dexterity. This is a starting point — all scores remain editable.',
+  'prep.help1':
+    'Enter a name of 2–150 characters, choose species, class and a whole level from 1 to 20.',
+  'prep.help2':
+    'Spend all 27 points or use every standard array value. You can start with suggested class scores.',
+  'prep.help3':
+    'Choose a background and the required number of unique class skills. Background proficiencies are already included.',
+  'prep.uncertain':
+    'Could not confirm creation. Your form is retained. Check the character list before trying again to avoid a duplicate.',
+  'prep.sceneUncertain':
+    'Could not confirm the result. Refresh the scene list before trying again.',
+  'prep.scenesHint':
+    'Prepare locations ahead of play. Open a table to configure it; activating a scene switches it for the whole party.',
+  'prep.scenesPlayerHint': 'Open available game tables. The active scene is marked separately.',
+  'prep.sceneFilters': 'Scene search and filters',
+  'prep.findScene': 'Find a scene',
+  'prep.sceneSort': 'Scene order',
+  'prep.activeFirst': 'Active first',
+  'prep.sceneScope': 'Scene type',
+  'prep.scope.all': 'All scenes',
+  'prep.scope.active': 'Active',
+  'prep.scope.maps': 'With a map',
+  'prep.scope.blank': 'Blank grid',
+  'prep.sceneFound': 'Found: {count} / {total}',
+  'prep.noScenes': 'No matching scenes. Change the search or clear filters.',
+  'prep.openScene': 'Open scene: {name}',
+  'prep.deleteScene': 'Delete scene: {name}',
+  'prep.openTable': 'Open game table',
+  'prep.chapterStart': 'Where does the adventure begin?',
+  'prep.chapterHint':
+    'Choose a starting point for the first chapter. Only the chapter title is prefilled — the story and secrets are yours to write.',
+  'prep.chapter0': 'Hook: an unexpected invitation',
+  'prep.chapter1': 'Exploration: forgotten ruins',
+  'prep.chapter2': 'Finale: the price of victory',
+  'prep.chapterHint0': 'Who calls the heroes? What is their goal? What happens if they refuse?',
+  'prep.chapterHint1': 'What can they discover? Which clues connect? What is this place hiding?',
+  'prep.chapterHint2': 'What is at stake? How will the heroes’ choices change the world?',
   'inventory.library.title': 'Hero’s equipment',
   'inventory.library.description':
     'Items, attunement and carrying weight in one place. Browse the catalog or add your own item.',

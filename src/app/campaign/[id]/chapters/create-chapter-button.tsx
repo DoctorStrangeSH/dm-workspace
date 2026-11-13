@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import CreateChapterModal from './create-chapter-modal'
+import { useT } from '@/lib/i18n'
+import { Button } from '@/components/ui'
 
 interface Props {
   campaignId: string
@@ -10,16 +12,13 @@ interface Props {
 
 export default function CreateChapterButton({ campaignId }: Props) {
   const [open, setOpen] = useState(false)
+  const t = useT()
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium transition hover:bg-indigo-500"
-      >
-        <Plus size={18} />
-        Новая глава
-      </button>
+      <Button icon={<Plus size={18} />} onClick={() => setOpen(true)} className="min-h-11">
+        {t('chapters.create')}
+      </Button>
       {open && <CreateChapterModal campaignId={campaignId} onClose={() => setOpen(false)} />}
     </>
   )
