@@ -49,6 +49,7 @@ import BestiaryClient from '../../src/app/campaign/[id]/bestiary/bestiary-client
 import { SessionsClient } from '../../src/app/campaign/[id]/sessions/sessions-client'
 import { sessionFixtures } from './sessions-data'
 import ItemsClient from '../../src/app/campaign/[id]/items/items-client'
+import EntitiesWorkspace from '../../src/app/campaign/[id]/entities/entities-workspace'
 
 const query = new URLSearchParams(location.search)
 document.cookie = `dm-lang=${query.get('lang') === 'en' ? 'en' : 'ru'}; path=/`
@@ -391,7 +392,53 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'scene-library' ? (
+            {screen === 'entities' ? (
+              <EntitiesWorkspace
+                campaignId="test"
+                isDm={isDm}
+                initialType={query.has('quest') ? 'quest' : 'all'}
+                templates={[]}
+                backlinksCounts={{ npc: 2 }}
+                entities={
+                  query.has('empty')
+                    ? []
+                    : [
+                        {
+                          id: 'npc',
+                          type: 'npc',
+                          name: 'Альма Alma',
+                          description: 'Торговка у старой башни',
+                          is_visible_to_players: true,
+                          updated_at: '2026-11-11T10:00:00Z',
+                        },
+                        {
+                          id: 'location',
+                          type: 'location',
+                          name: 'Башня Tower',
+                          description: 'На берегу озера',
+                          is_visible_to_players: true,
+                          updated_at: '2026-11-12T10:00:00Z',
+                        },
+                        {
+                          id: 'quest',
+                          type: 'quest',
+                          name: 'Зов Echo',
+                          description: 'Найти пропавшего торговца',
+                          is_visible_to_players: true,
+                          updated_at: '2026-11-13T10:00:00Z',
+                        },
+                        {
+                          id: 'note',
+                          type: 'note',
+                          name: 'Секрет Secret',
+                          description: 'Дракон ждёт героев',
+                          is_visible_to_players: false,
+                          updated_at: '2026-11-13T11:00:00Z',
+                        },
+                      ]
+                }
+              />
+            ) : screen === 'scene-library' ? (
               <ScenesClient
                 campaignId="test"
                 isDm={isDm}

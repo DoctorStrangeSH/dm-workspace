@@ -79,4 +79,5 @@ export const ENTITY_FILTERS: { value: EntityType | 'all' }[] = [
   { value: 'monster' },
   { value: 'faction' },
   { value: 'quest' },
+  { value: 'note' },
 ]

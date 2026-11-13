@@ -44,7 +44,7 @@ jobs:
         run: npm run test:characters
 
       - name: Entity template action authorization and source boundaries (offline)
-        run: node --import tsx --test tests/entity-template-actions.test.ts
+        run: node --import tsx --test tests/entity-template-actions.test.ts tests/entity-library-page.test.ts
 
       - name: Offline tactical map geometry and combat action boundaries
         run: npm run test:maps

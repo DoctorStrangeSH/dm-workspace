@@ -56,6 +56,7 @@ export const lab = {
   sessionDelay: 0,
   characterActions: [] as { name: string; args: unknown[] }[],
   refreshes: 0,
+  entityCreates: [] as { campaignId: string; type: string }[],
   identityOutcome: 'error' as 'error' | 'success' | 'throw',
   identityDelay: 0,
   sheetOutcome: 'error' as 'error' | 'success' | 'throw',
@@ -604,4 +605,9 @@ export async function joinCampaign(code: string) {
   return lab.joinOutcome === 'success'
     ? { success: true, campaignId: 'synthetic-campaign' }
     : { error: 'Synthetic error', code: lab.joinOutcome }
+}
+
+export async function createEntity(campaignId: string, form: FormData) {
+  lab.entityCreates.push({ campaignId, type: String(form.get('type')) })
+  return { error: 'Synthetic save error' }
 }
