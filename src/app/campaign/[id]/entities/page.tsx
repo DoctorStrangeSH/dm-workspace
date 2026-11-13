@@ -63,7 +63,7 @@ export default async function EntitiesPage({
   const [entitiesRes, backlinksCounts, templates] = await Promise.all([
     query,
     getBacklinksCounts(campaignId),
-    getTemplatesForCampaign(campaignId),
+    isDm ? getTemplatesForCampaign(campaignId) : Promise.resolve([]),
   ])
 
   if (entitiesRes.error) {

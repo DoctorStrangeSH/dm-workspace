@@ -43,6 +43,9 @@ jobs:
       - name: Character HP, level-up and action boundary regression tests
         run: npm run test:characters
 
+      - name: Entity template action authorization and source boundaries (offline)
+        run: node --import tsx --test tests/entity-template-actions.test.ts
+
       - name: Offline tactical map geometry and combat action boundaries
         run: npm run test:maps
 
@@ -112,6 +115,9 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261027000600_revoke_broadcast_trigger_rpc_execute.sql
       - name: Assert role-scoped Storage and Realtime behavior
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/pr37_ci_assertions.sql
+
+      - name: Entity template migration and role isolation (disposable PostgreSQL only)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/entity_templates_ci.sql
 
       - name: Setup Node.js for isolated catalog import tests
         uses: actions/setup-node@v4

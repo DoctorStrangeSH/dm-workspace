@@ -52,7 +52,7 @@ export async function createTemplateFromEntity(
     return { error: 'Не удалось создать шаблон' }
   }
 
-  revalidatePath(`/campaign/${campaignId}/templates`)
+  revalidatePath(`/campaign/${campaignId}/entities`)
   return { success: true, templateId: data.id }
 }
 
@@ -79,6 +79,6 @@ export async function deleteTemplate(templateId: string, campaignId: string) {
     return { error: 'Не удалось удалить шаблон' }
   }
 
-  revalidatePath(`/campaign/${campaignId}/templates`)
+  revalidatePath(`/campaign/${campaignId}/entities`)
   return { success: true }
 }
