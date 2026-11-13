@@ -58,6 +58,8 @@ export const lab = {
   refreshes: 0,
   identityOutcome: 'error' as 'error' | 'success' | 'throw',
   identityDelay: 0,
+  sheetOutcome: 'error' as 'error' | 'success' | 'throw',
+  sheetDelay: 0,
   createdCharacters: [] as { campaignId: string; name: string; data: CharacterData }[],
   navigated: [] as string[],
   chapterSaves: [] as string[],
@@ -373,7 +375,11 @@ export default function Link(props: AnchorHTMLAttributes<HTMLAnchorElement>) {
 // Record any real character control invoked by the offline sheet. Never call a backend.
 export async function updateCharacter(...args: unknown[]) {
   lab.characterActions.push({ name: 'updateCharacter', args })
-  return { error: 'Offline character action boundary' }
+  await new Promise((resolve) => setTimeout(resolve, lab.sheetDelay))
+  if (lab.sheetOutcome === 'throw') throw Error('Offline sheet transport failure')
+  return lab.sheetOutcome === 'success'
+    ? { success: true }
+    : { error: 'Offline character action boundary' }
 }
 export async function updateCharacterIdentityAtomic(...args: unknown[]) {
   lab.characterActions.push({ name: 'updateCharacterIdentityAtomic', args })

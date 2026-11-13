@@ -43,6 +43,9 @@
 | [TACTICAL_MAP_WORKSPACE.md](TACTICAL_MAP_WORKSPACE.md) | Tactical map workspace |
 | [VISUAL_TURN_TIMELINE.md](VISUAL_TURN_TIMELINE.md) | Visual turn timeline |
 
+Дополнительно: [Игровой лист персонажа](CHARACTER_PLAY_WORKSPACE.md) — быстрые броски,
+тактические фильтры, инвентарь и редактор особенностей.
+
 ## Целостность HP и данных персонажа
 
 | Документ | Тема |

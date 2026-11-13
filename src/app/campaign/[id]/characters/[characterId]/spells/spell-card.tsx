@@ -8,6 +8,7 @@ import { useToast } from '@/components/toast/toast-provider'
 import { Button, Dialog } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { spellSchoolLabel } from '@/lib/i18n/labels'
+import { spellRuleText, isConcentration } from '@/lib/dnd/character-workspace'
 import { cn } from '@/lib/utils'
 import type { CharacterSpell } from '@/lib/types'
 
@@ -61,7 +62,7 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
     <>
       <div className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] transition-colors duration-200 hover:border-[var(--accent)]/40 motion-reduce:transition-none">
         <div className="flex items-center gap-2 p-3 transition-colors hover:bg-[var(--bg-hover)]">
-          {canEdit && spell.level > 0 && (
+          {canEdit && spell.level > 0 && !spell.alwaysPrepared && (
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -83,24 +84,48 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
             </button>
           )}
 
-          <button type="button" onClick={() => setIsOpen(!isOpen)} aria-expanded={isOpen} aria-label={`${spell.name}: ${isOpen ? t('common.close') : spell.name}`} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
-            <ChevronDown size={14} aria-hidden="true" className={cn('shrink-0 text-[var(--text-subtle)] transition-transform duration-200 motion-reduce:transition-none', isOpen && 'rotate-180')} />
-
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="min-w-0 break-words font-medium text-[var(--text-primary)]">{spell.name}</span>
-              {spell.ritual && (
-                <span className="rounded border border-[var(--accent)]/40 bg-[var(--accent-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--accent-text)]">
-                  {t('spells.ritual')}
-                </span>
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+            aria-label={`${spell.name}: ${isOpen ? t('common.close') : spell.name}`}
+            className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+          >
+            <ChevronDown
+              size={14}
+              aria-hidden="true"
+              className={cn(
+                'shrink-0 text-[var(--text-subtle)] transition-transform duration-200 motion-reduce:transition-none',
+                isOpen && 'rotate-180'
               )}
-            </div>
-            <div className="text-xs text-[var(--text-muted)]">
-              {spell.school && spellSchoolLabel(lang, spell.school)}
-              {spell.castingTime && ` · ${spell.castingTime}`}
-            </div>
-          </div>
+            />
 
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <span className="min-w-0 font-medium break-words text-[var(--text-primary)]">
+                  {spell.name}
+                </span>
+                {spell.ritual && (
+                  <span className="rounded border border-[var(--accent)]/40 bg-[var(--accent-subtle)] px-1.5 py-0.5 text-[10px] text-[var(--accent-text)]">
+                    {t('spells.ritual')}
+                  </span>
+                )}
+                {isConcentration(spell.duration) && (
+                  <span className="rounded-md bg-[var(--accent-subtle)] px-2 py-1 text-[10px] text-[var(--accent-text)]">
+                    {t('sheet.spells.concentration')}
+                  </span>
+                )}
+                {spell.alwaysPrepared && (
+                  <span className="text-[10px] text-[var(--success-text)]">
+                    {t('spells.prepared')}
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-[var(--text-muted)]">
+                {spell.school && spellSchoolLabel(lang, spell.school)}
+                {spell.castingTime && ` · ${spellRuleText(spell.castingTime, lang)}`}
+              </div>
+            </div>
           </button>
 
           {onRoll && (
@@ -109,8 +134,9 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
                 e.stopPropagation()
                 onRoll(spell)
               }}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" aria-label={t('spells.roll')}
-              title={t('spells.roll')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+              aria-label={t('spells.roll')}
+              title={t('sheet.spells.attackHint')}
             >
               <Dices size={18} className="text-[var(--text-muted)]" />
             </button>
@@ -123,7 +149,8 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
                 setShowDeleteConfirm(true)
               }}
               disabled={isPending}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-50" aria-label={t('common.delete')}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[var(--danger-subtle)] focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] disabled:opacity-50"
+              aria-label={t('common.delete')}
               title={t('common.delete')}
             >
               <Trash2 size={18} className="text-[var(--danger)]" />
@@ -137,7 +164,9 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
               {spell.range && (
                 <div>
                   <span className="text-[var(--text-subtle)]">{t('spells.range')}:</span>{' '}
-                  <span className="text-[var(--text-secondary)]">{spell.range}</span>
+                  <span className="text-[var(--text-secondary)]">
+                    {spellRuleText(spell.range, lang)}
+                  </span>
                 </div>
               )}
               {spell.components && (
@@ -149,13 +178,15 @@ export default function SpellCard({ spell, characterId, campaignId, canEdit, onR
               {spell.duration && (
                 <div>
                   <span className="text-[var(--text-subtle)]">{t('spells.duration')}:</span>{' '}
-                  <span className="text-[var(--text-secondary)]">{spell.duration}</span>
+                  <span className="text-[var(--text-secondary)]">
+                    {spellRuleText(spell.duration, lang)}
+                  </span>
                 </div>
               )}
             </div>
 
             {spell.description && (
-              <div className="pb-2 text-sm whitespace-pre-wrap text-[var(--text-secondary)]">
+              <div className="pb-2 text-sm break-words whitespace-pre-wrap text-[var(--text-secondary)]">
                 {spell.description}
               </div>
             )}

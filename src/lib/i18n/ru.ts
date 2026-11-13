@@ -1191,6 +1191,66 @@ export const ru: Dictionary = {
   'settings.deleteAccount.toast.deleted': 'Аккаунт удалён',
 
   // ─── Generators ───
+  'sheet.dock': 'Панель действий',
+  'sheet.hp': 'Хиты',
+  'sheet.ac': 'Класс доспеха',
+  'sheet.speed': 'Скорость',
+  'sheet.mode': 'Режим броска d20',
+  'sheet.ability': 'Характеристика для проверки',
+  'sheet.normal': 'Обычный бросок',
+  'sheet.advantage': 'С преимуществом · два d20',
+  'sheet.disadvantage': 'С помехой · два d20',
+  'sheet.check': 'Проверка',
+  'sheet.attack': 'Атака',
+  'sheet.damage': 'Урон',
+  'sheet.rollHint':
+    'Личные броски. Для атаки с преимуществом выбирается больший d20, с помехой — меньший. Попадание и критический урон определяй отдельно.',
+  'sheet.rollError':
+    'Не удалось бросить. Поддерживаются XdY±Z (до 20 кубиков и бонус ±100) или постоянный урон от 0 до 100.',
+  'sheet.history': 'Последние броски',
+  'sheet.noRolls': 'Здесь появятся пять последних результатов этой страницы.',
+  'sheet.features.hint':
+    'Собери способности класса, черты и заметки для игры. Текст не добавляет автоматических бонусов к характеристикам.',
+  'sheet.features.edit': 'Редактировать способности',
+  'sheet.features.attacks': 'Атаки и приёмы',
+  'sheet.features.attacksHint':
+    'До 30 атак. Бонус — целое число от −100 до 100. Урон: например, 1d8+3; сложные формулы можно записать, но бросить их нужно отдельно.',
+  'sheet.features.addAttack': 'Добавить атаку',
+  'sheet.features.attack.name': 'Название атаки',
+  'sheet.features.attack.bonus': 'Бонус атаки',
+  'sheet.features.attack.damage': 'Формула урона',
+  'sheet.features.attack.notes': 'Условия и заметки',
+  'sheet.features.features': 'Способности',
+  'sheet.features.traits': 'Черты',
+  'sheet.features.notes': 'Заметки персонажа',
+  'sheet.features.empty': 'Пока нет записей.',
+  'sheet.features.add': 'Добавить запись',
+  'sheet.features.invalid':
+    'Проверь записи: непустые способности и черты до 2000 знаков, заметки до 12 000. У атаки нужны название, формула и целый бонус от −100 до 100.',
+  'sheet.features.conflict':
+    'Персонаж обновился во время редактирования. Скопируй черновик и открой редактор заново, чтобы сохранить изменения в актуальной версии.',
+  'sheet.features.uncertain':
+    'Не удалось подтвердить сохранение. Черновик остался здесь. Проверь обновлённую страницу перед повторной попыткой.',
+  'sheet.features.saved': 'Сохранено. Обновляем данные персонажа.',
+  'sheet.features.unsaved':
+    'Черновик остаётся при переключении разделов. Сохрани его перед перезагрузкой или уходом со страницы.',
+  'sheet.spells.focus': 'Тактический фильтр',
+  'sheet.spells.rituals': 'Ритуалы',
+  'sheet.spells.concentration': 'Концентрация',
+  'sheet.spells.attack': 'Бонус атаки заклинанием',
+  'sheet.spells.dc': 'Сложность спасброска',
+  'sheet.spells.book': 'В книге',
+  'sheet.spells.attackHint':
+    'Бросок атаки заклинанием; ячейка не расходуется. Используй для заклинаний с броском атаки.',
+  'sheet.inventory.all': 'Все вещи',
+  'sheet.inventory.ready': 'Снаряжение',
+  'sheet.inventory.attuned': 'Настройка',
+  'sheet.inventory.pack': 'В рюкзаке',
+  'sheet.inventory.sort': 'Порядок предметов',
+  'sheet.inventory.name': 'По названию',
+  'sheet.inventory.weight': 'Сначала тяжёлые',
+  'sheet.inventory.quantity': 'По количеству',
+  'sheet.inventory.description': 'Описание предмета',
   'generators.workbench.title': 'Мастерская ведущего',
   'generators.workbench.hint':
     'Подготовьте находку, торговца или неожиданную встречу. Переключайтесь свободно: результаты и настройки останутся на месте, пока открыта страница.',
