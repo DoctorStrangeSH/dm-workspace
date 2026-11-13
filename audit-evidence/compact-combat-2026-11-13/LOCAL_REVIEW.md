@@ -16,6 +16,9 @@ boundaries remain. Full regression and final CI results recorded in release rece
 
 One initial new privacy scenario used unsupported fixture flags; corrected to existing
 hideEnemy/role=player/turn=3. Product privacy behavior was unchanged.
+Initial CI43423698582 passed218browser+20module but the real Next production layout test
+still expected legacy124px/flex cards. Updated it to validate compact184px/grid and
+detailed124px/flex, both expanded layouts and actual compact height savings.
 No DB/schema/HP/RPC/manual workflow mutations. Sources read-only, no subagents.
 Authenticated live campaign acceptance remains unverified; synthetic transport is not
 evidence of live authorized saves. Existing entity_templates drift tracked W-02/TD-13;
