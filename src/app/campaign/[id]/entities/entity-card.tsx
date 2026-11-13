@@ -9,8 +9,13 @@ import { useI18n } from '@/lib/i18n'
 import { pluralize } from '@/lib/i18n/plural'
 import type { Entity } from '@/lib/types'
 
+export type EntityCardData = Pick<
+  Entity,
+  'id' | 'type' | 'name' | 'description' | 'is_visible_to_players' | 'updated_at'
+>
+
 interface Props {
-  entity: Entity
+  entity: EntityCardData
   campaignId: string
   isDm: boolean
   backlinksCount?: number

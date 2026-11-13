@@ -115,7 +115,7 @@ export default function CreateEntityModal({
           <label className="mb-2 block text-sm text-[var(--text-secondary)]">
             {t('entities.form.type')} <span className="text-[var(--danger)]">*</span>
           </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {TYPE_OPTIONS.map((type) => {
               const style = ENTITY_STYLES[type]
               const active = selectedType === type
@@ -123,6 +123,7 @@ export default function CreateEntityModal({
                 <button
                   key={type}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => handleTypeChange(type)}
                   className={cn(
                     'flex flex-col items-center gap-1 rounded-lg border p-3 transition-colors',

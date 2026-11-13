@@ -4,6 +4,7 @@ import { generatorScenarios } from './generator-scenarios.mjs'
 import { characterWorkspaceScenarios } from './character-workspace-scenarios.mjs'
 import { preparationScenarios } from './preparation-scenarios.mjs'
 import { compactCombatScenarios } from './compact-combat-scenarios.mjs'
+import { entityLibraryScenarios } from './entity-library-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -51,7 +52,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:chapters|scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:entities|chapters|scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -154,6 +155,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await entityLibraryScenarios(scenario, expect, output)
   await compactCombatScenarios(scenario, expect, output)
   await preparationScenarios(scenario, expect, output)
   await characterWorkspaceScenarios(scenario, expect, output)
