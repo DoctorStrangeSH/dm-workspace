@@ -24,7 +24,7 @@ export default async function ScenesPage({ params }: { params: Promise<{ id: str
   const scenes = await getScenes(campaignId)
 
   return (
-    <div className="max-w-6xl">
+    <div className="w-full max-w-[100rem] min-w-0">
       <Breadcrumbs
         items={[
           { label: t('nav.dashboard'), href: '/dashboard' },

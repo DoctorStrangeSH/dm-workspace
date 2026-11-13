@@ -105,7 +105,7 @@ export default async function ScenePage({
   )
 
   return (
-    <div className="max-w-6xl">
+    <div className="w-full max-w-[100rem] min-w-0">
       <Breadcrumbs
         items={[
           { label: t('nav.dashboard'), href: '/dashboard' },

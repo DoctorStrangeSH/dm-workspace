@@ -2,6 +2,7 @@ import { sessionPlanningScenarios } from './session-planning-scenarios.mjs'
 import { diceScenarios } from './dice-scenarios.mjs'
 import { generatorScenarios } from './generator-scenarios.mjs'
 import { characterWorkspaceScenarios } from './character-workspace-scenarios.mjs'
+import { preparationScenarios } from './preparation-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -49,7 +50,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:chapters|scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -152,6 +153,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await preparationScenarios(scenario, expect, output)
   await characterWorkspaceScenarios(scenario, expect, output)
   await generatorScenarios(scenario, expect, output)
   await diceScenarios(scenario, expect, output)
@@ -870,9 +872,9 @@ try {
         const expectedHP = fallback ? 9 : 8
         expect(created.data.hp).toEqual({ current: expectedHP, max: expectedHP, temp: 0 })
         expect(created.data.abilities.con).toBe(fallback ? 16 : 15)
-        expect(await page.evaluate(() => window.__uiLab.navigated)).toEqual([
-          '/campaign/test/characters/offline-character',
-        ])
+        await expect
+          .poll(() => page.evaluate(() => window.__uiLab.navigated))
+          .toEqual(['/campaign/test/characters/offline-character'])
       }
     )
   }

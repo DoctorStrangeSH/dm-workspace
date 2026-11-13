@@ -24,7 +24,7 @@ export default async function NewCharacterPage({ params }: { params: Promise<{ i
   const [species, classes] = await Promise.all([getSrdSpecies(), getSrdClasses()])
 
   return (
-    <div className="max-w-3xl">
+    <div className="w-full max-w-[100rem] min-w-0">
       <Breadcrumbs
         items={[
           { label: t('nav.dashboard'), href: '/dashboard' },

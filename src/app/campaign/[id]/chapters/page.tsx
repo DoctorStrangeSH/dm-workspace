@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCampaignAccess } from '@/lib/queries/access'
 import { BookOpen, Sparkles } from 'lucide-react'
 import CreateChapterButton from './create-chapter-button'
+import ChapterStartGuide from './chapter-start-guide'
 import ChaptersList from './chapters-list'
 import { Breadcrumbs } from '@/components/breadcrumbs'
 import { getLang } from '@/lib/i18n/get-lang'
@@ -42,7 +43,7 @@ export default async function ChaptersPage({ params }: { params: Promise<{ id: s
   })
 
   return (
-    <div className="max-w-4xl">
+    <div className="w-full max-w-[100rem] min-w-0">
       <Breadcrumbs
         items={[
           { label: t('nav.dashboard'), href: '/dashboard' },
@@ -52,8 +53,14 @@ export default async function ChaptersPage({ params }: { params: Promise<{ id: s
         className="mb-4"
       />
 
-      <section className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[linear-gradient(120deg,var(--bg-primary),var(--bg-secondary))] p-5 shadow-[var(--shadow-sm)] sm:p-7" aria-labelledby="chapters-heading">
-        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-20 h-60 w-60 rounded-full border border-[var(--accent)]/20">
+      <section
+        className="relative mb-6 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[linear-gradient(120deg,var(--bg-primary),var(--bg-secondary))] p-5 shadow-[var(--shadow-sm)] sm:p-7"
+        aria-labelledby="chapters-heading"
+      >
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-20 -right-12 h-60 w-60 rounded-full border border-[var(--accent)]/20"
+        >
           <div className="absolute inset-9 rounded-full border border-[var(--accent)]/15" />
           <Sparkles size={22} className="absolute bottom-9 left-7 text-[var(--accent)]/30" />
         </div>
@@ -63,7 +70,10 @@ export default async function ChaptersPage({ params }: { params: Promise<{ id: s
               <BookOpen size={14} aria-hidden="true" />
               {lang === 'en' ? 'Story archive' : 'Архив приключений'}
             </span>
-            <h1 id="chapters-heading" className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl">
+            <h1
+              id="chapters-heading"
+              className="text-3xl font-bold tracking-tight text-[var(--text-primary)] sm:text-4xl"
+            >
               {t('nav.chapters')}
             </h1>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">
@@ -75,7 +85,11 @@ export default async function ChaptersPage({ params }: { params: Promise<{ id: s
         </div>
       </section>
 
-      <ChaptersList campaignId={id} initialChapters={list} isDm={isDm} />
+      {list.length === 0 && isDm ? (
+        <ChapterStartGuide campaignId={id} />
+      ) : (
+        <ChaptersList campaignId={id} initialChapters={list} isDm={isDm} />
+      )}
     </div>
   )
 }

@@ -94,7 +94,8 @@ export function srdClassToClassInfo(cls: SrdClass): ClassInfo {
       parseSrdHitDie(data.hit_die) ??
       CLASSES.find((base) => base.slug === baseClassSlug(cls.key))?.hitDie ??
       8,
-    primaryAbility: 'str',
+    primaryAbility:
+      CLASSES.find((base) => base.slug === baseClassSlug(cls.key))?.primaryAbility ?? 'str',
     savingThrows,
     skillChoices: {
       count: 2,

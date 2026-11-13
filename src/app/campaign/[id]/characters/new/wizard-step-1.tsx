@@ -105,11 +105,15 @@ export default function WizardStep1({
       )}
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-[var(--text-secondary)]">
+        <label
+          htmlFor="new-character-level"
+          className="mb-1.5 block text-sm font-medium text-[var(--text-secondary)]"
+        >
           {t('characters.wizard.level')}
         </label>
         <div className="flex items-center gap-2">
           <Input
+            id="new-character-level"
             type="number"
             min={1}
             max={20}

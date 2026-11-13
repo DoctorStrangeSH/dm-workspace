@@ -42,7 +42,7 @@ export function canDecrement(abilities: Record<AbilityKey, number>, ability: Abi
 export function isStandardArrayUsed(values: number[]): boolean {
   const sorted = [...values].sort((a, b) => b - a)
   const expected = [15, 14, 13, 12, 10, 8]
-  return sorted.every((v, i) => v === expected[i])
+  return sorted.length === expected.length && sorted.every((v, i) => v === expected[i])
 }
 
 // ============================================================
@@ -77,7 +77,10 @@ export function buildCharacterData(input: BuildInput): CharacterData {
 
   // HP: hitDie + con_mod (уровень 1)
   const conMod = abilityModifier(finalAbilities.con)
-  const hpMax = cls.hitDie + conMod
+  const hpMax =
+    cls.hitDie +
+    conMod +
+    Math.max(0, level - 1) * Math.max(1, Math.floor(cls.hitDie / 2) + 1 + conMod)
   const hp: CharacterHP = {
     current: hpMax,
     max: hpMax,
