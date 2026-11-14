@@ -5,6 +5,7 @@ import { characterWorkspaceScenarios } from './character-workspace-scenarios.mjs
 import { preparationScenarios } from './preparation-scenarios.mjs'
 import { compactCombatScenarios } from './compact-combat-scenarios.mjs'
 import { entityLibraryScenarios } from './entity-library-scenarios.mjs'
+import { questJournalScenarios } from './quest-journal-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -155,6 +156,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await questJournalScenarios(scenario, expect, output)
   await entityLibraryScenarios(scenario, expect, output)
   await compactCombatScenarios(scenario, expect, output)
   await preparationScenarios(scenario, expect, output)

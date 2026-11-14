@@ -43,8 +43,8 @@ jobs:
       - name: Character HP, level-up and action boundary regression tests
         run: npm run test:characters
 
-      - name: Entity template action authorization and source boundaries (offline)
-        run: node --import tsx --test tests/entity-template-actions.test.ts tests/entity-library-page.test.ts
+      - name: Entity library, quest summaries and template boundaries (offline)
+        run: node --import tsx --test tests/entity-template-actions.test.ts tests/entity-library-page.test.ts tests/quest-journal.test.ts
 
       - name: Offline tactical map geometry and combat action boundaries
         run: npm run test:maps

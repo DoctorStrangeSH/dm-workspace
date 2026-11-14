@@ -12,6 +12,7 @@ import { getLang } from '@/lib/i18n/get-lang'
 import { createT, getDictionary } from '@/lib/i18n/dictionaries'
 import EntitiesWorkspace from './entities-workspace'
 import type { EntityCardData } from './entity-card'
+import { toEntityLibraryCard, type QuestLibraryRow } from '@/lib/quest-journal'
 
 export default async function EntitiesPage({
   params,
@@ -33,7 +34,10 @@ export default async function EntitiesPage({
   // Fetch only card fields. Secret/stat payloads are not needed by the library.
   let query = supabase
     .from('entities')
-    .select('id,type,name,description,is_visible_to_players,updated_at', { count: 'exact' })
+    .select(
+      'id,type,name,description,is_visible_to_players,updated_at,quest_status:data_json->status,quest_giver:data_json->giver,quest_reward:data_json->reward,quest_location:data_json->location',
+      { count: 'exact' }
+    )
     .eq('campaign_id', campaignId)
     .order('updated_at', { ascending: false })
     .order('id')
@@ -48,7 +52,7 @@ export default async function EntitiesPage({
         throw new Error('Unable to load entity library')
       }
       if (!data?.length) return rows
-      rows.push(...(data as EntityCardData[]))
+      rows.push(...(data as unknown as QuestLibraryRow[]).map(toEntityLibraryCard))
       if (count !== null ? rows.length >= count : data.length < 500) return rows
     }
   }

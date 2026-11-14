@@ -855,6 +855,18 @@ export const ru: Dictionary = {
   'entities.hidden': 'Скрыта от игроков',
   'entities.create': 'Новая сущность',
   'entities.library.title': 'Библиотека кампании',
+  'questJournal.title': 'Журнал заданий',
+  'questJournal.hint':
+    'Что ещё предстоит героям, кто ждёт помощи и какая награда обещана. Откройте карточку, чтобы посмотреть подробности.',
+  'questJournal.filter': 'Состояние заданий',
+  'questJournal.status.all': 'Все задания',
+  'questJournal.status.active': 'В работе',
+  'questJournal.status.completed': 'Завершены',
+  'questJournal.status.paused': 'Отложены',
+  'questJournal.status.failed': 'Провалены',
+  'questJournal.status.unset': 'Без статуса',
+  'questJournal.unsetHint':
+    'Пустые и неизвестные статусы собраны отдельно. Статус меняется в характеристиках задания.',
   'entities.library.hintDm': 'Персонажи, места и сюжетные зацепки — всё под рукой во время игры.',
   'entities.library.search': 'Поиск по библиотеке',
   'entities.library.searchHint': 'Название или слова из описания…',

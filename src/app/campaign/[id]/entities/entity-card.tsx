@@ -7,12 +7,9 @@ import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { pluralize } from '@/lib/i18n/plural'
-import type { Entity } from '@/lib/types'
+import { questStatus, type EntityLibraryCard } from '@/lib/quest-journal'
 
-export type EntityCardData = Pick<
-  Entity,
-  'id' | 'type' | 'name' | 'description' | 'is_visible_to_players' | 'updated_at'
->
+export type EntityCardData = EntityLibraryCard
 
 interface Props {
   entity: EntityCardData
@@ -64,9 +61,40 @@ export default function EntityCard({ entity, campaignId, isDm, backlinksCount = 
 
             <div className="mb-2 text-xs text-[var(--text-muted)]">{t(style.labelKey)}</div>
 
+            {entity.type === 'quest' && (
+              <div className="mb-3 inline-flex rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] px-2 py-1 text-xs font-medium text-[var(--text-secondary)]">
+                {t(
+                  questStatus(entity.quest?.status) === 'unset'
+                    ? 'questJournal.status.unset'
+                    : `questStatus.${questStatus(entity.quest?.status)}`
+                )}
+              </div>
+            )}
+
             {entity.description && (
               <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{entity.description}</p>
             )}
+
+            {entity.quest &&
+              (entity.quest.giver || entity.quest.location || entity.quest.reward) && (
+                <dl className="mt-3 space-y-2 border-t border-[var(--border-default)] pt-3 text-xs">
+                  {(['giver', 'location', 'reward'] as const).map((field) =>
+                    entity.quest?.[field] ? (
+                      <div key={field}>
+                        <dt className="text-[var(--text-muted)]">
+                          {t(`entityField.quest.${field}`)}
+                        </dt>
+                        <dd
+                          className="line-clamp-2 break-words text-[var(--text-secondary)]"
+                          title={entity.quest[field]}
+                        >
+                          {entity.quest[field]}
+                        </dd>
+                      </div>
+                    ) : null
+                  )}
+                </dl>
+              )}
 
             {backlinksCount > 0 && (
               <div className="mt-2 flex items-center gap-1 text-xs text-[var(--text-subtle)]">
