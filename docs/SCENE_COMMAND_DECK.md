@@ -6,7 +6,8 @@ filtered into heroes and other creatures, and located on the map without writing
 The panel can be hidden to give the map more space. The existing turn timeline,
 combat drawer, map upload, zoom, pan, ruler, spell areas and routes remain available.
 Fullscreen hides the scene heading and timeline to prioritize the map; the toolbar
-still provides the fullscreen exit control. Exit fullscreen to return to the timeline.
+keeps combat, participant toggle and fullscreen exit controls. Exit fullscreen to
+return to the timeline.
 
 The map and participant panel share one `useRealtimeTokens` subscription. Players do
 not render hidden tokens received in a broadcast. The movement queue and revision

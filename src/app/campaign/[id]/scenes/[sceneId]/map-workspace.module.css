@@ -78,3 +78,11 @@
 .workspace:fullscreen .timelineSlot {
   display: none;
 }
+.fullscreenControls {
+  display: none;
+}
+.workspace:fullscreen .fullscreenControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

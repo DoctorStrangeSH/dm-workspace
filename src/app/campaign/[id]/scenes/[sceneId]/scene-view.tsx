@@ -711,6 +711,27 @@ export default function SceneView({
           aria-label={t('map.workspace')}
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] p-2">
+            <div className={styles.fullscreenControls}>
+              <Button
+                variant="secondary"
+                className="min-h-11"
+                icon={<Swords size={16} />}
+                aria-haspopup="dialog"
+                aria-pressed={showInitiative}
+                onClick={(event) => openCombat(event.currentTarget)}
+              >
+                {t('scenes.combatPanel')}
+              </Button>
+              <Button
+                variant="ghost"
+                className="min-h-11"
+                aria-expanded={showRoster}
+                aria-controls="scene-roster"
+                onClick={() => setShowRoster((value) => !value)}
+              >
+                {lang === 'ru' ? 'Участники' : 'Participants'}
+              </Button>
+            </div>
             <div
               className="flex flex-wrap items-center gap-1"
               role="group"
