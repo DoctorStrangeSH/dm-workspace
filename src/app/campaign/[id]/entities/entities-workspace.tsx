@@ -10,6 +10,8 @@ import type { EntityTemplate, EntityType } from '@/lib/types'
 import type { EntityCardData } from './entity-card'
 import EntityCard from './entity-card'
 import CreateEntityButton from './create-entity-button'
+import QuestJournalFilters from './quest-journal-filters'
+import { questStatus, type QuestStatus } from '@/lib/quest-journal'
 
 interface Props {
   campaignId: string
@@ -35,17 +37,26 @@ export default function EntitiesWorkspace({
   const [search, setSearch] = useState('')
   const [visibility, setVisibility] = useState('all')
   const [sort, setSort] = useState('recent')
+  const [questFilter, setQuestFilter] = useState<QuestStatus | 'all'>('all')
   // Defence in depth: hidden entries never contribute to player counts or search.
   const accessible = entities.filter((entity) => isDm || entity.is_visible_to_players)
   const terms = normalize(search).trim().split(/\s+/).filter(Boolean)
   const matching = accessible.filter((entity) => {
-    const text = normalize(`${entity.name} ${entity.description ?? ''}`)
+    const text = normalize(
+      `${entity.name} ${entity.description ?? ''} ${entity.quest?.giver ?? ''} ${entity.quest?.reward ?? ''} ${entity.quest?.location ?? ''}`
+    )
     return (
       terms.every((term) => text.includes(term)) &&
       (!isDm || visibility === 'all' || entity.is_visible_to_players === (visibility === 'visible'))
     )
   })
-  const visible = matching.filter((entity) => type === 'all' || entity.type === type)
+  const visible = matching.filter(
+    (entity) =>
+      (type === 'all' || entity.type === type) &&
+      (type !== 'quest' ||
+        questFilter === 'all' ||
+        questStatus(entity.quest?.status) === questFilter)
+  )
   visible.sort((a, b) =>
     sort === 'name'
       ? a.name.localeCompare(b.name) || a.id.localeCompare(b.id)
@@ -56,6 +67,7 @@ export default function EntitiesWorkspace({
     setVisibility('all')
     setType('all')
     setSort('recent')
+    setQuestFilter('all')
   }
   const filtered =
     search.trim() !== '' || type !== 'all' || visibility !== 'all' || sort !== 'recent'
@@ -72,13 +84,27 @@ export default function EntitiesWorkspace({
             {t(isDm ? 'entities.library.hintDm' : 'entities.onlyVisible')}
           </p>
         </div>
-        {isDm && (
-          <CreateEntityButton
-            campaignId={campaignId}
-            defaultType={type === 'all' ? undefined : type}
-            templates={templates}
-          />
-        )}
+        <div className="flex flex-wrap gap-2">
+          {type !== 'quest' && (
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => {
+                setType('quest')
+                setQuestFilter('all')
+              }}
+            >
+              {t('questJournal.title')}
+            </Button>
+          )}
+          {isDm && (
+            <CreateEntityButton
+              campaignId={campaignId}
+              defaultType={type === 'all' ? undefined : type}
+              templates={templates}
+            />
+          )}
+        </div>
       </div>
 
       <div className="space-y-4 rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
@@ -129,7 +155,10 @@ export default function EntitiesWorkspace({
                 key={value}
                 type="button"
                 aria-pressed={type === value}
-                onClick={() => setType(value)}
+                onClick={() => {
+                  setType(value)
+                  setQuestFilter('all')
+                }}
                 className={cn(
                   'flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]',
                   type === value
@@ -145,6 +174,14 @@ export default function EntitiesWorkspace({
           })}
         </div>
       </div>
+
+      {type === 'quest' && (
+        <QuestJournalFilters
+          quests={matching.filter((entity) => entity.type === 'quest')}
+          selected={questFilter}
+          onChange={setQuestFilter}
+        />
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p role="status" aria-live="polite" className="text-sm text-[var(--text-muted)]">

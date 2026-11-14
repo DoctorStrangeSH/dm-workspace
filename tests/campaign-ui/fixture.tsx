@@ -50,6 +50,7 @@ import { SessionsClient } from '../../src/app/campaign/[id]/sessions/sessions-cl
 import { sessionFixtures } from './sessions-data'
 import ItemsClient from '../../src/app/campaign/[id]/items/items-client'
 import EntitiesWorkspace from '../../src/app/campaign/[id]/entities/entities-workspace'
+import { questJournalFixtures } from './quest-journal-data'
 
 const query = new URLSearchParams(location.search)
 document.cookie = `dm-lang=${query.get('lang') === 'en' ? 'en' : 'ru'}; path=/`
@@ -396,46 +397,48 @@ function Fixture() {
               <EntitiesWorkspace
                 campaignId="test"
                 isDm={isDm}
-                initialType={query.has('quest') ? 'quest' : 'all'}
+                initialType={query.has('quest') || query.has('questJournal') ? 'quest' : 'all'}
                 templates={[]}
                 backlinksCounts={{ npc: 2 }}
                 entities={
                   query.has('empty')
                     ? []
-                    : [
-                        {
-                          id: 'npc',
-                          type: 'npc',
-                          name: 'Альма Alma',
-                          description: 'Торговка у старой башни',
-                          is_visible_to_players: true,
-                          updated_at: '2026-11-11T10:00:00Z',
-                        },
-                        {
-                          id: 'location',
-                          type: 'location',
-                          name: 'Башня Tower',
-                          description: 'На берегу озера',
-                          is_visible_to_players: true,
-                          updated_at: '2026-11-12T10:00:00Z',
-                        },
-                        {
-                          id: 'quest',
-                          type: 'quest',
-                          name: 'Зов Echo',
-                          description: 'Найти пропавшего торговца',
-                          is_visible_to_players: true,
-                          updated_at: '2026-11-13T10:00:00Z',
-                        },
-                        {
-                          id: 'note',
-                          type: 'note',
-                          name: 'Секрет Secret',
-                          description: 'Дракон ждёт героев',
-                          is_visible_to_players: false,
-                          updated_at: '2026-11-13T11:00:00Z',
-                        },
-                      ]
+                    : query.has('questJournal')
+                      ? questJournalFixtures
+                      : [
+                          {
+                            id: 'npc',
+                            type: 'npc',
+                            name: 'Альма Alma',
+                            description: 'Торговка у старой башни',
+                            is_visible_to_players: true,
+                            updated_at: '2026-11-11T10:00:00Z',
+                          },
+                          {
+                            id: 'location',
+                            type: 'location',
+                            name: 'Башня Tower',
+                            description: 'На берегу озера',
+                            is_visible_to_players: true,
+                            updated_at: '2026-11-12T10:00:00Z',
+                          },
+                          {
+                            id: 'quest',
+                            type: 'quest',
+                            name: 'Зов Echo',
+                            description: 'Найти пропавшего торговца',
+                            is_visible_to_players: true,
+                            updated_at: '2026-11-13T10:00:00Z',
+                          },
+                          {
+                            id: 'note',
+                            type: 'note',
+                            name: 'Секрет Secret',
+                            description: 'Дракон ждёт героев',
+                            is_visible_to_players: false,
+                            updated_at: '2026-11-13T11:00:00Z',
+                          },
+                        ]
                 }
               />
             ) : screen === 'scene-library' ? (

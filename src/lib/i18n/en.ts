@@ -853,6 +853,18 @@ export const en: Dictionary = {
   'entities.hidden': 'Hidden from players',
   'entities.create': 'New entity',
   'entities.library.title': 'Campaign library',
+  'questJournal.title': 'Quest journal',
+  'questJournal.hint':
+    'What lies ahead, who needs help and what reward awaits. Open a card to see the details.',
+  'questJournal.filter': 'Quest state',
+  'questJournal.status.all': 'All quests',
+  'questJournal.status.active': 'In progress',
+  'questJournal.status.completed': 'Completed',
+  'questJournal.status.paused': 'On hold',
+  'questJournal.status.failed': 'Failed',
+  'questJournal.status.unset': 'No status',
+  'questJournal.unsetHint':
+    'Empty and unknown statuses are grouped separately. Change a status in the quest details.',
   'entities.library.hintDm':
     'Characters, places and story hooks, ready when you need them at the table.',
   'entities.library.search': 'Search library',

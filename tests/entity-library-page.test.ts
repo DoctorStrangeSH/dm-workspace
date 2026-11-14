@@ -4,6 +4,7 @@ import { test } from 'node:test'
 import * as jsx from 'react/jsx-runtime'
 import ts from 'typescript'
 import { ENTITY_FILTERS } from '../src/lib/entity-ui'
+import * as questJournal from '../src/lib/quest-journal'
 
 const source = ts.transpileModule(
   readFileSync(new URL('../src/app/campaign/[id]/entities/page.tsx', import.meta.url), 'utf8'),
@@ -16,7 +17,15 @@ const source = ts.transpileModule(
   }
 ).outputText
 
-function rig({ dm = true, member = true, found = true, failAt = -1, total = 3, cap = 500 } = {}) {
+function rig({
+  dm = true,
+  member = true,
+  found = true,
+  failAt = -1,
+  total = 3,
+  cap = 500,
+  fixtureRows = [] as Array<Record<string, unknown>>,
+} = {}) {
   const calls: unknown[][] = []
   const query = {
     select(...args: unknown[]) {
@@ -36,7 +45,7 @@ function rig({ dm = true, member = true, found = true, failAt = -1, total = 3, c
       return {
         data: Array.from(
           { length: Math.max(0, Math.min(cap, total - from, to - from + 1)) },
-          (_, i) => ({ id: String(from + i) })
+          (_, i) => fixtureRows[from + i] ?? { id: String(from + i) }
         ),
         error: from === failAt ? { code: 'TEST' } : null,
         count: total,
@@ -69,7 +78,7 @@ function rig({ dm = true, member = true, found = true, failAt = -1, total = 3, c
         isMember: member,
       }),
     },
-    '@/lib/queries/backlinks': { getBacklinksCounts: async () => ({}) },
+    '@/lib/queries/backlinks': { getBacklinksCounts: async () => ({ q: 2, hidden: 9 }) },
     '@/lib/queries/templates': {
       getTemplatesForCampaign: async () => {
         calls.push(['templates'])
@@ -78,6 +87,7 @@ function rig({ dm = true, member = true, found = true, failAt = -1, total = 3, c
     },
     '@/components/breadcrumbs': { Breadcrumbs: 'breadcrumbs' },
     '@/lib/entity-ui': { ENTITY_FILTERS },
+    '@/lib/quest-journal': questJournal,
     '@/lib/i18n/get-lang': { getLang: async () => 'en' },
     '@/lib/i18n/dictionaries': { getDictionary: () => ({}), createT: () => (key: string) => key },
     './entities-workspace': { default: 'workspace' },
@@ -110,9 +120,15 @@ test('library page preserves campaign and visibility constraints and omits priva
       (call) => JSON.stringify(call) === JSON.stringify(['eq', 'is_visible_to_players', true])
     )
   )
-  assert.deepEqual(
-    r.calls.find((call) => call[0] === 'select'),
-    ['select', 'id,type,name,description,is_visible_to_players,updated_at', { count: 'exact' }]
+  const projection = String(r.calls.find((call) => call[0] === 'select')?.[1])
+  assert.ok(projection.includes('quest_status:data_json->status'))
+  assert.ok(projection.includes('quest_giver:data_json->giver'))
+  assert.ok(projection.includes('quest_reward:data_json->reward'))
+  assert.ok(projection.includes('quest_location:data_json->location'))
+  assert.ok(
+    !projection
+      .split(',')
+      .some((field) => field === '*' || field === 'data_json' || field.includes('notes'))
   )
   assert.equal(
     r.calls.some((call) => call[0] === 'templates'),
@@ -130,6 +146,36 @@ test('library follows server row caps and returns all card pages, including olde
     r.calls.filter((call) => call[0] === 'range').map((call) => call[1]),
     [0, 200, 400, 600, 800, 1000]
   )
+})
+
+test('actual page sends the quest projection and only returned backlink IDs to the client', async () => {
+  const row = {
+    id: 'q',
+    type: 'quest',
+    name: 'Quest',
+    description: 'Goal',
+    is_visible_to_players: true,
+    updated_at: '2026-11-14T00:00:00Z',
+  }
+  const r = rig({
+    total: 1,
+    fixtureRows: [
+      {
+        ...row,
+        quest_status: 'paused',
+        quest_giver: 'Alma',
+        data_json: { notes: 'SECRET' },
+        notes: 'SECRET',
+      },
+    ],
+  })
+  const view = await r.render('quest')
+  const props = view.props.children[1].props
+  assert.deepEqual(props.entities, [
+    { ...row, quest: { status: 'paused', giver: 'Alma', reward: undefined, location: undefined } },
+  ])
+  assert.deepEqual(props.backlinksCounts, { q: 2 })
+  assert.equal(JSON.stringify(props).includes('SECRET'), false)
 })
 
 test('library errors fail to retry boundary instead of showing partial or empty success', async () => {
