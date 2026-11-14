@@ -50,7 +50,7 @@ try {
     JSON.stringify({
       compilerOptions: {
         target: 'ES2017',
-        lib: ['dom', 'esnext'],
+        lib: ['dom', 'dom.iterable', 'esnext'],
         strict: true,
         skipLibCheck: true,
         esModuleInterop: true,
@@ -215,6 +215,33 @@ export default function Layout({children}: {children: React.ReactNode}) {
     metrics = await measure()
     assert.equal(metrics.display, 'flex')
     assert.equal(metrics.cardWidth, 184)
+  }
+  for (const width of [1440, 320]) {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto(origin)
+    const trigger = page.getByRole('button', { name: 'Open preparation workspace', exact: true })
+    await trigger.click()
+    const dialog = page.getByRole('dialog', { name: 'Preparation workspace', exact: true })
+    await dialog.waitFor()
+    const box = await dialog.boundingBox()
+    if (width === 1440) assert.equal(box.width, 896, 'Workspace uses the production max width')
+    else
+      assert.ok(
+        box.width >= width - 64 && box.width <= width - 32,
+        'Workspace keeps mobile margins, including native scrollbar space'
+      )
+    assert.equal(box.height, 812, 'Workspace height respects dynamic viewport')
+    assert.ok(
+      await dialog.evaluate(
+        (el) => el.scrollHeight > el.clientHeight && el.scrollWidth <= el.clientWidth
+      )
+    )
+    await page.keyboard.press('Escape')
+    await dialog.waitFor({ state: 'detached' })
+    assert.ok(
+      await trigger.evaluate((el) => document.activeElement === el),
+      'Focus returns after workspace close'
+    )
   }
   assert.deepEqual(failures, [], 'No browser exceptions')
   assert.deepEqual(externalRequests, [], 'No external services used')

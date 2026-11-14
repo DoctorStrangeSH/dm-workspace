@@ -1132,6 +1132,7 @@ export default function SceneView({
           scene={scene}
           characters={characters}
           monsters={monsters}
+          tokens={tokens}
           onClose={() => setShowAddToken(false)}
         />
       )}
