@@ -35,6 +35,7 @@ import CharacterSheet from '../../src/app/campaign/[id]/characters/[characterId]
 import {
   createEmptyCharacterData,
   type Character,
+  type Entity,
   type SessionWithRsvp,
   type CampaignWithRole,
 } from '../../src/lib/types'
@@ -220,6 +221,21 @@ function DashboardFixture() {
 }
 
 function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?: boolean }) {
+  const characters = query.has('tokenPreparation')
+    ? [
+        {
+          ...fixtureCharacter,
+          name: 'Zero hero',
+          data_json: { ...fixtureCharacter.data_json, hp: { current: 0, max: 8, temp: 0 } },
+        },
+      ]
+    : []
+  const monsters = query.has('tokenPreparation')
+    ? ([
+        { id: 'dice-monster', name: 'Dice goblin', data_json: { hp: '2d8+4' } },
+        { id: 'broken-monster', name: 'Unknown creature', data_json: '{' },
+      ] as unknown as Entity[])
+    : []
   const [entries, setEntries] = useState(() =>
     (query.has('manyTokens') ? battleInitiative : mapInitiative).map((entry, index) => ({
       ...entry,
@@ -270,8 +286,8 @@ function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?
           scenes={[mapScene]}
           activeScene={mapScene}
           tokens={tokens}
-          characters={[]}
-          monsters={[]}
+          characters={characters}
+          monsters={monsters}
           initiative={entries}
           initialFog={[]}
           initialWalls={[]}
@@ -288,8 +304,8 @@ function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?
         ...(query.has('mapImage') ? { image_url: 'private-map-revision' } : {}),
       }}
       tokens={tokens}
-      characters={[]}
-      monsters={[]}
+      characters={characters}
+      monsters={monsters}
       initiative={query.has('combat') ? entries : []}
       initialFog={[]}
       initialWalls={[]}

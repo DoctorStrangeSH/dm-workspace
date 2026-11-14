@@ -9,11 +9,13 @@ export default function CombatDrawer({
   onClose,
   blocked,
   children,
+  presentation = 'drawer',
 }: {
   label: string
   onClose: () => void
   blocked: boolean
   children: React.ReactNode
+  presentation?: 'drawer' | 'workspace'
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const [host, setHost] = useState<Element | null>(null)
@@ -26,14 +28,19 @@ export default function CombatDrawer({
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
+    const opener = document.activeElement
     dialog.showModal()
     const overflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       dialog.close()
       document.body.style.overflow = overflow
+      queueMicrotask(() => {
+        if (presentation === 'workspace' && opener instanceof HTMLElement && opener.isConnected)
+          opener.focus({ preventScroll: true })
+      })
     }
-  }, [host])
+  }, [host, presentation])
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || ref.current?.querySelector('[aria-modal="true"]')) return
@@ -49,7 +56,11 @@ export default function CombatDrawer({
       ref={ref}
       aria-label={label}
       data-busy={blocked}
-      className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-md overflow-y-auto border-0 bg-[var(--bg-elevated)] p-0 text-[var(--text-primary)] shadow-[var(--shadow-xl)] backdrop:bg-black/60"
+      className={
+        presentation === 'workspace'
+          ? 'fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-4xl overflow-y-auto rounded-2xl border border-[var(--border-default)] bg-[var(--bg-elevated)] p-0 text-[var(--text-primary)] shadow-[var(--shadow-xl)] backdrop:bg-black/60'
+          : 'fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-md overflow-y-auto border-0 bg-[var(--bg-elevated)] p-0 text-[var(--text-primary)] shadow-[var(--shadow-xl)] backdrop:bg-black/60'
+      }
       onKeyDownCapture={(event) => {
         const dialog = ref.current
         if (!dialog) return
