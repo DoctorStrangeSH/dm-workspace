@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { Button, IconButton, Dialog } from '@/components/ui'
 import { useT } from '@/lib/i18n'
 import type { Scene, Token, TokenCondition, TokenOwnerWithProfile } from '@/lib/types'
+import TokenAppearance from './token-appearance'
 
 interface Props {
   token: Token
@@ -67,8 +68,16 @@ export default function TokenMenu({
     (o) => o.token_id === token.id && o.user_id === currentUserId
   )
   const canEdit = isDm || token.owner_id === currentUserId || isAdditionalOwner
-  const hasValidHP = localHP !== null && Number.isSafeInteger(localHP) && token.hp_max !== null && Number.isSafeInteger(token.hp_max) && token.hp_max > 0 && localHP >= 0
-  const hpPercent = hasValidHP ? Math.min(100, Math.max(0, (localHP! / (token.hp_max ?? 1)) * 100)) : 0
+  const hasValidHP =
+    localHP !== null &&
+    Number.isSafeInteger(localHP) &&
+    token.hp_max !== null &&
+    Number.isSafeInteger(token.hp_max) &&
+    token.hp_max > 0 &&
+    localHP >= 0
+  const hpPercent = hasValidHP
+    ? Math.min(100, Math.max(0, (localHP! / (token.hp_max ?? 1)) * 100))
+    : 0
 
   // CHANGES (5.3): владельцы токена
   const owners = tokenOwners.filter((o) => o.token_id === token.id)
@@ -190,6 +199,12 @@ export default function TokenMenu({
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-4 sm:p-5">
+          <TokenAppearance
+            key={`${token.id}:${token.image_url}`}
+            token={token}
+            canEdit={isDm || (!!currentUserId && token.owner_id === currentUserId)}
+            onUpdate={onUpdate}
+          />
           {/* HP */}
           {hasValidHP && (
             <section className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
@@ -200,7 +215,14 @@ export default function TokenMenu({
                   {localHP} / {token.hp_max}
                 </span>
               </div>
-              <div className="mb-3 h-3 overflow-hidden rounded-full bg-[var(--bg-app)]" role="progressbar" aria-label="HP" aria-valuemin={0} aria-valuemax={token.hp_max ?? 0} aria-valuenow={localHP ?? 0}>
+              <div
+                className="mb-3 h-3 overflow-hidden rounded-full bg-[var(--bg-app)]"
+                role="progressbar"
+                aria-label="HP"
+                aria-valuemin={0}
+                aria-valuemax={token.hp_max ?? 0}
+                aria-valuenow={localHP ?? 0}
+              >
                 <div
                   className={cn(
                     'h-full transition-all',
@@ -262,11 +284,19 @@ export default function TokenMenu({
           )}
 
           {localConditions.length > 0 && (
-            <section aria-label={t('scenes.token.conditions')} className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">{t('scenes.token.conditions')} · {localConditions.length}</h3>
+            <section
+              aria-label={t('scenes.token.conditions')}
+              className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-3"
+            >
+              <h3 className="mb-2 text-xs font-semibold tracking-wide text-[var(--text-muted)] uppercase">
+                {t('scenes.token.conditions')} · {localConditions.length}
+              </h3>
               <div className="flex flex-wrap gap-1.5">
                 {localConditions.map((cond, index) => (
-                  <span key={`${cond.name}-${index}`} className="inline-flex items-center gap-1 rounded-full border border-[var(--warning)]/30 bg-[var(--warning-subtle)] px-2.5 py-1 text-xs text-[var(--warning-text)]">
+                  <span
+                    key={`${cond.name}-${index}`}
+                    className="inline-flex items-center gap-1 rounded-full border border-[var(--warning)]/30 bg-[var(--warning-subtle)] px-2.5 py-1 text-xs text-[var(--warning-text)]"
+                  >
                     <span aria-hidden="true">{cond.icon ?? '●'}</span>
                     {t(`condition.${cond.name}`)}
                   </span>

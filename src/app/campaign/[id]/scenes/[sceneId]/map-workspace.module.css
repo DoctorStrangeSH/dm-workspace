@@ -1,5 +1,19 @@
 .workspace {
   container-type: inline-size;
+  min-width: 0;
+}
+.commandDeck {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--border-default);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(ellipse at top left, var(--accent-subtle), transparent 65%), var(--bg-surface);
 }
 .layout {
   display: grid;
@@ -7,7 +21,49 @@
   min-width: 0;
 }
 .viewport {
-  height: clamp(340px, 62dvh, 740px);
+  height: clamp(380px, 68dvh, 960px);
+}
+.rosterSlot {
+  min-width: 0;
+}
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: 1rem;
+  background: var(--bg-surface);
+}
+.rosterList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.25rem;
+  max-height: 320px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.rosterList > li {
+  min-width: 0;
+}
+@container (min-width: 1120px) {
+  .withRoster {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: start;
+  }
+  .roster {
+    position: sticky;
+    top: 1rem;
+  }
+  .rosterList {
+    max-height: min(52dvh, 700px);
+  }
+}
+@container (max-width: 600px) {
+  .commandDeck {
+    padding: 0.875rem;
+  }
 }
 .workspace:fullscreen {
   padding: 1rem;
@@ -15,6 +71,18 @@
   overflow: auto;
 }
 .workspace:fullscreen .viewport {
-  height: calc(100dvh - 230px);
+  height: calc(100dvh - 180px);
   min-height: 300px;
+}
+.workspace:fullscreen .commandDeck,
+.workspace:fullscreen .timelineSlot {
+  display: none;
+}
+.fullscreenControls {
+  display: none;
+}
+.workspace:fullscreen .fullscreenControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }

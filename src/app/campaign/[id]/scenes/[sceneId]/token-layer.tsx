@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import { useT } from '@/lib/i18n'
 import Token from './token'
 import TokenMenu from './token-menu'
-import { useRealtimeTokens } from '@/lib/hooks/use-realtime-tokens'
 import { useRealtimeTokenOwners } from '@/lib/hooks/use-realtime-token-owners'
 import type { Scene, Token as TokenType, SceneWall, TokenOwnerWithProfile } from '@/lib/types'
 
@@ -13,7 +12,8 @@ interface Props {
   scene: Scene
   zoomScale?: number
   activeTokenId?: string | null
-  initialTokens: TokenType[]
+  tokens: TokenType[]
+  isReady: boolean
   isDm: boolean
   currentUserId: string | null
   walls?: SceneWall[]
@@ -26,7 +26,8 @@ export default function TokenLayer({
   scene,
   zoomScale = 1,
   activeTokenId = null,
-  initialTokens,
+  tokens,
+  isReady,
   isDm,
   currentUserId,
   walls = [],
@@ -35,13 +36,6 @@ export default function TokenLayer({
   onRefresh,
 }: Props) {
   const t = useT()
-  // CHANGES: isReady используется для индикатора "Подключение…"
-  // (drag НЕ блокируется — иначе первое движение теряется).
-  const { tokens, isReady } = useRealtimeTokens({
-    sceneId: scene.id,
-    initialTokens,
-  })
-
   const { owners } = useRealtimeTokenOwners({
     campaignId: scene.campaign_id,
     initialOwners: initialTokenOwners,

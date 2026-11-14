@@ -5,6 +5,7 @@ import TurnTimeline from '@/app/campaign/[id]/scenes/[sceneId]/turn-timeline'
 import styles from '@/app/campaign/[id]/scenes/[sceneId]/map-workspace.module.css'
 import { I18nProvider } from '@/lib/i18n'
 import { battleInitiative } from '../campaign-ui/maps-data'
+import SceneRoster from '@/app/campaign/[id]/scenes/[sceneId]/scene-roster'
 
 // Imports the production components and CSS without auth, actions or database clients.
 export default function ProductionLayoutFixture() {
@@ -23,8 +24,17 @@ export default function ProductionLayoutFixture() {
             onFocusToken={setFocused}
             onOpenPanel={() => setPanelOpen(true)}
           />
-          <div data-testid="map-viewport" className={styles.viewport}>
-            Карта
+          <div data-testid="scene-layout" className={`${styles.layout} ${styles.withRoster}`}>
+            <div data-testid="map-viewport" className={styles.viewport}>
+              Карта
+            </div>
+            <SceneRoster
+              tokens={battleInitiative.map((entry) => entry.token)}
+              activeTokenId="battle-0"
+              isDm={true}
+              onFocus={setFocused}
+              onAdd={() => {}}
+            />
           </div>
           <output data-testid="focused-token">{focused}</output>
           {panelOpen && <p role="status">Панель открыта</p>}
