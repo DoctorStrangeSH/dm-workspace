@@ -27,6 +27,15 @@ export async function questJournalScenarios(scenario, expect, output) {
         })
         const cards = library.getByTestId('entity-library-results').getByRole('link')
         await expect(cards).toHaveCount(options.player ? 6 : 7)
+        await expect(cards.filter({ hasText: 'Caravan' }).getByRole('progressbar')).toHaveAttribute(
+          'aria-valuenow',
+          '1'
+        )
+        await expect(cards.filter({ hasText: 'Caravan' }).getByRole('progressbar')).toHaveAttribute(
+          'aria-valuemax',
+          '2'
+        )
+        await expect(library.getByText('Private objective detail')).toHaveCount(0)
         await states.getByRole('button', { name: en ? /No status/ : /Без статуса/ }).click()
         await expect(cards).toHaveCount(2)
         await expect(cards.filter({ hasText: 'Legacy' })).toHaveCount(1)

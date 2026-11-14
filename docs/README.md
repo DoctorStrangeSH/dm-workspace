@@ -4,6 +4,8 @@
 
 ## Управление проектом
 
+Цели заданий: [QUEST_OBJECTIVES.md](QUEST_OBJECTIVES.md).
+
 | Документ | Тема |
 | --- | --- |
 | [ROADMAP.md](ROADMAP.md) | Дорожная карта DM Workspace |

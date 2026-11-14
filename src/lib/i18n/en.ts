@@ -853,6 +853,28 @@ export const en: Dictionary = {
   'entities.hidden': 'Hidden from players',
   'entities.create': 'New entity',
   'entities.library.title': 'Campaign library',
+  'questObjectives.title': 'Quest objectives',
+  'questObjectives.error.snapshot':
+    'The saved version could not be checked. Reload the page before saving.',
+  'questObjectives.error.objectives': 'Invalid objectives: up to 20 steps, 200 characters each.',
+  'questObjectives.error.failed':
+    'Could not save. Your edits remain on this page. Retry saving when ready.',
+  'questObjectives.error.conflict':
+    'The data changed in another tab or is no longer available. Copy your edits and reload the page.',
+  'questObjectives.progress': '{done} of {total} completed',
+  'questObjectives.hint':
+    'Mark steps as your adventure unfolds. Quest status is managed separately. Changes save automatically.',
+  'questObjectives.playerHint':
+    'The GM marks completed steps. Progress does not change the quest status automatically.',
+  'questObjectives.invalid':
+    'The existing objectives could not be read. They remain unchanged. Check the data before replacing them.',
+  'questObjectives.empty': 'Every journey starts with a step. No objectives yet.',
+  'questObjectives.new': 'New objective',
+  'questObjectives.placeholder': 'For example: find the entrance to the old tower',
+  'questObjectives.add': 'Add objective',
+  'questObjectives.remove': 'Remove objective {number}',
+  'questObjectives.limit':
+    'Up to {count} objectives, 200 characters each. Objectives are visible to everyone who can see the quest.',
   'questJournal.title': 'Quest journal',
   'questJournal.hint':
     'What lies ahead, who needs help and what reward awaits. Open a card to see the details.',

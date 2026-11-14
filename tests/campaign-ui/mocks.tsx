@@ -57,6 +57,10 @@ export const lab = {
   characterActions: [] as { name: string; args: unknown[] }[],
   refreshes: 0,
   entityCreates: [] as { campaignId: string; type: string }[],
+  entityUpdates: [] as { entityId: string; campaignId: string; data: unknown; expected: unknown }[],
+  entitySaveFails: false,
+  entitySaveDeferred: false,
+  entitySavePending: [] as (() => void)[],
   identityOutcome: 'error' as 'error' | 'success' | 'throw',
   identityDelay: 0,
   sheetOutcome: 'error' as 'error' | 'success' | 'throw',
@@ -610,4 +614,18 @@ export async function joinCampaign(code: string) {
 export async function createEntity(campaignId: string, form: FormData) {
   lab.entityCreates.push({ campaignId, type: String(form.get('type')) })
   return { error: 'Synthetic save error' }
+}
+
+export async function updateEntity(
+  entityId: string,
+  campaignId: string,
+  data: unknown,
+  expected: unknown
+) {
+  lab.entityUpdates.push(structuredClone({ entityId, campaignId, data, expected }))
+  if (lab.entitySaveDeferred)
+    await new Promise<void>((resolve) => lab.entitySavePending.push(resolve))
+  return lab.entitySaveFails
+    ? { error: 'Synthetic conflict: copy edits and reload' }
+    : { success: true }
 }
