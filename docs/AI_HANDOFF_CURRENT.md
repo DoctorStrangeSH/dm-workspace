@@ -1,5 +1,18 @@
 # DM Workspace — current AI handoff (2026-10-29)
 
+## Scene workspace checkpoint — 2026-11-14 (supersedes old checkpoints)
+
+Current feature: `feat/scene-command-deck` from main
+`4513f9ee44eb1cc3ec2633074a53016c02349496` (quest objectives #284 delivered).
+Read `SCENE_COMMAND_DECK.md` and `../DM_WORKSPACE_RESUME.md` for current release status.
+This change adds a responsive live participant panel, fullscreen map focus and private
+PNG/JPG/WebP token uploads. Movement queue, combat actions and HP writers are unchanged.
+Apply only the reviewed token-art migration after isolated PostgreSQL checks; do not
+bulk-push migrations. Preserve local entity-template timestamp20261113125548 mapped
+to installed history20261113130929. Installed broken HP RPC/manual harness remain forbidden.
+Source, passing tests and Preview readiness do not establish authenticated live acceptance.
+Final PR/head, migration and deployment receipts belong in the continuation note.
+
 Read repository AGENTS.md, AI_PROJECT_AUTHORIZATION.md, then CHARACTER_HP_VALIDATION.md and PR_BACKLOG_TRIAGE_2026-10-28.md. Refresh refs, PR states and deployment checks. A closed PR is not necessarily merged; a passing defect reproduction is not a fix.
 
 ## Current checkpoint (supersedes historical source checkpoints below)

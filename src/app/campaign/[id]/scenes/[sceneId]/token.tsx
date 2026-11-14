@@ -8,6 +8,7 @@ import { useT } from '@/lib/i18n'
 import { isBlockedByWalls } from '@/lib/collision'
 import { cn } from '@/lib/utils'
 import { TokenMovement } from '@/lib/maps/token-movement'
+import { tokenArtSrc } from '@/lib/maps/token-art'
 import type { Token as TokenType, SceneWall } from '@/lib/types'
 
 interface Props {
@@ -36,6 +37,8 @@ export default function Token({
   const [dragging, setDragging] = useState(false)
   const [pos, setPos] = useState({ x: token.x, y: token.y })
   const [blocked, setBlocked] = useState(false)
+  const imageSrc = tokenArtSrc(token)
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const startRef = useRef({ x: 0, y: 0, tokenX: token.x, tokenY: token.y })
   const dragRef = useRef(false)
   const cleanupRef = useRef<(() => void) | null>(null)
@@ -213,13 +216,14 @@ export default function Token({
           className="pointer-events-none absolute -inset-2 rounded-full border-2 border-[var(--accent)]/65 motion-safe:animate-pulse"
         />
       )}
-      {token.image_url ? (
+      {imageSrc && failedSrc !== imageSrc ? (
         <Image
-          src={token.image_url}
+          src={imageSrc}
           alt={token.name}
           fill
           sizes="64px"
-          className="pointer-events-none rounded-full object-cover"
+          className="pointer-events-none rounded-full object-contain"
+          onError={() => setFailedSrc(imageSrc)}
           unoptimized
           draggable={false}
         />

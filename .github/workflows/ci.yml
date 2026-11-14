@@ -49,6 +49,9 @@ jobs:
       - name: Offline tactical map geometry and combat action boundaries
         run: npm run test:maps
 
+      - name: Token art upload permissions and private route boundaries (offline)
+        run: node --import tsx --test tests/token-art.test.ts
+
       - name: Magic item catalog source and planning tests
         run: |
           node --test tests/magic-item-catalog.test.mjs
@@ -121,6 +124,9 @@ jobs:
 
       - name: Quest JSON snapshot conflict safety (disposable PostgreSQL only)
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/quest_objectives_ci.sql
+
+      - name: Private token art Storage isolation (disposable PostgreSQL only)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/token_art_ci.sql
 
       - name: Setup Node.js for isolated catalog import tests
         uses: actions/setup-node@v4

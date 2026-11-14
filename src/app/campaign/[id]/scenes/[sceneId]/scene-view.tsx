@@ -37,6 +37,8 @@ import AddTokenModal from './add-token-modal'
 import InitiativePanel from './initiative-panel'
 import CombatDrawer from './combat-drawer'
 import TurnTimeline from './turn-timeline'
+import SceneRoster from './scene-roster'
+import { useRealtimeTokens } from '@/lib/hooks/use-realtime-tokens'
 import { useRealtimeInitiative } from '@/lib/hooks/use-realtime-initiative'
 import FogLayer from './fog-layer'
 import RulerTool from './ruler-tool'
@@ -84,7 +86,7 @@ interface Props {
 
 export default function SceneView({
   scene,
-  tokens,
+  tokens: initialTokens,
   characters,
   monsters,
   initiative,
@@ -98,6 +100,9 @@ export default function SceneView({
   currentUserId,
 }: Props) {
   const { t, lang } = useI18n()
+  const { tokens: liveTokens, isReady } = useRealtimeTokens({ sceneId: scene.id, initialTokens })
+  const tokens = liveTokens.filter((token) => isDm || !token.is_hidden)
+  const [showRoster, setShowRoster] = useState(true)
   const router = useRouter()
   const toast = useToast()
   const [isPending, startTransition] = useTransition()
@@ -591,7 +596,7 @@ export default function SceneView({
 
   return (
     <div ref={workspaceRef} className={styles.workspace}>
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <header className={styles.commandDeck}>
         <div className="min-w-0">
           <p className="mb-1 text-xs font-semibold tracking-widest text-[var(--accent-text)] uppercase">
             {t('map.workspace')}
@@ -606,6 +611,15 @@ export default function SceneView({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant={showRoster ? 'secondary' : 'ghost'}
+            className="min-h-11"
+            aria-expanded={showRoster}
+            aria-controls="scene-roster"
+            onClick={() => setShowRoster((value) => !value)}
+          >
+            {lang === 'ru' ? 'Участники' : 'Participants'}
+          </Button>
           {isDm && (
             <Button
               variant={scene.image_url ? 'secondary' : 'primary'}
@@ -676,12 +690,14 @@ export default function SceneView({
         />
       )}
 
-      <TurnTimeline
-        entries={liveInitiative}
-        isDm={isDm}
-        onFocusToken={focusToken}
-        onOpenPanel={openCombat}
-      />
+      <div className={styles.timelineSlot}>
+        <TurnTimeline
+          entries={liveInitiative}
+          isDm={isDm}
+          onFocusToken={focusToken}
+          onOpenPanel={openCombat}
+        />
+      </div>
 
       {activeTool === 'wall' && (
         <div className="mb-3 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-subtle)] px-3 py-2 text-sm text-[var(--accent-text)]">
@@ -689,7 +705,7 @@ export default function SceneView({
         </div>
       )}
 
-      <div className={styles.layout}>
+      <div className={`${styles.layout} ${showRoster ? styles.withRoster : ''}`}>
         <section
           className="min-w-0 overflow-hidden rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-[var(--shadow-lg)]"
           aria-label={t('map.workspace')}
@@ -947,7 +963,8 @@ export default function SceneView({
                     scene={scene}
                     zoomScale={mapZoom}
                     activeTokenId={currentTurn?.token_id ?? null}
-                    initialTokens={tokens}
+                    tokens={tokens}
+                    isReady={isReady}
                     isDm={isDm}
                     currentUserId={currentUserId}
                     walls={localWalls}
@@ -1052,6 +1069,17 @@ export default function SceneView({
             </span>
           </div>
         </section>
+        {showRoster && (
+          <div id="scene-roster" className={styles.rosterSlot}>
+            <SceneRoster
+              tokens={tokens}
+              activeTokenId={currentTurn?.token_id ?? null}
+              isDm={isDm}
+              onFocus={focusToken}
+              onAdd={() => setShowAddToken(true)}
+            />
+          </div>
+        )}
         {showInitiative && (
           <CombatDrawer label={t('scenes.combatPanel')} blocked={combatBusy} onClose={closeCombat}>
             <InitiativePanel

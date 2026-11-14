@@ -20,6 +20,7 @@ import { combatFinderScenarios } from './combat-finder-scenarios.mjs'
 import { spellAreaScenarios } from './spell-area-scenarios.mjs'
 import { onboardingScenarios } from './onboarding-scenarios.mjs'
 import { routeScenarios } from './route-scenarios.mjs'
+import { sceneDeckScenarios } from './scene-deck-scenarios.mjs'
 
 const root = process.cwd()
 const output = path.join(root, 'test-results/campaign-ui')
@@ -54,7 +55,7 @@ const result = await build({
         builder.onResolve(
           {
             filter:
-              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:entities|chapters|scenes|combat|fog|walls|tokens|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
+              /^(?:next\/(?:link|navigation)|@\/lib\/actions\/(?:entities|chapters|scenes|combat|fog|walls|tokens|token-art|token-owners|summon|messages|sessions|campaigns|settings|chapter-content|export|characters|items-search|add-item-to-character|add-item-to-campaign|spells-search|bestiary-search|bestiary|add-spell-to-character)|@\/lib\/hooks\/use-realtime-(?:messages|initiative|token-owners|fog|walls|summons))$/,
           },
           () => ({ path: path.join(root, 'tests/campaign-ui/mocks.tsx') })
         )
@@ -158,6 +159,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await sceneDeckScenarios(scenario, expect, output)
   await questObjectivesScenarios(scenario, expect, output)
   await questJournalScenarios(scenario, expect, output)
   await entityLibraryScenarios(scenario, expect, output)

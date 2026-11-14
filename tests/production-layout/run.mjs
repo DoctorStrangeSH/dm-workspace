@@ -158,10 +158,26 @@ export default function Layout({children}: {children: React.ReactNode}) {
     assert.equal(metrics.firstTop, metrics.secondTop)
     assert.equal(metrics.firstTop, metrics.lastTop)
     assert.ok(metrics.railHeight < 300)
-    assert.equal(metrics.viewportHeight, 620)
+    assert.equal(metrics.viewportHeight, 680)
     assert.equal(metrics.containerType, 'inline-size')
     assert.equal(metrics.layoutDisplay, 'grid')
     assert.equal(metrics.pageOverflow, false)
+    const positions = await page.getByTestId('scene-layout').evaluate((element) => {
+      const map = element.children[0].getBoundingClientRect()
+      const roster = element.children[1].getBoundingClientRect()
+      return {
+        mapTop: map.top,
+        mapRight: map.right,
+        rosterTop: roster.top,
+        rosterLeft: roster.left,
+        rosterWidth: roster.width,
+      }
+    })
+    if (width === 1440) {
+      assert.equal(positions.mapTop, positions.rosterTop)
+      assert.ok(positions.rosterLeft > positions.mapRight)
+      assert.equal(positions.rosterWidth, 280)
+    } else assert.ok(positions.rosterTop >= positions.mapTop + metrics.viewportHeight)
     measurements.push({ width, mode: 'compact-collapsed', ...metrics })
     await page.screenshot({ path: path.join(results, `production-layout-${width}-collapsed.png`) })
     const compactHeight = metrics.railHeight

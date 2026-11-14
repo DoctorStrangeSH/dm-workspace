@@ -514,6 +514,12 @@ async function mapAction(name: string, args: unknown[]) {
   return { success: true, roll: 12, dexMod: 2, total: 14 }
 }
 export const uploadMap = (...args: unknown[]) => mapAction('uploadMap', args)
+export async function uploadTokenArt(...args: unknown[]) {
+  const result = await mapAction('uploadTokenArt', args)
+  return 'error' in result
+    ? result
+    : { success: true, imageUrl: 'https://offline.invalid/saved.png' }
+}
 export const setActiveScene = (...args: unknown[]) => mapAction('setActiveScene', args)
 export const deleteScene = (...args: unknown[]) => mapAction('deleteScene', args)
 export const createScene = (...args: unknown[]) => mapAction('createScene', args)
