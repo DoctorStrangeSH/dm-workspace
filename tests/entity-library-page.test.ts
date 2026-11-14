@@ -164,6 +164,7 @@ test('actual page sends the quest projection and only returned backlink IDs to t
         ...row,
         quest_status: 'paused',
         quest_giver: 'Alma',
+        quest_objectives: [{ id: 'one', text: 'OBJECTIVE_TEXT', done: true }],
         data_json: { notes: 'SECRET' },
         notes: 'SECRET',
       },
@@ -172,10 +173,20 @@ test('actual page sends the quest projection and only returned backlink IDs to t
   const view = await r.render('quest')
   const props = view.props.children[1].props
   assert.deepEqual(props.entities, [
-    { ...row, quest: { status: 'paused', giver: 'Alma', reward: undefined, location: undefined } },
+    {
+      ...row,
+      quest: {
+        status: 'paused',
+        giver: 'Alma',
+        reward: undefined,
+        location: undefined,
+        progress: { done: 1, total: 1 },
+      },
+    },
   ])
   assert.deepEqual(props.backlinksCounts, { q: 2 })
   assert.equal(JSON.stringify(props).includes('SECRET'), false)
+  assert.equal(JSON.stringify(props).includes('OBJECTIVE_TEXT'), false)
 })
 
 test('library errors fail to retry boundary instead of showing partial or empty success', async () => {

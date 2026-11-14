@@ -8,6 +8,7 @@ import { Card } from '@/components/ui'
 import { useI18n } from '@/lib/i18n'
 import { pluralize } from '@/lib/i18n/plural'
 import { questStatus, type EntityLibraryCard } from '@/lib/quest-journal'
+import QuestProgress from './quest-progress'
 
 export type EntityCardData = EntityLibraryCard
 
@@ -75,6 +76,14 @@ export default function EntityCard({ entity, campaignId, isDm, backlinksCount = 
               <p className="line-clamp-2 text-sm text-[var(--text-muted)]">{entity.description}</p>
             )}
 
+            {entity.quest?.progress && (
+              <div className="mt-3 text-xs text-[var(--text-secondary)]">
+                <span>{t('questObjectives.progress', entity.quest.progress)}</span>
+                <div className="mt-2">
+                  <QuestProgress label={t('questObjectives.title')} {...entity.quest.progress} />
+                </div>
+              </div>
+            )}
             {entity.quest &&
               (entity.quest.giver || entity.quest.location || entity.quest.reward) && (
                 <dl className="mt-3 space-y-2 border-t border-[var(--border-default)] pt-3 text-xs">

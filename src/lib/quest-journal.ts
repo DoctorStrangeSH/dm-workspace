@@ -1,4 +1,5 @@
 import type { Entity } from './types'
+import { readQuestObjectives } from './quest-objectives'
 
 export const QUEST_STATUSES = ['active', 'completed', 'paused', 'failed', 'unset'] as const
 export type QuestStatus = (typeof QUEST_STATUSES)[number]
@@ -7,6 +8,7 @@ export interface QuestSummary {
   giver?: string
   reward?: string
   location?: string
+  progress?: { done: number; total: number }
 }
 type CardFields = Pick<
   Entity,
@@ -18,6 +20,7 @@ export type QuestLibraryRow = CardFields & {
   quest_giver?: unknown
   quest_reward?: unknown
   quest_location?: unknown
+  quest_objectives?: unknown
 }
 
 export function questStatus(value: unknown): QuestStatus {
@@ -31,6 +34,7 @@ const summaryText = (value: unknown) =>
 
 /** Only the public card projection crosses the server/client boundary. */
 export function toEntityLibraryCard(row: QuestLibraryRow): EntityLibraryCard {
+  const objectives = row.type === 'quest' ? readQuestObjectives(row.quest_objectives) : null
   return {
     id: row.id,
     type: row.type,
@@ -45,6 +49,14 @@ export function toEntityLibraryCard(row: QuestLibraryRow): EntityLibraryCard {
             giver: summaryText(row.quest_giver),
             reward: summaryText(row.quest_reward),
             location: summaryText(row.quest_location),
+            ...(objectives?.length
+              ? {
+                  progress: {
+                    done: objectives.filter((item) => item.done).length,
+                    total: objectives.length,
+                  },
+                }
+              : {}),
           },
         }
       : {}),

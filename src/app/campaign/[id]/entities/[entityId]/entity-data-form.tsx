@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
+import QuestObjectives from './quest-objectives'
+import { Button } from '@/components/ui/button'
 import { updateEntity } from '@/lib/actions/entities'
 import { useAutosave } from '@/lib/hooks/use-autosave'
 import SaveStatus from '../../chapters/[chapterId]/save-status'
@@ -57,20 +59,30 @@ function setNestedValue(
 export default function EntityDataForm({ entityId, campaignId, type, initialData, isDm }: Props) {
   const t = useT()
   const [data, setData] = useState<Record<string, unknown>>(initialData)
+  const savedData = useRef(initialData)
 
   const schema = useMemo(() => ENTITY_SCHEMAS[type] ?? [], [type])
   const sections = useMemo(() => groupFieldsBySection(schema), [schema])
 
   const handleSave = useCallback(
     async (value: Record<string, unknown>) => {
-      return updateEntity(entityId, campaignId, {
-        data_json: value,
-      })
+      const result = await updateEntity(
+        entityId,
+        campaignId,
+        {
+          data_json: value,
+        },
+        savedData.current
+      )
+      if (result.success) savedData.current = value
+      if ('code' in result && result.code)
+        return { error: t(`questObjectives.error.${result.code}`) }
+      return result
     },
-    [entityId, campaignId]
+    [entityId, campaignId, t]
   )
 
-  const { status, lastSaved, error } = useAutosave({
+  const { status, lastSaved, error, saveNow } = useAutosave({
     value: data,
     onSave: handleSave,
     delay: 1000,
@@ -87,12 +99,25 @@ export default function EntityDataForm({ entityId, campaignId, type, initialData
 
   return (
     <div className="mt-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-[var(--text-primary)]">
           {t('entities.dataForm.title')}
         </h2>
         {isDm && <SaveStatus status={status} lastSaved={lastSaved} error={error} />}
+        {isDm && status === 'error' && (
+          <Button type="button" variant="secondary" onClick={() => void saveNow()}>
+            {t('common.retry')}
+          </Button>
+        )}
       </div>
+
+      {type === 'quest' && (
+        <QuestObjectives
+          value={data.objectives}
+          isDm={isDm}
+          onChange={(value) => handleFieldChange('objectives', value)}
+        />
+      )}
 
       <div className="space-y-6">
         {Object.entries(sections).map(([sectionKey, fields]) => (

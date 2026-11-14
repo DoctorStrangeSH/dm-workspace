@@ -35,7 +35,7 @@ export default async function EntitiesPage({
   let query = supabase
     .from('entities')
     .select(
-      'id,type,name,description,is_visible_to_players,updated_at,quest_status:data_json->status,quest_giver:data_json->giver,quest_reward:data_json->reward,quest_location:data_json->location',
+      'id,type,name,description,is_visible_to_players,updated_at,quest_status:data_json->status,quest_giver:data_json->giver,quest_reward:data_json->reward,quest_location:data_json->location,quest_objectives:data_json->objectives',
       { count: 'exact' }
     )
     .eq('campaign_id', campaignId)

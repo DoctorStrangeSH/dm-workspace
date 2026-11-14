@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getCampaignAccess } from '@/lib/queries/access'
 import type { EntityType } from '@/lib/types'
+import { readQuestObjectives } from '@/lib/quest-objectives'
 
 const VALID_TYPES: EntityType[] = ['npc', 'location', 'item', 'monster', 'faction', 'quest', 'note']
 
@@ -73,7 +74,8 @@ export async function updateEntity(
     image_url?: string | null
     is_visible_to_players?: boolean
     data_json?: Record<string, unknown>
-  }
+  },
+  expectedDataJson?: Record<string, unknown>
 ) {
   const { isDm } = await getCampaignAccess(campaignId)
   if (!isDm) return { error: 'Нет прав' }
@@ -107,7 +109,10 @@ export async function updateEntity(
   }
 
   if (data.image_url !== undefined) {
-    if (data.image_url !== null && (typeof data.image_url !== 'string' || data.image_url.length > 2048)) {
+    if (
+      data.image_url !== null &&
+      (typeof data.image_url !== 'string' || data.image_url.length > 2048)
+    ) {
       return { error: 'Некорректная ссылка на изображение' }
     }
     safeUpdates.image_url = data.image_url
@@ -129,6 +134,26 @@ export async function updateEntity(
       return { error: 'Данные сущности слишком большие' }
     }
     safeUpdates.data_json = value as Record<string, unknown>
+    if (
+      !expectedDataJson ||
+      typeof expectedDataJson !== 'object' ||
+      Array.isArray(expectedDataJson) ||
+      JSON.stringify(expectedDataJson).length > 100_000
+    ) {
+      return {
+        error: 'Не удалось проверить версию. Обновите страницу перед сохранением.',
+        code: 'snapshot' as const,
+      }
+    }
+    if (
+      Object.hasOwn(value, 'objectives') &&
+      readQuestObjectives((value as Record<string, unknown>).objectives) === null
+    ) {
+      return {
+        error: 'Некорректный список целей: до 20 пунктов, до 200 символов в каждом.',
+        code: 'objectives' as const,
+      }
+    }
   }
 
   if (Object.keys(safeUpdates).length === 0) {
@@ -136,17 +161,25 @@ export async function updateEntity(
   }
 
   const supabase = await createClient()
-  const { data: updated, error } = await supabase
+  let query = supabase
     .from('entities')
     .update(safeUpdates)
     .eq('id', entityId)
     .eq('campaign_id', campaignId)
-    .select('id')
-    .maybeSingle()
+  // JSONB equality is checked by PostgreSQL in the UPDATE, so another tab's
+  // completed objectives or other attributes cannot be overwritten by a stale form.
+  if (safeUpdates.data_json !== undefined)
+    query = query.eq('data_json', JSON.stringify(expectedDataJson))
+  const { data: updated, error } = await query.select('id').maybeSingle()
 
   if (error || !updated) {
-    console.error('updateEntity error:', error)
-    return { error: 'Не удалось обновить' }
+    if (error) console.error('updateEntity error:', { code: error.code })
+    return {
+      code: error ? ('failed' as const) : ('conflict' as const),
+      error: error
+        ? 'Не удалось обновить. Изменения остались на этой странице.'
+        : 'Данные изменились в другой вкладке или больше недоступны. Скопируйте свои правки и обновите страницу.',
+    }
   }
 
   revalidatePath(`/campaign/${campaignId}/entities`)

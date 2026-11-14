@@ -44,7 +44,7 @@ jobs:
         run: npm run test:characters
 
       - name: Entity library, quest summaries and template boundaries (offline)
-        run: node --import tsx --test tests/entity-template-actions.test.ts tests/entity-library-page.test.ts tests/quest-journal.test.ts
+        run: node --import tsx --test tests/entity-template-actions.test.ts tests/entity-library-page.test.ts tests/quest-journal.test.ts tests/quest-objectives.test.ts tests/entity-data-actions.test.ts
 
       - name: Offline tactical map geometry and combat action boundaries
         run: npm run test:maps
@@ -118,6 +118,9 @@ jobs:
 
       - name: Entity template migration and role isolation (disposable PostgreSQL only)
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/entity_templates_ci.sql
+
+      - name: Quest JSON snapshot conflict safety (disposable PostgreSQL only)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/verification/quest_objectives_ci.sql
 
       - name: Setup Node.js for isolated catalog import tests
         uses: actions/setup-node@v4

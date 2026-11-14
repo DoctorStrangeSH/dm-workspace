@@ -855,6 +855,29 @@ export const ru: Dictionary = {
   'entities.hidden': 'Скрыта от игроков',
   'entities.create': 'Новая сущность',
   'entities.library.title': 'Библиотека кампании',
+  'questObjectives.title': 'Цели задания',
+  'questObjectives.error.snapshot':
+    'Не удалось проверить версию. Обновите страницу перед сохранением.',
+  'questObjectives.error.objectives':
+    'Список целей некорректен: до 20 пунктов, до 200 символов в каждом.',
+  'questObjectives.error.failed':
+    'Не удалось сохранить. Ваши правки остались на странице. Повторите сохранение.',
+  'questObjectives.error.conflict':
+    'Данные изменились в другой вкладке или больше недоступны. Скопируйте свои правки и обновите страницу.',
+  'questObjectives.progress': '{done} из {total} выполнено',
+  'questObjectives.hint':
+    'Отмечайте шаги по мере приключения. Статус задания меняется отдельно. Изменения сохраняются автоматически.',
+  'questObjectives.playerHint':
+    'Ведущий отмечает выполненные шаги. Прогресс не меняет статус задания автоматически.',
+  'questObjectives.invalid':
+    'Не удалось прочитать старый список целей. Он сохранён без изменений. Не заменяйте его до проверки данных.',
+  'questObjectives.empty': 'Путь начинается с первого шага. Целей пока нет.',
+  'questObjectives.new': 'Новая цель',
+  'questObjectives.placeholder': 'Например: найти вход в старую башню',
+  'questObjectives.add': 'Добавить цель',
+  'questObjectives.remove': 'Удалить цель {number}',
+  'questObjectives.limit':
+    'До {count} целей, по 200 символов. Цели видны всем, кому доступно задание.',
   'questJournal.title': 'Журнал заданий',
   'questJournal.hint':
     'Что ещё предстоит героям, кто ждёт помощи и какая награда обещана. Откройте карточку, чтобы посмотреть подробности.',

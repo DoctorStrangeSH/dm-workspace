@@ -6,6 +6,7 @@ import { preparationScenarios } from './preparation-scenarios.mjs'
 import { compactCombatScenarios } from './compact-combat-scenarios.mjs'
 import { entityLibraryScenarios } from './entity-library-scenarios.mjs'
 import { questJournalScenarios } from './quest-journal-scenarios.mjs'
+import { questObjectivesScenarios } from './quest-objectives-scenarios.mjs'
 import { build } from 'esbuild'
 import { compile } from '@tailwindcss/node'
 import { Scanner } from '@tailwindcss/oxide'
@@ -108,6 +109,7 @@ const browser = await chromium.launch({ headless: true }).catch(async (error) =>
   throw error
 })
 async function scenario(name, options, body) {
+  if (process.env.UI_SCENARIO_FILTER && !name.includes(process.env.UI_SCENARIO_FILTER)) return
   await test(name, async () => {
     const context = await browser.newContext({
       viewport: options.mobile
@@ -156,6 +158,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await questObjectivesScenarios(scenario, expect, output)
   await questJournalScenarios(scenario, expect, output)
   await entityLibraryScenarios(scenario, expect, output)
   await compactCombatScenarios(scenario, expect, output)

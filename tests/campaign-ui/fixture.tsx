@@ -51,6 +51,7 @@ import { sessionFixtures } from './sessions-data'
 import ItemsClient from '../../src/app/campaign/[id]/items/items-client'
 import EntitiesWorkspace from '../../src/app/campaign/[id]/entities/entities-workspace'
 import { questJournalFixtures } from './quest-journal-data'
+import EntityDataForm from '../../src/app/campaign/[id]/entities/[entityId]/entity-data-form'
 
 const query = new URLSearchParams(location.search)
 document.cookie = `dm-lang=${query.get('lang') === 'en' ? 'en' : 'ru'}; path=/`
@@ -393,7 +394,29 @@ function Fixture() {
             data-testid="workspace-main"
             className="min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 md:pb-6"
           >
-            {screen === 'entities' ? (
+            {screen === 'questObjectives' ? (
+              <EntityDataForm
+                entityId="quest"
+                campaignId="test"
+                type="quest"
+                isDm={isDm}
+                initialData={{
+                  status: 'active',
+                  reward: '50 gold',
+                  notes: 'Existing notes',
+                  ...(query.has('malformed')
+                    ? { objectives: 'legacy data' }
+                    : query.has('empty')
+                      ? {}
+                      : {
+                          objectives: [
+                            { id: 'one', text: 'Find the old tower', done: false },
+                            { id: 'two', text: 'Talk to the keeper', done: true },
+                          ],
+                        }),
+                }}
+              />
+            ) : screen === 'entities' ? (
               <EntitiesWorkspace
                 campaignId="test"
                 isDm={isDm}

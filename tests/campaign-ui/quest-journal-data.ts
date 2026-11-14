@@ -27,5 +27,12 @@ export const questJournalFixtures = [
     quest_giver: quest.giver,
     quest_reward: quest.reward,
     quest_location: quest.location,
+    quest_objectives:
+      quest.id === 'active'
+        ? [
+            { id: 'one', text: 'Private objective detail', done: true },
+            { id: 'two', text: 'Second step', done: false },
+          ]
+        : undefined,
   })
 )
