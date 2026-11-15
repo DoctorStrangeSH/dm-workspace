@@ -22,6 +22,7 @@ import { onboardingScenarios } from './onboarding-scenarios.mjs'
 import { routeScenarios } from './route-scenarios.mjs'
 import { sceneDeckScenarios } from './scene-deck-scenarios.mjs'
 import { tokenPreparationScenarios } from './token-preparation-scenarios.mjs'
+import { rosterConditionsScenarios } from './roster-conditions-scenarios.mjs'
 
 const root = process.cwd()
 const output = path.join(root, 'test-results/campaign-ui')
@@ -160,6 +161,7 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await rosterConditionsScenarios(scenario, expect, output)
   await tokenPreparationScenarios(scenario, expect, output)
   await sceneDeckScenarios(scenario, expect, output)
   await questObjectivesScenarios(scenario, expect, output)

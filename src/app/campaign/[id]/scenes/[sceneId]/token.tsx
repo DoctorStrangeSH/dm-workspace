@@ -9,6 +9,7 @@ import { isBlockedByWalls } from '@/lib/collision'
 import { cn } from '@/lib/utils'
 import { TokenMovement } from '@/lib/maps/token-movement'
 import { tokenArtSrc } from '@/lib/maps/token-art'
+import { combatConditions } from '@/lib/maps/combat-conditions'
 import type { Token as TokenType, SceneWall } from '@/lib/types'
 
 interface Props {
@@ -174,7 +175,11 @@ export default function Token({
     cleanupRef.current = cleanup
   }
 
-  const conditions = Array.isArray(token.conditions) ? token.conditions : []
+  const conditions = Array.isArray(token.conditions)
+    ? token.conditions.filter(
+        (c) => c && typeof c === 'object' && typeof c.name === 'string' && c.name.trim()
+      )
+    : []
 
   return (
     <div
@@ -276,9 +281,9 @@ export default function Token({
             <span
               key={i}
               className="flex h-4 w-4 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] text-[8px]"
-              title={c.name}
+              title={combatConditions([c], t)[0]?.label}
             >
-              {c.icon ?? '●'}
+              {typeof c.icon === 'string' ? c.icon : '●'}
             </span>
           ))}
           {conditions.length > 3 && (
@@ -286,7 +291,7 @@ export default function Token({
               className="flex h-4 min-w-5 items-center justify-center rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] px-0.5 text-[9px] font-bold"
               title={conditions
                 .slice(3)
-                .map((c) => c.name)
+                .map((c) => combatConditions([c], t)[0]?.label)
                 .join(', ')}
             >
               +{conditions.length - 3}

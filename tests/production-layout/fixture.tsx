@@ -45,7 +45,16 @@ export default function ProductionLayoutFixture() {
               Карта
             </div>
             <SceneRoster
-              tokens={battleInitiative.map((entry) => entry.token)}
+              tokens={battleInitiative.map((entry, index) => ({
+                ...entry.token,
+                conditions:
+                  index === 0
+                    ? [
+                        { name: 'poisoned' },
+                        { name: 'ДлинноеПользовательскоеСостояниеБезПробелов'.repeat(3) },
+                      ]
+                    : [],
+              }))}
               activeTokenId="battle-0"
               isDm={true}
               onFocus={setFocused}

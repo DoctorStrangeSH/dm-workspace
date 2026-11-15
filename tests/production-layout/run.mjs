@@ -179,6 +179,15 @@ export default function Layout({children}: {children: React.ReactNode}) {
       assert.equal(positions.rosterWidth, 280)
     } else assert.ok(positions.rosterTop >= positions.mapTop + metrics.viewportHeight)
     measurements.push({ width, mode: 'compact-collapsed', ...metrics })
+    const roster = page.getByRole('complementary', { name: 'Участники сцены' })
+    await roster.getByLabel('Состояния участников', { exact: true }).selectOption('affected')
+    assert.equal(await roster.getByRole('listitem').count(), 1)
+    assert.ok(
+      await roster.evaluate((el) => el.scrollWidth <= el.clientWidth),
+      'Long custom conditions fit roster width'
+    )
+    await roster.getByRole('button', { name: 'Сбросить', exact: true }).click()
+    assert.equal(await roster.getByRole('listitem').count(), 11)
     await page.screenshot({ path: path.join(results, `production-layout-${width}-collapsed.png`) })
     const compactHeight = metrics.railHeight
     const density = page.getByRole('button', { name: 'Компактный вид', exact: true })
