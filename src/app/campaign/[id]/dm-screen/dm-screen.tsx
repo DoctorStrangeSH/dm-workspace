@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { useDmScreenContext } from './dm-screen-context'
 import DmScreenPanel from './dm-screen-panel'
 import { useHotkey } from '@/lib/hooks/use-hotkey'
@@ -12,7 +11,7 @@ interface Props {
 }
 
 export default function DmScreen({ entities, campaignId }: Props) {
-  const { toggle, open } = useDmScreenContext()
+  const { toggle } = useDmScreenContext()
 
   // Ctrl+M — открыть/закрыть
   useHotkey({
@@ -24,13 +23,6 @@ export default function DmScreen({ entities, campaignId }: Props) {
     },
     ignoreInInputs: false,
   })
-
-  // Слушаем кастомное событие из палитры команд
-  useEffect(() => {
-    const handler = () => open()
-    window.addEventListener('dm-screen:open', handler)
-    return () => window.removeEventListener('dm-screen:open', handler)
-  }, [open])
 
   return (
     <>

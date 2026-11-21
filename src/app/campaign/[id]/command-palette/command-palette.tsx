@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, CornerDownLeft } from 'lucide-react'
+import { getCampaignNavGroups } from '@/lib/campaign-nav-items'
+import { useDmScreenContext } from '../dm-screen/dm-screen-context'
 import { fuzzyFilter } from '@/lib/fuzzy'
 import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/ui'
@@ -15,13 +17,21 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   campaignId: string
-  campaignName: string
-  chapters: Chapter[]
+  isDm: boolean
+  chapters: Pick<Chapter, 'id' | 'title'>[]
   entities: Entity[]
 }
 
-export default function CommandPalette({ isOpen, onClose, campaignId, chapters, entities }: Props) {
+export default function CommandPalette({
+  isOpen,
+  onClose,
+  campaignId,
+  isDm,
+  chapters,
+  entities,
+}: Props) {
   const { t, lang } = useI18n()
+  const { open: openDmScreen } = useDmScreenContext()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
@@ -37,84 +47,37 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
   const commands = useMemo<Command[]>(() => {
     const list: Command[] = []
 
-    list.push(
-      {
-        id: 'action:dashboard',
-        kind: 'action',
-        label: t('commands.action.dashboard'),
-        icon: '🏠',
-        href: '/dashboard',
-      },
-      {
-        id: 'action:overview',
-        kind: 'action',
-        label: t('commands.action.overview'),
-        icon: '📊',
-        href: `/campaign/${campaignId}`,
-      },
-      {
-        id: 'action:chapters',
-        kind: 'action',
-        label: t('commands.action.chapters'),
-        icon: '📖',
-        href: `/campaign/${campaignId}/chapters`,
-      },
-      {
-        id: 'action:characters',
-        kind: 'action',
-        label: t('commands.action.characters'),
-        icon: '⚔️',
-        href: `/campaign/${campaignId}/characters`,
-      },
-      {
-        id: 'action:scenes',
-        kind: 'action',
-        label: t('commands.action.scenes'),
-        icon: '🗺️',
-        href: `/campaign/${campaignId}/scenes`,
-      },
-      {
-        id: 'action:entities',
-        kind: 'action',
-        label: t('commands.action.entities'),
-        icon: '👥',
-        href: `/campaign/${campaignId}/entities`,
-      },
-      {
-        id: 'action:bestiary',
-        kind: 'action',
-        label: t('commands.action.bestiary'),
-        icon: '🐉',
-        href: `/campaign/${campaignId}/bestiary`,
-      },
-      {
-        id: 'action:spells',
-        kind: 'action',
-        label: t('commands.action.spells'),
-        icon: '✨',
-        href: `/campaign/${campaignId}/spells`,
-      },
-      {
-        id: 'action:items',
-        kind: 'action',
-        label: t('commands.action.items'),
-        icon: '🎒',
-        href: `/campaign/${campaignId}/items`,
-      },
-      {
+    list.push({
+      id: 'action:dashboard',
+      kind: 'action',
+      label: t('commands.action.dashboard'),
+      icon: '🏠',
+      href: '/dashboard',
+    })
+    for (const group of getCampaignNavGroups(`/campaign/${campaignId}`, isDm)) {
+      for (const item of group.items) {
+        list.push({
+          id: item.href,
+          kind: 'action',
+          label: t(item.labelKey),
+          icon: <item.icon size={18} aria-hidden="true" />,
+          href: item.href,
+        })
+      }
+    }
+    if (isDm) {
+      list.push({
         id: 'action:dm-screen',
         kind: 'action',
         label: t('commands.action.dmScreen'),
         icon: '🎛️',
-        shortcut: '⌘M',
+        shortcut: 'Ctrl/⌘ M',
         action: () => {
           onClose()
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('dm-screen:open'))
-          }, 100)
+          openDmScreen()
         },
-      }
-    )
+      })
+    }
 
     for (const ch of chapters) {
       list.push({
@@ -154,7 +117,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
     }
 
     return list
-  }, [campaignId, chapters, entities, onClose, t])
+  }, [campaignId, chapters, entities, isDm, onClose, openDmScreen, t])
 
   const filtered = useMemo(() => {
     return fuzzyFilter(commands, query, (cmd) =>
@@ -240,6 +203,7 @@ export default function CommandPalette({ isOpen, onClose, campaignId, chapters, 
           <input
             ref={inputRef}
             type="text"
+            aria-label={t('commands.searchInputPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}

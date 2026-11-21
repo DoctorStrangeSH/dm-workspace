@@ -9,6 +9,7 @@ Production: https://dm-workspace.vercel.app
 | Документ | Назначение |
 | --- | --- |
 | [docs/README.md](docs/README.md) | Оглавление всей документации |
+| [Обзор игрового стола](docs/TABLE_REVIEW.md) | Сценарии мастера и игрока, выводы аудита и приоритеты дизайна |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Дорожная карта: выполнено / в работе / запланировано |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Архитектура, схемы, данные, тестовый контур |
 | [docs/ENGINEERING_PROCESS.md](docs/ENGINEERING_PROCESS.md) | Ветки, критерии слияния, релиз, синхронизация Miro |
@@ -45,7 +46,7 @@ cd dm-workspace
 ### 2. Установи зависимости
 
 ```bash
-npm install
+npm ci
 ```
 
 ### 3. Настрой окружение

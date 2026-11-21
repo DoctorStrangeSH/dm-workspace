@@ -4,7 +4,7 @@
 
 ## Управление проектом
 
-Цели заданий: [QUEST_OBJECTIVES.md](QUEST_OBJECTIVES.md).
+Продуктовые приоритеты и сценарии приёмки собраны в [обзоре игрового стола](TABLE_REVIEW.md).
 
 | Документ | Тема |
 | --- | --- |
@@ -35,6 +35,9 @@
 | [MAP_ROUTE_PLANNER.md](MAP_ROUTE_PLANNER.md) | Map route planner |
 | [PRODUCTION_MAP_LAYOUT.md](PRODUCTION_MAP_LAYOUT.md) | Production map layout regression |
 | [PUBLIC_LANDING_DEMO.md](PUBLIC_LANDING_DEMO.md) | Public introduction and practice table |
+| [SCENE_COMMAND_DECK.md](SCENE_COMMAND_DECK.md) | Управление сценой и полноэкранная карта |
+| [SCENE_ROSTER_CONDITIONS.md](SCENE_ROSTER_CONDITIONS.md) | Состояния и фильтры участников сцены |
+| [TOKEN_PREPARATION.md](TOKEN_PREPARATION.md) | Подготовка токенов к игре |
 | [SESSION_CARDS_DISPLAY.md](SESSION_CARDS_DISPLAY.md) | Session cards and mobile controls |
 | [SESSION_PLANNING_HUB.md](SESSION_PLANNING_HUB.md) | Session planning hub |
 | [SESSION_RSVP_SELECTION.md](SESSION_RSVP_SELECTION.md) | Saved personal session response |

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 export type CommandKind = 'campaign' | 'chapter' | 'entity' | 'action'
 
 export interface Command {
@@ -5,7 +7,7 @@ export interface Command {
   kind: CommandKind
   label: string
   description?: string
-  icon: string // эмодзи или название
+  icon: ReactNode
   href?: string // если нужно перейти
   action?: () => void | Promise<void>
   keywords?: string[] // для поиска

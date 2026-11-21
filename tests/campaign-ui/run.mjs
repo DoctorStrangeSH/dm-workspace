@@ -161,6 +161,25 @@ const openChat = async (page) => {
     .toBeLessThan(5)
 }
 try {
+  await scenario('command palette opens DM tools', {}, async (page) => {
+    await page.getByRole('button', { name: 'Открыть палитру команд' }).click()
+    await page.getByRole('button', { name: 'Открыть панель ГМа' }).click()
+    await expect(page.locator('#campaign-dm')).toBeVisible()
+  })
+  await scenario(
+    'command palette offers player sessions',
+    { url: '/?role=player', mobile: true },
+    async (page) => {
+      await page.getByRole('button', { name: 'Открыть палитру команд' }).click()
+      await expect(page.getByRole('button', { name: 'Открыть панель ГМа' })).toHaveCount(0)
+      const search = page.getByRole('textbox', { name: 'Поиск: главы, сущности, действия…' })
+      await search.fill('Сессии')
+      await search.press('Enter')
+      await expect
+        .poll(() => page.evaluate(() => window.__uiLab.navigated.at(-1)))
+        .toBe('/campaign/test/sessions')
+    }
+  )
   await rosterConditionsScenarios(scenario, expect, output)
   await tokenPreparationScenarios(scenario, expect, output)
   await sceneDeckScenarios(scenario, expect, output)
