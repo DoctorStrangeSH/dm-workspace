@@ -26,6 +26,7 @@ import { SessionModeToggle } from '../../src/app/campaign/[id]/session-mode-togg
 import CampaignOverview from '../../src/app/campaign/[id]/campaign-overview'
 import ChapterEditor from '../../src/app/campaign/[id]/chapters/[chapterId]/chapter-editor'
 import { overviewStats } from './overview-data'
+import CommandPaletteWrapper from '../../src/app/campaign/[id]/command-palette/command-palette-wrapper'
 import DmScreen from '../../src/app/campaign/[id]/dm-screen/dm-screen'
 import ChatPanel from '../../src/app/campaign/[id]/chat/chat-panel'
 import { SessionModeLayout } from '../../src/app/campaign/[id]/session/session-mode-layout'
@@ -374,9 +375,7 @@ function Fixture() {
             </>
           }
           search={
-            <button type="button" aria-label="Search" className="h-11 w-11">
-              ⌕
-            </button>
+            <CommandPaletteWrapper campaignId="test" isDm={isDm} chapters={[]} entities={[]} />
           }
           actions={
             <>

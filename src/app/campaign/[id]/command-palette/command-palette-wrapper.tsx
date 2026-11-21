@@ -9,17 +9,12 @@ import type { Entity, Chapter } from '@/lib/types'
 
 interface Props {
   campaignId: string
-  campaignName: string
-  chapters: Chapter[]
+  isDm: boolean
+  chapters: Pick<Chapter, 'id' | 'title'>[]
   entities: Entity[]
 }
 
-export default function CommandPaletteWrapper({
-  campaignId,
-  campaignName,
-  chapters,
-  entities,
-}: Props) {
+export default function CommandPaletteWrapper({ campaignId, isDm, chapters, entities }: Props) {
   const t = useT()
   const { isOpen, open, close } = useCommandPalette()
 
@@ -44,7 +39,7 @@ export default function CommandPaletteWrapper({
         isOpen={isOpen}
         onClose={close}
         campaignId={campaignId}
-        campaignName={campaignName}
+        isDm={isDm}
         chapters={chapters}
         entities={entities}
       />

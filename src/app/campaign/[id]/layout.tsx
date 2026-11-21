@@ -59,15 +59,15 @@ export default async function CampaignLayout({
   }
 
   let entities: Entity[] = []
-  let chapters: Chapter[] = []
+  let chapters: Pick<Chapter, 'id' | 'title'>[] = []
 
   if (role === 'dm') {
     const [entitiesRes, chaptersRes] = await Promise.all([
       supabase.from('entities').select('*').eq('campaign_id', id).order('name'),
-      supabase.from('chapters').select('*').eq('campaign_id', id).order('order_index'),
+      supabase.from('chapters').select('id, title').eq('campaign_id', id).order('order_index'),
     ])
     entities = (entitiesRes.data ?? []) as Entity[]
-    chapters = (chaptersRes.data ?? []) as Chapter[]
+    chapters = chaptersRes.data ?? []
   } else {
     const [entitiesRes, chaptersRes] = await Promise.all([
       supabase
@@ -78,13 +78,13 @@ export default async function CampaignLayout({
         .order('name'),
       supabase
         .from('chapters')
-        .select('*')
+        .select('id, title')
         .eq('campaign_id', id)
         .eq('is_visible_to_players', true)
         .order('order_index'),
     ])
     entities = (entitiesRes.data ?? []) as Entity[]
-    chapters = (chaptersRes.data ?? []) as Chapter[]
+    chapters = chaptersRes.data ?? []
   }
 
   const [messages, playlists, playerState, currentTrack, handouts, sessionLog] = await Promise.all([
@@ -115,7 +115,7 @@ export default async function CampaignLayout({
           search={
             <CommandPaletteWrapper
               campaignId={id}
-              campaignName={campaign.name}
+              isDm={role === 'dm'}
               chapters={chapters}
               entities={entities}
             />
