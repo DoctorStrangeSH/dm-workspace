@@ -429,6 +429,13 @@ export default function SceneView({
   const currentTurns = liveInitiative.filter((entry) => entry.is_current)
   const currentTurn = currentTurns.length === 1 ? currentTurns[0] : undefined
 
+  const playerTurnName =
+    !isDm && currentTurn
+      ? (!currentTurn.token?.is_hidden &&
+          tokens.find((token) => token.id === currentTurn.token_id)?.name) ||
+        t('turns.hidden')
+      : null
+
   const getGridCoords = (e: React.PointerEvent) => {
     if (!wallWrapperRef.current) return null
     return clientToGrid(
@@ -595,11 +602,18 @@ export default function SceneView({
   }
 
   return (
-    <div ref={workspaceRef} className={styles.workspace}>
+    <div ref={workspaceRef} className={styles.workspace} data-player-view={!isDm || undefined}>
       <header className={styles.commandDeck}>
         <div className="min-w-0">
           <p className="mb-1 text-xs font-semibold tracking-widest text-[var(--accent-text)] uppercase">
-            {t('map.workspace')}
+            <span className={playerTurnName ? styles.workspaceLabel : undefined}>
+              {t('map.workspace')}
+            </span>
+            {playerTurnName && (
+              <span className={styles.mobileTurn}>
+                {t('scenes.initiative.now')} · {playerTurnName}
+              </span>
+            )}
           </p>
           <h1 className="text-2xl font-bold [overflow-wrap:anywhere] text-[var(--text-primary)]">
             {scene.name}
@@ -733,7 +747,7 @@ export default function SceneView({
               </Button>
             </div>
             <div
-              className="flex flex-wrap items-center gap-1"
+              className={`${styles.mapTools} flex flex-wrap items-center gap-1`}
               role="group"
               aria-label={t('scenes.tools')}
             >
