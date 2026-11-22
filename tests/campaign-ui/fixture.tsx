@@ -222,15 +222,17 @@ function DashboardFixture() {
 }
 
 function BattleMapFixture({ isDm, embedded = false }: { isDm: boolean; embedded?: boolean }) {
-  const characters = query.has('tokenPreparation')
-    ? [
-        {
-          ...fixtureCharacter,
-          name: 'Zero hero',
-          data_json: { ...fixtureCharacter.data_json, hp: { current: 0, max: 8, temp: 0 } },
-        },
-      ]
-    : []
+  const characters = query.has('myTurn')
+    ? [{ ...fixtureCharacter, id: 'character-0', user_id: query.has('foreign') ? 'other' : 'self' }]
+    : query.has('tokenPreparation')
+      ? [
+          {
+            ...fixtureCharacter,
+            name: 'Zero hero',
+            data_json: { ...fixtureCharacter.data_json, hp: { current: 0, max: 8, temp: 0 } },
+          },
+        ]
+      : []
   const monsters = query.has('tokenPreparation')
     ? ([
         { id: 'dice-monster', name: 'Dice goblin', data_json: { hp: '2d8+4' } },

@@ -35,6 +35,7 @@ import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
 import InitiativePanel from './initiative-panel'
+import MyTurn from './my-turn'
 import CombatDrawer from './combat-drawer'
 import TurnTimeline from './turn-timeline'
 import SceneRoster from './scene-roster'
@@ -429,6 +430,22 @@ export default function SceneView({
   const currentTurns = liveInitiative.filter((entry) => entry.is_current)
   const currentTurn = currentTurns.length === 1 ? currentTurns[0] : undefined
 
+  const currentPlayerToken =
+    !isDm && currentTurn && !currentTurn.token?.is_hidden
+      ? tokens.find((token) => token.id === currentTurn.token_id)
+      : undefined
+  const playerTurnName = !isDm && currentTurn ? currentPlayerToken?.name || t('turns.hidden') : null
+  const turnCharacter =
+    currentUserId && currentPlayerToken?.character_id
+      ? characters.find(
+          (character) =>
+            character.id === currentPlayerToken.character_id && character.user_id === currentUserId
+        )
+      : undefined
+  const turnAction = turnCharacter && (
+    <MyTurn key={currentPlayerToken?.id + ':' + turnCharacter.id} character={turnCharacter} />
+  )
+
   const getGridCoords = (e: React.PointerEvent) => {
     if (!wallWrapperRef.current) return null
     return clientToGrid(
@@ -595,11 +612,18 @@ export default function SceneView({
   }
 
   return (
-    <div ref={workspaceRef} className={styles.workspace}>
+    <div ref={workspaceRef} className={styles.workspace} data-player-view={!isDm || undefined}>
       <header className={styles.commandDeck}>
         <div className="min-w-0">
           <p className="mb-1 text-xs font-semibold tracking-widest text-[var(--accent-text)] uppercase">
-            {t('map.workspace')}
+            <span className={playerTurnName ? styles.workspaceLabel : undefined}>
+              {t('map.workspace')}
+            </span>
+            {playerTurnName && (
+              <span className={styles.mobileTurn}>
+                {t('scenes.initiative.now')} · {playerTurnName}
+              </span>
+            )}
           </p>
           <h1 className="text-2xl font-bold [overflow-wrap:anywhere] text-[var(--text-primary)]">
             {scene.name}
@@ -611,6 +635,7 @@ export default function SceneView({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {turnAction}
           <Button
             variant={showRoster ? 'secondary' : 'ghost'}
             className="min-h-11"
@@ -712,6 +737,7 @@ export default function SceneView({
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] p-2">
             <div className={styles.fullscreenControls}>
+              {turnAction}
               <Button
                 variant="secondary"
                 className="min-h-11"
@@ -733,7 +759,7 @@ export default function SceneView({
               </Button>
             </div>
             <div
-              className="flex flex-wrap items-center gap-1"
+              className={`${styles.mapTools} flex flex-wrap items-center gap-1`}
               role="group"
               aria-label={t('scenes.tools')}
             >

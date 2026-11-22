@@ -5,6 +5,80 @@ const png = Buffer.from(
   'base64'
 )
 export async function sceneDeckScenarios(scenario, expect, output) {
+  const myTurnUrl = '/?screen=map&mapImage&combat&current&manyTokens&role=player&myTurn&workspace'
+  await scenario(
+    'my turn rolls with advantage and returns to the same map',
+    { mobile: true, width: 375, url: myTurnUrl },
+    async (page) => {
+      const map = page.getByRole('region', { name: /Игровая карта —/ })
+      await page.getByRole('button', { name: 'Увеличить масштаб карты', exact: true }).click()
+      const position = () => map.evaluate((el) => [el.scrollLeft, el.scrollTop, el.scrollWidth])
+      await map.evaluate((el) => {
+        el.scrollLeft = 180
+        el.scrollTop = 64
+      })
+      const before = await position()
+      expect(before[0]).toBeGreaterThan(0)
+      const button = page.getByRole('button', { name: 'Мой ход' })
+      await button.click()
+      const dialog = page.getByRole('dialog', { name: 'Мой ход' })
+      await dialog.locator('select').first().selectOption('advantage')
+      await dialog.getByRole('button', { name: /Атака.*5/ }).click()
+      await expect(dialog.getByRole('status')).toContainText(/Longsword:.*\[\d+, \d+\]/)
+      await dialog.getByRole('button', { name: 'К карте' }).click()
+      await expect(button).toBeFocused()
+      expect(await position()).toEqual(before)
+      await button.click()
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent('offline-turn-data', {
+            detail: window.__turnEntries.map((entry, i) => ({ ...entry, is_current: i === 1 })),
+          })
+        )
+      )
+      await expect(dialog).toHaveCount(0)
+      await expect(button).toHaveCount(0)
+    }
+  )
+  await scenario(
+    'my turn excludes another player’s character',
+    { url: myTurnUrl + '&foreign' },
+    async (page) => {
+      await expect(page.getByRole('button', { name: /^Порядок ходов/ }).first()).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Мой ход' })).toHaveCount(0)
+    }
+  )
+  for (const width of [320, 375]) {
+    await scenario(
+      `mobile player sees the map and can open combat at ${width}px`,
+      { mobile: true, width, url: '/?screen=map&mapImage&combat&current&manyTokens&role=player' },
+      async (page) => {
+        const map = page.getByRole('region', {
+          name: 'Игровая карта — используйте стрелки для прокрутки',
+        })
+        const queue = page.getByRole('button', { name: /^Порядок ходов/ }).first()
+        const current = page.locator('header').getByText(/^Сейчас · /)
+        const name = await page.evaluate(
+          () => window.__turnEntries.find((entry) => entry.is_current).token.name
+        )
+        await expect(current).toHaveText('Сейчас · ' + name)
+        await expect(current).toBeVisible()
+        await expect(map).toBeVisible()
+        const mapBounds = await map.boundingBox()
+        expect(mapBounds.y + 160).toBeLessThan(page.viewportSize().height - 64)
+        expect((await queue.boundingBox()).y).toBeLessThan(mapBounds.y)
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width
+        )
+        await page.screenshot({ path: path.join(output, `player-map-${width}.png`) })
+        await queue.click()
+        await expect(page.getByRole('dialog', { name: 'Панель боя' })).toBeVisible()
+        await page.keyboard.press('Escape')
+        await expect(queue).toBeFocused()
+        expect(await page.evaluate(() => window.__uiLab.mapActions)).toEqual([])
+      }
+    )
+  }
   await scenario(
     'scene deck fullscreen prioritizes map and restores turn timeline',
     { url: '/?screen=map&mapImage&combat&current&manyTokens' },
@@ -98,7 +172,11 @@ export async function sceneDeckScenarios(scenario, expect, output) {
     }
   await scenario(
     'scene deck hidden participants never appear for a player',
-    { url: '/?screen=map&mapImage&manyTokens&role=player' },
+    {
+      mobile: true,
+      width: 375,
+      url: '/?screen=map&mapImage&combat&current&manyTokens&role=player',
+    },
     async (page) => {
       await page.evaluate(() =>
         window.dispatchEvent(
@@ -115,6 +193,7 @@ export async function sceneDeckScenarios(scenario, expect, output) {
         'Secret creature'
       )
       await expect(page.locator('[data-token-id]')).toHaveCount(10)
+      await expect(page.locator('header').getByText('Сейчас · Скрытый участник')).toBeVisible()
     }
   )
   await scenario(
