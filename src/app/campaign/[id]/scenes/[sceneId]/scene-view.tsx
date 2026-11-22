@@ -35,6 +35,7 @@ import MapCanvas from './map-canvas'
 import TokenLayer from './token-layer'
 import AddTokenModal from './add-token-modal'
 import InitiativePanel from './initiative-panel'
+import MyTurn from './my-turn'
 import CombatDrawer from './combat-drawer'
 import TurnTimeline from './turn-timeline'
 import SceneRoster from './scene-roster'
@@ -429,12 +430,21 @@ export default function SceneView({
   const currentTurns = liveInitiative.filter((entry) => entry.is_current)
   const currentTurn = currentTurns.length === 1 ? currentTurns[0] : undefined
 
-  const playerTurnName =
-    !isDm && currentTurn
-      ? (!currentTurn.token?.is_hidden &&
-          tokens.find((token) => token.id === currentTurn.token_id)?.name) ||
-        t('turns.hidden')
-      : null
+  const currentPlayerToken =
+    !isDm && currentTurn && !currentTurn.token?.is_hidden
+      ? tokens.find((token) => token.id === currentTurn.token_id)
+      : undefined
+  const playerTurnName = !isDm && currentTurn ? currentPlayerToken?.name || t('turns.hidden') : null
+  const turnCharacter =
+    currentUserId && currentPlayerToken?.character_id
+      ? characters.find(
+          (character) =>
+            character.id === currentPlayerToken.character_id && character.user_id === currentUserId
+        )
+      : undefined
+  const turnAction = turnCharacter && (
+    <MyTurn key={currentPlayerToken?.id + ':' + turnCharacter.id} character={turnCharacter} />
+  )
 
   const getGridCoords = (e: React.PointerEvent) => {
     if (!wallWrapperRef.current) return null
@@ -625,6 +635,7 @@ export default function SceneView({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {turnAction}
           <Button
             variant={showRoster ? 'secondary' : 'ghost'}
             className="min-h-11"
@@ -726,6 +737,7 @@ export default function SceneView({
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-default)] p-2">
             <div className={styles.fullscreenControls}>
+              {turnAction}
               <Button
                 variant="secondary"
                 className="min-h-11"

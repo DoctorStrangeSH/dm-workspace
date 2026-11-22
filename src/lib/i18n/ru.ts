@@ -1635,6 +1635,8 @@ export const ru: Dictionary = {
   'dmScreen.closeHint': 'Закрыть (Esc)',
 
   // Tactical map workspace
+  'map.myTurn': 'Мой ход',
+  'map.backToMap': 'К карте',
   'map.workspace': 'Игровой стол',
   'map.uploadIntro': 'Выберите изображение, проверьте сетку и подтвердите загрузку.',
   'map.chooseFile': 'Выбрать или перетащить карту',

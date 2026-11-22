@@ -1631,6 +1631,8 @@ export const en: Dictionary = {
   'dmScreen.closeHint': 'Close (Esc)',
 
   // Tactical map workspace
+  'map.myTurn': 'My turn',
+  'map.backToMap': 'Back to map',
   'map.workspace': 'Battle table',
   'map.uploadIntro': 'Choose an image, preview the grid, then confirm the upload.',
   'map.chooseFile': 'Choose or drop a map',
